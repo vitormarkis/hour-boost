@@ -1,0 +1,9 @@
+.titleSpan {
+  --stop-mid: #fff;
+  --stop-cor: #d1dfff;
+
+  background: var(--stop-mid);
+  background: repeating-linear-gradient(90deg, var(--stop-cor) 0, var(--stop-mid) 50%, var(--stop-cor));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
