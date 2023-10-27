@@ -4,7 +4,7 @@ import { UserStartFarm } from "./use-case/UserStartFarm"
 console.log(`Logando com yversale`)
 
 const USERNAME = "yversale"
-const PASSWORD = "Dc4/uRZNSA(j6y&"
+const PASSWORD = "@998vmarkis"
 
 const app = new Application()
 

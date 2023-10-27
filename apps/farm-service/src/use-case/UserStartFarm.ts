@@ -9,6 +9,11 @@ export class UserStartFarm {
     this.application.appendUser(props.username, userClient)
     const user = this.application.getUser(props.username)
     if (!user) return console.log("User not found.")
+    console.log("Logando com ", {
+      accountName: props.username,
+      password: props.password,
+    })
+
     user.logOn({
       accountName: props.username,
       password: props.password,

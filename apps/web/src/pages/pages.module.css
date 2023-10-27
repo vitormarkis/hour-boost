@@ -1,0 +1,32 @@
+.divisor {
+  --color: #00b4ff;
+  pointer-events: none;
+  user-select: none;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  margin: 0px auto;
+  height: 600px;
+  overflow: hidden;
+  -webkit-mask-image: radial-gradient(circle, black, transparent 80%);
+}
+
+.divisor::before {
+  content: "";
+  position: absolute;
+  inset: 0px;
+  background: radial-gradient(circle at bottom center, var(--color), transparent 70%);
+  opacity: 0.4;
+}
+
+.divisor::after {
+  content: "";
+  position: absolute;
+  background: theme('colors.slate.950');
+  width: 200%;
+  left: -50%;
+  aspect-ratio: 1 / 0.6;
+  border-radius: 50%;
+  border-top: 1px solid rgba(120, 118, 197, 0.4);
+  top: 50%;
+}
