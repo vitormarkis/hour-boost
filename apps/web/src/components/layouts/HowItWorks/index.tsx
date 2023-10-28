@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils"
 import { CardApple } from "@/components/cards/CardApple"
 import { TitleSection } from "@/components/atoms/TitleSection"
 import { Button } from "@/components/ui/button"
+import { ButtonPrimary } from "@/components/theme/button-primary"
 
 export type HowItWorksSectionProps = React.ComponentPropsWithoutRef<"section"> & {}
 
@@ -45,7 +46,7 @@ export const HowItWorksSection = React.forwardRef<React.ElementRef<"section">, H
             </div>
           </div>
           <div className="pt-24 flex justify-center">
-            <Button variant="secondary">Ver planos</Button>
+            <ButtonPrimary colorScheme="purple-blue">Ver planos</ButtonPrimary>
           </div>
         </div>
       </section>

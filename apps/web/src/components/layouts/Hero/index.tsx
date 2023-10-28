@@ -1,9 +1,9 @@
 import { motion } from "framer-motion"
 import React from "react"
 import st from "./page.module.css"
-import { Button } from "@/components/ui/button"
 
 import { cn } from "@/lib/utils"
+import { ButtonPrimary } from "@/components/theme/button-primary"
 
 export type HeroSectionProps = React.ComponentPropsWithoutRef<"section"> & {}
 
@@ -104,8 +104,8 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
             </div>
           </div>
           <div className="flex w-full relative z-20 gap-20 pt-12 justify-center">
-            <Button variant="secondary">Ver mais</Button>
-            <Button variant="secondary">Entrar</Button>
+            <ButtonPrimary colorScheme="purple-blue">Ver mais</ButtonPrimary>
+            <ButtonPrimary colorScheme="purple-blue">Entrar</ButtonPrimary>
           </div>
         </div>
       </section>
