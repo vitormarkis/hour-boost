@@ -15,7 +15,7 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
         className={cn("flex w-screen grow flex-wrap justify-center gap-2", className)}
         ref={ref}
       >
-        <div className="flex flex-col h-[calc(100vh_-_56px)] grow items-center justify-center ">
+        <div className="flex flex-col h-[calc(100vh_-_56px)] grow items-center justify-center relative">
           <div
             className="opacity-20 top-0 left-0 right-0 bottom-1/3 absolute"
             style={{
@@ -104,8 +104,8 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
             </div>
           </div>
           <div className="flex w-full relative z-20 gap-20 pt-12 justify-center">
-            <ButtonPrimary colorScheme="purple-blue">Ver mais</ButtonPrimary>
-            <ButtonPrimary colorScheme="purple-blue">Entrar</ButtonPrimary>
+            <ButtonPrimary colorScheme="orange-yellow">Ver mais</ButtonPrimary>
+            <ButtonPrimary colorScheme="orange-yellow">Entrar</ButtonPrimary>
           </div>
         </div>
       </section>

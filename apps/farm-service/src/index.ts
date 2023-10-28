@@ -9,10 +9,10 @@ const PASSWORD = "@998vmarkis"
 const app = new Application()
 
 ;(() => {
-  const userStartFarm = new UserStartFarm(app)
-  userStartFarm.execute({
-    gamesPlayed: [601510],
-    password: PASSWORD,
-    username: USERNAME,
-  })
+  // const userStartFarm = new UserStartFarm(app)
+  // userStartFarm.execute({
+  //   gamesPlayed: [601510],
+  //   password: PASSWORD,
+  //   username: USERNAME,
+  // })
 })()

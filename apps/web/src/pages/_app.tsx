@@ -3,6 +3,7 @@ import type { AppProps } from "next/app"
 import { Barlow } from "next/font/google"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "next-themes"
+import { ClerkProvider } from "@clerk/nextjs"
 
 const barlow = Barlow({
   subsets: ["latin"],
@@ -11,14 +12,16 @@ const barlow = Barlow({
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem
-    >
-      <main className={cn(barlow.className)}>
-        <Component {...pageProps} />
-      </main>
-    </ThemeProvider>
+    <ClerkProvider {...pageProps}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        enableSystem
+      >
+        <main className={cn(barlow.className)}>
+          <Component {...pageProps} />
+        </main>
+      </ThemeProvider>
+    </ClerkProvider>
   )
 }
