@@ -25,15 +25,18 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
       ref={ref}
     >
       <div className="h-full mx-auto flex w-full max-w-7xl items-center px-4">
-        <div className="flex-1 flex">
-          <div className="pr-8">
+        <div className="flex-1 flex md:hidden">
+          <SVGList className="h-8 w-8 aspect-square" />
+        </div>
+        <div className="flex-1 flex h-full justify-center md:justify-start">
+          <div className="shrink-0">
             <img
               src="logo.png"
               alt=""
               className="h-[1.7rem]"
             />
           </div>
-          <ul className="flex gap-2 items-center">
+          <ul className="hidden md:flex gap-2 items-center pl-8">
             <li className="px-2 text-slate-300 hover:text-white hover:underline">
               <Link href="#">Como funciona?</Link>
             </li>
@@ -48,12 +51,12 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
             </li>
           </ul>
         </div>
-        <div className="h-full flex">
+        <div className="h-full flex flex-1 md:flex-initial justify-end">
           {user && user.firstName && user.lastName && (
             <div className="h-full flex gap-4 items-center">
               <Button
                 variant="ghost"
-                className="h-full"
+                className="h-full hidden md:flex"
                 asChild
               >
                 <a href="/dashboard">Ir para Dashboard</a>
@@ -112,6 +115,57 @@ export function SVGUser({}: SVGUserProps) {
       />
       <path
         d="M32,216c19.37-33.47,54.55-56,96-56s76.63,22.53,96,56"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={24}
+      />
+    </svg>
+  )
+}
+
+export type SVGListProps = React.ComponentPropsWithoutRef<"svg">
+
+export function SVGList({ ...props }: SVGListProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 256 256"
+      {...props}
+    >
+      <rect
+        width={256}
+        height={256}
+        fill="none"
+      />
+      <line
+        x1={40}
+        y1={128}
+        x2={216}
+        y2={128}
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={24}
+      />
+      <line
+        x1={40}
+        y1={64}
+        x2={216}
+        y2={64}
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={24}
+      />
+      <line
+        x1={40}
+        y1={192}
+        x2={216}
+        y2={192}
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"

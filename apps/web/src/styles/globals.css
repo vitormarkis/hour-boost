@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@media (max-width: 768px) {
+
+    html,
+    :root {
+        font-size: 20px;
+    }
+}
+
 .span-gr-accent {
     background: #230ccf;
     background: repeating-linear-gradient(90deg, #ffa530 0, #e3ff0a 50%, #ff6c0a);

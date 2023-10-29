@@ -10,7 +10,7 @@ const CardAppleRoot = React.forwardRef<React.ElementRef<"div">, CardAppleRootPro
     return (
       <div
         {...props}
-        className={cn("flex-1 flex flex-col items-center", className)}
+        className={cn("flex-1 flex flex-col items-center overflow-hidden", className)}
         ref={ref}
       >
         <div className="h-[1px] w-[60%] bg-gradient-to-r from-transparent via-slate-700 to-transparent" />

@@ -29,7 +29,7 @@ export const HowItWorksSection = React.forwardRef<React.ElementRef<"section">, H
           </div>
           <div className="pt-12">
             <div className="w-full overflow-hidden">
-              <div className="flex justify-between w-full mx-auto max-w-6xl">
+              <div className="flex flex-col md:flex-row gap-16 md:gap-0 justify-between w-full mx-auto max-w-6xl">
                 <CardApple.Root>
                   <CardApple.Title>1. Faça login</CardApple.Title>
                   <CardApple.MainAsset maskURL="https://cdn-icons-png.flaticon.com/512/4289/4289598.png" />
