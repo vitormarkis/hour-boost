@@ -18,9 +18,9 @@ export const HowItWorksSection = React.forwardRef<React.ElementRef<"section">, H
         <div className="flex flex-col w-full">
           <div className="mx-auto flex flex-col">
             <div className="flex pb-2 items-center self-center justify-around gap-8">
-              <div className="w-12 border-b border-white" />
+              <div className="hidden md:block w-12 border-b border-white" />
               <TitleSection>Como funciona</TitleSection>
-              <div className="w-12 border-b border-white" />
+              <div className="hidden md:block w-12 border-b border-white" />
             </div>
             <p className="text-slate-400 max-w-md text-center self-center">
               Faça seu cadastro, adicione horas a sua conta, adicione quantas contas da steam quiser,
@@ -29,7 +29,7 @@ export const HowItWorksSection = React.forwardRef<React.ElementRef<"section">, H
           </div>
           <div className="pt-12">
             <div className="w-full overflow-hidden">
-              <div className="flex flex-col md:flex-row gap-16 md:gap-0 justify-between w-full mx-auto max-w-6xl">
+              <div className="flex flex-col md:flex-row gap-24 md:gap-0 justify-between w-full mx-auto max-w-6xl">
                 <CardApple.Root>
                   <CardApple.Title>1. Faça login</CardApple.Title>
                   <CardApple.MainAsset maskURL="https://cdn-icons-png.flaticon.com/512/4289/4289598.png" />

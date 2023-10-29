@@ -12,7 +12,7 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
     return (
       <section
         {...props}
-        className={cn("flex w-screen grow flex-wrap justify-center gap-2", className)}
+        className={cn("flex grow flex-wrap justify-center gap-2", className)}
         ref={ref}
       >
         <div className="flex flex-col min-h-[calc(100vh_-_56px)] grow items-center justify-center relative">
@@ -40,7 +40,7 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 4 }}
-            className="absolute aspect-square w-[40rem] -translate-y-16 bg-black mix-blend-luminosity"
+            className="absolute aspect-square w-full max-w-[40rem] -translate-y-16 bg-black mix-blend-luminosity"
             style={{
               WebkitMaskImage: "radial-gradient(black 53%, transparent 67%)",
               maskImage: "radial-gradient(black 53%, transparent 67%)",
