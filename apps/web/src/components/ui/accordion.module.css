@@ -1,0 +1,4 @@
+.shadowEffect {
+  background: linear-gradient(315deg, hsl(var(--appleHue), 100%, 72%), hsl(var(--bananaHue), 100%, 50%));
+  box-shadow: 2px 2px 5px 2px hsl(var(--appleHue), 100%, 25%), -2px -2px 5px 1px hsl(var(--bananaHue), 100%, 25%);
+}

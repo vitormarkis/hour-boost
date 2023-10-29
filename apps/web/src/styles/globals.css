@@ -105,5 +105,7 @@
         --body-mid: theme(colors.black);
         --body-cor: theme(colors.slate.800);
         background-image: linear-gradient(to bottom right, var(--body-cor), var(--body-mid) 40%, var(--body-cor));
+        background-repeat: no-repeat;
+        min-height: 100dvh;
     }
 }

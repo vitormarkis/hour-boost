@@ -13,7 +13,7 @@ export const GamesAvailableSection = React.forwardRef<
   return (
     <section
       {...props}
-      className={cn("relative overflow-hidden flex w-screen grow flex-wrap gap-6 bg-slate-950", className)}
+      className={cn("relative overflow-hidden flex grow flex-wrap gap-6 bg-slate-950", className)}
       ref={ref}
     >
       <div className="max-w-8xl mx-auto w-full h-full absolute inset-0">
@@ -30,7 +30,7 @@ export const GamesAvailableSection = React.forwardRef<
           />
         </div>
       </div>
-      <div className="relative pt-14 max-w-7xl w-full mx-auto flex justify-between z-10">
+      <div className="relative pt-14 max-w-7xl w-full mx-auto flex justify-between z-10 px-8">
         <div
           className="absolute h-[1px] left-0 top-0 w-[30rem]"
           style={{

@@ -1,0 +1,27 @@
+.shapedividers_com-8155 {
+  overflow: hidden;
+  position: relative;
+}
+
+.shapedividers_com-8155::before {
+  content: '';
+  font-family: 'shape divider from ShapeDividers.com';
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  bottom: -0.1vw;
+  left: -0.1vw;
+  right: -0.1vw;
+  top: -0.1vw;
+  background-size: 100% 101px;
+  background-position: 50% 100%;
+  transform: rotateY(180deg);
+  background-image: url('data:image/svg+xml;charset=utf8, <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 381 77.25" preserveAspectRatio="none"><g fill="%23ffffff"><path d="M0 68.78l381-33.86v42.33H0z"/><path d="M0 43.38l381-25.4v59.27H0z" opacity=".33"/><path d="M0 17.98L381 0v77.25H0z" opacity=".33"/></g></svg>');
+}
+
+@media (min-width:2100px) {
+  .shapedividers_com-8155::before {
+    background-size: 100% calc(2vw + 101px);
+  }
+}
