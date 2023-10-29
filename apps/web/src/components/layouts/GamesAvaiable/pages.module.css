@@ -1,5 +1,6 @@
 .divisor {
-  --color: #00b4ff;
+  --color: hsl(var(--accent));
+  filter: saturate(0.5);
   pointer-events: none;
   user-select: none;
   position: absolute;
@@ -8,7 +9,7 @@
   margin: 0px auto;
   height: 600px;
   overflow: hidden;
-  -webkit-mask-image: radial-gradient(circle, black, transparent 80%);
+  /* -webkit-mask-image: radial-gradient(circle, black, transparent 80%); */
 }
 
 .divisor::before {
@@ -17,14 +18,15 @@
   inset: 0px;
   background: radial-gradient(circle at bottom center, var(--color), transparent 70%);
   opacity: 0.4;
+  -webkit-mask-image: linear-gradient(0deg, black 58%, transparent 100%);
 }
 
 .divisor::after {
   content: "";
   position: absolute;
   background: theme('colors.slate.950');
-  width: 200%;
-  left: -50%;
+  width: 400%;
+  left: -150%;
   aspect-ratio: 1 / 0.6;
   border-radius: 50%;
   border-top: 1px solid rgba(120, 118, 197, 0.4);
