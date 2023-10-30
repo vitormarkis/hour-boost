@@ -26,10 +26,10 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
     >
       <div className="h-full mx-auto flex w-full max-w-7xl items-center px-4">
         <div className="flex-1 flex md:hidden">
-          <SVGList className="h-8 w-8 aspect-square" />
+          <SVGList className="h-7 w-7 aspect-square" />
         </div>
         <div className="flex-1 flex h-full justify-center md:justify-start">
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center">
             <img
               src="logo.png"
               alt=""
@@ -62,7 +62,7 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
                 <a href="/dashboard">Ir para Dashboard</a>
               </Button>
               <MenuDropdownUserHeader>
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-7 w-7">
                   <AvatarImage src={user.imageUrl} />
                   <AvatarFallback>{user.firstName.at(0)! + user.lastName.at(0)!}</AvatarFallback>
                 </Avatar>
@@ -70,16 +70,24 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
             </div>
           )}
           {!user && (
-            <Button
-              variant="ghost"
-              className="h-full"
-              asChild
-            >
-              <a href="/sign-in">
-                <span>Entrar</span>
-                <SVGUser />
+            <>
+              <Button
+                variant="ghost"
+                className="h-full hidden sm:flex"
+                asChild
+              >
+                <a href="/sign-in">
+                  <span>Entrar</span>
+                  <SVGUser />
+                </a>
+              </Button>
+              <a
+                href="/sign-in"
+                className="overflow-hidden grid place-items-center sm:hidden"
+              >
+                <SVGUser className="h-7 w-7 aspect-square" />
               </a>
-            </Button>
+            </>
           )}
         </div>
       </div>
@@ -89,14 +97,15 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
 
 Header.displayName = "Header"
 
-export type SVGUserProps = {}
+export type SVGUserProps = React.ComponentPropsWithoutRef<"svg">
 
-export function SVGUser({}: SVGUserProps) {
+export function SVGUser({ className, ...props }: SVGUserProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 256 256"
-      className="w-4"
+      className={cn("w-4", className)}
+      {...props}
     >
       <rect
         width={256}

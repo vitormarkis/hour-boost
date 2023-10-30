@@ -12,6 +12,10 @@ const config: Config = {
       },
     },
     extend: {
+      screens: {
+        xs: "480px",
+        // => @media (min-width: 480px) { ... }
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

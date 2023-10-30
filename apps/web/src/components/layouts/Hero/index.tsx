@@ -77,7 +77,7 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
                     duration: 1,
                   },
                 }}
-                className="pb-6 text-center text-7xl font-black tracking-[2.4px]"
+                className="pb-6 text-center text-4xl xs:text-5xl md:text-7xl font-black tracking-[2.4px]"
               >
                 <span className={st.titleSpan}>Farme horas na</span>{" "}
                 <span className="span-gr-accent">Steam</span>
@@ -97,13 +97,13 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
                     duration: 0.7,
                   },
                 }}
-                className="text-center text-3xl font-light tracking-[0.5rem] text-zinc-500"
+                className="text-center text-xl xs:text-2xl md:text-3xl font-light tracking-[0.1rem] xs:tracking-[0.2rem] md:tracking-[0.4rem] text-zinc-500"
               >
                 Começe com 5 horas grátis
               </motion.h2>
             </div>
           </div>
-          <div className="flex w-full relative z-20 md:flex-row md:gap-20 md:pt-12 justify-center flex-col gap-4 pt-16 px-12">
+          <div className="flex w-full relative z-20 max-w-[14rem] md:max-w-none md:flex-row md:gap-20 md:pt-12 justify-center flex-col gap-4 pt-16 px-12">
             <ButtonPrimary colorScheme="orange-yellow">Ver mais</ButtonPrimary>
             <ButtonPrimary colorScheme="orange-yellow">Entrar</ButtonPrimary>
           </div>

@@ -20,12 +20,12 @@ const AccordionItem = React.forwardRef<
   return (
     <AccordionPrimitive.Item
       ref={ref}
-      className={cn("relative", className)}
+      className={cn("relative", className, st.shadowEffect)}
       {...props}
     >
       {children}
-      <div
-        className={cn("absolute h-[1px] top-full right-0 left-0", st.shadowEffect)}
+      <i
+        className={cn("absolute h-[1px] top-full right-0 left-0")}
         style={cssVariables(hues, style)}
       />
     </AccordionPrimitive.Item>
