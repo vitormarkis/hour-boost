@@ -32,3 +32,15 @@
   border-top: 1px solid rgba(120, 118, 197, 0.4);
   top: 50%;
 }
+
+.gamesImageFXs {
+  -webkit-mask-image: linear-gradient(101deg, transparent 43%, black 100%);
+  mask-image: linear-gradient(101deg, transparent 43%, black 100%);
+}
+
+@media (max-width: 768px) {
+  .gamesImageFXs {
+    -webkit-mask-image: linear-gradient(180deg, transparent 23%, black 80%);
+    mask-image: linear-gradient(180deg, transparent 23%, black 80%);
+  }
+}
