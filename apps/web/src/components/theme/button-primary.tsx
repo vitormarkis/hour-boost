@@ -10,15 +10,16 @@ export type ButtonPrimaryProps = React.ComponentPropsWithoutRef<typeof Button> &
 }
 
 export const buttonPrimaryHueThemes = {
+  get default(): string[] {
+    return this["cyan-blue"]
+  },
+  "cyan-blue": [228, 193],
   "orange-yellow": [57, 30],
   "purple-blue": [240, 300],
 } as const
 
 export const ButtonPrimary = React.forwardRef<React.ElementRef<typeof Button>, ButtonPrimaryProps>(
-  function ButtonPrimaryComponent(
-    { colorScheme = "orange-yellow", style, children, className, ...props },
-    ref
-  ) {
+  function ButtonPrimaryComponent({ colorScheme = "default", style, children, className, ...props }, ref) {
     const [appleHue, bananaHue] = buttonPrimaryHueThemes[colorScheme]
     const hues = Object.entries({ appleHue, bananaHue })
 

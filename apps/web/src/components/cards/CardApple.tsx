@@ -14,7 +14,7 @@ const CardAppleRoot = React.forwardRef<React.ElementRef<"div">, CardAppleRootPro
         ref={ref}
       >
         <div className="h-[1px] w-[60%] bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
-        <div className="relative flex flex-col items-center">
+        <div className="relative flex flex-col items-center w-full">
           <div className="w-[7rem] h-[7rem] absolute left-1/2 -translate-x-1/2 top-0 -translate-y-1/2 bg-slate-500/70 rounded-full blur-[60px]" />
           {children}
         </div>
@@ -34,7 +34,10 @@ const CardAppleTitle = React.forwardRef<React.ElementRef<"div">, CardAppleTitleP
     return (
       <div
         {...props}
-        className={cn("pt-4 text-lg font-semibold uppercase", className)}
+        className={cn(
+          "pt-4 text-lg font-semibold uppercase w-full px-[1.5rem] flex justify-center",
+          className
+        )}
         ref={ref}
       >
         <h2>{children}</h2>

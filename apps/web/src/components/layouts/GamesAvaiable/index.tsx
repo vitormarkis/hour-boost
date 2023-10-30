@@ -32,9 +32,10 @@ export const GamesAvailableSection = React.forwardRef<
       </div>
       <div className="relative pt-14 max-w-7xl w-full mx-auto flex justify-between z-10 px-8">
         <div
-          className="absolute h-[1px] left-0 top-0 w-[30rem]"
+          className="absolute h-[1px] left-28 top-0 w-[24rem]"
           style={{
-            background: "linear-gradient(90deg, transparent, hsla(var(--accent) / 50%), transparent)",
+            background:
+              "linear-gradient(90deg, transparent, hsla(var(--accent) / 40%), transparent), linear-gradient(90deg, transparent, hsl(0,0%,20%), transparent)",
           }}
         ></div>
         <div
@@ -50,7 +51,7 @@ export const GamesAvailableSection = React.forwardRef<
         </div>
       </div>
       <div className="flex w-full relative z-20 gap-20 pt-20 justify-center">
-        <ButtonPrimary colorScheme="purple-blue">Ver planos</ButtonPrimary>
+        <ButtonPrimary colorScheme="cyan-blue">Ver planos</ButtonPrimary>
       </div>
       <div className="w-full h-[27rem]"></div>
       <div className={st.divisor}>

@@ -14,7 +14,7 @@ const AccordionItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item> & {
     colorScheme?: keyof typeof buttonPrimaryHueThemes
   }
->(({ colorScheme = "purple-blue", style, children, className, ...props }, ref) => {
+>(({ colorScheme = "default", style, children, className, ...props }, ref) => {
   const [appleHue, bananaHue] = buttonPrimaryHueThemes[colorScheme]
   const hues = Object.entries({ appleHue, bananaHue })
   return (

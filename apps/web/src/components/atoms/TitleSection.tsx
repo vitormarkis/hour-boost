@@ -10,7 +10,7 @@ export const TitleSection = React.forwardRef<React.ElementRef<"h1">, TitleSectio
     return (
       <h1
         {...props}
-        className={cn("text-5xl font-semibold", className)}
+        className={cn("text-5xl font-semibold text-center", className)}
         ref={ref}
       >
         {children}

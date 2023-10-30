@@ -4,6 +4,13 @@ import st from "./page.module.css"
 
 import { cn } from "@/lib/utils"
 import { ButtonPrimary } from "@/components/theme/button-primary"
+import {
+  gamesListAnimation,
+  solderAnimation,
+  solderAnimationWrapper,
+  subtitleAnimations,
+  titleAnimations,
+} from "@/components/layouts/Hero/animations"
 
 export type HeroSectionProps = React.ComponentPropsWithoutRef<"section"> & {}
 
@@ -23,9 +30,7 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
             }}
           >
             <motion.img
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 1.5 }}
+              {...gamesListAnimation}
               src="https://www.techspot.com/articles-info/1429/images/2017-06-25-image.jpg"
               style={{
                 position: "absolute",
@@ -37,19 +42,15 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
             />
           </div>
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 4 }}
-            className="absolute aspect-square w-full max-w-[40rem] -translate-y-16 bg-black mix-blend-luminosity"
+            {...solderAnimationWrapper}
+            className="absolute aspect-square w-full max-w-[32rem] md:max-w-[40rem] translate-y-[-10rem] md:-translate-y-16 bg-black mix-blend-luminosity"
             style={{
               WebkitMaskImage: "radial-gradient(black 53%, transparent 67%)",
               maskImage: "radial-gradient(black 53%, transparent 67%)",
             }}
           >
             <motion.img
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
-              transition={{ duration: 1 }}
+              {...solderAnimation}
               src="https://hourboost.com.br/images/home/background.png"
               alt=""
               className="fillimg object-cover"
@@ -63,21 +64,10 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
                   "linear-gradient(0deg, transparent 0%, black 30%, black 80%, transparent 100%)",
               }}
             />
-            <div className="relative z-10 mx-auto max-w-6xl text-white px-8">
+            <div className="relative z-10 mx-auto max-w-6xl text-white px-[3.34rem]">
               <motion.h1
-                initial={{ y: 25, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{
-                  delay: 0.5,
-                  ease: "easeInOut",
-                  opacity: {
-                    duration: 0.7,
-                  },
-                  y: {
-                    duration: 1,
-                  },
-                }}
-                className="pb-6 text-center text-4xl xs:text-5xl md:text-7xl font-black tracking-[2.4px]"
+                {...titleAnimations}
+                className="pb-6 text-center text-[2.75rem]/[90%] xs:text-5xl md:text-7xl font-black tracking-[2.4px]"
               >
                 <span className={st.titleSpan}>Farme horas na</span>{" "}
                 <span className="span-gr-accent">Steam</span>
@@ -85,18 +75,7 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
                 <span className={st.titleSpan}>24 horas por dia!</span>
               </motion.h1>
               <motion.h2
-                initial={{ y: 15, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{
-                  ease: "easeInOut",
-                  delay: 1,
-                  opacity: {
-                    duration: 0.4,
-                  },
-                  y: {
-                    duration: 0.7,
-                  },
-                }}
+                {...subtitleAnimations}
                 className="text-center text-xl xs:text-2xl md:text-3xl font-light tracking-[0.1rem] xs:tracking-[0.2rem] md:tracking-[0.4rem] text-zinc-500"
               >
                 Começe com 5 horas grátis
@@ -104,8 +83,8 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
             </div>
           </div>
           <div className="flex w-full relative z-20 max-w-[14rem] md:max-w-none md:flex-row md:gap-20 md:pt-12 justify-center flex-col gap-4 pt-16 px-12">
-            <ButtonPrimary colorScheme="orange-yellow">Ver mais</ButtonPrimary>
-            <ButtonPrimary colorScheme="orange-yellow">Entrar</ButtonPrimary>
+            <ButtonPrimary colorScheme="cyan-blue">Ver mais</ButtonPrimary>
+            <ButtonPrimary colorScheme="cyan-blue">Entrar</ButtonPrimary>
           </div>
         </div>
       </section>

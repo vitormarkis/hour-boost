@@ -17,15 +17,17 @@ export const HowItWorksSection = React.forwardRef<React.ElementRef<"section">, H
       >
         <div className="flex flex-col w-full">
           <div className="mx-auto flex flex-col">
-            <div className="flex pb-2 items-center self-center justify-around gap-8">
-              <div className="hidden md:block w-12 border-b border-white" />
-              <TitleSection>Como funciona</TitleSection>
-              <div className="hidden md:block w-12 border-b border-white" />
+            <div className="px-[1.5rem]">
+              <div className="flex pb-2 items-center self-center justify-around gap-8">
+                <div className="hidden md:block w-12 border-b border-white" />
+                <TitleSection>Como funciona</TitleSection>
+                <div className="hidden md:block w-12 border-b border-white" />
+              </div>
+              <p className="text-slate-400 max-w-md xs:text-center self-center">
+                Faça seu cadastro, adicione horas a sua conta, adicione quantas contas da steam quiser,
+                selecione os jogos e inicie o farm
+              </p>
             </div>
-            <p className="text-slate-400 max-w-md text-center self-center">
-              Faça seu cadastro, adicione horas a sua conta, adicione quantas contas da steam quiser,
-              selecione os jogos e inicie o farm
-            </p>
           </div>
           <div className="pt-12">
             <div className="w-full overflow-hidden">
@@ -46,7 +48,7 @@ export const HowItWorksSection = React.forwardRef<React.ElementRef<"section">, H
             </div>
           </div>
           <div className="pt-24 flex justify-center">
-            <ButtonPrimary colorScheme="purple-blue">Ver planos</ButtonPrimary>
+            <ButtonPrimary colorScheme="cyan-blue">Ver planos</ButtonPrimary>
           </div>
         </div>
       </section>
