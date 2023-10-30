@@ -15,7 +15,7 @@ export const FAQSection = React.forwardRef<React.ElementRef<"section">, FAQSecti
         ref={ref}
       >
         <TitleSection className="text-center grow">FAQ</TitleSection>
-        <div className="max-w-7xl w-full mx-auto px-8">
+        <div className="max-w-7xl w-full mx-auto px-4 md:px-8">
           <div className="max-w-5xl w-full mx-auto">
             <Accordion type="multiple">
               {FAQData.map(faq => (
