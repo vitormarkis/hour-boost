@@ -13,6 +13,7 @@ export const Footer = React.forwardRef<React.ElementRef<"footer">, FooterProps>(
       {...props}
       className={cn("bg-black", className)}
       ref={ref}
+      id="footer"
     >
       <div className="flex flex-col sm:flex-row max-w-5xl w-full mx-auto pb-9 px-4 md:px-8">
         <div className="flex-1 pt-9 px-2">

@@ -15,8 +15,11 @@ export const PlanSection = React.forwardRef<React.ElementRef<"section">, PlanSec
         className={cn("flex py-32 pb-72 w-screen grow flex-wrap justify-center gap-6", className)}
         ref={ref}
       >
-        <TitleSection className="text-center grow pb-[10rem]">Planos</TitleSection>
-        <div className="w-full">
+        <TitleSection className="text-center grow pb-[4rem]">Planos</TitleSection>
+        <div
+          className="w-full pt-16"
+          id="plans"
+        >
           <div className="max-w-7xl h-full flex flex-col items-center mdx:flex-row md:justify-evenly gap-16 md:gap-8 px-4 md:px-8 w-full mx-auto">
             <CP.Root>
               <CP.BackgroundBlob />

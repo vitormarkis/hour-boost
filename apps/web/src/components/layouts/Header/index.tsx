@@ -41,16 +41,36 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
           </div>
           <ul className="hidden md:flex gap-2 items-center pl-8">
             <li className="px-2 text-slate-300 hover:text-white hover:underline">
-              <Link href="#">Como funciona?</Link>
+              <Link
+                scroll={false}
+                href="#how-it-works"
+              >
+                Como funciona?
+              </Link>
             </li>
             <li className="px-2 text-slate-300 hover:text-white hover:underline">
-              <Link href="#">Pacotes</Link>
+              <Link
+                scroll={false}
+                href="#plans"
+              >
+                Pacotes
+              </Link>
             </li>
             <li className="px-2 text-slate-300 hover:text-white hover:underline">
-              <Link href="#">FAQ</Link>
+              <Link
+                scroll={false}
+                href="#faq"
+              >
+                FAQ
+              </Link>
             </li>
             <li className="px-2 text-slate-300 hover:text-white hover:underline">
-              <Link href="#">Suporte</Link>
+              <Link
+                scroll={false}
+                href="#footer"
+              >
+                Suporte
+              </Link>
             </li>
           </ul>
         </div>
@@ -62,7 +82,7 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
                 className="h-full hidden md:flex"
                 asChild
               >
-                <a href="/dashboard">Ir para Dashboard</a>
+                <Link href="/dashboard">Ir para Dashboard</Link>
               </Button>
               <MenuDropdownUserHeader>
                 <Avatar className="h-7 w-7">
@@ -79,17 +99,17 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
                 className="h-full hidden sm:flex"
                 asChild
               >
-                <a href="/sign-in">
+                <Link href="/sign-in">
                   <span>Entrar</span>
                   <SVGUser />
-                </a>
+                </Link>
               </Button>
-              <a
+              <Link
                 href="/sign-in"
                 className="overflow-hidden grid place-items-center sm:hidden"
               >
                 <SVGUser className="h-7 w-7 aspect-square scale-[0.925]" />
-              </a>
+              </Link>
             </>
           )}
         </div>
