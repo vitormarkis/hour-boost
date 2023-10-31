@@ -15,7 +15,7 @@ export const CardBulletsSection = React.forwardRef<React.ElementRef<"section">, 
           <div className="border-b border-dotted border-slate-300 absolute right-0 left-0 -translate-y-14" />
           <div className="border-b border-dotted border-slate-400 absolute right-0 left-0 -translate-y-8" />
 
-          <div className="relative max-w-7xl w-full flex-col md:flex-row flex grow flex-wrap px-12 mx-auto">
+          <div className="relative max-w-7xl w-full flex-col md:flex-row flex grow flex-wrap px-4 md:px-8 mx-auto">
             <div className="border-r border-dotted border-slate-400 absolute translate-y-[-50%] left-0 top-0 bottom-0" />
             <div className="flex-1 flex flex-col pb-6 mb-6 border-b md:border-b-0 md:pb-0 md:mb-0 md:pr-6 md:mr-6 md:border-r border-slate-400 border-dotted">
               <h1 className="text-2xl font-semibold">Aumente suas horas da Steam</h1>

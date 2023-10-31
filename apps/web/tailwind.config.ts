@@ -15,6 +15,8 @@ const config: Config = {
       screens: {
         xs: "480px",
         // => @media (min-width: 480px) { ... }
+        mdx: "896px",
+        // => @media (min-width: 896px) { ... }
       },
       colors: {
         border: "hsl(var(--border))",

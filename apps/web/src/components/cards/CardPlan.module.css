@@ -1,0 +1,6 @@
+.highlight {
+  --content-color: #000;
+  border: 1px solid transparent;
+  background: linear-gradient(45deg, var(--content-color), #2b2b2b) padding-box, linear-gradient(0deg, hsl(var(--appleHue), 100%, 72%), hsl(var(--bananaHue), 100%, 50%)) border-box;
+  box-shadow: 2px 2px 5px 0px hsl(var(--appleHue), 100%, 25%), -2px -2px 5px 0px hsl(var(--bananaHue), 100%, 25%);
+}
