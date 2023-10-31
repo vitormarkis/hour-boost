@@ -19,7 +19,10 @@ export const FAQSection = React.forwardRef<React.ElementRef<"section">, FAQSecti
           <div className="max-w-5xl w-full mx-auto">
             <Accordion type="multiple">
               {FAQData.map(faq => (
-                <AccordionItem value={faq.question.replace(/\s+/g, " ").trim()}>
+                <AccordionItem
+                  key={faq.question.replace(/\s+/g, " ").trim()}
+                  value={faq.question.replace(/\s+/g, " ").trim()}
+                >
                   <AccordionTrigger>{faq.question}</AccordionTrigger>
                   <AccordionContent>{faq.answer}</AccordionContent>
                 </AccordionItem>

@@ -64,7 +64,7 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
                   "linear-gradient(0deg, transparent 0%, black 30%, black 80%, transparent 100%)",
               }}
             />
-            <div className="relative z-10 mx-auto max-w-6xl text-white px-[3.34rem]">
+            <div className="relative z-10 mx-auto max-w-6xl text-white px-[0.25rem]">
               <motion.h1
                 {...titleAnimations}
                 className="pb-6 text-center text-[2.75rem]/[90%] xs:text-5xl md:text-7xl font-black tracking-[2.4px]"

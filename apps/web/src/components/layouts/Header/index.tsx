@@ -6,6 +6,7 @@ import { AuthSession } from "@/types/UserSession"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ButtonPrimary } from "@/components/theme/button-primary"
 import { MenuDropdownUserHeader } from "@/components/molecules/menu-dropdown-user-header"
+import { SheetHeaderNavbar } from "@/components/molecules/sheet-header-navbar"
 
 export type HeaderProps = React.ComponentPropsWithoutRef<"header"> & {
   user: AuthSession["user"]
@@ -26,7 +27,9 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
     >
       <div className="h-full mx-auto flex w-full max-w-7xl items-center px-4">
         <div className="flex-1 flex md:hidden">
-          <SVGList className="h-7 w-7 aspect-square" />
+          <SheetHeaderNavbar>
+            <SVGList className="h-7 w-7 aspect-square cursor-pointer" />
+          </SheetHeaderNavbar>
         </div>
         <div className="flex-1 flex h-full justify-center md:justify-start">
           <div className="shrink-0 flex items-center">
@@ -85,7 +88,7 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
                 href="/sign-in"
                 className="overflow-hidden grid place-items-center sm:hidden"
               >
-                <SVGUser className="h-7 w-7 aspect-square" />
+                <SVGUser className="h-7 w-7 aspect-square scale-[0.925]" />
               </a>
             </>
           )}

@@ -20,7 +20,10 @@ export const Footer = React.forwardRef<React.ElementRef<"footer">, FooterProps>(
             <h2 className="font-semibold text-xl">Navegação</h2>
           </div>
           <div className="flex flex-col">
-            <FooterItemLink href="/">
+            <FooterItemLink
+              href="/"
+              target="_self"
+            >
               <span>Home</span>
             </FooterItemLink>
           </div>
