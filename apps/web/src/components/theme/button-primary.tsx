@@ -18,6 +18,14 @@ export const buttonPrimaryHueThemes = {
   "purple-blue": [240, 300],
 } as const
 
+export const backgroundHueThemes = {
+  get default(): string[] {
+    return this["black-shadow"]
+  },
+  "black-shadow": ["#000", "#2b2b2b"],
+  "white-shadow": ["#fff", "#aaa"],
+} as const
+
 export const ButtonPrimary = React.forwardRef<React.ElementRef<typeof Button>, ButtonPrimaryProps>(
   function ButtonPrimaryComponent({ colorScheme = "default", style, children, className, ...props }, ref) {
     const [appleHue, bananaHue] = buttonPrimaryHueThemes[colorScheme]

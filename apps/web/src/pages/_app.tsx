@@ -1,4 +1,5 @@
 import "@/styles/globals.css"
+import "@/styles/neon-fx.css"
 import type { AppProps } from "next/app"
 import { Barlow } from "next/font/google"
 import { cn } from "@/lib/utils"

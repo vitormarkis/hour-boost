@@ -1,5 +1,5 @@
 import { TitleSection } from "@/components/atoms/TitleSection"
-import { CardBulletsSection } from "@/components/layouts/CardBulletsSection"
+import { WhatWeOfferSection } from "@/components/layouts/CardBulletsSection"
 import { FAQSection } from "@/components/layouts/FAQSection"
 import { Footer } from "@/components/layouts/Footer"
 import { GamesAvailableSection } from "@/components/layouts/GamesAvailable"
@@ -26,15 +26,15 @@ export default function Home({ authSession }: AuthSessionParams) {
       <HeroSection />
       <HowItWorksSection />
       <GamesAvailableSection />
-      <UnlimitedAccountsSection />
-      <div className={cn("h-[7rem] bg-slate-950", st["shapedividers_com-8155"])} />
-      <CardBulletsSection />
-      <div
+      {/* <UnlimitedAccountsSection /> */}
+      {/* <div className={cn("h-[7rem] bg-slate-950", st["shapedividers_com-8155"])} /> */}
+      <WhatWeOfferSection />
+      {/* <div
         className={cn("h-[7rem]", st["shapedividers_com-8155"])}
         style={{
           transform: "scale(1,-1) matrix(1, 0, 0, 0.3, 0, 0) translateY(8.7rem)",
         }}
-      />
+      /> */}
       <PlanSection />
       <FAQSection />
       <Footer />
