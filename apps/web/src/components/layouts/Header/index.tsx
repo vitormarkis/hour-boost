@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { AuthSession } from "@/types/UserSession"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ButtonPrimary } from "@/components/theme/button-primary"
 import { MenuDropdownUserHeader } from "@/components/molecules/menu-dropdown-user-header"
 import { SheetHeaderNavbar } from "@/components/molecules/sheet-header-navbar"
+import { getUserInitials } from "@/util/getUserInitials"
 
 export type HeaderProps = React.ComponentPropsWithoutRef<"header"> & {
   user: AuthSession["user"]
@@ -16,6 +16,8 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
   { user, className, ...props },
   ref
 ) {
+  const userInitials = getUserInitials(user)
+
   return (
     <header
       {...props}
@@ -78,7 +80,7 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
           </ul>
         </div>
         <div className="h-full flex flex-1 md:flex-initial justify-end">
-          {user && user.firstName && user.lastName && (
+          {user && (
             <div className="h-full flex gap-4 items-center">
               <Button
                 variant="ghost"
@@ -90,7 +92,7 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
               <MenuDropdownUserHeader>
                 <Avatar className="h-7 w-7">
                   <AvatarImage src={user.imageUrl} />
-                  <AvatarFallback>{user.firstName.at(0)! + user.lastName.at(0)!}</AvatarFallback>
+                  <AvatarFallback>{userInitials}</AvatarFallback>
                 </Avatar>
               </MenuDropdownUserHeader>
             </div>
