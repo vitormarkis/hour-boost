@@ -25,9 +25,9 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
       )}
       ref={ref}
     >
-      {/* <pre className="absolute top-5 left-5 bg-orange-100 text-orange-500 p-2 text-xs">
+      <pre className="absolute top-5 left-5 bg-orange-100 text-orange-500 p-2 text-xs">
         {JSON.stringify({ user: user ?? "user is nullish" }, null, 2)}
-      </pre> */}
+      </pre>
       <div className="h-full mx-auto flex w-full max-w-7xl items-center px-4">
         <div className="flex-1 flex md:hidden">
           <SheetHeaderNavbar>
