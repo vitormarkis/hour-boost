@@ -25,6 +25,9 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
       )}
       ref={ref}
     >
+      {/* <pre className="absolute top-5 left-5 bg-orange-100 text-orange-500 p-2 text-xs">
+        {JSON.stringify({ user: user ?? "user is nullish" }, null, 2)}
+      </pre> */}
       <div className="h-full mx-auto flex w-full max-w-7xl items-center px-4">
         <div className="flex-1 flex md:hidden">
           <SheetHeaderNavbar>
@@ -135,10 +138,19 @@ export function SVGUser({ className, ...props }: SVGUserProps) {
         height={256}
         fill="none"
       />
-      <circle
-        cx={128}
-        cy={96}
-        r={64}
+      <line
+        x1={24}
+        y1={128}
+        x2={136}
+        y2={128}
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={24}
+      />
+      <polyline
+        points="96 88 136 128 96 168"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"
@@ -146,7 +158,7 @@ export function SVGUser({ className, ...props }: SVGUserProps) {
         strokeWidth={24}
       />
       <path
-        d="M32,216c19.37-33.47,54.55-56,96-56s76.63,22.53,96,56"
+        d="M136,40h56a8,8,0,0,1,8,8V208a8,8,0,0,1-8,8H136"
         fill="none"
         stroke="currentColor"
         strokeLinecap="round"

@@ -2,9 +2,11 @@ import { SignIn } from "@clerk/nextjs"
 
 export default function Page() {
   return (
-    <SignIn
-      afterSignInUrl="/dashboard"
-      afterSignUpUrl="/dashboard"
-    />
+    <div className="grid place-items-center min-h-screen">
+      <SignIn
+        afterSignInUrl="/dashboard"
+        afterSignUpUrl="/dashboard"
+      />
+    </div>
   )
 }

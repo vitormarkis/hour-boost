@@ -5,6 +5,7 @@ import { Barlow } from "next/font/google"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "next-themes"
 import { ClerkProvider } from "@clerk/nextjs"
+import { ptBR } from "@clerk/localizations"
 
 const barlow = Barlow({
   subsets: ["latin"],
@@ -13,7 +14,10 @@ const barlow = Barlow({
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <ClerkProvider {...pageProps}>
+    <ClerkProvider
+      {...pageProps}
+      localization={ptBR}
+    >
       <ThemeProvider
         attribute="class"
         defaultTheme="dark"

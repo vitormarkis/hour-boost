@@ -44,7 +44,7 @@ export const WhatWeOfferSection = React.forwardRef<React.ElementRef<"section">, 
                 </div>
               </div>
               <div className="">
-                <h1 className="text-2xl font-semibold">Plano Gratuito</h1>
+                <h1 className="text-2xl font-semibold text-center">Plano Gratuito</h1>
                 <p className="text-slate-400">
                   Desfrute do nosso plano gratuito que para novos usuários, temos um bônus especial de 5 horas
                   grátis para que você aproveite ao máximo nossa plataforma.
@@ -61,7 +61,7 @@ export const WhatWeOfferSection = React.forwardRef<React.ElementRef<"section">, 
                 </div>
               </div>
               <div className="">
-                <h1 className="text-2xl font-semibold">Muitos recursos</h1>
+                <h1 className="text-2xl font-semibold text-center">Muitos recursos</h1>
                 <p className="text-slate-400">
                   Oferecemos muitos e vários recursos, incluindo, entre outros: suporte 2FA, suporte a vários
                   jogos, resposta automática, aceitação automática de solicitações de amizade e muito mais!
@@ -78,7 +78,7 @@ export const WhatWeOfferSection = React.forwardRef<React.ElementRef<"section">, 
                 </div>
               </div>
               <div className="">
-                <h1 className="text-2xl font-semibold">Serviço estável</h1>
+                <h1 className="text-2xl font-semibold text-center">Serviço estável</h1>
                 <p className="text-slate-400">
                   O serviço de aumento de horas de Steam mais confiável e estável que você pode encontrar.
                   Aproveite nossos recursos para potencializar sua experiência na plataforma Steam{" "}
