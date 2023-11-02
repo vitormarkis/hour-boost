@@ -21,7 +21,7 @@ export const CardPlanX = React.forwardRef<React.ElementRef<typeof CardPlanRoot>,
         <CardPlan.Name>Premium</CardPlan.Name>
         <CardPlan.Price>12</CardPlan.Price>
         <CardPlan.FeaturesContainer className="pt-20">
-          <CardPlan.BulletItem strong>24 horas</CardPlan.BulletItem>
+          <CardPlan.BulletItem weight="strong">24 horas</CardPlan.BulletItem>
           <CardPlan.BulletItem>1 conta da Steam</CardPlan.BulletItem>
           <CardPlan.BulletItem>1 conta por jogo</CardPlan.BulletItem>
           <CardPlan.BulletItem>Farm 24/7</CardPlan.BulletItem>
@@ -202,20 +202,41 @@ export const CardPlanFeaturesContainer = React.forwardRef<
 CardPlanFeaturesContainer.displayName = "CardPlanFeaturesContainer"
 
 export type CardPlanBulletItemProps = React.ComponentPropsWithoutRef<"li"> & {
-  strong?: boolean
+  weight?: "strong" | "normal" | "weak"
   children: React.ReactNode
 }
 
 export const CardPlanBulletItem = React.forwardRef<React.ElementRef<"li">, CardPlanBulletItemProps>(
-  function CardPlanBulletItemComponent({ strong, children, className, ...props }, ref) {
+  function CardPlanBulletItemComponent({ weight = "normal", children, className, ...props }, ref) {
     return (
       <li
         {...props}
-        className={cn("flex items-center gap-3", strong ? "text-slate-200" : "text-slate-400", className)}
+        className={cn(
+          "flex items-center gap-3",
+          {
+            "text-slate-500": weight === "weak",
+            "text-slate-400": weight === "normal",
+            "text-slate-200": weight === "strong",
+          },
+          className
+        )}
         ref={ref}
       >
-        <SVGCheckIcon className={cn(strong ? "text-green-500 h-5 w-5" : "text-slate-400 h-4 w-4")} />
-        <span className={cn(strong && "uppercase text-xl font-medium")}>{children}</span>
+        <SVGCheckIcon
+          className={cn({
+            "text-slate-500 h-4 w-4": weight === "weak",
+            "text-slate-400 h-4 w-4": weight === "normal",
+            "text-green-500 h-5 w-5": weight === "strong",
+          })}
+        />
+        <span
+          className={cn({
+            "uppercase text-xl font-medium": weight === "strong",
+            "line-through": weight === "weak",
+          })}
+        >
+          {children}
+        </span>
       </li>
     )
   }

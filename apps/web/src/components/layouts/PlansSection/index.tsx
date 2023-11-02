@@ -26,13 +26,86 @@ export const PlanSection = React.forwardRef<React.ElementRef<"section">, PlanSec
               <CP.Name>Grátis</CP.Name>
               <CP.Price>0</CP.Price>
               <CP.FeaturesContainer className="pt-20">
-                <CP.BulletItem strong>24 horas</CP.BulletItem>
+                <CP.BulletItem weight="strong">6 horas</CP.BulletItem>
+                <CP.BulletItem>1 conta da Steam</CP.BulletItem>
+                <CP.BulletItem>1 jogo por conta</CP.BulletItem>
+                <CP.BulletItem weight="weak">Farm 24/7</CP.BulletItem>
+                <CP.BulletItem weight="weak">Auto-restart</CP.BulletItem>
+              </CP.FeaturesContainer>
+              <CP.Button>Testar agora</CP.Button>
+            </CP.Root>
+            <CP.Root>
+              <CP.BackgroundBlob className="bg-slate-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="translate-x-4 -translate-y-24 mdx:translate-x-4 rotate-[-7deg]"
+                  viewBox="0 0 256 256"
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    width: "4rem",
+                    height: "4rem",
+                    left: "50%",
+                    color: "#c3d0e3",
+                  }}
+                >
+                  <rect
+                    width={256}
+                    height={256}
+                    fill="none"
+                  />
+                  <circle
+                    cx={128}
+                    cy={184}
+                    r={40}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={24}
+                  />
+                  <path
+                    d="M128,144l82.72-37.6A9,9,0,0,0,216,98.2V49a9,9,0,0,0-9-9H49a9,9,0,0,0-9,9V98.2a9,9,0,0,0,5.28,8.2Z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={24}
+                  />
+                  <line
+                    x1={168}
+                    y1={40}
+                    x2={168}
+                    y2="125.82"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={24}
+                  />
+                  <line
+                    x1={88}
+                    y1={40}
+                    x2={88}
+                    y2="125.82"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={24}
+                  />
+                </svg>
+              </CP.BackgroundBlob>
+              <CP.Name>Silver</CP.Name>
+              <CP.Price>12</CP.Price>
+              <CP.FeaturesContainer className="pt-20">
+                <CP.BulletItem weight="strong">24 horas</CP.BulletItem>
                 <CP.BulletItem>1 conta da Steam</CP.BulletItem>
                 <CP.BulletItem>1 jogo por conta</CP.BulletItem>
                 <CP.BulletItem>Farm 24/7</CP.BulletItem>
                 <CP.BulletItem>Auto-restart</CP.BulletItem>
               </CP.FeaturesContainer>
-              <CP.Button>Testar agora</CP.Button>
+              <CP.Button>Assinar agora</CP.Button>
             </CP.Root>
             <CP.Root
               highlight={<CardPlanHighlight className="-translate-x-4 sm:translate-x-4" />}
@@ -70,7 +143,7 @@ export const PlanSection = React.forwardRef<React.ElementRef<"section">, PlanSec
               <CP.Name>Gold</CP.Name>
               <CP.Price>18</CP.Price>
               <CP.FeaturesContainer className="pt-20">
-                <CP.BulletItem strong>24 horas</CP.BulletItem>
+                <CP.BulletItem weight="strong">24 horas</CP.BulletItem>
                 <CP.BulletItem>1 conta da Steam</CP.BulletItem>
                 <CP.BulletItem>
                   <strong>32</strong> jogos por conta
@@ -134,7 +207,7 @@ export const PlanSection = React.forwardRef<React.ElementRef<"section">, PlanSec
               <CP.Name>Diamond</CP.Name>
               <CP.Price>22</CP.Price>
               <CP.FeaturesContainer className="pt-20">
-                <CP.BulletItem strong>24 horas</CP.BulletItem>
+                <CP.BulletItem weight="strong">24 horas</CP.BulletItem>
                 <CP.BulletItem>
                   <strong>2</strong> contas da Steam
                 </CP.BulletItem>
