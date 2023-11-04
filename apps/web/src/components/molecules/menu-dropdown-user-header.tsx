@@ -33,7 +33,7 @@ export const MenuDropdownUserHeader = React.forwardRef<
       >
         {/* <DropdownMenuLabel />
         <DropdownMenuSeparator /> */}
-        <DropdownMenuItem onClick={() => signOut(() => router.push("/"))}>Sair</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => signOut()}>Sair</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

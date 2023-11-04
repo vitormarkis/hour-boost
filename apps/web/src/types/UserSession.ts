@@ -16,7 +16,7 @@ export interface IBuildClerkProps {
     sessionClaims: SessionClaims
     sessionId: string
     userId: string
-    user: UserSession
+    user: UserSession | null
   }
 }
 

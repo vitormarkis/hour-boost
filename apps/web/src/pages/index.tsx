@@ -9,16 +9,29 @@ import { AuthSessionParams } from "@/types/UserSession"
 import { getAuthSession } from "@/util/getAuthSession"
 import { GetServerSideProps } from "next"
 import { PlanSection } from "@/components/layouts/PlansSection"
+import { UserSession } from "core"
 
 export const getServerSideProps: GetServerSideProps = async ctx => {
-  const props = await getAuthSession(ctx.req)
-  return { props }
+  const response = await fetch("http://localhost:3309/me", {
+    headers: ctx.req.headers as Record<string, string>,
+  })
+  const user: UserSession | null = await response.json()
+
+  return {
+    props: {
+      user,
+    } as UserSessionParams,
+  }
 }
 
-export default function Home({ authSession }: AuthSessionParams) {
+export type UserSessionParams = {
+  user: UserSession | null
+}
+
+export default function Home({ user }: UserSessionParams) {
   return (
     <>
-      <Header user={authSession.user} />
+      <Header user={user} />
       <HeroSection />
       <HowItWorksSection />
       <GamesAvailableSection />

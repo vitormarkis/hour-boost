@@ -7,9 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MenuDropdownUserHeader } from "@/components/molecules/menu-dropdown-user-header"
 import { SheetHeaderNavbar } from "@/components/molecules/sheet-header-navbar"
 import { getUserInitials } from "@/util/getUserInitials"
+import { UserSession } from "core"
 
 export type HeaderProps = React.ComponentPropsWithoutRef<"header"> & {
-  user: AuthSession["user"]
+  user: UserSession | null
 }
 
 export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(function HeaderComponent(
@@ -91,7 +92,7 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
               </Button>
               <MenuDropdownUserHeader>
                 <Avatar className="h-7 w-7">
-                  <AvatarImage src={user.imageUrl} />
+                  <AvatarImage src={user.profilePic} />
                   <AvatarFallback>{userInitials}</AvatarFallback>
                 </Avatar>
               </MenuDropdownUserHeader>
@@ -171,14 +172,19 @@ export function SVGUser({ className, ...props }: SVGUserProps) {
   )
 }
 
-export type SVGListProps = React.ComponentPropsWithoutRef<"svg">
+export type SVGListProps = React.ComponentPropsWithoutRef<"svg"> & {}
 
-export function SVGList({ ...props }: SVGListProps) {
+export const SVGList = React.forwardRef<React.ElementRef<"svg">, SVGListProps>(function SVGListComponent(
+  { className, ...props },
+  ref
+) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 256 256"
       {...props}
+      className={cn("", className)}
+      ref={ref}
     >
       <rect
         width={256}
@@ -220,4 +226,6 @@ export function SVGList({ ...props }: SVGListProps) {
       />
     </svg>
   )
-}
+})
+
+SVGList.displayName = "SVGList"
