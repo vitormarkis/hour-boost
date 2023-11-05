@@ -26,12 +26,13 @@ model User {
 }
 
 model SteamAccount {
-  id_steamAccount String                   @id
+  id_steamAccount String      @id
   createdAt       DateTime
   owner_id        String
-  owner           User                     @relation("user_steam_accounts", fields: [owner_id], references: [id_user], onDelete: Cascade)
-  games           SteamGame[]              @relation("steam_account_games")
-  credentials     SteamAccountCredentials? @relation("steam_account_credentials")
+  owner           User        @relation("user_steam_accounts", fields: [owner_id], references: [id_user], onDelete: Cascade)
+  games           SteamGame[] @relation("steam_account_games")
+  accountName     String      @unique
+  password        String
 
   @@map("steam_accounts")
 }
@@ -44,16 +45,6 @@ model SteamGame {
 
   @@unique([steamAccount_id, gameId])
   @@map("steam_games")
-}
-
-model SteamAccountCredentials {
-  id_steamAccountCredentials String       @id
-  steamAccount_id            String       @unique
-  steamAccount               SteamAccount @relation("steam_account_credentials", fields: [steamAccount_id], references: [id_steamAccount], onDelete: Cascade)
-  accountName                String       @unique
-  password                   String
-
-  @@map("steam_account_credentials")
 }
 
 model Purchase {

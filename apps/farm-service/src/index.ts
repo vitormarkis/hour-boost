@@ -1,11 +1,31 @@
 import "dotenv/config"
-import { ClerkExpressWithAuth, LooseAuthProp, WithAuthProp } from "@clerk/clerk-sdk-node"
+import {
+  ClerkExpressRequireAuth,
+  ClerkExpressWithAuth,
+  LooseAuthProp,
+  WithAuthProp,
+} from "@clerk/clerk-sdk-node"
 import express, { Application, NextFunction, Request, Response } from "express"
 import { prisma } from "./libs/prisma"
 import clerkClient from "@clerk/clerk-sdk-node"
-import { UserSession, User } from "core"
+import {
+  UserSession,
+  User,
+  AddSteamAccount,
+  IAddSteamAccount,
+  IListUserSteamAccounts,
+  ISteamGame,
+} from "core"
+import { UsersRepositoryDatabase } from "./infra/repository/users-repository-database"
+import cors from "cors"
 
 const app: Application = express()
+app.use(
+  cors({
+    origin: "*",
+  })
+)
+app.use(express.json())
 declare global {
   namespace Express {
     interface Request extends LooseAuthProp {}
@@ -72,6 +92,58 @@ app.get("/me", ClerkExpressWithAuth(), async (req: WithAuthProp<Request>, res: R
     steamAccounts: user.steamAccounts.map(sA => sA.id_steamAccount),
     username: user.username,
   } as UserSession)
+})
+
+app.post("/steam-accounts", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
+  try {
+    const usersRepository = new UsersRepositoryDatabase(prisma)
+    const addSteamAccount = new AddSteamAccount(usersRepository)
+    const { accountName, password } = req.body as IAddSteamAccount
+    const output = await addSteamAccount.execute({
+      accountName,
+      password,
+      userId: req.auth.userId!,
+    })
+    return res.status(201).json(output)
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({
+        message: error.message,
+      })
+    }
+  }
+})
+
+app.get("/steam-accounts", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
+  try {
+    const userSteamAccountsDatabase = await prisma.steamAccount.findMany({
+      where: { owner_id: req.auth.userId! },
+      select: {
+        accountName: true,
+        id_steamAccount: true,
+        games: true,
+      },
+    })
+    const userSteamAccounts: IListUserSteamAccounts.Output = userSteamAccountsDatabase.map(sa => ({
+      accountName: sa.accountName,
+      games: sa.games.map(
+        g =>
+          ({
+            gameId: g.gameId,
+            id_steamGame: g.id_steamGame,
+          }) satisfies ISteamGame
+      ),
+      id_steamAccount: sa.id_steamAccount,
+    }))
+
+    return res.json(userSteamAccounts as IListUserSteamAccounts.Output)
+  } catch (error) {
+    if (error instanceof Error) {
+      return res.status(500).json({
+        message: error.message,
+      })
+    }
+  }
 })
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
