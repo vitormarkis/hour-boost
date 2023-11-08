@@ -1,1 +1,24 @@
-GET http://localhost:3309/me
+POST http://localhost:3309/farm/start
+Content-Type: application/json
+
+{
+  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN"
+}
+
+###
+
+POST http://localhost:3309/farm/stop
+Content-Type: application/json
+
+{
+  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN"
+}
+
+###
+
+GET http://localhost:3309/farm/plan-status
+Content-Type: application/json
+
+{
+  "userId": "user_2Xk8sUsugFULRFTZoMjprlpeu0t"
+}

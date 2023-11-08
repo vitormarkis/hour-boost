@@ -5,8 +5,6 @@ import { GamesAvailableSection } from "@/components/layouts/GamesAvailable"
 import { Header } from "@/components/layouts/Header"
 import { HeroSection } from "@/components/layouts/Hero"
 import { HowItWorksSection } from "@/components/layouts/HowItWorks"
-import { AuthSessionParams } from "@/types/UserSession"
-import { getAuthSession } from "@/util/getAuthSession"
 import { GetServerSideProps } from "next"
 import { PlanSection } from "@/components/layouts/PlansSection"
 import { UserSession } from "core"
@@ -16,6 +14,7 @@ export const getServerSideProps: GetServerSideProps = async ctx => {
     headers: ctx.req.headers as Record<string, string>,
   })
   const user: UserSession | null = await response.json()
+  console.log({ user })
 
   return {
     props: {
@@ -31,6 +30,7 @@ export type UserSessionParams = {
 export default function Home({ user }: UserSessionParams) {
   return (
     <>
+      <pre>{JSON.stringify({ user: user ?? "null" }, null, 2)}</pre>
       <Header user={user} />
       <HeroSection />
       <HowItWorksSection />

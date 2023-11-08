@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client"
-import { Plan, PlanName, GuestPlan, DiamondPlan, GoldPlan, SilverPlan } from "core"
+import { Plan, GuestPlan, DiamondPlan, GoldPlan, SilverPlan, PlanPropsWithName, PlanCreateProps } from "core"
 import { Status, StatusName, ActiveStatus, BannedStatus } from "core"
 import {
   User,
@@ -13,9 +13,41 @@ import {
   UserRole,
 } from "core"
 import { UsersRepository } from "core"
+import { getUserCurrentPlan } from "../../utils/getUserCurrentPlan"
 
 export class UsersRepositoryDatabase implements UsersRepository {
   constructor(private readonly prisma: PrismaClient) {}
+
+  async create(user: User): Promise<string> {
+    const { id_user } = await this.prisma.user.create({
+      data: {
+        id_user: user.id_user,
+        createdAt: new Date(),
+        email: user.email,
+        plan: {
+          create: {
+            createdAt: new Date(),
+            id_plan: user.plan.id_plan,
+            name: user.plan.name,
+          },
+        },
+        profilePic: user.profilePic,
+        role: user.role.name,
+        status: user.status.name,
+        username: user.username,
+      },
+      // include: {
+      //   purchases: {
+      //     select: { id_Purchase: true },
+      //   },
+      //   steamAccounts: {
+      //     select: { id_steamAccount: true },
+      //   },
+      // },
+    })
+
+    return id_user
+  }
 
   async update(user: User): Promise<void> {
     await this.prisma.user.update({
@@ -24,7 +56,28 @@ export class UsersRepositoryDatabase implements UsersRepository {
       },
       data: {
         email: user.email,
-        plan: user.plan.name,
+        plan: {
+          connectOrCreate: {
+            where: {
+              id_plan: user.plan.id_plan,
+            },
+            create: {
+              createdAt: new Date(),
+              id_plan: user.plan.id_plan,
+              name: user.plan.name,
+              usages: {
+                connectOrCreate: user.plan.usages.map(u => ({
+                  where: { id_usage: u.id_usage },
+                  create: {
+                    amountTime: u.amountTime,
+                    createdAt: new Date(),
+                    id_usage: u.id_usage,
+                  },
+                })),
+              },
+            },
+          },
+        },
         profilePic: user.profilePic,
         purchases: {
           connectOrCreate: user.purchases.map(p => ({
@@ -69,6 +122,11 @@ export class UsersRepositoryDatabase implements UsersRepository {
     const dbUser = await this.prisma.user.findUniqueOrThrow({
       where: { id_user: userId },
       include: {
+        plan: {
+          include: {
+            usages: true,
+          },
+        },
         purchases: true,
         steamAccounts: {
           include: { games: true },
@@ -92,10 +150,12 @@ export class UsersRepositoryDatabase implements UsersRepository {
       })
     )
 
+    const userPlan = getUserCurrentPlan(dbUser.plan, { ownerId: dbUser.id_user })
+
     return User.restore({
       email: dbUser.email,
       id_user: dbUser.id_user,
-      plan: planFactory(dbUser.plan),
+      plan: userPlan,
       profilePic: dbUser.profilePic,
       username: dbUser.username,
       purchases: dbUser.purchases.map(p =>
@@ -110,12 +170,12 @@ export class UsersRepositoryDatabase implements UsersRepository {
   }
 }
 
-export function planFactory(plan: PlanName): Plan {
-  if (plan === "GUEST") return GuestPlan.restore()
-  if (plan === "DIAMOND") return DiamondPlan.restore()
-  if (plan === "GOLD") return GoldPlan.restore()
-  if (plan === "SILVER") return SilverPlan.restore()
-  throw new Error("Invalid plan received: " + plan)
+export function planFactory<T extends PlanPropsWithName>(planProps: T): Plan {
+  if (planProps.name === "GUEST") return GuestPlan.restore(planProps)
+  if (planProps.name === "DIAMOND") return DiamondPlan.restore(planProps)
+  if (planProps.name === "GOLD") return GoldPlan.restore(planProps)
+  if (planProps.name === "SILVER") return SilverPlan.restore(planProps)
+  throw new Error("Invalid plan received: " + planProps)
 }
 
 export function roleFactory(role: RoleName): Role {
