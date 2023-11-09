@@ -1,12 +1,9 @@
 import { Usage, User } from "core"
+import { UserCompleteFarmSessionCommand } from "./application/commands/UserCompleteFarmSessionCommand"
+import { Publisher } from "./infra/queue/Publisher"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
 export type EventNames = "user-has-farmed" | "user-complete-farm-session"
-
-export interface Publisher {
-  emit(eventName: EventNames, data?: any): void
-  register(eventName: EventNames, handler: Function): Function
-}
 
 export class UserFarmService {
   FARMING_GAP = FARMING_INTERVAL_IN_SECONDS
@@ -26,7 +23,6 @@ export class UserFarmService {
     this.farmingInterval = setInterval(() => {
       if (this.currentFarmingUsage > usageLeftSnapshot) {
         this.stopFarm()
-        clearInterval(this.farmingInterval)
         throw new Error("Usos do plano acabaram!")
       }
       this.currentFarmingUsage += this.FARMING_GAP
@@ -34,23 +30,24 @@ export class UserFarmService {
   }
 
   stopFarm() {
+    clearInterval(this.farmingInterval)
     const usage = Usage.create({
       amountTime: this.currentFarmingUsage,
       createdAt: new Date(),
+      plan_id: this.user.plan.id_plan,
     })
     this.user.plan.use(usage)
+    this.publisher.publish(
+      new UserCompleteFarmSessionCommand({
+        usage,
+        usageLeft: this.user.plan.getUsageLeft(),
+        username: this.user.username,
+      })
+    )
+
+    this.currentFarmingUsage = 0
   }
 }
-// this.publisher.emit(
-//   "user-complete-farm-session",
-//   new UserCompleteFarmSessionCommand({
-//     id_user: this.user.id_user,
-//     usageLeft: this.user.plan.getTimeLeft(),
-//     username: this.user.username,
-//     planId: this.user.plan.id_plan,
-//     usage,
-//   })
-// )
 
 // this.publisher.emit(
 //   "user-has-farmed",

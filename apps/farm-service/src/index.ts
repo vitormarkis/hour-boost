@@ -8,20 +8,21 @@ import {
 import express, { Application, NextFunction, Request, Response } from "express"
 import { prisma } from "./libs/prisma"
 import clerkClient from "@clerk/clerk-sdk-node"
-import { UserSession, User, AddSteamAccount, ListSteamAccounts, CreateUser, GetUser, makeID } from "core"
-import { UsersRepositoryDatabase } from "./infra/repository/users-repository-database"
+import { AddSteamAccount, ListSteamAccounts, CreateUser, GetUser } from "core"
+import { UsersRepositoryDatabase } from "./infra/repository/UsersRepositoryDatabase"
 import cors from "cors"
 import { CreateSteamAccountController } from "./presentation/controllers/CreateSteamAccountController"
 import { ListSteamAccountsController } from "./presentation/controllers/ListSteamAccountsController"
-import { UsersDAODatabase } from "./infra/dao/users-data-access-object"
+import { UsersDAODatabase } from "./infra/dao/UsersDAODatabase"
 import { GetMeController } from "./presentation/controllers/GetMeController"
 import { ClerkAuthentication } from "./services/ClerkAuthentication"
-import { EventNames, UserFarmService, Publisher } from "./UserFarmService"
-import { UserHasFarmedCommand } from "./queue/commands/UserHasFarmedCommand"
-import { UserCompleteFarmSessionCommand } from "./queue/commands/UserCompleteFarmSessionCommand"
-import { makePublisher } from "./queue/publisher"
+import { UserFarmService } from "./UserFarmService"
+import { Publisher } from "./infra/queue/Publisher"
+import { PersistUsageHandler } from "./domain/handler/PersistUsageHandler"
+import { UsagesRepositoryDatabase } from "./infra/repository/UsagesRepositoryDatabase"
 
 const usersRepository = new UsersRepositoryDatabase(prisma)
+const usageRepository = new UsagesRepositoryDatabase(prisma)
 const usersDAO = new UsersDAODatabase(prisma)
 const addSteamAccount = new AddSteamAccount(usersRepository)
 const listSteamAccounts = new ListSteamAccounts(usersDAO)
@@ -81,21 +82,14 @@ app.get("/steam-accounts", ClerkExpressRequireAuth(), async (req: WithAuthProp<R
   return res.status(status).json(json)
 })
 
-const publisher = makePublisher()
+const publisher = new Publisher()
 
-publisher.register("user-complete-farm-session", async (data: UserCompleteFarmSessionCommand) => {
-  const { id_usage } = await prisma.usage.create({
-    data: {
-      amountTime: data.props.usage.amountTime,
-      createdAt: data.props.usage.createdAt,
-      id_usage: data.props.usage.id_usage,
-      plan_id: data.props.planId,
-    },
-  })
-
-  console.log(`Prisma: ${id_usage} usage created.`)
-  console.log(`Prisma: ${data.props.usageLeft / 60 / 60} horas restantes.`)
-  console.log(`Prisma: ${data.props.username} farmou ${data.props.usage.amountTime} segundos.`)
+publisher.register(new PersistUsageHandler(usageRepository))
+publisher.register({
+  operation: "user-complete-farm-session",
+  notify: async () => {
+    console.log("User has completed a farm session.")
+  },
 })
 
 const farmingUsers: Map<string, UserFarmService> = new Map()
@@ -118,6 +112,7 @@ app.post("/farm/start", async (req, res) => {
       message: `Starting farming for user ${user.username}`,
     })
   } catch (e) {
+    console.log(e)
     return res.status(500).json({
       message: "Erro interno no servidor.",
     })
@@ -134,6 +129,7 @@ app.post("/farm/stop", async (req, res) => {
       })
     }
     actualFarmingUser.stopFarm()
+    farmingUsers.delete(user.username)
     return res.json({
       message: `Stopping the farming for user ${user.username}`,
     })
@@ -150,8 +146,8 @@ app.get("/farm/plan-status", async (req, res) => {
     return res.json({
       plan: {
         ...user.plan,
-        timeLeftHours: `${user.plan.getTimeLeft() / 60 / 60} horas`,
-        timeLeft: user.plan.getTimeLeft(),
+        timeLeftHours: `${user.plan.getUsageLeft() / 60 / 60} horas`,
+        timeLeft: user.plan.getUsageLeft(),
         usageTotalMinutes: `${user.plan.getUsageTotal() / 60} minutos`,
         usageTotal: user.plan.getUsageTotal(),
         usages: user.plan.usages.length,
