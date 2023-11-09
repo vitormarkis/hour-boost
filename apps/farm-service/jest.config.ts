@@ -4,8 +4,8 @@ import type { Config } from "jest"
 
 const config: Config = {
   clearMocks: true,
-  collectCoverage: true,
-  coverageDirectory: "coverage",
+  // collectCoverage: true,
+  // coverageDirectory: "coverage",
   transform: {
     "^.+\\.(t|j)sx?$": "@swc/jest",
   },

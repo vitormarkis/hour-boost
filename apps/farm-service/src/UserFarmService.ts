@@ -1,7 +1,6 @@
-import { Usage, User, makeID } from "core"
-import { UserHasFarmedCommand } from "./queue/commands/UserHasFarmedCommand"
-import { UserCompleteFarmSessionCommand } from "./queue/commands/UserCompleteFarmSessionCommand"
+import { Usage, User } from "core"
 
+export const FARMING_INTERVAL_IN_SECONDS = 1
 export type EventNames = "user-has-farmed" | "user-complete-farm-session"
 
 export interface Publisher {
@@ -10,9 +9,9 @@ export interface Publisher {
 }
 
 export class UserFarmService {
-  FARMING_GAP = 1
+  FARMING_GAP = FARMING_INTERVAL_IN_SECONDS
   farmingInterval: NodeJS.Timeout | undefined
-  currentFarmingUsage: number = 0
+  currentFarmingUsage = 0
 
   constructor(
     private readonly publisher: Publisher,
@@ -20,37 +19,38 @@ export class UserFarmService {
   ) {}
 
   startFarm() {
-    this.currentFarmingUsage = 0
     if (!this.user.plan.isFarmAvailable) {
       throw new Error("Seu plano não possui mais horas disponíveis.")
     }
-    const usageLeftSnapshot = this.user.plan.getTimeLeft()
+    const usageLeftSnapshot = this.user.plan.getUsageLeft()
     this.farmingInterval = setInterval(() => {
-      if (this.currentFarmingUsage + this.FARMING_GAP >= usageLeftSnapshot) {
-        console.log("Farm automatico pausado. Usuario gastou todas as horas do plano!")
+      if (this.currentFarmingUsage > usageLeftSnapshot) {
         this.stopFarm()
+        clearInterval(this.farmingInterval)
+        throw new Error("Usos do plano acabaram!")
       }
-      console.log(`INTERNAL: Adding ${this.FARMING_GAP} to ${this.currentFarmingUsage}`)
       this.currentFarmingUsage += this.FARMING_GAP
-    }, this.FARMING_GAP * 1000)
+    }, this.FARMING_GAP * 1000).unref()
   }
 
   stopFarm() {
-    const usage = new Usage(makeID(), new Date(), this.currentFarmingUsage)
-    clearInterval(this.farmingInterval)
-    this.publisher.emit(
-      "user-complete-farm-session",
-      new UserCompleteFarmSessionCommand({
-        id_user: this.user.id_user,
-        usageLeft: this.user.plan.getTimeLeft(),
-        username: this.user.username,
-        planId: this.user.plan.id_plan,
-        usage,
-      })
-    )
-    this.currentFarmingUsage = 0
+    const usage = Usage.create({
+      amountTime: this.currentFarmingUsage,
+      createdAt: new Date(),
+    })
+    this.user.plan.use(usage)
   }
 }
+// this.publisher.emit(
+//   "user-complete-farm-session",
+//   new UserCompleteFarmSessionCommand({
+//     id_user: this.user.id_user,
+//     usageLeft: this.user.plan.getTimeLeft(),
+//     username: this.user.username,
+//     planId: this.user.plan.id_plan,
+//     usage,
+//   })
+// )
 
 // this.publisher.emit(
 //   "user-has-farmed",

@@ -19,6 +19,7 @@ import { ClerkAuthentication } from "./services/ClerkAuthentication"
 import { EventNames, UserFarmService, Publisher } from "./UserFarmService"
 import { UserHasFarmedCommand } from "./queue/commands/UserHasFarmedCommand"
 import { UserCompleteFarmSessionCommand } from "./queue/commands/UserCompleteFarmSessionCommand"
+import { makePublisher } from "./queue/publisher"
 
 const usersRepository = new UsersRepositoryDatabase(prisma)
 const usersDAO = new UsersDAODatabase(prisma)
@@ -80,28 +81,6 @@ app.get("/steam-accounts", ClerkExpressRequireAuth(), async (req: WithAuthProp<R
   return res.status(status).json(json)
 })
 
-export function makePublisher(): Publisher {
-  const eventHandlers: Map<EventNames, Function[]> = new Map()
-
-  return {
-    emit(eventName, data) {
-      console.log("Evento recebido:", eventName, data)
-      const event = eventHandlers.get(eventName)
-      console.log("Evento em questao:", event)
-      if (!event) return
-      for (const handler of event) {
-        console.log("chamando todos handlers!", event)
-        handler(data)
-      }
-    },
-    register(eventName, handler) {
-      const eventCurrentEventHandlers = eventHandlers.get(eventName)
-      if (!eventCurrentEventHandlers) eventHandlers.set(eventName, [])
-      eventHandlers.get(eventName)?.push(handler)
-      return () => eventHandlers.get(eventName)?.filter(cb => cb !== handler)
-    },
-  }
-}
 const publisher = makePublisher()
 
 publisher.register("user-complete-farm-session", async (data: UserCompleteFarmSessionCommand) => {
