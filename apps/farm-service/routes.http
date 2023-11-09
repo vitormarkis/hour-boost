@@ -20,5 +20,5 @@ GET http://localhost:3309/farm/plan-status
 Content-Type: application/json
 
 {
-  "userId": "user_2Xk8sUsugFULRFTZoMjprlpeu0t"
+  "userId": "user_2XkAyXBLx5ugXjAVx9w8QJtAf9y"
 }

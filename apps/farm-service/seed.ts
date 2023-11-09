@@ -1,5 +1,5 @@
 import { GuestPlan } from "core"
-import { prisma } from "./src/libs/prisma"
+import { prisma } from "./src/infra/libs/prisma"
 import { UsersRepositoryDatabase } from "./src/infra/repository/UsersRepositoryDatabase"
 
 async function main() {

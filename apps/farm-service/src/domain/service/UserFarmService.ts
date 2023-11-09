@@ -1,6 +1,6 @@
 import { Usage, User } from "core"
-import { UserCompleteFarmSessionCommand } from "./application/commands/UserCompleteFarmSessionCommand"
-import { Publisher } from "./infra/queue/Publisher"
+import { UserCompleteFarmSessionCommand } from "../../application/commands"
+import { Publisher } from "../../infra/queue"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
 export type EventNames = "user-has-farmed" | "user-complete-farm-session"

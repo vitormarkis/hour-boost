@@ -1,4 +1,4 @@
-import { EventNames } from "../../UserFarmService"
+import { EventNames } from "../service/UserFarmService"
 import { UserCompleteFarmSessionCommand } from "../../application/commands/UserCompleteFarmSessionCommand"
 import { Observer } from "../../infra/queue/Observer"
 import { UsagesRepository } from "core"

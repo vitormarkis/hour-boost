@@ -1,4 +1,4 @@
-import { EventNames } from "../../UserFarmService"
+import { EventNames } from "../../domain/service/UserFarmService"
 
 export class UserHasFarmedCommand {
   name: EventNames = "user-has-farmed"

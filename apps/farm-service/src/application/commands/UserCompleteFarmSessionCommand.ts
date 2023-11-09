@@ -1,5 +1,5 @@
 import { Usage } from "core"
-import { EventNames } from "../../UserFarmService"
+import { EventNames } from "../../domain/service/UserFarmService"
 import { Command } from "./Command"
 
 type Payload = {
