@@ -15,8 +15,6 @@ export const getServerSideProps: GetServerSideProps = async ctx => {
     headers: ctx.req.headers as Record<string, string>,
   })
 
-  console.log(response.data)
-
   const user = response.data
 
   return {

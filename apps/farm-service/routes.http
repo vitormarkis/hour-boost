@@ -16,9 +16,18 @@ Content-Type: application/json
 
 ###
 
+GET http://54.233.154.239:4000/farm/plan-status
+Content-Type: application/json
+
+{
+  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN"
+}
+
+###
+
 GET http://localhost:4000/farm/plan-status
 Content-Type: application/json
 
 {
-  "userId": "user_2XkAyXBLx5ugXjAVx9w8QJtAf9y"
+  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN"
 }
