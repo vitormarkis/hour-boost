@@ -17,7 +17,11 @@
     "strict": true,
     "strictNullChecks": true,
     "outDir": "./dist",
-    "rootDir": "./"
+    "rootDir": "./",
+    "baseUrl": "./",
+    "paths": {
+      "~/*": ["./src/*"]
+    }
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]

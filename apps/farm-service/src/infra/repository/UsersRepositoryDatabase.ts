@@ -13,7 +13,8 @@ import {
   UserRole,
 } from "core"
 import { UsersRepository } from "core"
-import { getUserCurrentPlan } from "../../utils/getUserCurrentPlan"
+
+import { getUserCurrentPlan } from "~/utils"
 
 export class UsersRepositoryDatabase implements UsersRepository {
   constructor(private readonly prisma: PrismaClient) {}

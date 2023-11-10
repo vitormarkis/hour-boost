@@ -1,7 +1,8 @@
-import { EventNames } from "../service/UserFarmService"
-import { UserCompleteFarmSessionCommand } from "../../application/commands/UserCompleteFarmSessionCommand"
-import { Observer } from "../../infra/queue/Observer"
 import { UsagesRepository } from "core"
+
+import { EventNames } from "~/domain/service"
+import { UserCompleteFarmSessionCommand } from "~/application/commands"
+import { Observer } from "~/infra/queue"
 
 export class PersistUsageHandler implements Observer {
   constructor(private readonly usageRepository: UsagesRepository) {}

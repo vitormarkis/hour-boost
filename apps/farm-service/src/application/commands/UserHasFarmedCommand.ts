@@ -1,4 +1,4 @@
-import { EventNames } from "../../domain/service/UserFarmService"
+import { EventNames } from "~/infra/queue"
 
 export class UserHasFarmedCommand {
   name: EventNames = "user-has-farmed"

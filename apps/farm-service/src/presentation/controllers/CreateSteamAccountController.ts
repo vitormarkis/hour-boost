@@ -1,5 +1,6 @@
 import { AddSteamAccount, AddSteamAccountOutput, IAddSteamAccount } from "core"
-import { HttpClient } from "../../contracts/HttpClient"
+
+import { HttpClient } from "~/contracts/HttpClient"
 
 export class CreateSteamAccountController {
   constructor(private readonly addSteamAccount: AddSteamAccount) {}

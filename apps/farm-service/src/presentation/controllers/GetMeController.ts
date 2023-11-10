@@ -1,6 +1,7 @@
-import { CreateUser, GetUser, User, UserAuthentication, UserSession, UsersDAO, UsersRepository } from "core"
-import { HttpClient } from "../../contracts/HttpClient"
-import { makeRes, makeResError } from "../../utils/makeResError"
+import { CreateUser, GetUser, UserSession, UsersRepository } from "core"
+
+import { HttpClient } from "~/contracts/HttpClient"
+import { makeRes, makeResError } from "~/utils"
 
 export class GetMeController {
   constructor(

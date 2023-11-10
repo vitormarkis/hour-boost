@@ -1,5 +1,6 @@
 import { GuestPlan, Plan, PlanCreateProps, PlanPropsWithName } from "core"
-import { planFactory } from "../infra/repository/UsersRepositoryDatabase"
+
+import { planFactory } from "~/infra/repository"
 
 export function getUserCurrentPlan<T extends PlanPropsWithName | null>(
   plan: T,

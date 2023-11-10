@@ -1,6 +1,7 @@
 import { ListSteamAccounts } from "core"
-import { HttpClient } from "../../contracts/HttpClient"
-import { makeResError } from "../../utils/makeResError"
+
+import { HttpClient } from "~/contracts/HttpClient"
+import { makeResError } from "~/utils"
 
 export class ListSteamAccountsController {
   constructor(private readonly listSteamAccounts: ListSteamAccounts) {}

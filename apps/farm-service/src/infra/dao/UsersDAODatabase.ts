@@ -1,6 +1,7 @@
 import { IListUserSteamAccounts, ISteamAccountSession, ISteamGame, UserSession, UsersDAO } from "core"
 import { PrismaClient } from "@prisma/client"
-import { getUserCurrentPlan } from "../../utils/getUserCurrentPlan"
+
+import { getUserCurrentPlan } from "~/utils"
 
 export class UsersDAODatabase implements UsersDAO {
   constructor(private readonly prisma: PrismaClient) {}

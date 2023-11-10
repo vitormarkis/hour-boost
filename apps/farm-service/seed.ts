@@ -1,6 +1,7 @@
 import { GuestPlan } from "core"
-import { prisma } from "./src/infra/libs/prisma"
-import { UsersRepositoryDatabase } from "./src/infra/repository/UsersRepositoryDatabase"
+
+import { prisma } from "~/infra/libs"
+import { UsersRepositoryDatabase } from "~/infra/repository"
 
 async function main() {
   console.log("rodando seed")

@@ -3,11 +3,17 @@ import { LooseAuthProp } from "@clerk/clerk-sdk-node"
 import express, { Application, NextFunction, Request, Response } from "express"
 import cors from "cors"
 
-import { prisma } from "./infra/libs/prisma"
-import { Publisher } from "./infra/queue/Publisher"
-import { PersistUsageHandler } from "./domain/handler/PersistUsageHandler"
-import { UsagesRepositoryDatabase } from "./infra/repository/UsagesRepositoryDatabase"
-import { router } from "./presentation/routes"
+import { PersistUsageHandler } from "~/domain/handler"
+import { prisma } from "~/infra/libs"
+import { Publisher } from "~/infra/queue"
+import { UsagesRepositoryDatabase } from "~/infra/repository"
+import { router } from "~/presentation/routes"
+
+declare global {
+  namespace Express {
+    interface Request extends LooseAuthProp {}
+  }
+}
 
 const app: Application = express()
 app.use(
@@ -17,11 +23,11 @@ app.use(
 )
 app.use(express.json())
 app.use(router)
-declare global {
-  namespace Express {
-    interface Request extends LooseAuthProp {}
-  }
-}
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.stack)
+  return res.status(401).send("Unauthenticated!")
+})
+
 const usageRepository = new UsagesRepositoryDatabase(prisma)
 
 export const publisher = new Publisher()
@@ -32,11 +38,6 @@ publisher.register({
   notify: async () => {
     console.log("User has completed a farm session.")
   },
-})
-
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack)
-  return res.status(401).send("Unauthenticated!")
 })
 
 app.listen(3309, () => {
