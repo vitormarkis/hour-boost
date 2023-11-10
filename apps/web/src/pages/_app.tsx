@@ -6,6 +6,15 @@ import { cn } from "@/lib/utils"
 import { ThemeProvider } from "next-themes"
 import { ClerkProvider } from "@clerk/nextjs"
 import { ptBR } from "@clerk/localizations"
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query"
+
+const queryClient = new QueryClient()
 
 const barlow = Barlow({
   subsets: ["latin"],
@@ -23,9 +32,11 @@ export default function App({ Component, pageProps }: AppProps) {
         defaultTheme="dark"
         enableSystem
       >
-        <main className={cn(barlow.className)}>
-          <Component {...pageProps} />
-        </main>
+        <QueryClientProvider client={queryClient}>
+          <main className={cn(barlow.className)}>
+            <Component {...pageProps} />
+          </main>
+        </QueryClientProvider>
       </ThemeProvider>
     </ClerkProvider>
   )

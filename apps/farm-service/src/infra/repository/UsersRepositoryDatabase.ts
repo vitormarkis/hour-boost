@@ -119,8 +119,8 @@ export class UsersRepositoryDatabase implements UsersRepository {
     })
   }
 
-  async getByID(userId: string): Promise<User> {
-    const dbUser = await this.prisma.user.findUniqueOrThrow({
+  async getByID(userId: string): Promise<User | null> {
+    const dbUser = await this.prisma.user.findUnique({
       where: { id_user: userId },
       include: {
         plan: {
@@ -134,6 +134,8 @@ export class UsersRepositoryDatabase implements UsersRepository {
         },
       },
     })
+
+    if (!dbUser) return null
 
     const steamAccounts: SteamAccount[] = dbUser.steamAccounts.map(sa =>
       SteamAccount.restore({

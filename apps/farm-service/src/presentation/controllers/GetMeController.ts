@@ -17,7 +17,7 @@ export class GetMeController {
   ): Promise<HttpClient.Response<UserSession>> {
     try {
       const { userId } = req.payload
-      if (!userId) return { json: null, status: 400 }
+      if (!userId) return { json: null, status: 200 }
       const user = await this.usersRepository.getByID(userId)
       if (!user) await this.createUser.execute(userId)
       const userSession = await this.getUser.execute(userId)
@@ -27,6 +27,7 @@ export class GetMeController {
         status: 201,
       }
     } catch (error) {
+      console.log(error)
       return makeResError(error)
     }
   }

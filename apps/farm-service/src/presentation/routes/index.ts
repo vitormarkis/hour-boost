@@ -5,13 +5,17 @@ import { ClerkExpressRequireAuth, ClerkExpressWithAuth, WithAuthProp } from "@cl
 import { Request, Response, Router } from "express"
 import { AddSteamAccount, ListSteamAccounts, CreateUser, GetUser } from "core"
 
-import { prisma } from "../../infra/libs/prisma"
-import { UsersRepositoryDatabase } from "../../infra/repository"
-import { UsersDAODatabase } from "../../infra/dao"
-import { ClerkAuthentication } from "../../infra/services"
-import { CreateSteamAccountController, GetMeController, ListSteamAccountsController } from "../controllers"
-import { UserFarmService } from "../../domain/service"
-import { publisher } from "../.."
+import { UserFarmService } from "~/domain/service"
+import { UsersDAODatabase } from "~/infra/dao"
+import { prisma } from "~/infra/libs"
+import { UsersRepositoryDatabase } from "~/infra/repository"
+import { ClerkAuthentication } from "~/infra/services"
+import {
+  GetMeController,
+  CreateSteamAccountController,
+  ListSteamAccountsController,
+} from "~/presentation/controllers"
+import { publisher } from "~/server"
 
 const usersRepository = new UsersRepositoryDatabase(prisma)
 const usersDAO = new UsersDAODatabase(prisma)
@@ -33,10 +37,6 @@ router.get("/me", ClerkExpressWithAuth(), async (req: WithAuthProp<Request>, res
     },
   })
 
-  console.log({
-    status,
-    json,
-  })
   return res.status(status).json(json)
 })
 
@@ -75,11 +75,16 @@ router.get(
 router.post("/farm/start", async (req, res) => {
   try {
     const user = await usersRepository.getByID(req.body.userId)
+    if (!user) {
+      return res.status(404).json({
+        message: "User doesn't exists.",
+      })
+    }
 
     const actualFarmingUser = farmingUsers.get(user.username)
     if (actualFarmingUser) {
       return res.status(400).json({
-        message: `${user.username} já está farmando.`,
+        message: `${user?.username} já está farmando.`,
       })
     }
     const userFarmService = new UserFarmService(publisher, user)
@@ -87,7 +92,7 @@ router.post("/farm/start", async (req, res) => {
     userFarmService.startFarm()
 
     return res.json({
-      message: `Starting farming for user ${user.username}`,
+      message: `Starting farming for user ${user?.username}`,
     })
   } catch (e) {
     console.log(e)
@@ -100,16 +105,21 @@ router.post("/farm/start", async (req, res) => {
 router.post("/farm/stop", async (req, res) => {
   try {
     const user = await usersRepository.getByID(req.body.userId)
+    if (!user) {
+      return res.status(404).json({
+        message: "User doesn't exists.",
+      })
+    }
     const actualFarmingUser = farmingUsers.get(user.username)
     if (!actualFarmingUser) {
       return res.status(400).json({
-        message: `${user.username} não está farmando.`,
+        message: `${user?.username} não está farmando.`,
       })
     }
     actualFarmingUser.stopFarm()
     farmingUsers.delete(user.username)
     return res.json({
-      message: `Stopping the farming for user ${user.username}`,
+      message: `Stopping the farming for user ${user?.username}`,
     })
   } catch (e) {
     return res.status(500).json({
@@ -121,6 +131,12 @@ router.post("/farm/stop", async (req, res) => {
 router.get("/farm/plan-status", async (req, res) => {
   try {
     const user = await usersRepository.getByID(req.body.userId)
+    if (!user) {
+      return res.status(404).json({
+        message: "User doesn't exists.",
+      })
+    }
+
     return res.json({
       plan: {
         ...user.plan,
@@ -132,6 +148,7 @@ router.get("/farm/plan-status", async (req, res) => {
       },
     })
   } catch (e) {
+    console.log(e)
     return res.status(500).json({
       message: "Erro interno no servidor.",
     })

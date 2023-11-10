@@ -1,4 +1,4 @@
-import { IListUserSteamAccounts, ISteamAccountSession, ISteamGame, UserSession, UsersDAO } from "core"
+import { ISteamAccountSession, ISteamGame, UserSession, UsersDAO } from "core"
 import { PrismaClient } from "@prisma/client"
 
 import { getUserCurrentPlan } from "~/utils"
@@ -42,7 +42,7 @@ export class UsersDAODatabase implements UsersDAO {
         games: true,
       },
     })
-    const userSteamAccounts: IListUserSteamAccounts.Output = userSteamAccountsDatabase.map(sa => ({
+    const userSteamAccounts: ISteamAccountSession[] = userSteamAccountsDatabase.map(sa => ({
       accountName: sa.accountName,
       games: sa.games.map(
         g =>

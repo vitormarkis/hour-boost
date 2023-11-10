@@ -1,17 +1,15 @@
-import { Header } from "@/components/layouts/Header"
 import { HeaderDashboard } from "@/components/layouts/Header/header-dashboard"
 import { ModalAddSteamAccount } from "@/components/molecules/modal-add-steam-account"
 import { Button } from "@/components/ui/button"
-import { IListUserSteamAccounts, UserSession } from "core"
+import { API_GET_SteamAccounts, ISteamAccountSession, UserSession } from "core"
 import { GetServerSideProps } from "next"
 import React from "react"
 import { useAuth } from "@clerk/clerk-react"
 
 export const getServerSideProps: GetServerSideProps = async ctx => {
-  const response = await fetch("http://localhost:3309/me", {
+  const { data: user } = await api.get<UserSession | null>("/me", {
     headers: ctx.req.headers as Record<string, string>,
   })
-  const user: UserSession | null = await response.json()
 
   if (!user) {
     return {
@@ -38,43 +36,55 @@ export default function DashboardPage({ user }: UserSessionParams) {
     <>
       <HeaderDashboard user={user} />
       <div className="max-w-7xl w-full mx-auto px-8">
-        <ModalAddSteamAccount>
+        <ModalAddSteamAccount userId={user.id_user}>
           <Button className="h-9">Adicionar conta +</Button>
         </ModalAddSteamAccount>
       </div>
       <div className="max-w-7xl w-full mx-auto px-8">
-        <ListSteamAccounts />
+        <ListSteamAccounts user={user} />
       </div>
     </>
   )
 }
 
 import { cn } from "@/lib/utils"
+import { api } from "@/lib/axios"
+import { useQuery } from "@tanstack/react-query"
+import { AxiosError } from "axios"
 
-export type ListSteamAccountsProps = React.ComponentPropsWithoutRef<"section"> & {}
+export type ListSteamAccountsProps = React.ComponentPropsWithoutRef<"section"> & {
+  user: UserSession
+}
 
 export const ListSteamAccounts = React.forwardRef<React.ElementRef<"section">, ListSteamAccountsProps>(
-  function ListSteamAccountsComponent({ className, ...props }, ref) {
-    const [steamAccounts, setSteamAccounts] = React.useState<IListUserSteamAccounts.Output | null>(null)
-    const [isLoadingSteamAccounts, setIsLoadingSteamAccounts] = React.useState(true)
-    const [errorSteamAccounts, setErrorSteamAccounts] = React.useState(null)
+  function ListSteamAccountsComponent({ user, className, ...props }, ref) {
     const { getToken } = useAuth()
 
-    React.useEffect(() => {
-      const fetchSteamAccounts = async () => {
-        fetch("http://localhost:3309/steam-accounts", {
-          headers: {
-            Authorization: `Bearer ${await getToken()}`,
-          },
-        })
-          .then(res => res.json())
-          .then(setSteamAccounts)
-          .catch(setErrorSteamAccounts)
-          .finally(() => setIsLoadingSteamAccounts(false))
-      }
+    const {
+      data,
+      error: errorSteamAccounts,
+      isLoading: isLoadingSteamAccounts,
+    } = useQuery<API_GET_SteamAccounts>({
+      queryKey: ["steam-accounts", user.id_user],
+      queryFn: async () => {
+        try {
+          const response = await api.get<API_GET_SteamAccounts>("/steam-accounts", {
+            headers: {
+              Authorization: `Bearer ${await getToken()}`,
+            },
+          })
 
-      fetchSteamAccounts()
-    }, [])
+          return response.data
+        } catch (error) {
+          console.log(error)
+          if (error instanceof AxiosError) {
+            throw new Error(error.message)
+          }
+          throw error
+        }
+      },
+      staleTime: 1000 * 60, // 1 minute
+    })
 
     if (errorSteamAccounts) {
       return (
@@ -88,7 +98,7 @@ export const ListSteamAccounts = React.forwardRef<React.ElementRef<"section">, L
       )
     }
 
-    if (!steamAccounts || isLoadingSteamAccounts) {
+    if (!data || isLoadingSteamAccounts) {
       return (
         <section
           {...props}
@@ -99,6 +109,8 @@ export const ListSteamAccounts = React.forwardRef<React.ElementRef<"section">, L
         </section>
       )
     }
+
+    const { steamAccounts } = data
 
     if (steamAccounts.length === 0) {
       return (
@@ -132,3 +144,7 @@ export const ListSteamAccounts = React.forwardRef<React.ElementRef<"section">, L
 )
 
 ListSteamAccounts.displayName = "ListSteamAccounts"
+
+export function isResponseOK(status: number) {
+  return status >= 200 && status <= 299
+}
