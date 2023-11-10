@@ -154,3 +154,9 @@ router.get("/farm/plan-status", async (req, res) => {
     })
   }
 })
+
+router.get("/up", (req, res) => {
+  return res.status(200).json({
+    message: "server is up !!",
+  })
+})
