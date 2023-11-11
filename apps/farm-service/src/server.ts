@@ -18,7 +18,7 @@ declare global {
 const app: Application = express()
 app.use(
   cors({
-    origin: "https://hour-boost.vercel.app/",
+    origin: "*",
   })
 )
 app.use(express.json())
