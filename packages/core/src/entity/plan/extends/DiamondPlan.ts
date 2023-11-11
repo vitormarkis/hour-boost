@@ -1,14 +1,14 @@
-import { Plan, PlanCreateProps, PlanProps } from "./Plan"
-import { makeID } from "../generateID"
+import { PlanCreateProps, PlanProps } from "../Plan"
+import { makeID } from "../../generateID"
+import { PlanInfinity, PlanInfinityRestoreProps } from "../PlanInfinity"
 
-export class DiamondPlan extends Plan {
+export class DiamondPlan extends PlanInfinity {
   private constructor(props: PlanProps) {
     super({
       ...props,
       maxGamesAllowed: 32,
       maxSteamAccounts: 2,
       autoRestarter: true,
-      maxUsageTime: 60 * 60 * 24 * 30, // 1 mês
       name: "DIAMOND",
       price: 2200,
     })
@@ -17,12 +17,11 @@ export class DiamondPlan extends Plan {
   static create(props: PlanCreateProps) {
     return new DiamondPlan({
       ownerId: props.ownerId,
-      usages: [],
       id_plan: makeID(),
     })
   }
 
-  static restore(props: PlanProps) {
+  static restore(props: PlanInfinityRestoreProps) {
     return new DiamondPlan(props)
   }
 }

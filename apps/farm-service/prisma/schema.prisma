@@ -55,6 +55,7 @@ model Plan {
   usages    Usage[]  @relation("plan_usages")
   owner     User     @relation("user_plan", fields: [ownerId], references: [id_user], onDelete: Cascade)
   ownerId   String   @unique
+  type      PlanType
 
   @@map("plans")
 }
@@ -76,6 +77,11 @@ model Purchase {
   createdAt   DateTime
 
   @@map("purchases")
+}
+
+enum PlanType {
+  INFINITY
+  USAGE
 }
 
 enum PlanName {

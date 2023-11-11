@@ -1,8 +1,9 @@
-import { Plan, GuestPlan } from "."
-import { UsageUsedMoreThanPlanAllows } from "../../entity/exceptions"
 import { Usage } from "../../entity/plan"
+import { PlanInfinity } from "../../entity/plan"
+import { GuestPlan } from "../../entity/plan"
+import { UsageUsedMoreThanPlanAllows } from "../exceptions"
 
-let plan: Plan
+let plan: GuestPlan
 
 const makeUsage = (amountTime: number, id_usage: string = "123") =>
   Usage.restore({

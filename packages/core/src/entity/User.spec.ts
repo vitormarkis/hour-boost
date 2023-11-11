@@ -1,9 +1,5 @@
-import { User } from "./User"
-import { GuestPlan } from "./plan/PlanGuest"
-import { SilverPlan } from "./plan/PlanSilver"
-import { UserRole } from "./role/UserRole"
-import { ActiveStatus } from "./status/ActiveStatus"
-import { makeID } from "./generateID"
+import { User, makeID, UserRole, ActiveStatus } from "core/entity"
+import { GuestPlan, SilverPlan } from "core/entity/plan"
 
 test("should create user with default values", async () => {
   const user = User.create({
@@ -65,6 +61,7 @@ test("should assign a new plan", async () => {
     email: "vitormarkis@mail.com",
     profilePic: "https://photo.com",
   })
+  expect(1 + 1).toBe(2)
   expect(user.plan).toBeInstanceOf(GuestPlan)
   user.assignPlan(
     SilverPlan.create({

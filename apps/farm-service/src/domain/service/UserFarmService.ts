@@ -1,4 +1,4 @@
-import { Usage, User } from "core"
+import { PlanUsage, Usage, User } from "core"
 
 import { UserCompleteFarmSessionCommand } from "~/application/commands"
 import { Publisher } from "~/infra/queue"
@@ -17,6 +17,8 @@ export class UserFarmService {
   ) {}
 
   startFarm() {
+    if (!(this.user.plan instanceof PlanUsage))
+      throw new Error(`${this.user.username}'s plan don't have usages.`)
     if (!this.user.plan.isFarmAvailable) {
       throw new Error("Seu plano não possui mais horas disponíveis.")
     }
@@ -31,6 +33,8 @@ export class UserFarmService {
   }
 
   stopFarm() {
+    if (!(this.user.plan instanceof PlanUsage))
+      throw new Error(`${this.user.username}'s plan don't have usages.`)
     clearInterval(this.farmingInterval)
     const usage = Usage.create({
       amountTime: this.currentFarmingUsage,

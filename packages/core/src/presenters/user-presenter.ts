@@ -1,4 +1,4 @@
-import { PlanName } from "../entity/plan/Plan"
+import { PlanAllNames, PlanInfinityName } from "../entity/plan/Plan"
 import { RoleName } from "../entity/role/Role"
 import { StatusName } from "../entity/status/Status"
 
@@ -8,7 +8,7 @@ export interface UserSession {
   username: string
   profilePic: string
   steamAccounts: string[]
-  plan: PlanName
+  plan: PlanAllNames
   role: RoleName
   status: StatusName
   purchases: string[]

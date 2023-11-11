@@ -1,6 +1,5 @@
-import { makeID } from "./generateID"
+import { GuestPlan, PlanInfinity, PlanUsage } from "../entity/plan"
 import { Plan } from "./plan/Plan"
-import { GuestPlan } from "./plan/PlanGuest"
 import { Purchase } from "./Purchase"
 import { Role } from "./role/Role"
 import { UserRole } from "./role/UserRole"
@@ -14,7 +13,7 @@ export class User {
   readonly username: string
   readonly profilePic: string
   readonly steamAccounts: SteamAccount[]
-  plan: Plan
+  plan: PlanUsage | PlanInfinity
   readonly role: Role
   readonly status: Status
   readonly purchases: Purchase[]
@@ -49,7 +48,7 @@ export class User {
     return new User(props)
   }
 
-  assignPlan(plan: Plan) {
+  assignPlan(plan: PlanUsage | PlanInfinity) {
     this.plan = plan
   }
 
@@ -68,7 +67,7 @@ type UserProps = {
   username: string
   profilePic: string
   steamAccounts: SteamAccount[]
-  plan: Plan
+  plan: PlanUsage | PlanInfinity
   role: Role
   status: Status
   purchases: Purchase[]

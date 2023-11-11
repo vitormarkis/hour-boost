@@ -1,13 +1,13 @@
-import { FARMING_INTERVAL_IN_SECONDS, UserFarmService } from "../UserFarmService"
-import { makePublisher } from "../queue/publisher"
-import { User } from "core"
+import { Publisher } from "../infra/queue"
+import { FARMING_INTERVAL_IN_SECONDS, UserFarmService } from "../domain/service/UserFarmService"
+import { PlanUsage, User } from "core"
 
 const SIX_HOURS_IN_SECONDS = 21600
 let userFarmService: UserFarmService
 let user: User
 
 beforeEach(() => {
-  const publisher = makePublisher()
+  const publisher = new Publisher()
   user = User.create({
     email: "json@mail.com",
     id_user: "123",
@@ -23,7 +23,9 @@ afterAll(() => {
 
 describe("UserFarmService test suite", () => {
   test("should decrement user plan as user farms", async () => {
+    if (!(user.plan instanceof PlanUsage)) throw new Error()
     userFarmService.startFarm()
+    user.plan.getUsageLeft()
     expect(user.plan.getUsageLeft()).toBe(21600)
     jest.advanceTimersByTime(FARMING_INTERVAL_IN_SECONDS * 1000)
     userFarmService.stopFarm()
@@ -31,6 +33,7 @@ describe("UserFarmService test suite", () => {
   })
 
   test("should empty the user plan usage left when uses all plan usage", async () => {
+    if (!(user.plan instanceof PlanUsage)) throw new Error()
     userFarmService.startFarm()
     expect(user.plan.getUsageLeft()).toBe(SIX_HOURS_IN_SECONDS) // 6 hours in seconds
     jest.advanceTimersByTime(1000 * SIX_HOURS_IN_SECONDS) // 6 hours farmed
@@ -39,6 +42,7 @@ describe("UserFarmService test suite", () => {
   })
 
   test("should throw error when farming interval exceeds maximum plan's usage left", async () => {
+    if (!(user.plan instanceof PlanUsage)) throw new Error()
     userFarmService.startFarm()
     expect(user.plan.getUsageLeft()).toBe(SIX_HOURS_IN_SECONDS)
     expect(() => {

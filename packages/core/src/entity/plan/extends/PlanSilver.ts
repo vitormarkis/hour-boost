@@ -1,14 +1,14 @@
-import { Plan, PlanCreateProps, PlanProps } from "./Plan"
-import { makeID } from "../generateID"
+import { PlanInfinity, PlanInfinityRestoreProps } from "../../../entity/plan/PlanInfinity"
+import { makeID } from "../../../entity/generateID"
+import { PlanCreateProps, PlanProps } from "../../../entity/plan/Plan"
 
-export class SilverPlan extends Plan {
+export class SilverPlan extends PlanInfinity {
   private constructor(props: PlanProps) {
     super({
       ...props,
       maxGamesAllowed: 1,
       maxSteamAccounts: 1,
       autoRestarter: true,
-      maxUsageTime: 60 * 60 * 24 * 30, // 1 mês
       name: "SILVER",
       price: 1200,
     })
@@ -17,12 +17,11 @@ export class SilverPlan extends Plan {
   static create(props: PlanCreateProps) {
     return new SilverPlan({
       ownerId: props.ownerId,
-      usages: [],
       id_plan: makeID(),
     })
   }
 
-  static restore(props: PlanProps) {
+  static restore(props: PlanInfinityRestoreProps) {
     return new SilverPlan(props)
   }
 }

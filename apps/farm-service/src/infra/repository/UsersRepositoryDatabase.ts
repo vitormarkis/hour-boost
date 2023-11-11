@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client"
-import { Plan, GuestPlan, DiamondPlan, GoldPlan, SilverPlan, PlanPropsWithName, PlanCreateProps } from "core"
+import { PlanUsage } from "core"
 import { Status, StatusName, ActiveStatus, BannedStatus } from "core"
 import {
   User,
@@ -30,6 +30,7 @@ export class UsersRepositoryDatabase implements UsersRepository {
             createdAt: new Date(),
             id_plan: user.plan.id_plan,
             name: user.plan.name,
+            type: user.plan.type,
           },
         },
         profilePic: user.profilePic,
@@ -37,14 +38,6 @@ export class UsersRepositoryDatabase implements UsersRepository {
         status: user.status.name,
         username: user.username,
       },
-      // include: {
-      //   purchases: {
-      //     select: { id_Purchase: true },
-      //   },
-      //   steamAccounts: {
-      //     select: { id_steamAccount: true },
-      //   },
-      // },
     })
 
     return id_user
@@ -66,15 +59,19 @@ export class UsersRepositoryDatabase implements UsersRepository {
               createdAt: new Date(),
               id_plan: user.plan.id_plan,
               name: user.plan.name,
+              type: user.plan.type,
               usages: {
-                connectOrCreate: user.plan.usages.map(u => ({
-                  where: { id_usage: u.id_usage },
-                  create: {
-                    amountTime: u.amountTime,
-                    createdAt: new Date(),
-                    id_usage: u.id_usage,
-                  },
-                })),
+                connectOrCreate:
+                  user.plan instanceof PlanUsage
+                    ? user.plan.usages.map(u => ({
+                        where: { id_usage: u.id_usage },
+                        create: {
+                          amountTime: u.amountTime,
+                          createdAt: new Date(),
+                          id_usage: u.id_usage,
+                        },
+                      }))
+                    : [],
               },
             },
           },
@@ -153,7 +150,7 @@ export class UsersRepositoryDatabase implements UsersRepository {
       })
     )
 
-    const userPlan = getUserCurrentPlan(dbUser.plan, { ownerId: dbUser.id_user })
+    const userPlan = getUserCurrentPlan(dbUser.plan, dbUser.id_user)
 
     return User.restore({
       email: dbUser.email,
@@ -171,14 +168,6 @@ export class UsersRepositoryDatabase implements UsersRepository {
       status: statusFactory(dbUser.status),
     })
   }
-}
-
-export function planFactory<T extends PlanPropsWithName>(planProps: T): Plan {
-  if (planProps.name === "GUEST") return GuestPlan.restore(planProps)
-  if (planProps.name === "DIAMOND") return DiamondPlan.restore(planProps)
-  if (planProps.name === "GOLD") return GoldPlan.restore(planProps)
-  if (planProps.name === "SILVER") return SilverPlan.restore(planProps)
-  throw new Error("Invalid plan received: " + planProps)
 }
 
 export function roleFactory(role: RoleName): Role {

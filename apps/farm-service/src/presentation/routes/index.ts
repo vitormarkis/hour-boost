@@ -3,7 +3,7 @@ import "dotenv/config"
 import clerkClient from "@clerk/clerk-sdk-node"
 import { ClerkExpressRequireAuth, ClerkExpressWithAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
 import { Request, Response, Router } from "express"
-import { AddSteamAccount, ListSteamAccounts, CreateUser, GetUser } from "core"
+import { AddSteamAccount, ListSteamAccounts, CreateUser, GetUser, PlanInfinity } from "core"
 
 import { UserFarmService } from "~/domain/service"
 import { UsersDAODatabase } from "~/infra/dao"
@@ -134,6 +134,14 @@ router.get("/farm/plan-status", async (req, res) => {
     if (!user) {
       return res.status(404).json({
         message: "User doesn't exists.",
+      })
+    }
+
+    if (user.plan instanceof PlanInfinity) {
+      return res.json({
+        plan: {
+          ...user.plan,
+        },
       })
     }
 

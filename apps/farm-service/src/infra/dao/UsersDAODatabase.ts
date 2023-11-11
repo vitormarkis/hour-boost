@@ -18,7 +18,7 @@ export class UsersDAODatabase implements UsersDAO {
 
     if (!dbUser) return null
 
-    const userPlan = getUserCurrentPlan(dbUser.plan, { ownerId: dbUser.id_user })
+    const userPlan = getUserCurrentPlan(dbUser.plan, dbUser.id_user)
 
     return {
       email: dbUser.email,

@@ -1,6 +1,6 @@
-import { UserAuthentication, UsersDAO } from "../contracts"
-import { User } from "../entity"
-import { UsersRepository } from "../repository"
+import { UserAuthentication } from "core/contracts"
+import { User } from "core/entity"
+import { UsersRepository } from "core/repository"
 
 export class CreateUser {
   constructor(
