@@ -87,6 +87,12 @@ router.post("/farm/start", async (req, res) => {
         message: `${user?.username} já está farmando.`,
       })
     }
+    if (user.plan instanceof PlanInfinity) {
+      return res.json({
+        message: "Starting hollow farming.",
+      })
+    }
+
     const userFarmService = new UserFarmService(publisher, user)
     farmingUsers.set(user.username, userFarmService)
     userFarmService.startFarm()
