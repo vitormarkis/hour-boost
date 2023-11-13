@@ -13,7 +13,9 @@ import {
   PersistFarmSessionHandler,
   PersistUsageHandler,
   PlanUsageExpiredMidFarmCommand,
+  StartFarmHandler,
 } from "~/domain/handler"
+import { StartFarmPlanHandler } from "~/domain/handler/ChangePlanStatusHandler"
 
 const publisher = new Publisher()
 const SIX_HOURS_IN_SECONDS = 21600
@@ -39,33 +41,6 @@ const sleep = (time: number) =>
     jest.advanceTimersByTime(time)
   })
 
-publisher.register({
-  operation: "user-has-start-farming",
-  async notify({ props: { userId } }: UserHasStartFarmingCommand) {
-    const user = await usersRepository.getByID(userId)
-    if (user) {
-      user.plan.startFarm()
-      await usersRepository.update(user)
-    }
-  },
-})
-
-publisher.register({
-  operation: "user-complete-farm-session",
-  async notify({ userId, usage, planId }: PlanUsageExpiredMidFarmCommand) {
-    const user = await usersRepository.getByID(userId)
-    if (user) {
-      user.plan.stopFarm()
-      await usersRepository.update(user)
-    }
-    const plan = await planRepository.getById(planId)
-    if (plan instanceof PlanUsage) {
-      plan.use(usage)
-      await planRepository.update(plan)
-    }
-  },
-})
-
 beforeEach(async () => {
   meDomain = User.create({
     email: "json@mail.com",
@@ -77,6 +52,12 @@ beforeEach(async () => {
   planRepository = new PlanRepositoryInMemory(usersInMemory)
   await usersRepository.create(meDomain)
   jest.useFakeTimers()
+  publisher.register(new PersistUsageHandler(planRepository))
+  publisher.register(new StartFarmPlanHandler(planRepository))
+})
+
+afterEach(() => {
+  publisher.observers = []
 })
 
 const getMe = async () => {
@@ -156,6 +137,11 @@ describe("FarmUsageService test suite", () => {
   })
 
   test("should call event when farming interval exceeds maximum plan's usage left", async () => {
+    const [notify] = publisher.observers.filter(o => o.operation === "user-complete-farm-session")
+    expect(notify).toBeTruthy()
+    console.log(notify)
+    const finishFarmHandler = jest.spyOn(notify, "notify")
+
     const me = await getMe()
     const meFarmService = getFarmService(me)
     meFarmService.startFarm()
@@ -165,5 +151,12 @@ describe("FarmUsageService test suite", () => {
     jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
     const me3 = await getMe()
     expect(me3.plan.status).toBe("IDDLE")
+
+    await sleep(200)
+    expect(finishFarmHandler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation: "user-complete-farm-session",
+      })
+    )
   })
 })

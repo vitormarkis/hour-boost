@@ -1,18 +1,17 @@
 import { PlanRepository, PlanUsage } from "core"
 
-import { UserCompleteFarmSessionCommand } from "~/application/commands"
+import { UserHasStartFarmingCommand } from "~/application/commands"
 import { EventNames, Observer } from "~/infra/queue"
 
-export class PersistUsageHandler implements Observer {
-  operation: EventNames = "user-complete-farm-session"
+export class StartFarmPlanHandler implements Observer {
+  operation: EventNames = "user-has-start-farming"
 
   constructor(private readonly planRepository: PlanRepository) {}
 
-  async notify(command: UserCompleteFarmSessionCommand): Promise<void> {
+  async notify(command: UserHasStartFarmingCommand): Promise<void> {
     const actualPlan = await this.planRepository.getById(command.planId)
     if (actualPlan instanceof PlanUsage) {
-      actualPlan.use(command.usage)
-      actualPlan.stopFarm()
+      actualPlan.startFarm()
       await this.planRepository.update(actualPlan)
     }
   }
