@@ -5,14 +5,14 @@ import { HttpClient } from "~/contracts/HttpClient"
 export class CreateSteamAccountController {
   constructor(private readonly addSteamAccount: AddSteamAccount) {}
 
-  async handle(
-    req: HttpClient.Request<IAddSteamAccount>
-  ): Promise<HttpClient.Response<AddSteamAccountOutput>> {
+  async handle(req: HttpClient.Request<IAddSteamAccount>): Promise<HttpClient.Response> {
     try {
       const input = req.payload as IAddSteamAccount
-      const output = await this.addSteamAccount.execute(input)
+      const { steamAccountID } = await this.addSteamAccount.execute(input)
       return {
-        json: output,
+        json: {
+          steamAccountID,
+        } as AddSteamAccountOutput,
         status: 201,
       }
     } catch (error) {

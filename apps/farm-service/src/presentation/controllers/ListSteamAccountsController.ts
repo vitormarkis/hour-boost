@@ -10,14 +10,16 @@ export class ListSteamAccountsController {
     req: HttpClient.Request<{
       userId: string
     }>
-  ): Promise<HttpClient.Response<API_GET_SteamAccounts>> {
+  ): Promise<HttpClient.Response> {
     try {
-      const output = await this.listSteamAccounts.execute({
+      const { steamAccounts } = await this.listSteamAccounts.execute({
         userId: req.payload.userId,
       })
 
       return {
-        json: output,
+        json: {
+          steamAccounts,
+        } as API_GET_SteamAccounts,
         status: 200,
       }
     } catch (error) {

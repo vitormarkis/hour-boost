@@ -11,6 +11,7 @@ export abstract class PlanUsage extends Plan {
     super({
       ...props,
       type: "USAGE",
+      status: "IDDLE",
     })
     this.maxUsageTime = props.maxUsageTime
     this.usages = props.usages
@@ -43,8 +44,18 @@ export abstract class PlanUsage extends Plan {
     this.usages.push(usage)
   }
 
-  get isFarmAvailable() {
-    const amountUsedSoFar = this.usages.reduce((amount, usage) => (amount + usage.amountTime, amount), 0)
+  isFarmAvailable() {
+    console.log(this.usages)
+    const amountUsedSoFar = this.usages.reduce((amount, usage) => {
+      amount + usage.amountTime
+      return amount
+    }, 0)
+    console.log("CALCULANDO SE FARM ESTA DISPONIVEL? DOMAIN")
+
+    console.log({
+      usageTime: this.maxUsageTime,
+      amountUsedSoFar,
+    })
     return amountUsedSoFar < this.maxUsageTime
   }
 }

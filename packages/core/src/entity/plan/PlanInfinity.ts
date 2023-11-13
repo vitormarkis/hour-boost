@@ -7,6 +7,7 @@ export class PlanInfinity extends Plan {
     super({
       ...props,
       type: "INFINITY",
+      status: "IDDLE",
     })
     this.name = props.name
   }

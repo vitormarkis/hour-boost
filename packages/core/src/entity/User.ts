@@ -4,7 +4,7 @@ import { Purchase } from "./Purchase"
 import { Role } from "./role/Role"
 import { UserRole } from "./role/UserRole"
 import { ActiveStatus } from "./status/ActiveStatus"
-import { Status } from "./status/Status"
+import { Status, StatusName } from "./status/Status"
 import { SteamAccount } from "./SteamAccount"
 
 export class User {

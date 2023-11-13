@@ -3,11 +3,12 @@ import { LooseAuthProp } from "@clerk/clerk-sdk-node"
 import express, { Application, NextFunction, Request, Response } from "express"
 import cors from "cors"
 
-import { PersistUsageHandler } from "~/domain/handler"
+import { PersistUsageHandler, StartFarmHandler } from "~/domain/handler"
 import { prisma } from "~/infra/libs"
 import { Publisher } from "~/infra/queue"
 import { UsagesRepositoryDatabase } from "~/infra/repository"
 import { router } from "~/presentation/routes"
+import { LogCompleteInfinityFarmSessionHandler } from "~/domain/handler/LogCompleteInfinityFarmSessionHandler"
 
 declare global {
   namespace Express {
@@ -39,6 +40,8 @@ publisher.register({
     console.log("User has completed a farm session.")
   },
 })
+publisher.register(new StartFarmHandler())
+publisher.register(new LogCompleteInfinityFarmSessionHandler())
 
 app.listen(process.env.PORT ?? 4000, () => {
   console.log(`Server is running on port ${process.env.PORT ?? 4000}`)

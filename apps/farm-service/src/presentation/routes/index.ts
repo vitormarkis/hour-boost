@@ -5,7 +5,6 @@ import { ClerkExpressRequireAuth, ClerkExpressWithAuth, WithAuthProp } from "@cl
 import { Request, Response, Router } from "express"
 import { AddSteamAccount, ListSteamAccounts, CreateUser, GetUser, PlanInfinity } from "core"
 
-import { UserFarmService } from "~/domain/service"
 import { UsersDAODatabase } from "~/infra/dao"
 import { prisma } from "~/infra/libs"
 import { UsersRepositoryDatabase } from "~/infra/repository"
@@ -14,8 +13,11 @@ import {
   GetMeController,
   CreateSteamAccountController,
   ListSteamAccountsController,
+  StopFarmController,
+  StartFarmController,
 } from "~/presentation/controllers"
 import { publisher } from "~/server"
+import { FarmingUsersStorage } from "~/application/services"
 
 const usersRepository = new UsersRepositoryDatabase(prisma)
 const usersDAO = new UsersDAODatabase(prisma)
@@ -24,8 +26,7 @@ const listSteamAccounts = new ListSteamAccounts(usersDAO)
 const userAuthentication = new ClerkAuthentication(clerkClient)
 const createUser = new CreateUser(usersRepository, userAuthentication)
 const getUser = new GetUser(usersDAO)
-
-const farmingUsers: Map<string, UserFarmService> = new Map()
+const farmingUsersStorage = new FarmingUsersStorage()
 
 export const router: Router = Router()
 
@@ -72,66 +73,32 @@ router.get(
   }
 )
 
-router.post("/farm/start", async (req, res) => {
-  try {
-    const user = await usersRepository.getByID(req.body.userId)
-    if (!user) {
-      return res.status(404).json({
-        message: "User doesn't exists.",
-      })
-    }
+// router.post("/farm/start", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
+router.post("/farm/start", async (req: WithAuthProp<Request>, res: Response) => {
+  const startFarmController = new StartFarmController(farmingUsersStorage, publisher, usersRepository)
+  const { json, status } = await startFarmController.handle({
+    payload: {
+      // userId: req.auth.userId!,
+      userId: req.body.userId,
+    },
+  })
 
-    const actualFarmingUser = farmingUsers.get(user.username)
-    if (actualFarmingUser) {
-      return res.status(400).json({
-        message: `${user?.username} já está farmando.`,
-      })
-    }
-    if (user.plan instanceof PlanInfinity) {
-      return res.json({
-        message: "Starting hollow farming.",
-      })
-    }
+  console.log({ json, status })
 
-    const userFarmService = new UserFarmService(publisher, user)
-    farmingUsers.set(user.username, userFarmService)
-    userFarmService.startFarm()
-
-    return res.json({
-      message: `Starting farming for user ${user?.username}`,
-    })
-  } catch (e) {
-    console.log(e)
-    return res.status(500).json({
-      message: "Erro interno no servidor.",
-    })
-  }
+  return json ? res.status(status).json(json) : res.status(status).end()
 })
 
-router.post("/farm/stop", async (req, res) => {
-  try {
-    const user = await usersRepository.getByID(req.body.userId)
-    if (!user) {
-      return res.status(404).json({
-        message: "User doesn't exists.",
-      })
-    }
-    const actualFarmingUser = farmingUsers.get(user.username)
-    if (!actualFarmingUser) {
-      return res.status(400).json({
-        message: `${user?.username} não está farmando.`,
-      })
-    }
-    actualFarmingUser.stopFarm()
-    farmingUsers.delete(user.username)
-    return res.json({
-      message: `Stopping the farming for user ${user?.username}`,
-    })
-  } catch (e) {
-    return res.status(500).json({
-      message: "Erro interno no servidor.",
-    })
-  }
+// router.post("/farm/stop", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
+router.post("/farm/stop", async (req: WithAuthProp<Request>, res: Response) => {
+  const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
+  const { json, status } = await stopFarmController.handle({
+    payload: {
+      // userId: req.auth.userId!,
+      userId: req.body.userId,
+    },
+  })
+
+  return json ? res.status(status).json(json) : res.status(status).end()
 })
 
 router.get("/farm/plan-status", async (req, res) => {

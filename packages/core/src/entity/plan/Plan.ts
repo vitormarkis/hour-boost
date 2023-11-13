@@ -8,6 +8,7 @@ export abstract class Plan {
   maxGamesAllowed: number
   autoRestarter: boolean
   type: PlanType
+  private _status: PlanStatus
 
   constructor(props: PlanAllProps) {
     this.maxSteamAccounts = props.maxSteamAccounts
@@ -17,6 +18,19 @@ export abstract class Plan {
     this.id_plan = props.id_plan
     this.type = props.type
     this.name = props.name
+    this._status = props.status
+  }
+
+  startFarm() {
+    this._status = "FARMING"
+  }
+
+  stopFarm() {
+    this._status = "IDDLE"
+  }
+
+  get status() {
+    return this._status
   }
 }
 
@@ -51,10 +65,12 @@ export type PlanAllProps = {
   maxGamesAllowed: number
   autoRestarter: boolean
   type: PlanType
+  status: PlanStatus
 }
 
 export type PlanInfinityName = "SILVER" | "GOLD" | "DIAMOND"
 export type PlanUsageName = "GUEST"
 export type PlanAllNames = PlanInfinityName | PlanUsageName
+export type PlanStatus = "FARMING" | "IDDLE"
 
 export type PlanType = "INFINITY" | "USAGE"

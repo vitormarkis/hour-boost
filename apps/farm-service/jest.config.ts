@@ -11,6 +11,7 @@ const config: Config = {
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
     prefix: "<rootDir>/",
   }),
+  testMatch: ["**/__tests__/**/?(*.)+(spec|test).ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
 }
 
 export default config

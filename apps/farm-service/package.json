@@ -9,7 +9,7 @@
     "start": "node dist/src/server.js",
     "build:s": "bun run build && bun start",
     "seed": "tsx seed.ts",
-    "test": "jest --watchAll"
+    "test": "jest --silent"
   },
   "keywords": [],
   "author": "",

@@ -5,19 +5,19 @@ import { EventNames } from "~/infra/queue"
 
 type Payload = {
   usage: Usage
-  usageLeft: number
   username: string
+  userId: string
 }
 
 export class UserCompleteFarmSessionCommand implements Command<Payload> {
   operation: EventNames = "user-complete-farm-session"
   usage: Usage
-  usageLeft: number
   username: string
+  userId: string
 
   constructor(props: Payload) {
     this.usage = props.usage
-    this.usageLeft = props.usageLeft
     this.username = props.username
+    this.userId = props.userId
   }
 }

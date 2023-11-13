@@ -14,7 +14,7 @@ export class GetMeController {
     req: HttpClient.Request<{
       userId: string | null
     }>
-  ): Promise<HttpClient.Response<UserSession>> {
+  ): Promise<HttpClient.Response> {
     try {
       const { userId } = req.payload
       if (!userId) return { json: null, status: 200 }
@@ -23,7 +23,9 @@ export class GetMeController {
       const userSession = await this.getUser.execute(userId)
       if (!userSession) return makeRes(500, "Something went wrong during the creation of your user.")
       return {
-        json: userSession,
+        json: {
+          ...userSession,
+        } as UserSession,
         status: 201,
       }
     } catch (error) {
