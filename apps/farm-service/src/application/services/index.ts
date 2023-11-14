@@ -15,7 +15,6 @@ export interface IFarmService {
   ownerId: string
   startFarm(): void
   stopFarm(): void
-  listFarmingStatusCount(): FarmStatusCount
 }
 
 export type FarmStatusCount = {

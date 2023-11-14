@@ -28,12 +28,14 @@ export function makeUsagePlan(planProps: PlanUsageRestoreProps & PlanName["USAGE
   throw new Error("Invalid plan assignment")
 }
 
-export function getUserCurrentPlan(
-  dbUserPlan: (PrismaPlan & { usages: PrismaUsage[] }) | null,
-  userId: string
-) {
-  if (!dbUserPlan) return GuestPlan.create({ ownerId: userId })
+type SessionPlan = PrismaPlan & { usages: PrismaUsage[] }
 
+export function getCurrentPlanOrCreateOne(dbUserPlan: SessionPlan | null, userId: string) {
+  if (!dbUserPlan) return GuestPlan.create({ ownerId: userId })
+  return getCurrentPlan(dbUserPlan)
+}
+
+export function getCurrentPlan(dbUserPlan: SessionPlan) {
   if (dbUserPlan.type === "INFINITY")
     return makeInfinityPlan({
       id_plan: dbUserPlan.id_plan,

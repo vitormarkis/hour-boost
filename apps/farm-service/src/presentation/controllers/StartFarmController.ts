@@ -1,4 +1,5 @@
-import { PlanInfinity, PlanUsage, UsersRepository } from "core"
+import { PlanInfinity, PlanUsage, UserIsAlreadyFarmingException, UsersRepository } from "core"
+
 import { HttpClient } from "~/contracts/HttpClient"
 import { FarmInfinityService, FarmUsageService, IFarmingUsersStorage } from "~/application/services"
 import { Publisher } from "~/infra/queue"
@@ -20,16 +21,6 @@ export class StartFarmController {
       const user = await this.usersRepository.getByID(req.payload.userId)
       if (!user) return { json: { message: "Usuário não encontrado." }, status: 404 }
 
-      const farmingUser = this.farmingUsersStorage.get(user.username)
-      if (farmingUser?.status === "FARMING") {
-        return { status: 400, json: { message: "Usuário já está farmando." } }
-      }
-
-      if (farmingUser) {
-        await farmingUser.startFarm()
-        return { json: null, status: 200 }
-      }
-
       if (user.plan instanceof PlanInfinity) {
         const farmInfinityService = new FarmInfinityService(
           this.publisher,
@@ -42,13 +33,7 @@ export class StartFarmController {
       }
 
       if (user.plan instanceof PlanUsage) {
-        const farmUsageService = new FarmUsageService(
-          this.publisher,
-          user.plan.getUsageLeft(),
-          user.plan.id_plan,
-          user.plan.ownerId,
-          user.username
-        )
+        const farmUsageService = new FarmUsageService(this.publisher, user.plan, user.username)
         this.farmingUsersStorage.add(farmUsageService).startFarm()
         return { json: null, status: 200 }
       }
@@ -57,6 +42,7 @@ export class StartFarmController {
       throw new Error("Instância do plano do usuário não suportado.")
     } catch (error) {
       console.log(error)
+      if (error instanceof UserIsAlreadyFarmingException) return makeResError(error, 400)
       return makeResError(error)
     }
   }

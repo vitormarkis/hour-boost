@@ -14,7 +14,7 @@ import {
 } from "core"
 import { UsersRepository } from "core"
 
-import { getUserCurrentPlan } from "~/utils"
+import { getCurrentPlan, getCurrentPlanOrCreateOne } from "~/utils"
 
 export class UsersRepositoryDatabase implements UsersRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -150,7 +150,7 @@ export class UsersRepositoryDatabase implements UsersRepository {
       })
     )
 
-    const userPlan = getUserCurrentPlan(dbUser.plan, dbUser.id_user)
+    const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
 
     return User.restore({
       email: dbUser.email,

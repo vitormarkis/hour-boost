@@ -1,6 +1,6 @@
 import { PlanType, User } from "core"
 import { UserHasStartFarmingCommand, UserPauseInfinityFarmSessionCommand } from "~/application/commands"
-import { IFarmService, FarmServiceStatus, FarmStatusCount } from "~/application/services"
+import { IFarmService, FarmServiceStatus } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 
 export class FarmInfinityService implements IFarmService {
@@ -31,9 +31,5 @@ export class FarmInfinityService implements IFarmService {
         username: this.username,
       })
     )
-  }
-
-  listFarmingStatusCount(): FarmStatusCount {
-    throw new Error("Method not implemented.")
   }
 }

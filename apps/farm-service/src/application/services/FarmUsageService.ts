@@ -1,29 +1,39 @@
-import { PlanType, PlanUsage, Usage, User, UsersRepository } from "core"
+import { PlanType, PlanUsage, Usage } from "core"
 
 import { Command, UserCompleteFarmSessionCommand, UserHasStartFarmingCommand } from "~/application/commands"
-import { FarmServiceStatus, FarmStatusCount, IFarmService } from "~/application/services"
-import { PlanUsageExpiredMidFarmCommand } from "~/domain/handler/PersistFarmSessionHandler"
+import { FarmServiceStatus, IFarmService } from "~/application/services"
 import { Publisher } from "~/infra/queue"
+import { PlanUsageExpiredMidFarmCommand } from "~/domain/handler"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
 
 export class FarmUsageService implements IFarmService {
+  private readonly publisher: Publisher
+
   FARMING_GAP = FARMING_INTERVAL_IN_SECONDS
   farmingInterval: NodeJS.Timeout | undefined
   currentFarmingUsage = 0
   status: FarmServiceStatus = "IDDLE"
   type: PlanType = "USAGE"
+  readonly planId: string
+  readonly ownerId: string
+  readonly username: string
+  readonly usageLeft: number
+  private startedAt: Date = new Date()
 
-  constructor(
-    private readonly publisher: Publisher,
-    private readonly usageLeft: number,
-    private readonly planId: string,
-    readonly ownerId: string,
-    readonly username: string
-  ) {}
+  constructor(publisher: Publisher, plan: PlanUsage, username: string) {
+    if (!(plan instanceof PlanUsage))
+      throw new Error("Tentativa de fazer usage farm com plano que não é do tipo USAGE.")
+    this.planId = plan.id_plan
+    this.ownerId = plan.ownerId
+    this.publisher = publisher
+    this.username = username
+    this.usageLeft = plan.getUsageLeft()
+  }
 
   startFarm() {
     this.status = "FARMING"
+    this.startedAt = new Date()
     this.farmingInterval = setInterval(() => {
       if (this.currentFarmingUsage > this.usageLeft) {
         this.stopFarm()
@@ -56,7 +66,7 @@ export class FarmUsageService implements IFarmService {
       operation: "user-complete-farm-session",
       usage: Usage.create({
         amountTime: this.currentFarmingUsage,
-        createdAt: new Date(),
+        createdAt: this.startedAt,
         plan_id: this.planId,
       }),
       planId: this.planId,
@@ -66,29 +76,4 @@ export class FarmUsageService implements IFarmService {
 
     this.currentFarmingUsage = 0
   }
-
-  listFarmingStatusCount(): FarmStatusCount {
-    throw new Error("Method not implemented.")
-  }
 }
-
-export type FarmUsageServiceExtraProps = {
-  username: string
-}
-
-// if (!(this.plan instanceof PlanUsage))
-// throw new Error(`O plano de ${this.extra.username} não é do tipo USAGE.`)
-// if (!this.plan.isFarmAvailable()) {
-// throw new Error("Seu plano não possui mais horas disponíveis.")
-// }
-// const usageLeftSnapshot = this.plan.getUsageLeft()
-
-// this.publisher.emit(
-//   "user-has-farmed",
-//   new UserHasFarmedCommand({
-//     id_user: this.user.id_user,
-//     usageLeft: this.plan.getTimeLeft(),
-//     username: this.extra.username,
-//     planId: this.plan.id_plan,
-//   })
-// )

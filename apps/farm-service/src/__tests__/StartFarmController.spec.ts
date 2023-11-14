@@ -1,9 +1,10 @@
-import { StartFarmController } from "../presentation/controllers"
-import { Publisher } from "../infra/queue"
-import { UsersInMemory, UsersRepositoryInMemory } from "../infra/repository"
-import { makeUser } from "../utils/makeUser"
-import { PlanType, User } from "core"
+import { User } from "core"
+
 import { FarmingUsersStorage } from "~/application/services"
+import { Publisher } from "~/infra/queue"
+import { UsersRepositoryInMemory, UsersInMemory } from "~/infra/repository"
+import { StartFarmController } from "~/presentation/controllers"
+import { makeUser } from "~/utils/makeUser"
 
 const USER_ID = "123"
 const FRIEND_ID = "ABC"
@@ -62,7 +63,7 @@ describe("StartFarmController test suite", () => {
 
   test("should return succcess after user start farm again after break", async () => {
     await useCase(USER_ID)
-    farmingUsersStorage.get(USERNAME)?.stopFarm()
+    farmingUsersStorage.remove(USERNAME)
     const response = await useCase(USER_ID)
 
     expect(farmingUsersStorage.users.size).toBe(1)

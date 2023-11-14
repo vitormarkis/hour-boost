@@ -1,9 +1,9 @@
-export function makeResError(error: unknown) {
+export function makeResError(error: unknown, status = 500) {
   return {
     json: {
       message: error instanceof Error ? error.message : "Erro interno no servidor.",
     },
-    status: 500,
+    status,
   }
 }
 

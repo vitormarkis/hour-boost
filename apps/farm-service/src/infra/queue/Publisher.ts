@@ -15,10 +15,6 @@ export class Publisher {
   publish(command: Command) {
     for (const observer of this.observers) {
       if (observer.operation === command.operation) {
-        if (observer.operation === "user-complete-farm-session")
-          console.log({
-            beingCalledWith: command,
-          })
         observer.notify(command)
       }
     }

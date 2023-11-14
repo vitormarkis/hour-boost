@@ -1,22 +1,40 @@
-import { FarmStatusCount, IFarmService } from "~/application/services"
+import { PlanType, UserIsAlreadyFarmingException, UserIsNotFarmingException } from "core"
+import { FarmServiceStatus, FarmStatusCount, IFarmService } from "~/application/services"
 
 export class FarmingUsersStorage implements IFarmingUsersStorage {
   users: Map<string, IFarmService> = new Map()
+  usersHistory: Set<string> = new Set()
 
   add(userFarm: IFarmService): IFarmService {
-    const existingUser = this.get(userFarm.username)
-    if (existingUser) return existingUser
+    const existingUser = this.users.get(userFarm.username)
+    if (existingUser) {
+      if (existingUser.status === "FARMING") throw new UserIsAlreadyFarmingException()
+      return existingUser
+    }
     this.users.set(userFarm.username, userFarm)
+    this.usersHistory.add(userFarm.username)
     return userFarm
   }
 
-  get(username: string): IFarmService | null {
-    return this.users.get(username) ?? null
+  get(username: string): PublicUserFarmService | null {
+    const farmingUser = this.users.get(username)
+    return farmingUser
+      ? {
+          ownerId: farmingUser.ownerId,
+          status: farmingUser.status,
+          type: farmingUser.type,
+          username: farmingUser.username,
+        }
+      : null
   }
 
-  remove(username: string): void {
-    if (!this.get(username)) throw new Error("User is not farming.")
+  remove(username: string): { stopFarm: () => void } {
+    const farmingUser = this.users.get(username)
+    if (!farmingUser) throw new UserIsNotFarmingException()
     this.users.delete(username)
+    return {
+      stopFarm: () => farmingUser.stopFarm(),
+    }
   }
 
   listFarmingStatusCount(): FarmStatusCount {
@@ -28,14 +46,21 @@ export class FarmingUsersStorage implements IFarmingUsersStorage {
     })
     return {
       FARMING,
-      IDDLE,
+      IDDLE: this.usersHistory.size - FARMING,
     }
   }
 }
 
+export type PublicUserFarmService = {
+  type: PlanType
+  status: FarmServiceStatus
+  username: string
+  ownerId: string
+}
+
 export interface IFarmingUsersStorage {
+  users: Map<string, IFarmService>
   add(userFarm: IFarmService): IFarmService
-  get(username: string): IFarmService | null
   remove(username: string): void
   listFarmingStatusCount(): FarmStatusCount
 }

@@ -1,38 +1,15 @@
-import { PlanRepository, PlanUsage, User, UsersRepository } from "core"
+import { PlanRepository, PlanUsage, SilverPlan, User, UsersRepository } from "core"
 
 import { FarmUsageService, IFarmService } from "~/application/services"
 import { Publisher } from "../infra/queue"
-import {
-  UsersInMemory,
-  PlanRepositoryInMemory,
-  UsersRepositoryInMemory,
-  UsagesRepositoryDatabase,
-} from "~/infra/repository"
-import { UserHasStartFarmingCommand } from "~/application/commands"
-import {
-  PersistFarmSessionHandler,
-  PersistUsageHandler,
-  PlanUsageExpiredMidFarmCommand,
-  StartFarmHandler,
-} from "~/domain/handler"
-import { StartFarmPlanHandler } from "~/domain/handler/ChangePlanStatusHandler"
+import { UsersInMemory, PlanRepositoryInMemory, UsersRepositoryInMemory } from "~/infra/repository"
+import { PersistUsageHandler, ChangePlanStatusHandler } from "~/domain/handler"
 
 const publisher = new Publisher()
-const SIX_HOURS_IN_SECONDS = 21600
 let meDomain: User
 let usersRepository: UsersRepository
 let usersInMemory: UsersInMemory
 let planRepository: PlanRepository
-
-// publisher.register({
-//   operation: "user-has-start-farming",
-//   async notify({ props: { planId } }: UserHasStartFarmingCommand) {
-//     const plan = await planRepository.getById(planId)
-//     if(plan instanceof PlanUsage) {
-//       plan.use()
-//     }
-//   },
-// })
 
 const ME_ID = "123"
 const sleep = (time: number) =>
@@ -53,11 +30,15 @@ beforeEach(async () => {
   await usersRepository.create(meDomain)
   jest.useFakeTimers()
   publisher.register(new PersistUsageHandler(planRepository))
-  publisher.register(new StartFarmPlanHandler(planRepository))
+  publisher.register(new ChangePlanStatusHandler(planRepository))
 })
 
 afterEach(() => {
   publisher.observers = []
+})
+
+afterAll(() => {
+  jest.useRealTimers()
 })
 
 const getMe = async () => {
@@ -68,27 +49,17 @@ const getMe = async () => {
 }
 
 const getFarmService = (user: User): IFarmService => {
-  if (!(user.plan instanceof PlanUsage)) throw new Error()
-  return new FarmUsageService(
-    publisher,
-    user.plan.getUsageLeft(),
-    user.plan.id_plan,
-    user.id_user,
-    user.username
-  )
+  return new FarmUsageService(publisher, user.plan as PlanUsage, user.username)
 }
 
-afterAll(() => {
-  jest.useRealTimers()
-})
-
 describe("FarmUsageService test suite", () => {
-  // test("should throw when plan infinity attemps to use the service", async () => {
-  //   const me = await getMe()
-  //   me.assignPlan(SilverPlan.create({ ownerId: me.id_user }))
-  //   const meFarmService = getFarmService(me)
-  //   expect(meFarmService.startFarm()).rejects.toThrow("O plano de jsonwebtoken não é do tipo USAGE.")
-  // })
+  test("should throw when plan infinity attemps to use the service", async () => {
+    const me = await getMe()
+    me.assignPlan(SilverPlan.create({ ownerId: me.id_user }))
+    expect(() => {
+      new FarmUsageService(publisher, me.plan as PlanUsage, me.username)
+    }).toThrow("Tentativa de fazer usage farm com plano que não é do tipo USAGE.")
+  })
 
   test("should start with status iddle", async () => {
     const me = await getMe()

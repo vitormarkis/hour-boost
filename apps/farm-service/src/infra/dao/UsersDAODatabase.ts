@@ -1,7 +1,7 @@
 import { ISteamAccountSession, ISteamGame, UserSession, UsersDAO } from "core"
 import { PrismaClient } from "@prisma/client"
 
-import { getUserCurrentPlan } from "~/utils"
+import { getCurrentPlan, getCurrentPlanOrCreateOne } from "~/utils"
 
 export class UsersDAODatabase implements UsersDAO {
   constructor(private readonly prisma: PrismaClient) {}
@@ -18,7 +18,7 @@ export class UsersDAODatabase implements UsersDAO {
 
     if (!dbUser) return null
 
-    const userPlan = getUserCurrentPlan(dbUser.plan, dbUser.id_user)
+    const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
 
     return {
       email: dbUser.email,
