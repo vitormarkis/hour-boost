@@ -3,6 +3,10 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:web": "turbo dev --filter=hour-boost-web",
+    "dev:api": "turbo dev --filter=farm-service",
+    "build:web": "turbo build --filter=hour-boost-web",
+    "build:api": "turbo build --filter=farm-service",
     "lint": "turbo run lint",
     "start": "turbo run start",
     "format": "prettier --write ."
