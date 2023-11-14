@@ -6,14 +6,7 @@ import { cn } from "@/lib/utils"
 import { ThemeProvider } from "next-themes"
 import { ClerkProvider } from "@clerk/nextjs"
 import { ptBR } from "@clerk/localizations"
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query"
-
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 const queryClient = new QueryClient()
 
 const barlow = Barlow({

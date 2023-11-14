@@ -4,9 +4,9 @@ export abstract class Plan {
   id_plan: string
   readonly name: PlanAllNames
   maxSteamAccounts: number
-  ownerId: string
   maxGamesAllowed: number
   autoRestarter: boolean
+  ownerId: string
   type: PlanType
   private _status: PlanStatus
 

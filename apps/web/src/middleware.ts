@@ -1,12 +1,19 @@
 import { authMiddleware } from "@clerk/nextjs"
+import { NextFetchEvent, NextRequest, NextResponse } from "next/server"
 
-// This example protects all routes including api/trpc routes
-// Please edit this to allow other routes to be public as needed.
-// See https://clerk.com/docs/references/nextjs/auth-middleware for more information about configuring your Middleware
-export default authMiddleware({
-  publicRoutes: ["/"],
-})
+export default function (req: NextRequest, event: NextFetchEvent) {
+  return NextResponse.next()
+  // If in development or accessing /dashboard, bypass middleware
+  if (process.env.NODE_ENV === "development" || req.nextUrl.pathname === "/dashboard") {
+    return NextResponse.next()
+  }
+
+  // Otherwise, apply the authMiddleware
+  return authMiddleware({
+    publicRoutes: ["/", "/dashboard"],
+  })(req, event)
+}
 
 export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/dashboard", "/(api|trpc)(.*)"],
+  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/(api|trpc)(.*)"],
 }
