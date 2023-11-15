@@ -31,3 +31,7 @@ Content-Type: application/json
 {
   "userId": "user_2XkAyXBLx5ugXjAVx9w8QJtAf9y"
 }
+
+###
+
+GET http://localhost:4000/up

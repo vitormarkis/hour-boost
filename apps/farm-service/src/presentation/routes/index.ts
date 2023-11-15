@@ -137,7 +137,12 @@ router.get("/farm/plan-status", async (req, res) => {
 })
 
 router.get("/up", (req, res) => {
+  console.log({
+    farmingUsers: farmingUsersStorage.listFarmingStatusCount(),
+    date: new Date(),
+  })
+
   return res.status(200).json({
-    message: "server is up !!",
+    message: "server is up !",
   })
 })

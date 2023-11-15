@@ -88,6 +88,7 @@ export const ModalAddSteamAccount = React.forwardRef<
             type="password"
             placeholder="Password..."
           />
+          steam guard
           <Button onClick={handleSubmit}>Enviar</Button>
         </DialogHeader>
       </DialogContent>

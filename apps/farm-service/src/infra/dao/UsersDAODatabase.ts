@@ -1,4 +1,4 @@
-import { ISteamAccountSession, ISteamGame, UserSession, UsersDAO } from "core"
+import { ISteamAccountSession, ISteamGame, PlanUsage, UserSession, UsersDAO } from "core"
 import { PrismaClient } from "@prisma/client"
 
 import { getCurrentPlan, getCurrentPlanOrCreateOne } from "~/utils"
@@ -23,7 +23,23 @@ export class UsersDAODatabase implements UsersDAO {
     return {
       email: dbUser.email,
       id_user: dbUser.id_user,
-      plan: userPlan.name,
+      plan:
+        userPlan instanceof PlanUsage
+          ? {
+              autoRestarter: userPlan.autoRestarter,
+              maxGamesAllowed: userPlan.maxGamesAllowed,
+              maxSteamAccounts: userPlan.maxSteamAccounts,
+              maxUsageTime: userPlan.maxUsageTime,
+              name: userPlan.name,
+              type: userPlan.type as "USAGE",
+            }
+          : {
+              autoRestarter: userPlan.autoRestarter,
+              maxGamesAllowed: userPlan.maxGamesAllowed,
+              maxSteamAccounts: userPlan.maxSteamAccounts,
+              name: userPlan.name,
+              type: userPlan.type as "INFINITY",
+            },
       profilePic: dbUser.profilePic,
       purchases: dbUser.purchases.map(p => p.id_Purchase),
       role: dbUser.role,

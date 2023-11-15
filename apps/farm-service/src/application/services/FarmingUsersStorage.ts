@@ -5,6 +5,8 @@ export class FarmingUsersStorage implements IFarmingUsersStorage {
   users: Map<string, IFarmService> = new Map()
   usersHistory: Set<string> = new Set()
 
+  constructor() {}
+
   add(userFarm: IFarmService): IFarmService {
     const existingUser = this.users.get(userFarm.username)
     if (existingUser) {
