@@ -35,3 +35,49 @@ Content-Type: application/json
 ###
 
 GET http://localhost:4000/up
+
+###
+
+POST http://localhost:4000/add
+Content-Type: application/json
+
+{
+  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN"
+}
+
+###
+
+POST http://localhost:4000/start
+Content-Type: application/json
+
+{
+  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN",
+  "accountName": "yversale",
+  "password": "@998vmarkis"
+}
+
+###
+
+POST http://localhost:4000/code
+Content-Type: application/json
+
+{
+  "loginAttemptID": "ynfh9yrbt",
+  "code": "R8JPY"
+}
+
+###
+
+POST http://localhost:4000/set-farming-games
+Content-Type: application/json
+
+{
+  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN",
+  "gamesID": []
+}
+
+###
+
+GET http://localhost:4000/list
+
+

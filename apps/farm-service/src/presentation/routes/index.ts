@@ -18,6 +18,7 @@ import {
 } from "~/presentation/controllers"
 import { publisher } from "~/server"
 import { FarmingUsersStorage } from "~/application/services"
+import { SteamFarming } from "~/application/services/SteamFarming"
 
 const usersRepository = new UsersRepositoryDatabase(prisma)
 const usersDAO = new UsersDAODatabase(prisma)
@@ -145,4 +146,83 @@ router.get("/up", (req, res) => {
   return res.status(200).json({
     message: "server is up !",
   })
+})
+
+// ============
+export type UserID = string
+export type LoginSessionID = string
+export type LoginSessionConfig = {
+  insertCodeCallback: ((code: string) => void) | null
+}
+const userLoginSessions: Map<UserID, { loginSessionID: LoginSessionID }> = new Map()
+const loginSessions: Map<LoginSessionID, LoginSessionConfig> = new Map()
+const steamFarming = new SteamFarming(loginSessions, userLoginSessions)
+
+router.post("/add", (req, res) => {
+  steamFarming.addUser(req.body.userId)
+  console.log({
+    steamFarmingUsers: steamFarming.listUsers(),
+  })
+  return res.status(200).end()
+})
+router.post("/start", (req, res) => {
+  const loginAttemptID = Math.random().toString(36).substring(2, 11)
+  loginSessions.set(loginAttemptID, {
+    insertCodeCallback: null,
+  })
+  userLoginSessions.set(req.body.userId, {
+    loginSessionID: loginAttemptID,
+  })
+  console.log({
+    loginAttemptID,
+  })
+  steamFarming.login(req.body.userId, req.body.accountName, req.body.password)
+  return res.status(200).json({
+    loginAttemptID,
+  })
+})
+router.post("/code", (req, res) => {
+  const loginAttemptID = req.body.loginAttemptID
+  const code = req.body.code
+  console.log({
+    loginAttemptID,
+    code,
+  })
+
+  console.log({
+    logginSessions: loginSessions.entries(),
+  })
+  const loginSession = loginSessions.get(loginAttemptID)
+  console.log({ loginSession })
+  if (!loginSession) return res.status(404).json({ message: "Login session not found" })
+  console.log({ insertCodeCallback: loginSession.insertCodeCallback })
+  if (!loginSession.insertCodeCallback) return res.status(404).json({ message: "Callback não foi definido." })
+
+  loginSession.insertCodeCallback(code)
+
+  return res.status(200).json({
+    loginAttemptID,
+  })
+})
+router.get("/list", (req, res) => {
+  // console.log(loginSessions)
+  // console.log(loginSessions.entries())
+  return res.status(200).json({
+    users: steamFarming.listUsers(),
+    loginSessions: loginSessions.entries(),
+    userLoginSessions: userLoginSessions.entries(),
+  })
+})
+router.post("/set-farming-games", (req, res) => {
+  const userId = req.body.userId
+  const gamesID = req.body.gamesID
+  steamFarming.farmGames(userId, gamesID)
+  console.log({
+    userId,
+    gamesID,
+  })
+
+  console.log({ steamClient: steamFarming.getSteamClient(userId) })
+
+  return res.status(200).json({ message: `Adicionado os jogos ${gamesID.map(String).join(", ")}.` })
 })
