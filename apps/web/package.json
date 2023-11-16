@@ -31,6 +31,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "react-flip-move": "^3.0.5",
     "tsconfig": "workspace:*"
   }
 }
