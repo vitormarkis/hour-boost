@@ -45,7 +45,7 @@ export default function ResourceNotFoundPage() {
               transition={{ ease: "easeInOut", duration: 0.7 }}
               className="block text-[2.5rem] sm:text-[4rem] text-center sm:text-left"
             >
-              Em manutenção...
+              Em desenvolvimento...
             </motion.span>
           </div>
         </div>
