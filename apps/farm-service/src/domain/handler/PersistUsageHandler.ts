@@ -11,9 +11,12 @@ export class PersistUsageHandler implements Observer {
   async notify(command: UserCompleteFarmSessionCommand): Promise<void> {
     const actualPlan = await this.planRepository.getById(command.planId)
     if (actualPlan instanceof PlanUsage) {
+      console.log({
+        usage: command.usage,
+      })
       actualPlan.use(command.usage)
       actualPlan.stopFarm()
-      await this.planRepository.update(actualPlan)
+      void this.planRepository.update(actualPlan)
     }
   }
 }

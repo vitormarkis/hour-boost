@@ -63,6 +63,8 @@ export type PublicUserFarmService = {
 export interface IFarmingUsersStorage {
   users: Map<string, IFarmService>
   add(userFarm: IFarmService): IFarmService
-  remove(username: string): void
+  remove(username: string): {
+    stopFarm: () => void
+  }
   listFarmingStatusCount(): FarmStatusCount
 }

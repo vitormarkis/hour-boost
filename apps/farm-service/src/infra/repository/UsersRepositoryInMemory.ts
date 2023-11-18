@@ -1,11 +1,14 @@
 import { User, UsersRepository } from "core"
-import { UsersInMemory } from "~/infra/repository/UsersInMemory"
+import { UsersInMemory } from "./UsersInMemory"
 
 export class UsersRepositoryInMemory implements UsersRepository {
   constructor(private readonly usersMemory: UsersInMemory) {}
-
   async getByID(userId: string): Promise<User | null> {
     return this.usersMemory.users.find(u => u.id_user === userId) ?? null
+  }
+
+  async getByUsername(username: string): Promise<User | null> {
+    return this.usersMemory.users.find(u => u.username === username) ?? null
   }
 
   async update(user: User): Promise<void> {

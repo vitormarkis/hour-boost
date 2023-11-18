@@ -1,5 +1,5 @@
-import { PlanRepository, PlanUsage, Usage } from "core"
-import { Command } from "~/application/commands"
+import { PlanRepository, PlanUsage } from "core"
+import { PlanUsageExpiredMidFarmCommand } from "~/application/commands/PlanUsageExpiredMidFarmCommand"
 import { EventNames, Observer } from "~/infra/queue"
 
 export class PersistFarmSessionHandler implements Observer {
@@ -15,18 +15,4 @@ export class PersistFarmSessionHandler implements Observer {
       await this.planRepository.update(plan)
     }
   }
-}
-
-export type PlanUsageExpiredMidFarmCommand = {
-  operation: "plan-usage-expired-mid-farm"
-  usage: Usage
-  planId: string
-  userId: string
-}
-
-export type PlanUsageCompleteFarm = {
-  operation: "plan-usage-expired-mid-farm"
-  usage: Usage
-  planId: string
-  userId: string
 }

@@ -18,7 +18,6 @@ import { getCurrentPlan, getCurrentPlanOrCreateOne } from "~/utils"
 
 export class UsersRepositoryDatabase implements UsersRepository {
   constructor(private readonly prisma: PrismaClient) {}
-
   async create(user: User): Promise<string> {
     const { id_user } = await this.prisma.user.create({
       data: {
@@ -117,56 +116,13 @@ export class UsersRepositoryDatabase implements UsersRepository {
   }
 
   async getByID(userId: string): Promise<User | null> {
-    const dbUser = await this.prisma.user.findUnique({
-      where: { id_user: userId },
-      include: {
-        plan: {
-          include: {
-            usages: true,
-          },
-        },
-        purchases: true,
-        steamAccounts: {
-          include: { games: true },
-        },
-      },
-    })
+    const dbUser = await prismaGetUser(this.prisma, { userId })
+    return dbUser ? prismaUserToDomain(dbUser) : null
+  }
 
-    if (!dbUser) return null
-
-    const steamAccounts: SteamAccount[] = dbUser.steamAccounts.map(sa =>
-      SteamAccount.restore({
-        credentials: SteamAccountCredentials.restore({
-          accountName: sa.accountName,
-          password: sa.password,
-        }),
-        games: sa.games.map(g =>
-          SteamGame.restore({
-            gameId: g.gameId,
-            id_steamGame: g.id_steamGame,
-          })
-        ),
-        id_steamAccount: sa.id_steamAccount,
-      })
-    )
-
-    const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
-
-    return User.restore({
-      email: dbUser.email,
-      id_user: dbUser.id_user,
-      plan: userPlan,
-      profilePic: dbUser.profilePic,
-      username: dbUser.username,
-      purchases: dbUser.purchases.map(p =>
-        Purchase.restore({
-          id_Purchase: p.id_Purchase,
-        })
-      ),
-      steamAccounts: steamAccounts,
-      role: roleFactory(dbUser.role),
-      status: statusFactory(dbUser.status),
-    })
+  async getByUsername(username: string): Promise<User | null> {
+    const dbUser = await prismaGetUser(this.prisma, { username })
+    return dbUser ? prismaUserToDomain(dbUser) : null
   }
 }
 
@@ -180,4 +136,67 @@ export function statusFactory(status: StatusName): Status {
   if (status === "ACTIVE") return new ActiveStatus()
   if (status === "BANNED") return new BannedStatus()
   throw new Error("Invalid status received: " + status)
+}
+
+export function prismaUserToDomain(dbUser: PrismaGetUser) {
+  if (!dbUser) return null
+  const steamAccounts: SteamAccount[] = dbUser.steamAccounts.map(sa =>
+    SteamAccount.restore({
+      credentials: SteamAccountCredentials.restore({
+        accountName: sa.accountName,
+        password: sa.password,
+      }),
+      games: sa.games.map(g =>
+        SteamGame.restore({
+          gameId: g.gameId,
+          id_steamGame: g.id_steamGame,
+        })
+      ),
+      id_steamAccount: sa.id_steamAccount,
+    })
+  )
+
+  const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
+
+  return User.restore({
+    email: dbUser.email,
+    id_user: dbUser.id_user,
+    plan: userPlan,
+    profilePic: dbUser.profilePic,
+    username: dbUser.username,
+    purchases: dbUser.purchases.map(p =>
+      Purchase.restore({
+        id_Purchase: p.id_Purchase,
+      })
+    ),
+    steamAccounts: steamAccounts,
+    role: roleFactory(dbUser.role),
+    status: statusFactory(dbUser.status),
+  })
+}
+
+export type IGetUserProps = { userId: string } | { username: string }
+export type PrismaGetUser = Awaited<ReturnType<typeof prismaGetUser>>
+export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
+  return prisma.user.findUnique({
+    where:
+      "username" in props
+        ? {
+            username: props.username,
+          }
+        : {
+            id_user: props.userId,
+          },
+    include: {
+      plan: {
+        include: {
+          usages: true,
+        },
+      },
+      purchases: true,
+      steamAccounts: {
+        include: { games: true },
+      },
+    },
+  })
 }

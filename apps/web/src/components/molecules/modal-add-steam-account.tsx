@@ -166,7 +166,7 @@ export const ModalAddSteamAccount = React.forwardRef<
                 <div className="relative w-full">
                   <div className="absolute right-4 bottom-full">
                     <strong
-                      onClick={s.cancelAddSteamGuard}
+                      onClick={s.goBackToCredentials}
                       className="underline text-xs cursor-pointer font-medium text-accent"
                     >
                       Voltar
@@ -294,7 +294,7 @@ export function useStater() {
     removeAccountNameFromSteamGuardCache()
     closeModal()
   }
-  const cancelAddSteamGuard = () => {
+  const goBackToCredentials = () => {
     setFormStep("CREDENTIALS")
     setTimeout(() => refInputAccountName.current?.focus(), 1)
   }
@@ -313,7 +313,7 @@ export function useStater() {
     openModal,
     completeForm,
     form,
-    cancelAddSteamGuard,
+    goBackToCredentials,
     inputStates: {
       accountName,
       setAccountName,

@@ -20,7 +20,8 @@ export class StopFarmController {
       const user = await this.usersRepository.getByID(req.payload.userId)
       if (!user) return { json: { message: "Usuário não encontrado." }, status: 404 }
 
-      this.farmingUsersStorage.remove(user.username)
+      const { stopFarm } = this.farmingUsersStorage.remove(user.username)
+      stopFarm()
       return { json: null, status: 200 }
     } catch (error) {
       if (error instanceof UserIsNotFarmingException) return makeResError(error, 400)

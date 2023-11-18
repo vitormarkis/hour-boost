@@ -2,21 +2,13 @@ POST http://localhost:4000/farm/start
 Content-Type: application/json
 
 {
-  "userId": "user_2XkAyXBLx5ugXjAVx9w8QJtAf9y"
+  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN",
+  "gamesID": [601510]
 }
 
 ###
 
 POST http://localhost:4000/farm/stop
-Content-Type: application/json
-
-{
-  "userId": "user_2XkAyXBLx5ugXjAVx9w8QJtAf9y"
-}
-
-###
-
-GET http://54.233.154.239:4000/farm/plan-status
 Content-Type: application/json
 
 {
@@ -29,7 +21,7 @@ GET http://localhost:4000/farm/plan-status
 Content-Type: application/json
 
 {
-  "userId": "user_2XkAyXBLx5ugXjAVx9w8QJtAf9y"
+  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN"
 }
 
 ###
@@ -38,20 +30,12 @@ GET http://localhost:4000/up
 
 ###
 
-POST http://localhost:4000/add
-Content-Type: application/json
-
-{
-  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN"
-}
-
-###
-
-POST http://localhost:4000/start
+POST http://localhost:4000/add-account
 Content-Type: application/json
 
 {
   "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN",
+  "username": "vitormarkis",
   "accountName": "yversale",
   "password": "@998vmarkis"
 }
@@ -62,8 +46,9 @@ POST http://localhost:4000/code
 Content-Type: application/json
 
 {
-  "loginAttemptID": "ynfh9yrbt",
-  "code": "R8JPY"
+  "code": "73GP2",
+  "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN",
+  "accountName": "yversale"
 }
 
 ###
@@ -73,7 +58,7 @@ Content-Type: application/json
 
 {
   "userId": "user_2XhCIwGjiPYDC35lIWBpF0OapkN",
-  "gamesID": []
+  "gamesID": [601510]
 }
 
 ###

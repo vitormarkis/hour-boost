@@ -2,7 +2,7 @@ import { PlanUsage, User, UsersRepository } from "core"
 
 import { FarmUsageService, FarmingUsersStorage, IFarmingUsersStorage } from "~/application/services"
 import { Publisher } from "~/infra/queue"
-import { UsersInMemory, UsersRepositoryInMemory } from "~/infra/repository"
+import { UsersInMemory, UsersRepositoryInMemory } from "../infra/repository"
 import { StopFarmController } from "~/presentation/controllers"
 import { makeUser } from "~/utils/makeUser"
 

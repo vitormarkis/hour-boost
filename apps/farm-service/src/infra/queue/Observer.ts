@@ -6,6 +6,10 @@ export type EventNames =
   | "user-pause-infinity-farm-session-command"
   | "plan-usage-expired-mid-farm"
   | "user-farmed"
+  | "STEAMCLIENT:add-more-games"
+  | "STEAMCLIENT:paused-some-games"
+  | "STEAMCLIENT:start-farming"
+  | "STEAMCLIENT:stop-farming"
 
 export interface Observer {
   operation: EventNames

@@ -20,6 +20,7 @@ export class FarmInfinityService implements IFarmService {
       new UserHasStartFarmingCommand({
         planId: this.planId,
         userId: this.ownerId,
+        when: new Date(),
       })
     )
   }
@@ -29,6 +30,7 @@ export class FarmInfinityService implements IFarmService {
     this.publisher.publish(
       new UserPauseInfinityFarmSessionCommand({
         username: this.username,
+        when: new Date(),
       })
     )
   }

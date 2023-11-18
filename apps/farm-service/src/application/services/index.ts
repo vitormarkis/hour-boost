@@ -5,6 +5,7 @@ export * from "./FarmingUsageController"
 export * from "./FarmInfinityService"
 export * from "./FarmUsageService"
 export * from "./FarmingUsersStorage"
+export * from "./SteamFarming"
 
 export type FarmServiceStatus = "FARMING" | "IDDLE"
 

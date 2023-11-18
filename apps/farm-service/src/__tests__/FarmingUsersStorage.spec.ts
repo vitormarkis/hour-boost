@@ -8,7 +8,7 @@ import {
 } from "~/application/services"
 import { ChangePlanStatusHandler, PersistUsageHandler } from "~/domain/handler"
 import { Publisher } from "~/infra/queue"
-import { PlanRepositoryInMemory, UsersInMemory, UsersRepositoryInMemory } from "~/infra/repository"
+import { PlanRepositoryInMemory, UsersInMemory, UsersRepositoryInMemory } from "../infra/repository"
 import { makeUser } from "~/utils/makeUser"
 
 const USER_ID = "123"

@@ -2,7 +2,7 @@ import { PlanRepository, PlanUsage, SilverPlan, User, UsersRepository } from "co
 
 import { FarmUsageService, IFarmService } from "~/application/services"
 import { Publisher } from "../infra/queue"
-import { UsersInMemory, PlanRepositoryInMemory, UsersRepositoryInMemory } from "~/infra/repository"
+import { UsersInMemory, PlanRepositoryInMemory, UsersRepositoryInMemory } from "../infra/repository"
 import { PersistUsageHandler, ChangePlanStatusHandler } from "~/domain/handler"
 
 const publisher = new Publisher()
@@ -130,4 +130,6 @@ describe("FarmUsageService test suite", () => {
       })
     )
   })
+
+  test("should call event when user end farm session", async () => {})
 })

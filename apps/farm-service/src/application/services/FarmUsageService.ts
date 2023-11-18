@@ -1,9 +1,10 @@
 import { PlanType, PlanUsage, Usage } from "core"
 
-import { Command, UserCompleteFarmSessionCommand, UserHasStartFarmingCommand } from "~/application/commands"
+import { UserCompleteFarmSessionCommand, UserHasStartFarmingCommand } from "~/application/commands"
+import { PlanUsageExpiredMidFarmCommand } from "~/application/commands/PlanUsageExpiredMidFarmCommand"
+import { UserFarmedCommand } from "~/application/commands/UserFarmedCommand"
 import { FarmServiceStatus, IFarmService } from "~/application/services"
 import { Publisher } from "~/infra/queue"
-import { PlanUsageExpiredMidFarmCommand } from "~/domain/handler"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
 
@@ -36,44 +37,55 @@ export class FarmUsageService implements IFarmService {
     this.startedAt = new Date()
     this.farmingInterval = setInterval(() => {
       if (this.currentFarmingUsage > this.usageLeft) {
-        this.stopFarm()
-        this.publisher.publish({
-          operation: "plan-usage-expired-mid-farm",
-        } as PlanUsageExpiredMidFarmCommand)
+        const { usage } = this.stopFarm()
+        this.publisher.publish(
+          new PlanUsageExpiredMidFarmCommand({
+            planId: this.planId,
+            usage,
+            userId: this.ownerId,
+            when: new Date(),
+          })
+        )
         return
       }
       this.currentFarmingUsage += this.FARMING_GAP
-      this.publisher.publish({
-        operation: "user-farmed",
-        farmedValue: this.currentFarmingUsage,
-      } as Command)
+      this.publisher.publish(
+        new UserFarmedCommand({ amount: this.FARMING_GAP, username: this.username, when: new Date() })
+      )
       // no front, subtrair o valor farmedValue do usageLeft
     }, this.FARMING_GAP * 1000).unref()
 
     this.publisher.publish(
       new UserHasStartFarmingCommand({
+        when: new Date(),
         planId: this.planId,
         userId: this.ownerId,
       })
     )
   }
 
-  stopFarm(): void {
+  stopFarm(): { usage: Usage } {
     this.status = "IDDLE"
     clearInterval(this.farmingInterval)
 
-    this.publisher.publish({
-      operation: "user-complete-farm-session",
-      usage: Usage.create({
-        amountTime: this.currentFarmingUsage,
-        createdAt: this.startedAt,
-        plan_id: this.planId,
-      }),
-      planId: this.planId,
-      userId: this.ownerId,
-      username: this.username,
-    } as UserCompleteFarmSessionCommand)
+    const usage = Usage.create({
+      amountTime: this.currentFarmingUsage,
+      createdAt: this.startedAt,
+      plan_id: this.planId,
+    })
+
+    this.publisher.publish(
+      new UserCompleteFarmSessionCommand({
+        planId: this.planId,
+        usage,
+        userId: this.ownerId,
+        username: this.username,
+        when: new Date(),
+        farmStartedAt: this.startedAt,
+      })
+    )
 
     this.currentFarmingUsage = 0
+    return { usage }
   }
 }

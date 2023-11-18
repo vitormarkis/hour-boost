@@ -2,7 +2,7 @@ import { User } from "core"
 
 import { FarmingUsersStorage } from "~/application/services"
 import { Publisher } from "~/infra/queue"
-import { UsersRepositoryInMemory, UsersInMemory } from "~/infra/repository"
+import { UsersRepositoryInMemory, UsersInMemory } from "../infra/repository"
 import { StartFarmController } from "~/presentation/controllers"
 import { makeUser } from "~/utils/makeUser"
 
