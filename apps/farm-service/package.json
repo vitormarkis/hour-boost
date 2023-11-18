@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "dev": "tsx watch src/server.ts --clear-screen=false",
     "dev:inspect": "node --require tsx/cjs --inspect src/server.ts",
-    "build": "rm -rf dist/ && tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
-    "start": "node dist/src/server.js",
+    "build": "tsc --noEmit && tsup src/server.ts",
+    "build:f": "tsup src/server.ts",
+    "start": "node dist/server.js",
     "start:inspect": "node --inspect dist/src/server.js",
     "build:s": "bun run build && bun start",
     "seed": "tsx seed.ts",
@@ -29,6 +31,7 @@
     "express": "^4.18.2",
     "steam-user": "^5.0.2",
     "tsc-alias": "^1.8.8",
+    "tsup": "^7.2.0",
     "tsx": "^3.14.0"
   },
   "devDependencies": {

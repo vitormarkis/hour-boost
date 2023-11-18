@@ -1,22 +1,20 @@
-import "dotenv/config"
 import { LooseAuthProp } from "@clerk/clerk-sdk-node"
-import express, { Application, NextFunction, Request, Response } from "express"
 import cors from "cors"
+import "dotenv/config"
+import express, { Application, NextFunction, Request, Response } from "express"
 
 import {
+  LogCompleteInfinityFarmSessionHandler,
+  LogSteamStartFarmHandler,
+  LogSteamStopFarmHandler,
+  LogUserCompleteFarmSessionHandler,
   PersistUsageHandler,
   StartFarmPlanHandler,
-  LogSteamStopFarmHandler,
-  LogSteamStartFarmHandler,
-  LogCompleteInfinityFarmSessionHandler,
-  LogUserCompleteFarmSessionHandler,
-  LogUserFarmedHandler,
 } from "~/domain/handler"
-import { prisma } from "~/infra/libs"
-import { Publisher } from "~/infra/queue"
-import { PlanRepositoryDatabase } from "~/infra/repository"
-import { router } from "~/presentation/routes"
-import { SteamFarming } from "~/application/services"
+import { planRepository, publisher } from "~/presentation/instances"
+
+import { command_routerSteam } from "~/presentation/routes/command"
+import { query_routerGeneral, query_routerPlan, query_routerSteam } from "~/presentation/routes/query"
 
 declare global {
   namespace Express {
@@ -31,15 +29,16 @@ app.use(
   })
 )
 app.use(express.json())
-app.use(router)
+
+app.use(query_routerSteam)
+app.use(query_routerPlan)
+app.use(query_routerGeneral)
+app.use(command_routerSteam)
+
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err)
   return res.status(401).send("Unauthenticated!")
 })
-
-const planRepository = new PlanRepositoryDatabase(prisma)
-export const publisher = new Publisher()
-export const steamFarming = new SteamFarming(publisher)
 
 publisher.register(new PersistUsageHandler(planRepository))
 publisher.register(new StartFarmPlanHandler())
