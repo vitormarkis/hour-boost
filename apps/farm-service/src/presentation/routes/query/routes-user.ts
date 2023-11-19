@@ -13,8 +13,9 @@ import {
   usersRepository,
 } from "~/presentation/instances"
 import { getTimeoutPromise, makeResError } from "~/utils"
+import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 
-export const router: Router = Router()
+export const query_routerUser: Router = Router()
 export const createUser = new CreateUser(usersRepository, userAuthentication)
 export const getUser = new GetUser(usersDAO)
 
@@ -29,7 +30,7 @@ const loginErrorMessages: Record<number, string> = {
   84: "Rate limit exceeded.",
 }
 
-router.get("/me", ClerkExpressWithAuth(), async (req: WithAuthProp<Request>, res: Response) => {
+query_routerUser.get("/me", ClerkExpressWithAuth(), async (req: WithAuthProp<Request>, res: Response) => {
   const getMeController = new GetMeController(usersRepository, createUser, getUser)
   const { json, status } = await getMeController.handle({
     payload: {
@@ -40,7 +41,7 @@ router.get("/me", ClerkExpressWithAuth(), async (req: WithAuthProp<Request>, res
   return res.status(status).json(json)
 })
 
-router.get("/farm/plan-status", async (req, res) => {
+query_routerUser.get("/farm/plan-status", async (req, res) => {
   try {
     const user = await usersRepository.getByID(req.body.userId)
     if (!user) {
@@ -75,7 +76,7 @@ router.get("/farm/plan-status", async (req, res) => {
   }
 })
 
-router.get("/up", (req, res) => {
+query_routerUser.get("/up", (req, res) => {
   console.log({
     farmingUsers: farmingUsersStorage.listFarmingStatusCount(),
     date: new Date(),
@@ -95,40 +96,7 @@ export type LoginSessionConfig = {
 const userLoginSessions: Map<UserID, { loginSessionID: LoginSessionID }> = new Map()
 const loginSessions: Map<LoginSessionID, LoginSessionConfig> = new Map()
 
-router.post("/add-account", async (req, res) => {
-  try {
-    const { userId, username, accountName, password } = req.body
-
-    const { userSteamClient: usc } = steamFarming.addUser(userId, username)
-    usc.login(accountName, password)
-
-    const resolved = await Promise.any([
-      new Promise<Resolved>(res => {
-        usc.client.on("steamGuard", domain => {
-          res({ message: `CLX: Sending code to email ${domain}` })
-        })
-      }),
-      new Promise<Resolved>(res => {
-        usc.client.on("error", error => {
-          res({
-            message: `CLX: Error of type ${loginErrorMessages[error.eresult]}`,
-            error,
-          })
-        })
-      }),
-      getTimeoutPromise<Resolved>(10, {
-        message: "Server timed out :D",
-      }),
-    ])
-
-    return res.status(200).json(resolved)
-  } catch (error) {
-    const { json, status } = makeResError(error, 500)
-    return res.status(status).json(json)
-  }
-})
-
-router.post("/code", async (req, res) => {
+query_routerUser.post("/code", async (req, res) => {
   try {
     const { code, userId, accountName } = req.body
 
@@ -141,24 +109,36 @@ router.post("/code", async (req, res) => {
     const resolved = await Promise.any([
       new Promise<Resolved>(res => {
         usc.client.on("loggedOn", (details, parental) => {
-          res({ message: `CLX: Login succesfully`, details, parental })
+          res({
+            json: { message: `CLX: Login succesfully`, details, parental },
+            status: 200,
+          })
         })
       }),
       new Promise<Resolved>(res => {
         usc.client.on("steamGuard", (details, parental) => {
-          res({ message: `CLX: Steam Guard invalid, try again.`, details, parental })
+          res({
+            json: { message: `CLX: Steam Guard invalid, try again.`, details, parental },
+            status: 200,
+          })
         })
       }),
       new Promise<Resolved>(res => {
         usc.client.on("error", error => {
           res({
-            message: `CLX: Error of type ${loginErrorMessages[error.eresult]}`,
-            error,
+            json: {
+              message: `CLX: Error of type ${loginErrorMessages[error.eresult]}`,
+              error,
+            },
+            status: 400,
           })
-        })
-      }),
-      getTimeoutPromise<Resolved>(10, {
-        message: "Server timed out :D",
+        }),
+          getTimeoutPromise<Resolved>(EVENT_PROMISES_TIMEOUT_IN_SECONDS, {
+            json: {
+              message: "Server timed out :D",
+            },
+            status: 400,
+          })
       }),
     ])
 
@@ -169,7 +149,7 @@ router.post("/code", async (req, res) => {
   }
 })
 
-router.get("/list", (req, res) => {
+query_routerUser.get("/list", (req, res) => {
   return res.status(200).json({
     users: steamFarming.listUsers(),
     loginSessions: loginSessions.entries(),

@@ -14,7 +14,12 @@ import {
 import { planRepository, publisher } from "~/presentation/instances"
 
 import { command_routerSteam } from "~/presentation/routes/command"
-import { query_routerGeneral, query_routerPlan, query_routerSteam } from "~/presentation/routes/query"
+import {
+  query_routerGeneral,
+  query_routerPlan,
+  query_routerSteam,
+  query_routerUser,
+} from "~/presentation/routes/query"
 
 declare global {
   namespace Express {
@@ -30,6 +35,7 @@ app.use(
 )
 app.use(express.json())
 
+app.use(query_routerUser)
 app.use(query_routerSteam)
 app.use(query_routerPlan)
 app.use(query_routerGeneral)

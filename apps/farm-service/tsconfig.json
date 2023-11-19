@@ -24,5 +24,5 @@
       "~/*": ["./src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "../../packages/core/src/contracts/IDGenerator.ts"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }
