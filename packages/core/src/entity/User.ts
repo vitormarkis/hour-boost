@@ -1,11 +1,15 @@
-import { GuestPlan, PlanInfinity, PlanUsage } from "../entity/plan"
-import { Plan } from "./plan/Plan"
-import { Purchase } from "./Purchase"
-import { Role } from "./role/Role"
-import { UserRole } from "./role/UserRole"
-import { ActiveStatus } from "./status/ActiveStatus"
-import { Status, StatusName } from "./status/Status"
-import { SteamAccount } from "./SteamAccount"
+import {
+  ActiveStatus,
+  ApplicationError,
+  GuestPlan,
+  PlanInfinity,
+  PlanUsage,
+  Purchase,
+  Role,
+  Status,
+  SteamAccount,
+  UserRole,
+} from "core/entity"
 
 export class User {
   readonly id_user: string
@@ -54,8 +58,14 @@ export class User {
 
   addSteamAccount(steamAccount: SteamAccount) {
     const currentUserSteamAccounts = this.steamAccounts.length
+    const alreadyHasSteamAccountWithThisAccountName = this.steamAccounts.some(sa => {
+      return sa.credentials.accountName === steamAccount.credentials.accountName
+    })
+    if (alreadyHasSteamAccountWithThisAccountName) {
+      throw new ApplicationError("Você já possui essa conta cadastrada!")
+    }
     if (currentUserSteamAccounts >= this.plan.maxSteamAccounts) {
-      throw new Error("Max plan steam accounts reached.")
+      throw new ApplicationError("Você já adicionou o máximo de contas que seu plano permite!")
     }
     this.steamAccounts.push(steamAccount)
   }

@@ -1,4 +1,10 @@
-import { PlanInfinity, PlanUsage, UserIsAlreadyFarmingException, UsersRepository } from "core"
+import {
+  ApplicationError,
+  PlanInfinity,
+  PlanUsage,
+  UserIsAlreadyFarmingException,
+  UsersRepository,
+} from "core"
 
 import { HttpClient } from "~/contracts/HttpClient"
 import { FarmInfinityService, FarmUsageService, IFarmingUsersStorage } from "~/application/services"
@@ -39,7 +45,7 @@ export class StartFarmController {
       }
 
       console.log({ plan: user.plan })
-      throw new Error("Instância do plano do usuário não suportado.")
+      throw new ApplicationError("Instância do plano do usuário não suportado.")
     } catch (error) {
       console.log(error)
       if (error instanceof UserIsAlreadyFarmingException) return makeResError(error, 400)

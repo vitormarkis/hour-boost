@@ -1,6 +1,6 @@
 import { SteamGame } from "./SteamGame"
 import { SteamAccountCredentials } from "./SteamAccountCredentials"
-import { makeID } from "./generateID"
+import { IDGenerator } from "../contracts"
 
 export class SteamAccount {
   id_steamAccount: string
@@ -17,7 +17,7 @@ export class SteamAccount {
     return new SteamAccount({
       ...props,
       games: [],
-      id_steamAccount: makeID(),
+      id_steamAccount: props.idGenerator.makeID(),
     })
   }
 
@@ -42,4 +42,5 @@ type SteamAccountProps = {
 
 type SteamAccountCreateProps = {
   credentials: SteamAccountCredentials
+  idGenerator: IDGenerator
 }

@@ -1,10 +1,10 @@
 import "dotenv/config"
 
 import { ClerkExpressWithAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
-import { CreateUser, GetUser, PlanInfinity } from "core"
+import { ApplicationError, CreateUser, GetUser, PlanInfinity } from "core"
 import { Request, Response, Router } from "express"
 
-import { GetMeController } from "~/presentation/controllers"
+import { GetMeController, Resolved } from "~/presentation/controllers"
 import {
   farmingUsersStorage,
   steamFarming,
@@ -95,10 +95,6 @@ export type LoginSessionConfig = {
 const userLoginSessions: Map<UserID, { loginSessionID: LoginSessionID }> = new Map()
 const loginSessions: Map<LoginSessionID, LoginSessionConfig> = new Map()
 
-type Resolved = {
-  message: string
-} & Record<string, any>
-
 router.post("/add-account", async (req, res) => {
   try {
     const { userId, username, accountName, password } = req.body
@@ -137,7 +133,7 @@ router.post("/code", async (req, res) => {
     const { code, userId, accountName } = req.body
 
     const { userSteamClient: usc } = steamFarming.getUser(userId)
-    if (!usc) throw new Error("User never tried to log in.")
+    if (!usc) throw new ApplicationError("User never tried to log in.")
 
     const onSteamGuard = usc.getLastHandler(accountName, "steamGuard")
     onSteamGuard(code)

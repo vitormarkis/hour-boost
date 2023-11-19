@@ -1,7 +1,7 @@
 export function getTimeoutPromise<T>(timeInSeconds: number, object: T): Promise<T> {
-  return new Promise(res =>
+  return new Promise((res, rej) =>
     setTimeout(() => {
-      res(object)
-    }, timeInSeconds * 1000)
+      rej(object)
+    }, timeInSeconds * 1000).unref()
   )
 }

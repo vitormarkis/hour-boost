@@ -13,7 +13,7 @@
     "start:inspect": "node --inspect dist/src/server.js",
     "build:s": "bun run build && bun start",
     "seed": "tsx seed.ts",
-    "test": "jest --silent"
+    "test": "jest --silent --verbose"
   },
   "keywords": [],
   "author": "",

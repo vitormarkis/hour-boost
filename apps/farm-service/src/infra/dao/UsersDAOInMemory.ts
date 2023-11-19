@@ -4,6 +4,15 @@ import { UsersInMemory } from "~/infra/repository"
 export class UsersDAOInMemory implements UsersDAO {
   constructor(private readonly users: UsersInMemory) {}
 
+  async getUsername(userId: string): Promise<{ username: string } | null> {
+    const dbUser = this.users.users.find(u => u.id_user === userId)
+    return dbUser
+      ? {
+          username: dbUser.username,
+        }
+      : null
+  }
+
   async getByID(userId: string): Promise<UserSession | null> {
     const foundUser = this.users.users.find(u => u.id_user === userId) ?? null
 

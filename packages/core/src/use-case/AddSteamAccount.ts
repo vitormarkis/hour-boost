@@ -1,14 +1,18 @@
-import { SteamAccount } from "../entity/SteamAccount"
-import { SteamAccountCredentials } from "../entity/SteamAccountCredentials"
-import { UsersRepository } from "../repository/users-repository"
+import { IDGenerator } from "core/contracts"
+import { ApplicationError, SteamAccount, SteamAccountCredentials } from "core/entity"
+import { UsersRepository } from "core/repository"
 
 export class AddSteamAccount {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly idGenerator: IDGenerator
+  ) {}
 
   async execute(input: AddSteamAccountInput): Promise<AddSteamAccountOutput> {
     const user = await this.usersRepository.getByID(input.userId)
-    if (!user) throw new Error("No user found!")
+    if (!user) throw new ApplicationError("No user found!", 404)
     const newSteamAccount = SteamAccount.create({
+      idGenerator: this.idGenerator,
       credentials: SteamAccountCredentials.create({
         accountName: input.accountName,
         password: input.password,

@@ -1,5 +1,6 @@
 import SteamUser from "steam-user"
 import { UserSteamClient } from "~/application/services/steam"
+import { SteamBuilder } from "~/contracts/SteamBuilder"
 import { Publisher } from "~/infra/queue"
 
 type UserID = string
@@ -7,12 +8,15 @@ type UserID = string
 export class SteamFarming {
   farmingUsers: Map<UserID, UserSteamClient> = new Map()
 
-  constructor(private readonly publisher: Publisher) {}
+  constructor(
+    private readonly publisher: Publisher,
+    private readonly steamBuilder: SteamBuilder
+  ) {}
 
   addUser(userId: string, username: string) {
     const userSteamClient = new UserSteamClient({
       props: {
-        client: new SteamUser(),
+        client: this.steamBuilder.create(),
         userId,
         username,
       },

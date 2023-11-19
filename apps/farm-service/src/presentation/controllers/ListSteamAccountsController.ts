@@ -1,6 +1,7 @@
 import { API_GET_SteamAccounts, ISteamAccountSession, ListSteamAccounts } from "core"
 
 import { HttpClient } from "~/contracts/HttpClient"
+import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { makeResError } from "~/utils"
 
 export class ListSteamAccountsController {
@@ -11,7 +12,7 @@ export class ListSteamAccountsController {
       userId: string
     }>
   ): Promise<HttpClient.Response> {
-    try {
+    const perform = async () => {
       const { steamAccounts } = await this.listSteamAccounts.execute({
         userId: req.payload.userId,
       })
@@ -22,9 +23,8 @@ export class ListSteamAccountsController {
         } as API_GET_SteamAccounts,
         status: 200,
       }
-    } catch (error) {
-      console.log(error)
-      return makeResError(error)
     }
+
+    return promiseHandler(perform())
   }
 }

@@ -3,6 +3,11 @@ import { UsersInMemory } from "./UsersInMemory"
 
 export class UsersRepositoryInMemory implements UsersRepository {
   constructor(private readonly usersMemory: UsersInMemory) {}
+
+  async dropAll(): Promise<void> {
+    return this.usersMemory.dropAll()
+  }
+
   async getByID(userId: string): Promise<User | null> {
     return this.usersMemory.users.find(u => u.id_user === userId) ?? null
   }

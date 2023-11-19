@@ -12,6 +12,7 @@ import {
   PlanUsageRestoreProps,
   Plan,
   Usage,
+  ApplicationError,
 } from "core"
 
 export function makeInfinityPlan(planProps: PlanInfinityRestoreProps & PlanName["INFINITY"]): PlanInfinity {
@@ -19,13 +20,13 @@ export function makeInfinityPlan(planProps: PlanInfinityRestoreProps & PlanName[
   if (planProps.name === "SILVER") return SilverPlan.restore(planProps)
   if (planProps.name === "GOLD") return GoldPlan.restore(planProps)
   console.log(`makeInfinityPlan: Tried to assign this invalid planProps: `, planProps)
-  throw new Error("Invalid plan assignment")
+  throw new ApplicationError("Invalid plan assignment")
 }
 
 export function makeUsagePlan(planProps: PlanUsageRestoreProps & PlanName["USAGE"]): PlanUsage {
   if (planProps.name === "GUEST") return GuestPlan.restore(planProps)
   console.log(`makeUsagePlan: Tried to assign this invalid planProps: `, planProps)
-  throw new Error("Invalid plan assignment")
+  throw new ApplicationError("Invalid plan assignment")
 }
 
 type SessionPlan = PrismaPlan & { usages: PrismaUsage[] }
@@ -58,7 +59,7 @@ export function getCurrentPlan(dbUserPlan: SessionPlan) {
       ),
     })
   console.log({ dbUserPlan })
-  throw new Error("Invalid plan data from database")
+  throw new ApplicationError("Invalid plan data from database")
 }
 
 export type PlanName = {

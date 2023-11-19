@@ -14,7 +14,7 @@ let planRepository: PlanRepository
 const ME_ID = "123"
 const sleep = (time: number) =>
   new Promise(res => {
-    setTimeout(res, time)
+    setTimeout(res, time).unref()
     jest.advanceTimersByTime(time)
   })
 

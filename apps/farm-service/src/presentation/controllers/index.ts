@@ -1,4 +1,4 @@
-export * from "./CreateSteamAccountController"
+export * from "./AddSteamAccountController"
 export * from "./GetMeController"
 export * from "./ListSteamAccountsController"
 export * from "./StartFarmController"

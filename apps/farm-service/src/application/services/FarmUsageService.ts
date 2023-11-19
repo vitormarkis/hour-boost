@@ -1,4 +1,4 @@
-import { PlanType, PlanUsage, Usage } from "core"
+import { ApplicationError, PlanType, PlanUsage, Usage } from "core"
 
 import { UserCompleteFarmSessionCommand, UserHasStartFarmingCommand } from "~/application/commands"
 import { PlanUsageExpiredMidFarmCommand } from "~/application/commands/PlanUsageExpiredMidFarmCommand"
@@ -24,7 +24,7 @@ export class FarmUsageService implements IFarmService {
 
   constructor(publisher: Publisher, plan: PlanUsage, username: string) {
     if (!(plan instanceof PlanUsage))
-      throw new Error("Tentativa de fazer usage farm com plano que não é do tipo USAGE.")
+      throw new ApplicationError("Tentativa de fazer usage farm com plano que não é do tipo USAGE.")
     this.planId = plan.id_plan
     this.ownerId = plan.ownerId
     this.publisher = publisher

@@ -5,4 +5,5 @@ export interface UsersRepository {
   getByUsername(username: string): Promise<User | null>
   update(user: User): Promise<void>
   create(user: User): Promise<string>
+  dropAll(): Promise<void>
 }

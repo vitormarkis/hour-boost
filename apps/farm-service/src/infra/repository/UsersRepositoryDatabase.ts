@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client"
-import { PlanUsage } from "core"
+import { ApplicationError, PlanUsage } from "core"
 import { Status, StatusName, ActiveStatus, BannedStatus } from "core"
 import {
   User,
@@ -18,6 +18,9 @@ import { getCurrentPlan, getCurrentPlanOrCreateOne } from "~/utils"
 
 export class UsersRepositoryDatabase implements UsersRepository {
   constructor(private readonly prisma: PrismaClient) {}
+  async dropAll(): Promise<void> {
+    console.log("Você acidentalmente tentou limpar o banco de dados.")
+  }
   async create(user: User): Promise<string> {
     const { id_user } = await this.prisma.user.create({
       data: {
@@ -129,13 +132,13 @@ export class UsersRepositoryDatabase implements UsersRepository {
 export function roleFactory(role: RoleName): Role {
   if (role === "ADMIN") return new AdminRole()
   if (role === "USER") return new UserRole()
-  throw new Error("Invalid role received: " + role)
+  throw new ApplicationError("Invalid role received: " + role)
 }
 
 export function statusFactory(status: StatusName): Status {
   if (status === "ACTIVE") return new ActiveStatus()
   if (status === "BANNED") return new BannedStatus()
-  throw new Error("Invalid status received: " + status)
+  throw new ApplicationError("Invalid status received: " + status)
 }
 
 export function prismaUserToDomain(dbUser: PrismaGetUser) {

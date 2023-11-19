@@ -1,3 +1,5 @@
+import { ApplicationError } from "core"
+
 export class LastHandler {
   private readonly lastHandler: Map<string, Map<string, Function>> = new Map()
   getLastHandler = <K extends keyof SteamUserEvents = keyof SteamUserEvents>(
@@ -5,7 +7,7 @@ export class LastHandler {
     event: K
   ) => {
     const accountNameHandler = this.lastHandler.get(accountName)
-    if (!accountNameHandler) throw new Error("This account don't have the event " + event)
+    if (!accountNameHandler) throw new ApplicationError("This account don't have the event " + event)
     return accountNameHandler.get(event) as (...args: SteamUserEvents[K]) => void
   }
   setLastHandler = <K extends keyof SteamUserEvents = keyof SteamUserEvents>(

@@ -6,6 +6,7 @@ export const router: Router = Router()
 
 export const loginErrorMessages: Record<number, string> = {
   5: "Invalid password or steam account.",
+  18: "Account not found.",
   61: "Invalid Password",
   63:
     "Account login denied due to 2nd factor authentication failure. " +
