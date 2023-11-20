@@ -33,8 +33,11 @@ export class AddSteamAccountController {
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
       if (!username) throw new ApplicationError("No user found with this ID.")
 
-      const { userSteamClient: usc } = this.steamFarming.addSteamAccount(userId, username)
-      console.log("CHAMANDO LOGIN !!")
+      const { userSteamClient: usc } = this.steamFarming.addSteamAccount({
+        accountName,
+        userId,
+        username: username,
+      })
       usc.login(accountName, password)
 
       try {

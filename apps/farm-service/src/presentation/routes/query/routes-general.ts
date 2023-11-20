@@ -2,7 +2,13 @@ import { ClerkExpressWithAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
 import { CreateUser, GetUser } from "core"
 import { Request, Response, Router } from "express"
 import { GetMeController } from "~/presentation/controllers"
-import { farmingUsersStorage, steamFarming, userAuthentication, usersDAO, usersRepository } from "~/presentation/instances"
+import {
+  farmingUsersStorage,
+  userSteamClientsStorage,
+  userAuthentication,
+  usersDAO,
+  usersRepository,
+} from "~/presentation/instances"
 
 export const query_routerGeneral: Router = Router()
 
@@ -33,6 +39,6 @@ query_routerGeneral.get("/me", ClerkExpressWithAuth(), async (req: WithAuthProp<
 
 query_routerGeneral.get("/list", (req, res) => {
   return res.status(200).json({
-    users: steamFarming.listUsers(),
+    users: userSteamClientsStorage.listUsers(),
   })
 })

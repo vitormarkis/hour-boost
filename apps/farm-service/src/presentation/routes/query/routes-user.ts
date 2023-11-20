@@ -7,9 +7,9 @@ import { Request, Response, Router } from "express"
 import { GetMeController, Resolved } from "~/presentation/controllers"
 import {
   farmingUsersStorage,
-  steamFarming,
   userAuthentication,
   usersDAO,
+  userSteamClientsStorage,
   usersRepository,
 } from "~/presentation/instances"
 import { getTimeoutPromise, makeResError } from "~/utils"
@@ -100,7 +100,7 @@ query_routerUser.post("/code", async (req, res) => {
   try {
     const { code, userId, accountName } = req.body
 
-    const { userSteamClient: usc } = steamFarming.getUserSteamClient(userId)
+    const { userSteamClient: usc } = userSteamClientsStorage.get(userId, accountName)
     if (!usc) throw new ApplicationError("User never tried to log in.")
 
     const onSteamGuard = usc.getLastHandler(accountName, "steamGuard")
@@ -151,7 +151,7 @@ query_routerUser.post("/code", async (req, res) => {
 
 query_routerUser.get("/list", (req, res) => {
   return res.status(200).json({
-    users: steamFarming.listUsers(),
+    users: userSteamClientsStorage.listUsers(),
     loginSessions: loginSessions.entries(),
     userLoginSessions: userLoginSessions.entries(),
   })
