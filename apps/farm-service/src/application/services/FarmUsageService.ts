@@ -35,6 +35,7 @@ export class FarmUsageService implements IFarmService {
   startFarm() {
     this.status = "FARMING"
     this.startedAt = new Date()
+    if (this.usageLeft <= 0) throw new ApplicationError("Seu plano não possui mais uso disponível.")
     this.farmingInterval = setInterval(() => {
       if (this.currentFarmingUsage > this.usageLeft) {
         const { usage } = this.stopFarm()

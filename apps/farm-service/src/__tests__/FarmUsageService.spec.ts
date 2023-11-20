@@ -1,9 +1,9 @@
-import { PlanRepository, PlanUsage, SilverPlan, User, UsersRepository } from "core"
+import { GuestPlan, PlanRepository, PlanUsage, SilverPlan, Usage, User, UsersRepository } from "core"
 
 import { FarmUsageService, IFarmService } from "~/application/services"
 import { Publisher } from "../infra/queue"
 import { UsersInMemory, PlanRepositoryInMemory, UsersRepositoryInMemory } from "../infra/repository"
-import { PersistUsageHandler, ChangePlanStatusHandler } from "~/domain/handler"
+import { PersistUsageHandler, ChangePlanStatusHandler, PersistFarmSessionHandler } from "~/domain/handler"
 
 const publisher = new Publisher()
 let meDomain: User
@@ -31,6 +31,7 @@ beforeEach(async () => {
   jest.useFakeTimers()
   publisher.register(new PersistUsageHandler(planRepository))
   publisher.register(new ChangePlanStatusHandler(planRepository))
+  publisher.register(new PersistFarmSessionHandler(planRepository))
 })
 
 afterEach(() => {
@@ -53,6 +54,59 @@ const getFarmService = (user: User): IFarmService => {
 }
 
 describe("FarmUsageService test suite", () => {
+  test("should throw plan with no usage left attempts to farm", async () => {
+    const me = await getMe()
+    const allPlanUsage = Usage.create({
+      amountTime: 21600,
+      createdAt: new Date("2023-06-10T10:00:00Z"),
+      plan_id: me.plan.id_plan,
+    })
+    ;(me.plan as PlanUsage).use(allPlanUsage)
+    await usersRepository.update(me)
+    const dbMe = await usersRepository.getByID(ME_ID)
+    if (!dbMe) throw new Error()
+    const meFarmService = new FarmUsageService(publisher, dbMe.plan as PlanUsage, dbMe.username)
+    expect(dbMe.plan).toBeInstanceOf(GuestPlan)
+    expect((dbMe.plan as PlanUsage).getUsageLeft()).toBe(0)
+    expect((dbMe.plan as PlanUsage).getUsageTotal()).toBe(21600)
+
+    expect(() => {
+      meFarmService.startFarm()
+    }).toThrow("Seu plano não possui mais uso disponível.")
+  })
+
+  test("should call event when farming interval exceeds maximum plan's usage left", async () => {
+    const [notify] = publisher.observers.filter(o => o.operation === "user-complete-farm-session")
+    expect(notify).toBeTruthy()
+    const finishFarmHandler = jest.spyOn(notify, "notify")
+
+    const [notify1] = publisher.observers.filter(o => o.operation === "plan-usage-expired-mid-farm")
+    expect(notify1).toBeTruthy()
+    const planUsageRunOutMidFarm = jest.spyOn(notify1, "notify")
+
+    const me = await getMe()
+    const meFarmService = getFarmService(me)
+    meFarmService.startFarm()
+    jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
+    const me2 = await getMe()
+    expect(me2.plan.status).toBe("FARMING")
+    jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
+    const me3 = await getMe()
+    expect(me3.plan.status).toBe("IDDLE")
+
+    await sleep(200)
+    expect(finishFarmHandler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation: "user-complete-farm-session",
+      })
+    )
+    expect(planUsageRunOutMidFarm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operation: "plan-usage-expired-mid-farm",
+      })
+    )
+  })
+
   test("should throw when plan infinity attemps to use the service", async () => {
     const me = await getMe()
     me.assignPlan(SilverPlan.create({ ownerId: me.id_user }))
@@ -105,30 +159,6 @@ describe("FarmUsageService test suite", () => {
     jest.advanceTimersByTime(60)
     const me2 = await getMe()
     expect((me2.plan as PlanUsage).getUsageLeft()).toBe(0)
-  })
-
-  test("should call event when farming interval exceeds maximum plan's usage left", async () => {
-    const [notify] = publisher.observers.filter(o => o.operation === "user-complete-farm-session")
-    expect(notify).toBeTruthy()
-    console.log(notify)
-    const finishFarmHandler = jest.spyOn(notify, "notify")
-
-    const me = await getMe()
-    const meFarmService = getFarmService(me)
-    meFarmService.startFarm()
-    jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
-    const me2 = await getMe()
-    expect(me2.plan.status).toBe("FARMING")
-    jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
-    const me3 = await getMe()
-    expect(me3.plan.status).toBe("IDDLE")
-
-    await sleep(200)
-    expect(finishFarmHandler).toHaveBeenCalledWith(
-      expect.objectContaining({
-        operation: "user-complete-farm-session",
-      })
-    )
   })
 
   test("should call event when user end farm session", async () => {})

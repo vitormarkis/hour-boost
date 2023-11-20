@@ -6,7 +6,7 @@ import {
   UsersDAO,
   UsersRepository,
 } from "core"
-import { SteamFarming } from "~/application/services"
+import { UserSteamClientsStorage } from "~/application/services"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 
 import { HttpClient } from "~/contracts/HttpClient"
@@ -23,7 +23,7 @@ export type Resolved = {
 export class AddSteamAccountController {
   constructor(
     private readonly addSteamAccount: AddSteamAccount,
-    private readonly steamFarming: SteamFarming,
+    private readonly steamFarming: UserSteamClientsStorage,
     private readonly usersDAO: UsersDAO
   ) {}
 
@@ -33,7 +33,7 @@ export class AddSteamAccountController {
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
       if (!username) throw new ApplicationError("No user found with this ID.")
 
-      const { userSteamClient: usc } = this.steamFarming.addUser(userId, username)
+      const { userSteamClient: usc } = this.steamFarming.addSteamAccount(userId, username)
       console.log("CHAMANDO LOGIN !!")
       usc.login(accountName, password)
 

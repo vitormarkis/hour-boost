@@ -1,6 +1,6 @@
 import { AddSteamAccount, DiamondPlan, User } from "core"
 import SteamUser from "steam-user"
-import { SteamFarming } from "~/application/services"
+import { UserSteamClientsStorage } from "~/application/services"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
@@ -28,7 +28,7 @@ let usersRepository: UsersRepositoryInMemory
 let addSteamAccount: AddSteamAccount
 let usersDAO: UsersDAOInMemory
 const publisher = new Publisher()
-const steamFarming = new SteamFarming(publisher, steamBuilder)
+const steamFarming = new UserSteamClientsStorage(publisher, steamBuilder)
 let sut: AddSteamAccountController
 let me: User
 

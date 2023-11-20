@@ -27,6 +27,14 @@ export class UserSteamClient extends LastHandler {
     this.publisher = instances.publisher
   }
 
+  getGamesPlaying() {
+    return this.gamesPlaying
+  }
+
+  setGamesPlaying(gamesID: number[]) {
+    this.gamesPlaying = gamesID
+  }
+
   login(accountName: string, password: string) {
     let { client, setLastHandler } = this
 
@@ -59,6 +67,7 @@ export class UserSteamClient extends LastHandler {
     const when = new Date()
 
     const userIntention = getUserFarmIntention(gamesID, this.gamesPlaying)
+    console.log({ userIntention })
     if (userIntention === "DIDNT-ADD-GAMES") return
     else if (userIntention === "ADD-GAMES") {
       const newGames = gamesID.filter(gid => !this.gamesPlaying.includes(gid))
@@ -71,7 +80,8 @@ export class UserSteamClient extends LastHandler {
       this.publisher.publish(new StopFarmingCommand({ when }))
     }
 
-    this.gamesPlaying = gamesID
+    console.log("Chegando Aqui, setando games id: ", gamesID)
+    this.setGamesPlaying(gamesID)
     this.client.gamesPlayed(gamesID)
   }
 }

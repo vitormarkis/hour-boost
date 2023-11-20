@@ -100,7 +100,7 @@ query_routerUser.post("/code", async (req, res) => {
   try {
     const { code, userId, accountName } = req.body
 
-    const { userSteamClient: usc } = steamFarming.getUser(userId)
+    const { userSteamClient: usc } = steamFarming.getUserSteamClient(userId)
     if (!usc) throw new ApplicationError("User never tried to log in.")
 
     const onSteamGuard = usc.getLastHandler(accountName, "steamGuard")

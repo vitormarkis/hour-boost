@@ -1,4 +1,4 @@
-import { ClerkExpressRequireAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
+import { WithAuthProp } from "@clerk/clerk-sdk-node"
 import { AddSteamAccount, ApplicationError, ListSteamAccounts } from "core"
 import { randomUUID } from "crypto"
 import { Request, Response, Router } from "express"
@@ -11,7 +11,7 @@ import {
 import {
   farmingUsersStorage,
   publisher,
-  steamFarming,
+  userSteamClientsStorage,
   usersDAO,
   usersRepository,
 } from "~/presentation/instances"
@@ -35,7 +35,7 @@ command_routerSteam.post(
   async (req: WithAuthProp<Request>, res: Response) => {
     const createSteamAccountController = new AddSteamAccountController(
       addSteamAccount,
-      steamFarming,
+      userSteamClientsStorage,
       usersDAO
     )
     const { json, status } = await createSteamAccountController.handle({
@@ -53,14 +53,16 @@ command_routerSteam.post(
 
 // command_routerSteam.post("/farm/start", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
 command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: Response) => {
-  const { userId, gamesID } = req.body
-  const { userSteamClient: usc } = steamFarming.getUser(userId)
-  if (!usc) throw new ApplicationError("This account never logged in.")
-  usc.farmGames(gamesID)
-
-  const startFarmController = new StartFarmController(farmingUsersStorage, publisher, usersRepository)
+  const startFarmController = new StartFarmController(
+    farmingUsersStorage,
+    publisher,
+    usersRepository,
+    userSteamClientsStorage
+  )
   const { json, status } = await startFarmController.handle({
     payload: {
+      accountName: "123",
+      gamesID: [],
       // userId: req.auth.userId!,
       userId: req.body.userId,
     },
@@ -74,7 +76,7 @@ command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: 
 // command_routerSteam.post("/farm/stop", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
 command_routerSteam.post("/farm/stop", async (req: WithAuthProp<Request>, res: Response) => {
   const { userId } = req.body
-  const { userSteamClient: usc } = steamFarming.getUser(userId)
+  const { userSteamClient: usc } = userSteamClientsStorage.get(userId, "123")
   if (!usc) throw new ApplicationError("This account never logged in.")
   usc.farmGames([])
 
@@ -93,7 +95,7 @@ command_routerSteam.post("/code", async (req, res) => {
   try {
     const { code, userId, accountName } = req.body
 
-    const { userSteamClient: usc } = steamFarming.getUser(userId)
+    const { userSteamClient: usc } = userSteamClientsStorage.get(userId, "123")
     if (!usc) throw new ApplicationError("User never tried to log in.")
 
     const onSteamGuard = usc.getLastHandler(accountName, "steamGuard")
