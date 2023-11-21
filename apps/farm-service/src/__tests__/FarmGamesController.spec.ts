@@ -12,7 +12,7 @@ import {
 import { FarmingUsersStorage, UserSteamClientsStorage } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 import { UsersRepositoryInMemory, UsersInMemory } from "../infra/repository"
-import { StartFarmController } from "~/presentation/controllers"
+import { FarmGamesController } from "~/presentation/controllers"
 import { makeUser } from "~/utils/makeUser"
 import { SteamUserMock } from "~/infra/services/SteamUserMock"
 import SteamUser from "steam-user"
@@ -28,7 +28,7 @@ const FRIEND = "matheus"
 let farmingUsersStorage: FarmingUsersStorage
 let publisher: Publisher
 let usersRepository: UsersRepositoryInMemory
-let startFarmController: StartFarmController
+let startFarmController: FarmGamesController
 let userSteamClientsStorage: UserSteamClientsStorage
 let me: User
 let friend: User
@@ -44,7 +44,7 @@ beforeEach(async () => {
   userSteamClientsStorage = new UserSteamClientsStorage(publisher, {
     create: () => new SteamUserMock([]) as unknown as SteamUser,
   })
-  startFarmController = new StartFarmController(
+  startFarmController = new FarmGamesController(
     farmingUsersStorage,
     publisher,
     usersRepository,
@@ -130,6 +130,7 @@ describe("StartFarmController test suite", () => {
       amountTime: 21600,
       createdAt: new Date("2023-06-10T10:00:00Z"),
       plan_id: reachedPlan.id_plan,
+      accountName: "acc1",
     })
     reachedPlan.use(allUsage)
     const user = makeUser(reachedUserID, "used_user", reachedPlan)
@@ -247,6 +248,25 @@ describe("StartFarmController test suite", () => {
       status: 200,
       json: {
         message: "Farm pausado.",
+      },
+    })
+  })
+
+  test("should REJECT if user attempts for farm more games than his plan allows", async () => {
+    const response = await promiseHandler(
+      startFarmController.handle({
+        payload: {
+          userId: USER_ID,
+          accountName: USER_STEAM_ACCOUNT,
+          gamesID: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        },
+      })
+    )
+
+    expect(response).toStrictEqual({
+      status: 401,
+      json: {
+        message: "Você não tem permissão para farmar mais de 2 games por conta.",
       },
     })
   })

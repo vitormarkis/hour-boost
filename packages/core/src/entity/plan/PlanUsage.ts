@@ -37,6 +37,7 @@ export abstract class PlanUsage extends Plan {
         createdAt: usage.createdAt,
         id_usage: usage.id_usage,
         plan_id: this.id_plan,
+        accountName: usage.accountName,
       })
       this.usages.push(usageWithRemainingUsageLeft)
       return new UsageUsedMoreThanPlanAllows()

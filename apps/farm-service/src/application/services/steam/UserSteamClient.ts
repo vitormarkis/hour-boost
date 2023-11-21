@@ -36,27 +36,34 @@ export class UserSteamClient extends LastHandler {
   }
 
   login(accountName: string, password: string) {
-    let { client, setLastHandler } = this
-
     this.client.logOn({
       accountName,
       password,
     })
 
-    this.client.on("steamGuard", async function (domain, callback) {
-      console.log("Steam Guard code needed from email ending in " + domain)
-      console.log(`LAST HANDLER! Salvando callback para conta ${accountName}`)
-      setLastHandler(accountName, "steamGuard", code => {
+    this.client.on("loggedOn", details => {
+      this.logged = true
+      console.log(`${this.username} logged in.`)
+      this.client.setPersona(SteamUser.EPersonaState.Online)
+      this.client.gamesPlayed([])
+    })
+
+    this.client.on("steamGuard", async (domain, callback) => {
+      console.log(
+        domain
+          ? `${this.username}: Steam Guard code needed from email ending in ${domain}`
+          : `${this.username}: requesting Steam Guard on your device.`
+      )
+      this.setLastHandler(accountName, "steamGuard", code => {
         callback(code)
       })
     })
 
-    this.client.on("loggedOn", function (details) {
-      console.log("TRIGGERED: loggedOn", details)
-      console.log("Logged into Steam as " + client.steamID?.getSteam3RenderedID())
-      client.setPersona(SteamUser.EPersonaState.Online)
-      client.gamesPlayed([])
-    })
+    const logoff = () => (this.logged = false)
+
+    this.client.on("error", logoff)
+    this.client.on("disconnected", logoff)
+    this.client.on("steamGuard", logoff)
   }
 
   getPlayingGames() {
@@ -67,7 +74,6 @@ export class UserSteamClient extends LastHandler {
     const when = new Date()
 
     const userIntention = getUserFarmIntention(gamesID, this.gamesPlaying)
-    console.log({ userIntention })
     if (userIntention === "DIDNT-ADD-GAMES") return
     else if (userIntention === "ADD-GAMES") {
       const newGames = gamesID.filter(gid => !this.gamesPlaying.includes(gid))
@@ -80,7 +86,6 @@ export class UserSteamClient extends LastHandler {
       this.publisher.publish(new StopFarmingCommand({ when }))
     }
 
-    console.log("Chegando Aqui, setando games id: ", gamesID)
     this.setGamesPlaying(gamesID)
     this.client.gamesPlayed(gamesID)
   }

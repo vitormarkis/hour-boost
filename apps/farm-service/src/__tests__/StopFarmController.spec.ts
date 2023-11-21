@@ -65,7 +65,9 @@ describe("StopFarmController test suite", () => {
   })
 
   test("should delete farming user from storage after stop farm", async () => {
-    farmingUsersStorage.add(new FarmUsageService(publisher, me.plan as PlanUsage, me.username)).startFarm()
+    const meFarmingService = new FarmUsageService(publisher, me.plan as PlanUsage, me.username)
+    meFarmingService.farmWithAccount("acc1")
+    farmingUsersStorage.add(meFarmingService).startFarm()
     const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
     const { status, json } = await stopFarmController.handle({
       payload: {

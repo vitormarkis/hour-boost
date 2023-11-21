@@ -11,6 +11,7 @@ const makeUsage = (amountTime: number, id_usage: string = "123") =>
     amountTime,
     createdAt: new Date("2023-06-15T10:00:00"),
     plan_id: plan.id_plan,
+    accountName: "acc1",
   })
 
 beforeEach(() => {

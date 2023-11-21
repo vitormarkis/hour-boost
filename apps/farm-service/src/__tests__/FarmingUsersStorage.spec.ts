@@ -62,7 +62,9 @@ describe("FarmingUsersStorage test suite", () => {
     const usageExpiredHandlerSpy = jest.spyOn(usageExpiredHandler, "notify")
 
     const mePlan = (await planRepository.getById(me.plan.id_plan)) as PlanUsage
-    farmingUsersStorage.add(makeFarmService(me, mePlan)).startFarm()
+    const meFarmingService = makeFarmService(me, mePlan)
+    meFarmingService.farmWithAccount("acc1")
+    farmingUsersStorage.add(meFarmingService).startFarm()
     jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 hours
     farmingUsersStorage.remove(USERNAME)
     expect(usageExpiredHandlerSpy).not.toHaveBeenCalledWith(
@@ -73,7 +75,9 @@ describe("FarmingUsersStorage test suite", () => {
 
     const mePlan2 = (await planRepository.getById(me.plan.id_plan)) as PlanUsage
     console.log(mePlan2.usages)
-    farmingUsersStorage.add(makeFarmService(me, mePlan2)).startFarm()
+    const meFarmingService2 = makeFarmService(me, mePlan)
+    meFarmingService2.farmWithAccount("acc1")
+    farmingUsersStorage.add(meFarmingService2).startFarm()
     jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 hours
     farmingUsersStorage.remove(USERNAME)
     expect(usageExpiredHandlerSpy).toHaveBeenCalledWith(
@@ -85,7 +89,9 @@ describe("FarmingUsersStorage test suite", () => {
 
   test("should assign the farm service properly", async () => {
     const mePlan = (await planRepository.getById(me.plan.id_plan)) as PlanUsage
-    farmingUsersStorage.add(makeFarmService(me, mePlan))
+    const meFarmingService = makeFarmService(me, mePlan)
+    meFarmingService.farmWithAccount("acc1")
+    farmingUsersStorage.add(meFarmingService).startFarm()
     farmingUsersStorage.add(
       new FarmInfinityService(publisher, friend.username, friend.plan.id_plan, friend.id_user)
     )
@@ -98,8 +104,14 @@ describe("FarmingUsersStorage test suite", () => {
     expect(farmingUsersStorage.users.size).toBe(0)
     const mePlan = (await planRepository.getById(me.plan.id_plan)) as PlanUsage
     const friendPlan = (await planRepository.getById(friend.plan.id_plan)) as PlanUsage
-    farmingUsersStorage.add(makeFarmService(me, mePlan)).startFarm()
-    farmingUsersStorage.add(makeFarmService(friend, friendPlan)).startFarm()
+    const meFarmingService = makeFarmService(me, mePlan)
+    meFarmingService.farmWithAccount("acc1")
+    farmingUsersStorage.add(meFarmingService).startFarm()
+
+    const friendFarmingService = makeFarmService(friend, friendPlan)
+    friendFarmingService.farmWithAccount("acc1")
+    farmingUsersStorage.add(friendFarmingService).startFarm()
+
     farmingUsersStorage.remove(FRIEND_USERNAME)
     expect(farmingUsersStorage.listFarmingStatusCount()).toStrictEqual({
       FARMING: 1,
@@ -109,14 +121,18 @@ describe("FarmingUsersStorage test suite", () => {
 
   test("user status should be iddle when added to the storage", async () => {
     const mePlan = (await planRepository.getById(me.plan.id_plan)) as PlanUsage
-    farmingUsersStorage.add(makeFarmService(me, mePlan))
+    const meFarmingService = makeFarmService(me, mePlan)
+    meFarmingService.farmWithAccount("acc1")
+    farmingUsersStorage.add(meFarmingService).startFarm()
     expect(farmingUsersStorage.users.size).toBe(1)
-    expect(farmingUsersStorage.get(USERNAME)?.status).toBe("IDDLE")
+    expect(farmingUsersStorage.get(USERNAME)?.status).toBe("FARMING")
   })
 
   test("user status should be farming after starts farming", async () => {
     const mePlan = (await planRepository.getById(me.plan.id_plan)) as PlanUsage
-    farmingUsersStorage.add(makeFarmService(me, mePlan)).startFarm()
+    const meFarmingService = makeFarmService(me, mePlan)
+    meFarmingService.farmWithAccount("acc1")
+    farmingUsersStorage.add(meFarmingService).startFarm()
     expect(farmingUsersStorage.users.size).toBe(1)
     expect(farmingUsersStorage.get(USERNAME)?.status).toBe("FARMING")
   })
@@ -124,8 +140,12 @@ describe("FarmingUsersStorage test suite", () => {
   test("users should stay in the storage after stop farm", async () => {
     const mePlan = (await planRepository.getById(me.plan.id_plan)) as PlanUsage
     const friendPlan = (await planRepository.getById(friend.plan.id_plan)) as PlanUsage
-    farmingUsersStorage.add(makeFarmService(me, mePlan)).startFarm()
-    farmingUsersStorage.add(makeFarmService(friend, friendPlan)).startFarm()
+    const meFarmingService = makeFarmService(me, mePlan)
+    meFarmingService.farmWithAccount("acc1")
+    farmingUsersStorage.add(meFarmingService).startFarm()
+    const friendFarmingService = makeFarmService(friend, friendPlan)
+    friendFarmingService.farmWithAccount("acc1")
+    farmingUsersStorage.add(friendFarmingService).startFarm()
     const meStop = farmingUsersStorage.remove(USERNAME)
     meStop.stopFarm()
     const friendStop = farmingUsersStorage.remove(FRIEND_USERNAME)

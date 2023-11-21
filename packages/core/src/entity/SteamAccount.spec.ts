@@ -9,6 +9,7 @@ describe("SteamAccount test suite", () => {
         accountName: "vitoruser",
         password: "829382h394h234ijsdj982",
       }),
+      idGenerator: { makeID: () => "123" },
     })
     expect(steamAccount.games).toHaveLength(0)
     steamAccount.addGame(

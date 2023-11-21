@@ -34,6 +34,7 @@ model SteamAccount {
   games           SteamGame[] @relation("steam_account_games")
   accountName     String      @unique
   password        String
+  Usage           Usage[]     @relation("steam_account_usages")
 
   @@map("steam_accounts")
 }
@@ -61,11 +62,13 @@ model Plan {
 }
 
 model Usage {
-  id_usage   String   @id
-  createdAt  DateTime
-  amountTime Int
-  plan       Plan     @relation("plan_usages", fields: [plan_id], references: [id_plan], onDelete: Cascade)
-  plan_id    String
+  id_usage     String       @id
+  createdAt    DateTime
+  amountTime   Int
+  plan         Plan         @relation("plan_usages", fields: [plan_id], references: [id_plan], onDelete: Cascade)
+  plan_id      String
+  accountName  String       @default("undefined")
+  SteamAccount SteamAccount @relation("steam_account_usages", fields: [accountName], references: [accountName])
 
   @@map("usages")
 }

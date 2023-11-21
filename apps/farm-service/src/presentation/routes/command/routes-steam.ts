@@ -5,9 +5,10 @@ import { Request, Response, Router } from "express"
 
 import {
   AddSteamAccountController,
-  StartFarmController,
+  FarmGamesController,
   StopFarmController,
 } from "~/presentation/controllers"
+import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import {
   farmingUsersStorage,
   publisher,
@@ -38,14 +39,16 @@ command_routerSteam.post(
       userSteamClientsStorage,
       usersDAO
     )
-    const { json, status } = await createSteamAccountController.handle({
-      payload: {
-        accountName: req.body.accountName,
-        password: req.body.password,
-        // userId: req.auth.userId!,
-        userId: req.body.userId,
-      },
-    })
+    const { json, status } = await promiseHandler(
+      createSteamAccountController.handle({
+        payload: {
+          accountName: req.body.accountName,
+          password: req.body.password,
+          // userId: req.auth.userId!,
+          userId: req.body.userId,
+        },
+      })
+    )
 
     return res.status(status).json(json)
   }
@@ -53,20 +56,22 @@ command_routerSteam.post(
 
 // command_routerSteam.post("/farm/start", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
 command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: Response) => {
-  const startFarmController = new StartFarmController(
+  const startFarmController = new FarmGamesController(
     farmingUsersStorage,
     publisher,
     usersRepository,
     userSteamClientsStorage
   )
-  const { json, status } = await startFarmController.handle({
-    payload: {
-      accountName: "123",
-      gamesID: [],
-      // userId: req.auth.userId!,
-      userId: req.body.userId,
-    },
-  })
+  const { json, status } = await promiseHandler(
+    startFarmController.handle({
+      payload: {
+        accountName: req.body.accountName,
+        gamesID: req.body.gamesID,
+        // userId: req.auth.userId!,
+        userId: req.body.userId,
+      },
+    })
+  )
 
   console.log({ json, status })
 
@@ -75,19 +80,22 @@ command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: 
 
 // command_routerSteam.post("/farm/stop", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
 command_routerSteam.post("/farm/stop", async (req: WithAuthProp<Request>, res: Response) => {
-  const { userId } = req.body
-  const { userSteamClient: usc } = userSteamClientsStorage.get(userId, "123")
-  if (!usc) throw new ApplicationError("This account never logged in.")
-  usc.farmGames([])
+  const perform = async () => {
+    const { userId } = req.body
+    const { userSteamClient: usc } = userSteamClientsStorage.get(userId, "123")
+    if (!usc) throw new ApplicationError("This account never logged in.")
+    usc.farmGames([])
 
-  const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
-  const { json, status } = await stopFarmController.handle({
-    payload: {
-      // userId: req.auth.userId!,
-      userId: req.body.userId,
-    },
-  })
+    const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
+    return await stopFarmController.handle({
+      payload: {
+        // userId: req.auth.userId!,
+        userId: req.body.userId,
+      },
+    })
+  }
 
+  const { status, json } = await promiseHandler(perform())
   return json ? res.status(status).json(json) : res.status(status).end()
 })
 

@@ -1,5 +1,5 @@
 export * from "./AddSteamAccountController"
 export * from "./GetMeController"
 export * from "./ListSteamAccountsController"
-export * from "./StartFarmController"
+export * from "./FarmGamesController"
 export * from "./StopFarmController"

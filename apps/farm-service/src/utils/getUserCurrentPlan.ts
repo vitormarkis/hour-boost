@@ -55,6 +55,7 @@ export function getCurrentPlan(dbUserPlan: SessionPlan) {
           createdAt: u.createdAt,
           id_usage: u.id_usage,
           plan_id: u.plan_id,
+          accountName: u.accountName,
         })
       ),
     })
