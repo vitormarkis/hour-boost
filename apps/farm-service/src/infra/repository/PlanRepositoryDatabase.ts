@@ -1,5 +1,5 @@
-import { Prisma, PrismaClient } from "@prisma/client"
-import { Plan, PlanInfinity, PlanRepository, PlanUsage } from "core"
+import { PrismaClient } from "@prisma/client"
+import { PlanInfinity, PlanRepository, PlanUsage } from "core"
 import { getCurrentPlan } from "~/utils"
 
 export class PlanRepositoryDatabase implements PlanRepository {
@@ -8,13 +8,22 @@ export class PlanRepositoryDatabase implements PlanRepository {
   async update(plan: PlanUsage | PlanInfinity): Promise<void> {
     console.log("DATABASE: Salvando plano novo")
 
+    console.log({
+      trashIDs: (plan as PlanUsage).usages.getTrashIDs(),
+    })
+
     await this.prisma.plan.update({
       where: { id_plan: plan.id_plan },
       data: {
         usages:
           plan instanceof PlanUsage
             ? {
-                connectOrCreate: plan.usages.map(u => {
+                deleteMany: {
+                  id_usage: {
+                    in: plan.usages.getTrashIDs(),
+                  },
+                },
+                connectOrCreate: plan.usages.data.map(u => {
                   return {
                     where: { id_usage: u.id_usage },
                     create: {

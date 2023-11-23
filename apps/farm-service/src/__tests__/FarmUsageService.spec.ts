@@ -170,7 +170,7 @@ describe("FarmUsageService test suite", () => {
     meFarmService.stopFarm()
     await sleep(50)
     const me2 = await getMe()
-    expect((me2.plan as PlanUsage).usages).toHaveLength(1)
+    expect((me2.plan as PlanUsage).usages.data).toHaveLength(1)
     expect((me2.plan as PlanUsage).getUsageLeft()).toBe(21540)
   })
 

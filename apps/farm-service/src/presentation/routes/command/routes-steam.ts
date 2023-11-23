@@ -73,8 +73,6 @@ command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: 
     })
   )
 
-  console.log({ json, status })
-
   return json ? res.status(status).json(json) : res.status(status).end()
 })
 

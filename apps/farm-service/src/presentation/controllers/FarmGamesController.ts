@@ -41,17 +41,10 @@ export class FarmGamesController {
     const steamAccountDomain = user.steamAccounts.find(sa => sa.credentials.accountName === accountName)
     if (!steamAccountDomain) throw new ApplicationError("Steam Account não foi registrada.", 400)
 
-    console.log({
-      CHECKING: true,
-    })
-
     const { steamAccountClient: sac } = this.userSteamClientsStorage.getOrAddSteamAccount({
       accountName,
       userId,
       username: user.username,
-    })
-    console.log({
-      THIS_NEEDS_TO_BE_TRUE: sac,
     })
     if (!sac) throw new ApplicationError("Essa conta nunca se conectou à Steam.")
     if (!sac.logged) {
@@ -126,7 +119,6 @@ export class FarmGamesController {
       return makeRes(200, "Iniciando farm.")
     }
 
-    console.log({ plan: user.plan })
     throw new ApplicationError("Instância do plano do usuário não suportado.")
   }
 }

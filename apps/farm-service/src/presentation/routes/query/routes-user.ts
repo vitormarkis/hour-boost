@@ -65,7 +65,7 @@ query_routerUser.get("/farm/plan-status", async (req, res) => {
         timeLeft: user.plan.getUsageLeft(),
         usageTotalMinutes: `${user.plan.getUsageTotal() / 60} minutos`,
         usageTotal: user.plan.getUsageTotal(),
-        usages: user.plan.usages.length,
+        usages: user.plan.usages.data.length,
       },
     })
   } catch (e) {

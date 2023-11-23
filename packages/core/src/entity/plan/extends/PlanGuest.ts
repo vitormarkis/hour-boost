@@ -1,3 +1,4 @@
+import { UsageList } from "core/entity/plan/UsageList"
 import { makeID } from "../../../entity/generateID"
 import { PlanUsage, PlanUsageCreateProps, PlanUsageRestoreProps } from "../../../entity/plan/PlanUsage"
 
@@ -16,7 +17,7 @@ export class GuestPlan extends PlanUsage {
 
   static create(props: PlanUsageCreateProps) {
     return new GuestPlan({
-      usages: [],
+      usages: new UsageList(),
       ownerId: props.ownerId,
       id_plan: makeID(),
     })

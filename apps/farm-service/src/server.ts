@@ -9,12 +9,14 @@ import {
   LogSteamStopFarmHandler,
   LogUserCompleteFarmSessionHandler,
   PersistUsageHandler,
+  PlanExpiredMidFarmPersistPlanHandler,
   StartFarmPlanHandler,
 } from "~/domain/handler"
 import { LogPlanExpiredMidFarm } from "~/domain/handler/LogPlanExpiredMidFarm"
 import { planRepository, publisher } from "~/presentation/instances"
 
 import { command_routerSteam } from "~/presentation/routes/command"
+import { command_routerPlan } from "~/presentation/routes/command/routes-plan"
 import {
   query_routerGeneral,
   query_routerPlan,
@@ -41,6 +43,7 @@ app.use(query_routerSteam)
 app.use(query_routerPlan)
 app.use(query_routerGeneral)
 app.use(command_routerSteam)
+app.use(command_routerPlan)
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err)
@@ -50,6 +53,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 publisher.register(new PersistUsageHandler(planRepository))
 publisher.register(new StartFarmPlanHandler())
 publisher.register(new LogCompleteInfinityFarmSessionHandler())
+publisher.register(new PlanExpiredMidFarmPersistPlanHandler(planRepository))
 publisher.register(new LogPlanExpiredMidFarm())
 
 // publisher.register(new LogUserFarmedHandler())

@@ -106,7 +106,6 @@ export class FarmUsageService implements IFarmService {
       const amountFarmedIndividually = this.FARMING_GAP
 
       if (this.usageLeft - amountFarmed < 0) {
-        console.log("Publicando evento")
         this.publisher.publish(
           new PlanUsageExpiredMidFarmCommand({
             planId: this.planId,

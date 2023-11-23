@@ -13,6 +13,7 @@ import {
   Plan,
   Usage,
   ApplicationError,
+  UsageList,
 } from "core"
 
 export function makeInfinityPlan(planProps: PlanInfinityRestoreProps & PlanName["INFINITY"]): PlanInfinity {
@@ -49,15 +50,17 @@ export function getCurrentPlan(dbUserPlan: SessionPlan) {
       id_plan: dbUserPlan.id_plan,
       name: dbUserPlan.name as PlanUsageName,
       ownerId: dbUserPlan.ownerId,
-      usages: dbUserPlan.usages.map(u =>
-        Usage.restore({
-          amountTime: u.amountTime,
-          createdAt: u.createdAt,
-          id_usage: u.id_usage,
-          plan_id: u.plan_id,
-          accountName: u.accountName,
-        })
-      ),
+      usages: new UsageList({
+        data: dbUserPlan.usages.map(u =>
+          Usage.restore({
+            amountTime: u.amountTime,
+            createdAt: u.createdAt,
+            id_usage: u.id_usage,
+            plan_id: u.plan_id,
+            accountName: u.accountName,
+          })
+        ),
+      }),
     })
   console.log({ dbUserPlan })
   throw new ApplicationError("Invalid plan data from database")

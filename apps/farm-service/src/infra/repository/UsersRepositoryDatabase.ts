@@ -65,7 +65,7 @@ export class UsersRepositoryDatabase implements UsersRepository {
               usages: {
                 connectOrCreate:
                   user.plan instanceof PlanUsage
-                    ? user.plan.usages.map(u => ({
+                    ? user.plan.usages.data.map(u => ({
                         where: { id_usage: u.id_usage },
                         create: {
                           amountTime: u.amountTime,

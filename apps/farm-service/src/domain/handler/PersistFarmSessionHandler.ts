@@ -10,9 +10,9 @@ export class PlanExpiredMidFarmPersistPlanHandler implements Observer {
   async notify(command: PlanUsageExpiredMidFarmCommand): Promise<void> {
     const plan = await this.planRepository.getById(command.planId)
     if (plan instanceof PlanUsage) {
+      plan.stopFarm()
       const persistPromises = command.usages.map(usage => {
         plan.use(usage)
-        plan.stopFarm()
         return this.planRepository.update(plan)
       })
 

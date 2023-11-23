@@ -1,11 +1,12 @@
 import { Usage } from "../../entity/plan/Usage"
 import { Plan, PlanUsageName } from "../../entity/plan/Plan"
 import { UsageUsedMoreThanPlanAllows } from "../../entity/exceptions"
+import { UsageList } from "core/entity/plan/UsageList"
 
 export abstract class PlanUsage extends Plan {
   readonly name: PlanUsageName
   readonly maxUsageTime: number
-  usages: Usage[]
+  usages: UsageList
 
   constructor(props: PlanUsageAllProps) {
     super({
@@ -19,7 +20,7 @@ export abstract class PlanUsage extends Plan {
   }
 
   getUsageTotal(): number {
-    return this.usages.reduce((total, usage) => {
+    return this.usages.data.reduce((total, usage) => {
       total += usage.amountTime
       return total
     }, 0)
@@ -28,6 +29,10 @@ export abstract class PlanUsage extends Plan {
   getUsageLeft(): number {
     const usageTotal = this.getUsageTotal()
     return this.maxUsageTime - usageTotal
+  }
+
+  removeUsage(usageID: string) {
+    this.usages.remove(usageID)
   }
 
   use(usage: Usage): void | UsageUsedMoreThanPlanAllows {
@@ -39,15 +44,15 @@ export abstract class PlanUsage extends Plan {
         plan_id: this.id_plan,
         accountName: usage.accountName,
       })
-      this.usages.push(usageWithRemainingUsageLeft)
+      this.usages.add(usageWithRemainingUsageLeft)
       return new UsageUsedMoreThanPlanAllows()
     }
-    this.usages.push(usage)
+    this.usages.add(usage)
   }
 
   isFarmAvailable() {
     console.log(this.usages)
-    const amountUsedSoFar = this.usages.reduce((amount, usage) => {
+    const amountUsedSoFar = this.usages.data.reduce((amount, usage) => {
       amount + usage.amountTime
       return amount
     }, 0)
@@ -64,7 +69,7 @@ export abstract class PlanUsage extends Plan {
 export type PlanUsageRestoreProps = {
   id_plan: string
   ownerId: string
-  usages: Usage[]
+  usages: UsageList
 }
 
 export type PlanUsageCreateProps = {
@@ -80,5 +85,5 @@ export type PlanUsageAllProps = {
   maxGamesAllowed: number
   autoRestarter: boolean
   maxUsageTime: number
-  usages: Usage[]
+  usages: UsageList
 }

@@ -39,19 +39,6 @@ export interface PlanProps {
   ownerId: string
 }
 
-export interface PlanPropsWithName {
-  name: PlanInfinityName
-  id_plan: string
-  ownerId: string
-}
-
-export interface PlanUsagePropsWithName {
-  usages: Usage[]
-  name: PlanInfinityName
-  id_plan: string
-  ownerId: string
-}
-
 export interface PlanCreateProps {
   ownerId: string
 }

@@ -30,6 +30,7 @@ export class SteamAccountClient extends LastHandler {
     this.publisher.register({
       operation: "plan-usage-expired-mid-farm",
       notify: async () => {
+        console.log("STEAM_CLIENT: Triggering the event.")
         this.farmGames([])
       },
     })
@@ -95,6 +96,7 @@ export class SteamAccountClient extends LastHandler {
     }
 
     this.setGamesPlaying(gamesID)
+    console.log(`STEAM_CLIENT: Calling the client with `, gamesID)
     this.client.gamesPlayed(gamesID)
   }
 }
