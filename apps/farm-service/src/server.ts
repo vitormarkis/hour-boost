@@ -46,8 +46,10 @@ app.use(command_routerSteam)
 app.use(command_routerPlan)
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err)
-  return res.status(401).send("Unauthenticated!")
+  console.log(err)
+  return res.status(500).json({
+    message: "Something went wrong.",
+  })
 })
 
 publisher.register(new PersistUsageHandler(planRepository))
