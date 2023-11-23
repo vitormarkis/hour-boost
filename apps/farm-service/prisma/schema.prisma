@@ -56,7 +56,7 @@ model Plan {
   usages    Usage[]  @relation("plan_usages")
   owner     User     @relation("user_plan", fields: [ownerId], references: [id_user], onDelete: Cascade)
   ownerId   String   @unique
-  type      PlanType
+  type      PlanType @default(USAGE)
 
   @@map("plans")
 }
