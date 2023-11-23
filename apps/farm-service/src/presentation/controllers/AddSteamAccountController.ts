@@ -62,7 +62,8 @@ export class AddSteamAccountController {
             })
           }),
           new Promise<Resolved>((res, rej) => {
-            sac.client.on("steamGuard", domain => {
+            sac.client.on("steamGuard", (domain, setCode) => {
+              sac.setLastHandler(accountName, "steamGuard", setCode)
               res({
                 json: { message: `CLX: Sending code to email ${domain}` },
                 status: 200,

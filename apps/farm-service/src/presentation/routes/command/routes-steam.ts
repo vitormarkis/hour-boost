@@ -115,11 +115,6 @@ command_routerSteam.post("/code", async (req, res) => {
         })
       }),
       new Promise<Resolved>(res => {
-        sac.client.on("steamGuard", (details, parental) => {
-          res({ message: `CLX: Steam Guard invalid, try again.`, details, parental })
-        })
-      }),
-      new Promise<Resolved>(res => {
         sac.client.on("error", error => {
           res({
             message: `CLX: Error of type ${loginErrorMessages[error.eresult]}`,
