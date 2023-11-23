@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client"
-import { ApplicationError, PlanUsage } from "core"
+import { ApplicationError, PlanUsage, SteamAccountList } from "core"
 import { Status, StatusName, ActiveStatus, BannedStatus } from "core"
 import {
   User,
@@ -93,7 +93,12 @@ export class UsersRepositoryDatabase implements UsersRepository {
         status: user.status.name,
         username: user.username,
         steamAccounts: {
-          connectOrCreate: user.steamAccounts.map(sa => ({
+          deleteMany: {
+            id_steamAccount: {
+              in: user.steamAccounts.getTrashIDs(),
+            },
+          },
+          connectOrCreate: user.steamAccounts.data.map(sa => ({
             where: { id_steamAccount: sa.id_steamAccount },
             create: {
               accountName: sa.credentials.accountName,
@@ -144,21 +149,23 @@ export function statusFactory(status: StatusName): Status {
 
 export function prismaUserToDomain(dbUser: PrismaGetUser) {
   if (!dbUser) return null
-  const steamAccounts: SteamAccount[] = dbUser.steamAccounts.map(sa =>
-    SteamAccount.restore({
-      credentials: SteamAccountCredentials.restore({
-        accountName: sa.accountName,
-        password: sa.password,
-      }),
-      games: sa.games.map(g =>
-        SteamGame.restore({
-          gameId: g.gameId,
-          id_steamGame: g.id_steamGame,
-        })
-      ),
-      id_steamAccount: sa.id_steamAccount,
-    })
-  )
+  const steamAccounts: SteamAccountList = new SteamAccountList({
+    data: dbUser.steamAccounts.map(sa =>
+      SteamAccount.restore({
+        credentials: SteamAccountCredentials.restore({
+          accountName: sa.accountName,
+          password: sa.password,
+        }),
+        games: sa.games.map(g =>
+          SteamGame.restore({
+            gameId: g.gameId,
+            id_steamGame: g.id_steamGame,
+          })
+        ),
+        id_steamAccount: sa.id_steamAccount,
+      })
+    ),
+  })
 
   const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
 
@@ -173,7 +180,7 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
         id_Purchase: p.id_Purchase,
       })
     ),
-    steamAccounts: steamAccounts,
+    steamAccounts,
     role: roleFactory(dbUser.role),
     status: statusFactory(dbUser.status),
   })

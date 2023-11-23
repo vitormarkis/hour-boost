@@ -25,7 +25,7 @@ export type Resolved = {
 export class AddSteamAccountController {
   constructor(
     private readonly addSteamAccount: AddSteamAccount,
-    private readonly steamFarming: AllUsersClientsStorage,
+    private readonly allUsersClientsStorage: AllUsersClientsStorage,
     private readonly usersDAO: UsersDAO
   ) {}
 
@@ -35,10 +35,10 @@ export class AddSteamAccountController {
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
       if (!username) throw new ApplicationError("No user found with this ID.")
 
-      const { steamAccountClient: sac } = this.steamFarming.addSteamAccount({
+      const { steamAccountClient: sac } = this.allUsersClientsStorage.addSteamAccount({
         accountName,
         userId,
-        username: username,
+        username,
       })
       sac.login(accountName, password)
 

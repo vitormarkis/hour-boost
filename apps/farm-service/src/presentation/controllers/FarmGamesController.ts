@@ -38,7 +38,7 @@ export class FarmGamesController {
     const { accountName, gamesID, userId } = req.payload
     const user = await this.usersRepository.getByID(req.payload.userId)
     if (!user) throw new ApplicationError("Usuário não encontrado.", 404)
-    const steamAccountDomain = user.steamAccounts.find(sa => sa.credentials.accountName === accountName)
+    const steamAccountDomain = user.steamAccounts.data.find(sa => sa.credentials.accountName === accountName)
     if (!steamAccountDomain) throw new ApplicationError("Steam Account não foi registrada.", 400)
 
     const { steamAccountClient: sac } = this.userSteamClientsStorage.getOrAddSteamAccount({

@@ -10,13 +10,14 @@ import {
   SteamAccount,
   UserRole,
 } from "core/entity"
+import { SteamAccountList } from "core/entity/SteamAccountList"
 
 export class User {
   readonly id_user: string
   readonly email: string
   readonly username: string
   readonly profilePic: string
-  readonly steamAccounts: SteamAccount[]
+  readonly steamAccounts: SteamAccountList
   plan: PlanUsage | PlanInfinity
   readonly role: Role
   readonly status: Status
@@ -44,7 +45,7 @@ export class User {
       purchases: [],
       role: new UserRole(),
       status: new ActiveStatus(),
-      steamAccounts: [],
+      steamAccounts: new SteamAccountList(),
     })
   }
 
@@ -57,8 +58,8 @@ export class User {
   }
 
   addSteamAccount(steamAccount: SteamAccount) {
-    const currentUserSteamAccounts = this.steamAccounts.length
-    const alreadyHasSteamAccountWithThisAccountName = this.steamAccounts.some(sa => {
+    const currentUserSteamAccounts = this.steamAccounts.getAmount()
+    const alreadyHasSteamAccountWithThisAccountName = this.steamAccounts.data.some(sa => {
       return sa.credentials.accountName === steamAccount.credentials.accountName
     })
     if (alreadyHasSteamAccountWithThisAccountName) {
@@ -67,7 +68,7 @@ export class User {
     if (currentUserSteamAccounts >= this.plan.maxSteamAccounts) {
       throw new ApplicationError("Você já adicionou o máximo de contas que seu plano permite!")
     }
-    this.steamAccounts.push(steamAccount)
+    this.steamAccounts.add(steamAccount)
   }
 }
 
@@ -76,7 +77,7 @@ type UserProps = {
   email: string
   username: string
   profilePic: string
-  steamAccounts: SteamAccount[]
+  steamAccounts: SteamAccountList
   plan: PlanUsage | PlanInfinity
   role: Role
   status: Status

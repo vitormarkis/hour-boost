@@ -42,7 +42,7 @@ export class UsersDAOInMemory implements UsersDAO {
       purchases: foundUser.purchases.map(p => p.id_Purchase),
       role: foundUser.role.name,
       status: foundUser.status.name,
-      steamAccounts: foundUser.steamAccounts.map(sa => sa.id_steamAccount),
+      steamAccounts: foundUser.steamAccounts.data.map(sa => sa.id_steamAccount),
       username: foundUser.username,
     }
   }
@@ -50,7 +50,7 @@ export class UsersDAOInMemory implements UsersDAO {
   async getUsersSteamAccounts(userId: string): Promise<ISteamAccountSession[]> {
     const user = this.users.users.find(u => u.id_user === userId) ?? null
     if (!user) return []
-    return user.steamAccounts.map(sa => ({
+    return user.steamAccounts.data.map(sa => ({
       accountName: sa.credentials.accountName,
       games: sa.games,
       id_steamAccount: sa.id_steamAccount,
