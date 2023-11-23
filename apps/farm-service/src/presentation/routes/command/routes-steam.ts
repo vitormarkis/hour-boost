@@ -81,10 +81,10 @@ command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: 
 // command_routerSteam.post("/farm/stop", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
 command_routerSteam.post("/farm/stop", async (req: WithAuthProp<Request>, res: Response) => {
   const perform = async () => {
-    const { userId } = req.body
-    const { userSteamClient: usc } = userSteamClientsStorage.get(userId, "123")
-    if (!usc) throw new ApplicationError("This account never logged in.")
-    usc.farmGames([])
+    const { userId, accountName } = req.body
+    const { userSteamClients } = userSteamClientsStorage.get(userId)
+    const { steamAccountClient: sac } = userSteamClients.getAccountClient(accountName)
+    sac.farmGames([])
 
     const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
     return await stopFarmController.handle({
@@ -103,25 +103,26 @@ command_routerSteam.post("/code", async (req, res) => {
   try {
     const { code, userId, accountName } = req.body
 
-    const { userSteamClient: usc } = userSteamClientsStorage.get(userId, "123")
-    if (!usc) throw new ApplicationError("User never tried to log in.")
+    const { userSteamClients } = userSteamClientsStorage.get(userId)
+    const { steamAccountClient: sac } = userSteamClients.getAccountClient(accountName)
+    if (!sac) throw new ApplicationError("User never tried to log in.")
 
-    const onSteamGuard = usc.getLastHandler(accountName, "steamGuard")
+    const onSteamGuard = sac.getLastHandler(accountName, "steamGuard")
     onSteamGuard(code)
 
     const resolved = await Promise.any([
       new Promise<Resolved>(res => {
-        usc.client.on("loggedOn", (details, parental) => {
+        sac.client.on("loggedOn", (details, parental) => {
           res({ message: `CLX: Login succesfully`, details, parental })
         })
       }),
       new Promise<Resolved>(res => {
-        usc.client.on("steamGuard", (details, parental) => {
+        sac.client.on("steamGuard", (details, parental) => {
           res({ message: `CLX: Steam Guard invalid, try again.`, details, parental })
         })
       }),
       new Promise<Resolved>(res => {
-        usc.client.on("error", error => {
+        sac.client.on("error", error => {
           res({
             message: `CLX: Error of type ${loginErrorMessages[error.eresult]}`,
             error,

@@ -11,6 +11,7 @@ import {
   PersistUsageHandler,
   StartFarmPlanHandler,
 } from "~/domain/handler"
+import { LogPlanExpiredMidFarm } from "~/domain/handler/LogPlanExpiredMidFarm"
 import { planRepository, publisher } from "~/presentation/instances"
 
 import { command_routerSteam } from "~/presentation/routes/command"
@@ -48,8 +49,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 publisher.register(new PersistUsageHandler(planRepository))
 publisher.register(new StartFarmPlanHandler())
-publisher.register(new StartFarmPlanHandler())
 publisher.register(new LogCompleteInfinityFarmSessionHandler())
+publisher.register(new LogPlanExpiredMidFarm())
 
 // publisher.register(new LogUserFarmedHandler())
 

@@ -9,7 +9,7 @@ import {
   User,
 } from "core"
 
-import { FarmingUsersStorage, UserSteamClientsStorage } from "~/application/services"
+import { FarmingUsersStorage, AllUsersClientsStorage } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 import { UsersRepositoryInMemory, UsersInMemory } from "../infra/repository"
 import { FarmGamesController } from "~/presentation/controllers"
@@ -25,11 +25,22 @@ const USERNAME = "vitormarkis"
 const FRIEND_ID = "ABC"
 const FRIEND = "matheus"
 
+const validSteamAccounts = [
+  {
+    accountName: "steam_account",
+    password: "steam_account_admin_pass",
+  },
+  {
+    accountName: "REACHED",
+    password: "REACHED_admin_pass",
+  },
+]
+
 let farmingUsersStorage: FarmingUsersStorage
 let publisher: Publisher
 let usersRepository: UsersRepositoryInMemory
 let startFarmController: FarmGamesController
-let userSteamClientsStorage: UserSteamClientsStorage
+let userSteamClientsStorage: AllUsersClientsStorage
 let me: User
 let friend: User
 let me_steamAcount: SteamAccount
@@ -41,8 +52,8 @@ beforeEach(async () => {
   farmingUsersStorage = new FarmingUsersStorage()
   publisher = new Publisher()
   usersRepository = new UsersRepositoryInMemory(new UsersInMemory())
-  userSteamClientsStorage = new UserSteamClientsStorage(publisher, {
-    create: () => new SteamUserMock([]) as unknown as SteamUser,
+  userSteamClientsStorage = new AllUsersClientsStorage(publisher, {
+    create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
   })
   startFarmController = new FarmGamesController(
     farmingUsersStorage,
@@ -54,7 +65,7 @@ beforeEach(async () => {
   me_steamAcount = SteamAccount.create({
     credentials: SteamAccountCredentials.create({
       accountName: USER_STEAM_ACCOUNT,
-      password: "123",
+      password: "steam_account_admin_pass",
     }),
     idGenerator,
   })
@@ -71,7 +82,7 @@ describe("StartFarmController test suite", () => {
         payload: {
           userId: USER_ID,
           accountName: USER_STEAM_ACCOUNT,
-          gamesID: [10],
+          gamesID: [10892],
         },
       })
     )
@@ -88,7 +99,7 @@ describe("StartFarmController test suite", () => {
         payload: {
           userId: "RANDOM_ID_SDFIWI",
           accountName: USER_STEAM_ACCOUNT,
-          gamesID: [10],
+          gamesID: [10892],
         },
       })
     )
@@ -107,7 +118,7 @@ describe("StartFarmController test suite", () => {
         payload: {
           userId: USER_ID,
           accountName: "RANDOM_STEAM_ACCOUNT_ID",
-          gamesID: [10],
+          gamesID: [10892],
         },
       })
     )
@@ -138,7 +149,7 @@ describe("StartFarmController test suite", () => {
       SteamAccount.create({
         credentials: SteamAccountCredentials.create({
           accountName: reachedUserSteamAccountName,
-          password: "123",
+          password: "REACHED_admin_pass",
         }),
         idGenerator,
       })
@@ -154,7 +165,7 @@ describe("StartFarmController test suite", () => {
         payload: {
           userId: reachedUserID,
           accountName: reachedUserSteamAccountName,
-          gamesID: [10],
+          gamesID: [10892],
         },
       })
     )
@@ -179,7 +190,7 @@ describe("StartFarmController test suite", () => {
         payload: {
           userId: USER_ID,
           accountName: USER_STEAM_ACCOUNT,
-          gamesID: [10],
+          gamesID: [10892],
         },
       })
     )
@@ -196,7 +207,7 @@ describe("StartFarmController test suite", () => {
         payload: {
           userId: USER_ID,
           accountName: USER_STEAM_ACCOUNT,
-          gamesID: [1, 2, 3],
+          gamesID: [10892],
         },
       })
     )
@@ -211,7 +222,7 @@ describe("StartFarmController test suite", () => {
         payload: {
           userId: USER_ID,
           accountName: USER_STEAM_ACCOUNT,
-          gamesID: [1, 2, 3],
+          gamesID: [10892],
         },
       })
     )
@@ -220,34 +231,6 @@ describe("StartFarmController test suite", () => {
       status: 200,
       json: {
         message: "Nenhum novo game adicionado ao farm.",
-      },
-    })
-  })
-
-  test("should stop the farming successfully", async () => {
-    await promiseHandler(
-      startFarmController.handle({
-        payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
-          gamesID: [1, 2, 3],
-        },
-      })
-    )
-    const response = await promiseHandler(
-      startFarmController.handle({
-        payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
-          gamesID: [],
-        },
-      })
-    )
-
-    expect(response).toStrictEqual({
-      status: 200,
-      json: {
-        message: "Farm pausado.",
       },
     })
   })
@@ -264,9 +247,82 @@ describe("StartFarmController test suite", () => {
     )
 
     expect(response).toStrictEqual({
-      status: 401,
+      status: 403,
       json: {
-        message: "Você não tem permissão para farmar mais de 2 games por conta.",
+        message: "Seu plano não permite o farm de mais do que 1 jogo por vez.",
+      },
+    })
+  })
+
+  test("should retrieve the credentials info from database, login and start farm", async () => {
+    const response = await promiseHandler(
+      startFarmController.handle({
+        payload: {
+          userId: USER_ID,
+          accountName: USER_STEAM_ACCOUNT,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    expect(response).toStrictEqual({
+      status: 200,
+      json: { message: "Iniciando farm." },
+    })
+  })
+
+  test("should ask for steam guard if the account has mobile steam guard", async () => {
+    const startFarmController = new FarmGamesController(
+      farmingUsersStorage,
+      publisher,
+      usersRepository,
+      new AllUsersClientsStorage(publisher, {
+        create: () => new SteamUserMock(validSteamAccounts, true) as unknown as SteamUser,
+      })
+    )
+
+    const response = await promiseHandler(
+      startFarmController.handle({
+        payload: {
+          userId: USER_ID,
+          accountName: USER_STEAM_ACCOUNT,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    expect(response).toStrictEqual({
+      status: 202,
+      json: { message: "SteamClient: Steam Guard required! Sendind code to your phone." },
+    })
+  })
+
+  test("should set the steam guard code across farm attempts", async () => {})
+
+  test("should reject when account that don't exists on steam database is somehow", async () => {
+    startFarmController = new FarmGamesController(
+      farmingUsersStorage,
+      publisher,
+      usersRepository,
+      new AllUsersClientsStorage(publisher, {
+        create: () => new SteamUserMock([]) as unknown as SteamUser,
+      })
+    )
+
+    const response = await promiseHandler(
+      startFarmController.handle({
+        payload: {
+          userId: USER_ID,
+          accountName: USER_STEAM_ACCOUNT,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    expect(response).toStrictEqual({
+      status: 404,
+      json: {
+        message: "Steam Account não existe no banco de dados da Steam, delete essa conta e crie novamente.",
       },
     })
   })

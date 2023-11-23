@@ -1,12 +1,11 @@
-import { SteamAccount } from "core"
 import SteamUser from "steam-user"
-import { UserSteamClient } from "~/application/services/steam/UserSteamClient"
+import { SteamAccountClient } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
 import { SteamUserMock } from "~/infra/services/SteamUserMock"
 
 describe("UserSteamClient test suite", () => {
   test("should ", async () => {
-    const usc = new UserSteamClient({
+    const sac = new SteamAccountClient({
       instances: {
         publisher: new Publisher(),
       },
@@ -14,9 +13,10 @@ describe("UserSteamClient test suite", () => {
         client: new SteamUserMock([]) as unknown as SteamUser,
         userId: "",
         username: "vitor",
+        accountName: "account",
       },
     })
-    usc.farmGames([322, 123])
-    expect(usc.getGamesPlaying()).toStrictEqual([322, 123])
+    sac.farmGames([322, 123])
+    expect(sac.getGamesPlaying()).toStrictEqual([322, 123])
   })
 })

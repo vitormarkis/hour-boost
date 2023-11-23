@@ -1,12 +1,12 @@
 import { ApplicationError } from "core"
-import { UserSteamClient } from "~/application/services/steam"
+import { UserClientsStorage } from "~/application/services"
+import { SteamAccountClient } from "~/application/services/steam"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import { Publisher } from "~/infra/queue"
 
-type UserSteamClientMapStorage = Map<string, Map<string, UserSteamClient>>
-
-export class UserSteamClientsStorage {
-  users: UserSteamClientMapStorage = new Map()
+type UserID = string
+export class AllUsersClientsStorage {
+  users: Map<UserID, UserClientsStorage> = new Map()
 
   constructor(
     private readonly publisher: Publisher,
@@ -14,35 +14,68 @@ export class UserSteamClientsStorage {
   ) {}
 
   getOrAddSteamAccount({ accountName, userId, username }: AddUserProps) {
-    const userSteamClient = this.users.get(userId)?.get(accountName)
-    if (!userSteamClient) return this.addSteamAccount({ accountName, userId, username })
-    return { userSteamClient }
-  }
-
-  addSteamAccount({ accountName, userId, username }: AddUserProps): { userSteamClient: UserSteamClient } {
-    const userSteamClient = new UserSteamClient({
-      props: { client: this.steamBuilder.create(), userId, username },
-      instances: { publisher: this.publisher },
-    })
-    const userSteamAccounts = this.users.get(userId)
-    if (!userSteamAccounts) {
-      this.users.set(userId, new Map().set(accountName, userSteamClient))
-      return { userSteamClient }
+    const userSteamClient = this.users.get(userId)?.hasAccountName(accountName)
+    if (!userSteamClient) {
+      return this.addSteamAccount({ accountName, userId, username })
     }
-
-    return { userSteamClient }
+    return { steamAccountClient: this.users.get(userId)?.getAccountClient(accountName).steamAccountClient }
   }
 
-  get(userId: string, accountName: string) {
-    const userSteamAccounts = this.users.get(userId)
-    if (!userSteamAccounts) {
+  addSteamAccount({ accountName, userId, username }: AddUserProps): {
+    steamAccountClient: SteamAccountClient
+  } {
+    const steamAccountClient = new SteamAccountClient({
+      props: {
+        client: this.steamBuilder.create(),
+        userId,
+        username,
+        accountName,
+      },
+      instances: {
+        publisher: this.publisher,
+      },
+    })
+
+    const userClientsStorage = this.users.get(userId)
+    console.log({
+      steamAccountClient,
+      userClientsStorage,
+    })
+    if (!userClientsStorage) {
+      const userClientsStorage = new UserClientsStorage()
+      userClientsStorage.addAccountClient(steamAccountClient)
+      console.log(`Adding client to storage with ${steamAccountClient.accountName}`)
+      this.addUser(userId, userClientsStorage)
+      return { steamAccountClient }
+    }
+    console.log(`Adding client to storage with ${steamAccountClient.accountName}`)
+    userClientsStorage.addAccountClient(steamAccountClient)
+    return { steamAccountClient }
+  }
+
+  addUser(userID: string, userClientsStorage: UserClientsStorage) {
+    this.users.set(userID, userClientsStorage)
+  }
+
+  get(userId: string) {
+    const userSteamClients = this.users.get(userId)
+    if (!userSteamClients) {
       throw new ApplicationError("Esse usuário não possui contas da Steam ativas na plataforma.", 406)
     }
-    const userSteamClient = userSteamAccounts.get(accountName)
-    if (!userSteamClient) {
-      throw new ApplicationError("Essa Steam Accuont não possui contas da Steam ativas na plataforma.", 406)
-    }
-    return { userSteamClient }
+    return { userSteamClients }
+  }
+
+  getAccountClient(userID: string, accountName: string) {
+    const { userSteamClients } = this.get(userID)
+    const { steamAccountClient } = userSteamClients.getAccountClient(accountName)
+    return { steamAccountClient }
+    // return {
+    //   const userSteamClient = userSteamAccounts.get(accountName)
+    //   if (!userSteamClient) {
+    //     throw new ApplicationError("Essa Steam Accuont não possui contas da Steam ativas na plataforma.", 406)
+    //   }
+    //   return { userSteamClient }
+    // }
   }
 
   listUsers() {

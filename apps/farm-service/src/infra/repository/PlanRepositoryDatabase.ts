@@ -21,6 +21,7 @@ export class PlanRepositoryDatabase implements PlanRepository {
                       amountTime: u.amountTime,
                       createdAt: u.createdAt,
                       id_usage: u.id_usage,
+                      accountName: u.accountName,
                     },
                   }
                 }),

@@ -71,6 +71,7 @@ export class UsersRepositoryDatabase implements UsersRepository {
                           amountTime: u.amountTime,
                           createdAt: new Date(),
                           id_usage: u.id_usage,
+                          accountName: u.accountName,
                         },
                       }))
                     : [],

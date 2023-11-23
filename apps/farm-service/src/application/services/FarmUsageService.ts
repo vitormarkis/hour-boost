@@ -113,6 +113,7 @@ export class FarmUsageService implements IFarmService {
             usages: this.getAccountsUsages().map(acc => acc.usage),
             userId: this.ownerId,
             when: new Date(),
+            username: this.username,
           })
         )
         return this.stopFarmSetInternals()

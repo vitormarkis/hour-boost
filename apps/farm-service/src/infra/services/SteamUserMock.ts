@@ -7,16 +7,37 @@ export type EventParameters = {
       eresult: number
     },
   ]
+  steamGuard: [domain: string | null, callback: (code: string) => void, lastCodeWrong: boolean]
 }
 
-type EventName = "loggedOn" | "error"
+type EventName = keyof EventParameters
 type SteamAccountCredentials = {
   accountName: string
   password: string
 }
 
 export class SteamUserMock {
-  constructor(private readonly validSteamAccounts: SteamAccountCredentials[]) {}
+  steamGuardCode: string | null = null
+  logged = false
+
+  constructor(
+    private readonly validSteamAccounts: SteamAccountCredentials[],
+    private readonly mobile?: boolean
+  ) {
+    console.log({
+      validSteamAccounts,
+    })
+    this.mobile = !!mobile
+    this.on("loggedOn", () => {
+      this.logged = true
+    })
+    this.on("error", () => {
+      this.logged = false
+    })
+    this.on("steamGuard", () => {
+      this.logged = false
+    })
+  }
 
   events: Map<EventName, Function[]> = new Map()
 
@@ -38,21 +59,42 @@ export class SteamUserMock {
     eventHandlers.forEach(cb => cb(...payload))
   }
 
+  setSteamGuardCode(code: string) {
+    this.steamGuardCode = code
+  }
+
+  isMobile() {
+    return this.mobile
+  }
+
   logOn(details: { accountName: string; password: string }) {
+    let errorCode = 0
     const isValidCredentials = this.validSteamAccounts.some(
       vsa => vsa.accountName === details.accountName && vsa.password === details.password
     )
-    console.log("loggin")
     setTimeout(() => {
       console.log("ST: loggin")
-      if (isValidCredentials) {
+      if (!isValidCredentials) {
+        console.log("is INvalid")
+        errorCode = 18
+        if (errorCode === 18) console.log(this.validSteamAccounts)
+        this.emit("error", {
+          eresult: errorCode,
+        })
+      } else if (this.mobile) {
+        console.log("Steam guard required.")
+        this.emit(
+          "steamGuard",
+          this.mobile ? null : "mail.com",
+          (code: string) => {
+            this.setSteamGuardCode(code)
+            this.emit("loggedOn")
+          },
+          false
+        )
+      } else {
         console.log("is valid: loggin")
         this.emit("loggedOn")
-      } else {
-        console.log("is INvalid")
-        this.emit("error", {
-          eresult: 18,
-        })
       }
     }).unref()
   }

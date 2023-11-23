@@ -6,7 +6,7 @@ import {
   UsersDAO,
   UsersRepository,
 } from "core"
-import { UserSteamClientsStorage } from "~/application/services"
+import { AllUsersClientsStorage } from "~/application/services"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 
 import { HttpClient } from "~/contracts/HttpClient"
@@ -15,15 +15,17 @@ import { loginErrorMessages } from "~/presentation/routes"
 import { getTimeoutPromise, makeResError } from "~/utils"
 
 export type Resolved = {
-  json: {
-    message: string
-  } & Record<string, any>
+  json:
+    | ({
+        message: string
+      } & Record<string, any>)
+    | null
   status: number
 }
 export class AddSteamAccountController {
   constructor(
     private readonly addSteamAccount: AddSteamAccount,
-    private readonly steamFarming: UserSteamClientsStorage,
+    private readonly steamFarming: AllUsersClientsStorage,
     private readonly usersDAO: UsersDAO
   ) {}
 
@@ -33,17 +35,17 @@ export class AddSteamAccountController {
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
       if (!username) throw new ApplicationError("No user found with this ID.")
 
-      const { userSteamClient: usc } = this.steamFarming.addSteamAccount({
+      const { steamAccountClient: sac } = this.steamFarming.addSteamAccount({
         accountName,
         userId,
         username: username,
       })
-      usc.login(accountName, password)
+      sac.login(accountName, password)
 
       try {
         const { status, json } = await Promise.race([
           new Promise<Resolved>((res, rej) => {
-            usc.client.on("loggedOn", async () => {
+            sac.client.on("loggedOn", async () => {
               this.addSteamAccount
                 .execute({
                   accountName,
@@ -60,7 +62,7 @@ export class AddSteamAccountController {
             })
           }),
           new Promise<Resolved>((res, rej) => {
-            usc.client.on("steamGuard", domain => {
+            sac.client.on("steamGuard", domain => {
               res({
                 json: { message: `CLX: Sending code to email ${domain}` },
                 status: 200,
@@ -68,7 +70,7 @@ export class AddSteamAccountController {
             })
           }),
           new Promise<Resolved>((res, rej) => {
-            usc.client.on("error", error => {
+            sac.client.on("error", error => {
               res({
                 json: {
                   message: `CLX: Error of type ${loginErrorMessages[error.eresult]}`,

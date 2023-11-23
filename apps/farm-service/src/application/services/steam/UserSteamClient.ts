@@ -10,7 +10,7 @@ import { LastHandler } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
 
-export class UserSteamClient extends LastHandler {
+export class SteamAccountClient extends LastHandler {
   private readonly publisher: Publisher
   client: SteamUser
   userId: string
@@ -18,13 +18,21 @@ export class UserSteamClient extends LastHandler {
   logged: boolean = false
   readonly loginAttempts: Map<string, LoginAttemptsConfig> = new Map()
   gamesPlaying: number[] = []
+  accountName: string
 
-  constructor({ instances, props }: UserSteamClientProps) {
+  constructor({ instances, props }: SteamAccountClientProps) {
     super()
     this.userId = props.userId
     this.username = props.username
     this.client = props.client
     this.publisher = instances.publisher
+    this.accountName = props.accountName
+    this.publisher.register({
+      operation: "plan-usage-expired-mid-farm",
+      notify: async () => {
+        this.farmGames([])
+      },
+    })
   }
 
   getGamesPlaying() {
@@ -103,11 +111,12 @@ function getUserFarmIntention(gamesID: number[], currentFarmingGames: number[]) 
   throw new ApplicationError("Server wasn't able to understand user intention.")
 }
 
-type UserSteamClientProps = {
+type SteamAccountClientProps = {
   props: {
     userId: string
     username: string
     client: SteamUser
+    accountName: string
   }
   instances: {
     publisher: Publisher

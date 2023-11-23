@@ -96,58 +96,59 @@ export type LoginSessionConfig = {
 const userLoginSessions: Map<UserID, { loginSessionID: LoginSessionID }> = new Map()
 const loginSessions: Map<LoginSessionID, LoginSessionConfig> = new Map()
 
-query_routerUser.post("/code", async (req, res) => {
-  try {
-    const { code, userId, accountName } = req.body
+// query_routerUser.post("/code", async (req, res) => {
+//   try {
+//     const { code, userId, accountName } = req.body
 
-    const { userSteamClient: usc } = userSteamClientsStorage.get(userId, accountName)
-    if (!usc) throw new ApplicationError("User never tried to log in.")
+//     const { userSteamClients } = userSteamClientsStorage.get(userId)
+//     const { steamAccountClient: sac } = userSteamClients.getAccountClient(accountName)
+//     if (!sac) throw new ApplicationError("User never tried to log in.")
 
-    const onSteamGuard = usc.getLastHandler(accountName, "steamGuard")
-    onSteamGuard(code)
+//     const onSteamGuard = sac.getLastHandler(accountName, "steamGuard")
+//     onSteamGuard(code)
 
-    const resolved = await Promise.any([
-      new Promise<Resolved>(res => {
-        usc.client.on("loggedOn", (details, parental) => {
-          res({
-            json: { message: `CLX: Login succesfully`, details, parental },
-            status: 200,
-          })
-        })
-      }),
-      new Promise<Resolved>(res => {
-        usc.client.on("steamGuard", (details, parental) => {
-          res({
-            json: { message: `CLX: Steam Guard invalid, try again.`, details, parental },
-            status: 200,
-          })
-        })
-      }),
-      new Promise<Resolved>(res => {
-        usc.client.on("error", error => {
-          res({
-            json: {
-              message: `CLX: Error of type ${loginErrorMessages[error.eresult]}`,
-              error,
-            },
-            status: 400,
-          })
-        }),
-          getTimeoutPromise<Resolved>(EVENT_PROMISES_TIMEOUT_IN_SECONDS, {
-            json: {
-              message: "Server timed out :D",
-            },
-            status: 400,
-          })
-      }),
-    ])
+//     const resolved = await Promise.any([
+//       new Promise<Resolved>(res => {
+//         sac.client.on("loggedOn", (details, parental) => {
+//           res({
+//             json: { message: `CLX: Login succesfully`, details, parental },
+//             status: 200,
+//           })
+//         })
+//       }),
+//       new Promise<Resolved>(res => {
+//         sac.client.on("steamGuard", (details, parental) => {
+//           res({
+//             json: { message: `CLX: Steam Guard invalid, try again.`, details, parental },
+//             status: 200,
+//           })
+//         })
+//       }),
+//       new Promise<Resolved>(res => {
+//         sac.client.on("error", error => {
+//           res({
+//             json: {
+//               message: `CLX: Error of type ${loginErrorMessages[error.eresult]}`,
+//               error,
+//             },
+//             status: 400,
+//           })
+//         }),
+//           getTimeoutPromise<Resolved>(EVENT_PROMISES_TIMEOUT_IN_SECONDS, {
+//             json: {
+//               message: "Server timed out :D",
+//             },
+//             status: 400,
+//           })
+//       }),
+//     ])
 
-    return res.status(200).json(resolved)
-  } catch (error) {
-    const { json, status } = makeResError(error, 500)
-    return res.status(status).json(json)
-  }
-})
+//     return res.status(200).json(resolved)
+//   } catch (error) {
+//     const { json, status } = makeResError(error, 500)
+//     return res.status(status).json(json)
+//   }
+// })
 
 query_routerUser.get("/list", (req, res) => {
   return res.status(200).json({

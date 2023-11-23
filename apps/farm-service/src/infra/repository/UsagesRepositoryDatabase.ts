@@ -11,6 +11,7 @@ export class UsagesRepositoryDatabase implements UsagesRepository {
         createdAt: usage.createdAt,
         id_usage: usage.id_usage,
         plan_id: usage.plan_id,
+        accountName: usage.accountName,
       },
     })
 

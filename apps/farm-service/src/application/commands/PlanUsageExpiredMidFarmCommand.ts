@@ -8,12 +8,14 @@ export class PlanUsageExpiredMidFarmCommand implements Command {
   usages: Usage[]
   planId: string
   userId: string
+  username: string
 
   constructor(props: PlanUsageExpiredMidFarmCommandProps) {
     this.when = props.when
     this.usages = props.usages
     this.planId = props.planId
     this.userId = props.userId
+    this.username = props.username
   }
 }
 
@@ -22,4 +24,5 @@ interface PlanUsageExpiredMidFarmCommandProps {
   usages: Usage[]
   planId: string
   userId: string
+  username: string
 }
