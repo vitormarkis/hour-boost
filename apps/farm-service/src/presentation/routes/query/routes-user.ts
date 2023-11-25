@@ -14,6 +14,7 @@ import {
 } from "~/presentation/instances"
 import { getTimeoutPromise, makeResError } from "~/utils"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
+import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 
 export const query_routerUser: Router = Router()
 export const createUser = new CreateUser(usersRepository, userAuthentication)
@@ -32,48 +33,15 @@ const loginErrorMessages: Record<number, string> = {
 
 query_routerUser.get("/me", ClerkExpressWithAuth(), async (req: WithAuthProp<Request>, res: Response) => {
   const getMeController = new GetMeController(usersRepository, createUser, getUser)
-  const { json, status } = await getMeController.handle({
-    payload: {
-      userId: req.auth.userId,
-    },
-  })
-
-  return res.status(status).json(json)
-})
-
-query_routerUser.get("/farm/plan-status", async (req, res) => {
-  try {
-    const user = await usersRepository.getByID(req.body.userId)
-    if (!user) {
-      return res.status(404).json({
-        message: "User doesn't exists.",
-      })
-    }
-
-    if (user.plan instanceof PlanInfinity) {
-      return res.json({
-        plan: {
-          ...user.plan,
-        },
-      })
-    }
-
-    return res.json({
-      plan: {
-        ...user.plan,
-        timeLeftHours: `${user.plan.getUsageLeft() / 60 / 60} horas`,
-        timeLeft: user.plan.getUsageLeft(),
-        usageTotalMinutes: `${user.plan.getUsageTotal() / 60} minutos`,
-        usageTotal: user.plan.getUsageTotal(),
-        usages: user.plan.usages.data.length,
+  const { json, status } = await promiseHandler(
+    getMeController.handle({
+      payload: {
+        userId: req.auth.userId,
       },
     })
-  } catch (e) {
-    console.log(e)
-    return res.status(500).json({
-      message: "Erro interno no servidor.",
-    })
-  }
+  )
+
+  return res.status(status).json(json)
 })
 
 // ============
@@ -138,11 +106,3 @@ const loginSessions: Map<LoginSessionID, LoginSessionConfig> = new Map()
 //     return res.status(status).json(json)
 //   }
 // })
-
-query_routerUser.get("/list", (req, res) => {
-  return res.status(200).json({
-    users: userSteamClientsStorage.listUsers(),
-    loginSessions: loginSessions.entries(),
-    userLoginSessions: userLoginSessions.entries(),
-  })
-})

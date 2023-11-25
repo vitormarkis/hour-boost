@@ -26,17 +26,6 @@ query_routerGeneral.get("/up", (req, res) => {
   })
 })
 
-query_routerGeneral.get("/me", ClerkExpressWithAuth(), async (req: WithAuthProp<Request>, res: Response) => {
-  const getMeController = new GetMeController(usersRepository, createUser, getUser)
-  const { json, status } = await getMeController.handle({
-    payload: {
-      userId: req.auth.userId,
-    },
-  })
-
-  return res.status(status).json(json)
-})
-
 query_routerGeneral.get("/list", (req, res) => {
   return res.status(200).json({
     users: userSteamClientsStorage.listUsers(),
