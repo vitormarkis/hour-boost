@@ -72,6 +72,7 @@ export class SteamUserMock {
     const isValidCredentials = this.validSteamAccounts.some(
       vsa => vsa.accountName === details.accountName && vsa.password === details.password
     )
+    console.log({})
     setTimeout(() => {
       console.log("ST: loggin")
       if (!isValidCredentials) {

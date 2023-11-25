@@ -1,4 +1,4 @@
-import { ISteamAccountSession, ISteamGame, PlanUsage, UserSession, UsersDAO } from "core"
+import { ISteamAccountSession, PlanUsage, UserSession, UsersDAO } from "core"
 import { UsersInMemory } from "~/infra/repository"
 
 export class UsersDAOInMemory implements UsersDAO {
@@ -52,7 +52,6 @@ export class UsersDAOInMemory implements UsersDAO {
     if (!user) return []
     return user.steamAccounts.data.map(sa => ({
       accountName: sa.credentials.accountName,
-      games: sa.games,
       id_steamAccount: sa.id_steamAccount,
     }))
   }

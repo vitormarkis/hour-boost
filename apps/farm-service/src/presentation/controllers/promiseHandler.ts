@@ -6,6 +6,7 @@ export async function promiseHandler(promise: Promise<HttpClient.Response>): Pro
     const response = await promise
     return response
   } catch (error) {
+    console.log(error)
     if (error instanceof ApplicationError) {
       return { status: error.status, json: { message: error.message } }
     }

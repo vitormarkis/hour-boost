@@ -1,9 +1,9 @@
 export namespace HttpClient {
-  export interface Request<T extends Object = Object> {
+  export interface Request<T extends Record<string, any> = Record<string, any>> {
     payload: T
   }
   export type Response = {
-    json?: Object | null
+    json?: Record<string, any> | null
     status: number
   }
 }

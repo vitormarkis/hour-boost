@@ -32,7 +32,9 @@ const steamFarming = new AllUsersClientsStorage(publisher, steamBuilder)
 let sut: AddSteamAccountController
 let me: User
 
+const log = console.log
 beforeEach(async () => {
+  console.log = () => {}
   usersMemory = new UsersInMemory()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
   addSteamAccount = new AddSteamAccount(usersRepository, {
@@ -53,7 +55,7 @@ beforeEach(async () => {
 describe("CreateSteamAccountController test suite", () => {
   test("should add new account in case it exists on steam database", async () => {
     const dbMe = await usersRepository.getByID(ME_ID)
-    expect(dbMe?.steamAccounts).toHaveLength(0)
+    expect(dbMe?.steamAccounts.data).toHaveLength(0)
     const { status, json } = await promiseHandler(
       sut.handle({
         payload: {
@@ -64,14 +66,14 @@ describe("CreateSteamAccountController test suite", () => {
       })
     )
     const dbMe2 = await usersRepository.getByID(ME_ID)
-    expect(dbMe2?.steamAccounts).toHaveLength(1)
+    expect(dbMe2?.steamAccounts.data).toHaveLength(1)
     expect(json).toStrictEqual({ message: "user1 adicionada com sucesso!", steamAccountID: "random" })
     expect(status).toBe(201)
   })
 
   test("should reject if provided account don't exist on steam database", async () => {
     const dbMe = await usersRepository.getByID(ME_ID)
-    expect(dbMe!.steamAccounts).toHaveLength(0)
+    expect(dbMe!.steamAccounts.data).toHaveLength(0)
     const { status, json } = await promiseHandler(
       sut.handle({
         payload: {
@@ -82,7 +84,7 @@ describe("CreateSteamAccountController test suite", () => {
       })
     )
     const dbMe2 = await usersRepository.getByID(ME_ID)
-    expect(dbMe2!.steamAccounts).toHaveLength(0)
+    expect(dbMe2!.steamAccounts.data).toHaveLength(0)
     expect(json).toStrictEqual(expect.objectContaining({ message: "CLX: Error of type Account not found." }))
     expect(status).toBe(400)
   })
@@ -90,7 +92,7 @@ describe("CreateSteamAccountController test suite", () => {
   test("should reject when user attempts to add an account he already has", async () => {
     await sut.handle({ payload: { accountName: "user1", password: "xx", userId: ME_ID } })
     const dbMe = await usersRepository.getByID(ME_ID)
-    expect(dbMe?.steamAccounts).toHaveLength(1)
+    expect(dbMe?.steamAccounts.data).toHaveLength(1)
     expect(dbMe?.plan.maxSteamAccounts).toBe(2)
     const { status, json } = await sut.handle({
       payload: {
@@ -100,7 +102,7 @@ describe("CreateSteamAccountController test suite", () => {
       },
     })
     const dbMe2 = await usersRepository.getByID(ME_ID)
-    expect(dbMe2?.steamAccounts).toHaveLength(1)
+    expect(dbMe2?.steamAccounts.data).toHaveLength(1)
     expect(json).toStrictEqual({ message: "Você já possui essa conta cadastrada!" })
     expect(status).toBe(400)
   })
@@ -109,7 +111,7 @@ describe("CreateSteamAccountController test suite", () => {
     await sut.handle({ payload: { accountName: "user1", password: "xx", userId: ME_ID } })
     await sut.handle({ payload: { accountName: "user2", password: "xx", userId: ME_ID } })
     const dbMe = await usersRepository.getByID(ME_ID)
-    expect(dbMe?.steamAccounts).toHaveLength(2)
+    expect(dbMe?.steamAccounts.data).toHaveLength(2)
     const { status, json } = await sut.handle({
       payload: {
         accountName: "user3",
@@ -118,7 +120,7 @@ describe("CreateSteamAccountController test suite", () => {
       },
     })
     const dbMe2 = await usersRepository.getByID(ME_ID)
-    expect(dbMe2?.steamAccounts).toHaveLength(2)
+    expect(dbMe2?.steamAccounts.data).toHaveLength(2)
     expect(json).toStrictEqual({ message: "Você já adicionou o máximo de contas que seu plano permite!" })
     expect(status).toBe(400)
   })

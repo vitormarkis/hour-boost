@@ -6,7 +6,6 @@ import {
   Purchase,
   SteamAccount,
   SteamAccountCredentials,
-  SteamGame,
   RoleName,
   Role,
   AdminRole,
@@ -46,79 +45,94 @@ export class UsersRepositoryDatabase implements UsersRepository {
   }
 
   async update(user: User): Promise<void> {
+    // await this.prisma.user.update({
+    //   where: {
+    //     id_user: user.id_user,
+    //   },
+    //   data: {
+    //     email: user.email,
+    //     plan: {
+    //       connectOrCreate: {
+    //         where: {
+    //           id_plan: user.plan.id_plan,
+    //         },
+    //         create: {
+    //           createdAt: new Date(),
+    //           id_plan: user.plan.id_plan,
+    //           name: user.plan.name,
+    //           type: user.plan.type,
+    //           usages: {
+    //             connectOrCreate:
+    //               user.plan instanceof PlanUsage
+    //                 ? user.plan.usages.data.map(u => ({
+    //                     where: { id_usage: u.id_usage },
+    //                     create: {
+    //                       amountTime: u.amountTime,
+    //                       createdAt: new Date(),
+    //                       id_usage: u.id_usage,
+    //                       accountName: u.accountName,
+    //                     },
+    //                   }))
+    //                 : [],
+    //           },
+    //         },
+    //       },
+    //     },
+    //     profilePic: user.profilePic,
+    //     purchases: {
+    //       connectOrCreate: user.purchases.map(p => ({
+    //         where: { id_Purchase: p.id_Purchase },
+    //         create: {
+    //           createdAt: new Date(),
+    //           id_Purchase: p.id_Purchase,
+    //         },
+    //       })),
+    //     },
+    //     role: user.role.name,
+    //     status: user.status.name,
+    //     username: user.username,
+    //     steamAccounts: {
+    //       connectOrCreate: user.steamAccounts.data.map(sa => ({
+    //         where: { id_steamAccount: sa.id_steamAccount },
+    //         create: {
+    //           accountName: sa.credentials.accountName,
+    //           createdAt: new Date(),
+    //           id_steamAccount: sa.id_steamAccount,
+    //           password: sa.credentials.password,
+    //           games: {
+    //             connectOrCreate: sa.games.map(
+    //               g =>
+    //                 ({
+    //                   where: { id_steamGame: g.id_steamGame },
+    //                   create: {
+    //                     gameId: g.gameId,
+    //                     id_steamGame: g.id_steamGame,
+    //                   },
+    //                 }) as Prisma.SteamGameCreateOrConnectWithoutSteamAccountInput
+    //             ),
+    //           },
+    //         },
+    //       })),
+    //     },
+    //   },
+    // })
+
+    const trashIDs = user.steamAccounts.getTrashIDs()
+
+    const dbUserSteamAccounts = (
+      await this.prisma.user.findUniqueOrThrow({
+        where: { id_user: user.id_user },
+        select: { steamAccounts: true },
+      })
+    ).steamAccounts.map(sa => sa.id_steamAccount)
+
+    console.log(`Deleting this steamAccountID: ${trashIDs[0]}, and the user has `, ...dbUserSteamAccounts)
+
     await this.prisma.user.update({
-      where: {
-        id_user: user.id_user,
-      },
+      where: { id_user: user.id_user },
       data: {
-        email: user.email,
-        plan: {
-          connectOrCreate: {
-            where: {
-              id_plan: user.plan.id_plan,
-            },
-            create: {
-              createdAt: new Date(),
-              id_plan: user.plan.id_plan,
-              name: user.plan.name,
-              type: user.plan.type,
-              usages: {
-                connectOrCreate:
-                  user.plan instanceof PlanUsage
-                    ? user.plan.usages.data.map(u => ({
-                        where: { id_usage: u.id_usage },
-                        create: {
-                          amountTime: u.amountTime,
-                          createdAt: new Date(),
-                          id_usage: u.id_usage,
-                          accountName: u.accountName,
-                        },
-                      }))
-                    : [],
-              },
-            },
-          },
-        },
-        profilePic: user.profilePic,
-        purchases: {
-          connectOrCreate: user.purchases.map(p => ({
-            where: { id_Purchase: p.id_Purchase },
-            create: {
-              createdAt: new Date(),
-              id_Purchase: p.id_Purchase,
-            },
-          })),
-        },
-        role: user.role.name,
-        status: user.status.name,
-        username: user.username,
         steamAccounts: {
-          deleteMany: {
-            id_steamAccount: {
-              in: user.steamAccounts.getTrashIDs(),
-            },
-          },
-          connectOrCreate: user.steamAccounts.data.map(sa => ({
-            where: { id_steamAccount: sa.id_steamAccount },
-            create: {
-              accountName: sa.credentials.accountName,
-              createdAt: new Date(),
-              id_steamAccount: sa.id_steamAccount,
-              password: sa.credentials.password,
-              games: {
-                connectOrCreate: sa.games.map(
-                  g =>
-                    ({
-                      where: { id_steamGame: g.id_steamGame },
-                      create: {
-                        gameId: g.gameId,
-                        id_steamGame: g.id_steamGame,
-                      },
-                    }) as Prisma.SteamGameCreateOrConnectWithoutSteamAccountInput
-                ),
-              },
-            },
-          })),
+          disconnect: trashIDs.map(id => ({ id_steamAccount: id })),
         },
       },
     })
@@ -156,12 +170,6 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
           accountName: sa.accountName,
           password: sa.password,
         }),
-        games: sa.games.map(g =>
-          SteamGame.restore({
-            gameId: g.gameId,
-            id_steamGame: g.id_steamGame,
-          })
-        ),
         id_steamAccount: sa.id_steamAccount,
       })
     ),
@@ -205,9 +213,7 @@ export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
         },
       },
       purchases: true,
-      steamAccounts: {
-        include: { games: true },
-      },
+      steamAccounts: true,
     },
   })
 }

@@ -100,7 +100,7 @@ export class FarmUsageService implements IFarmService {
       throw new ApplicationError("Você não pode começar uma sessão de farm sem uma conta atribuída.")
     this.status = "FARMING"
     this.startedAt = new Date()
-    if (this.usageLeft <= 0) throw new ApplicationError("Seu plano não possui mais uso disponível.")
+    if (this.usageLeft <= 0) throw new ApplicationError("Seu plano não possui mais uso disponível.", 403)
     this.farmingInterval = setInterval(() => {
       const amountFarmed = this.FARMING_GAP * this.getActiveFarmingAccountsAmount()
       const amountFarmedIndividually = this.FARMING_GAP

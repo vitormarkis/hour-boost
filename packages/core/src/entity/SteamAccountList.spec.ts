@@ -8,7 +8,6 @@ const makeSteamAccount = (accountName: string, id_steamAccount: string = "123") 
       accountName,
       password: "acc_pass",
     }),
-    games: [],
   })
 
 test("should move SteamAccount to the trash", async () => {

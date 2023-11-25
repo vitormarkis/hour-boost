@@ -16,7 +16,6 @@ import { FarmGamesController } from "~/presentation/controllers"
 import { makeUser } from "~/utils/makeUser"
 import { SteamUserMock } from "~/infra/services/SteamUserMock"
 import SteamUser from "steam-user"
-import { SteamBuilder } from "~/contracts"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 
 const USER_ID = "123"
@@ -47,6 +46,9 @@ let me_steamAcount: SteamAccount
 const idGenerator: IDGenerator = {
   makeID: () => "ID",
 }
+
+const log = console.log
+console.log = () => {}
 
 beforeEach(async () => {
   farmingUsersStorage = new FarmingUsersStorage()
@@ -126,7 +128,7 @@ describe("StartFarmController test suite", () => {
     expect(response).toStrictEqual({
       status: 400,
       json: {
-        message: "Steam Account não foi registrada.",
+        message: "Steam Account nunca foi registrada ou ela não pertence à você.",
       },
     })
   })
@@ -156,7 +158,7 @@ describe("StartFarmController test suite", () => {
     )
     await usersRepository.create(user)
     const dbUser = await usersRepository.getByID(reachedUserID)
-    expect(dbUser?.steamAccounts).toHaveLength(1)
+    expect(dbUser?.steamAccounts.data).toHaveLength(1)
     expect(dbUser?.plan).toBeInstanceOf(GuestPlan)
     expect((dbUser?.plan as PlanUsage).getUsageLeft()).toBe(0)
     expect((dbUser?.plan as PlanUsage).getUsageTotal()).toBe(21600)
@@ -171,7 +173,7 @@ describe("StartFarmController test suite", () => {
     )
 
     expect(response).toStrictEqual({
-      status: 400,
+      status: 403,
       json: {
         message: "Seu plano não possui mais uso disponível.",
       },
@@ -324,6 +326,113 @@ describe("StartFarmController test suite", () => {
       json: {
         message: "Steam Account não existe no banco de dados da Steam, delete essa conta e crie novamente.",
       },
+    })
+  })
+
+  test("should NOT call the farm on client when plan has no usage left", async () => {
+    console.log = () => {}
+    await usersRepository.dropAll()
+
+    SteamAccount.create({
+      credentials: SteamAccountCredentials.create({
+        accountName: USER_STEAM_ACCOUNT,
+        password: "steam_account_admin_pass",
+      }),
+      idGenerator,
+    })
+
+    const reachedUserID = "user_ID"
+    const reachedPlan = GuestPlan.create({
+      ownerId: reachedUserID,
+    })
+    const allUsage = Usage.create({
+      amountTime: 21600,
+      createdAt: new Date("2023-06-10T10:00:00Z"),
+      plan_id: reachedPlan.id_plan,
+      accountName: USER_STEAM_ACCOUNT,
+    })
+    reachedPlan.use(allUsage)
+    const user = makeUser(reachedUserID, "used_user", reachedPlan)
+    user.addSteamAccount(me_steamAcount)
+    await usersRepository.create(user)
+
+    const response = await promiseHandler(
+      startFarmController.handle({
+        payload: {
+          userId: user.id_user,
+          accountName: USER_STEAM_ACCOUNT,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    const { userSteamClients } = userSteamClientsStorage.get(user.id_user)
+    const { steamAccountClient: sac } = userSteamClients.getAccountClient(USER_STEAM_ACCOUNT)
+    const spyFarmGames = jest.spyOn(sac, "farmGames")
+
+    expect(spyFarmGames).not.toHaveBeenCalledWith([10892])
+
+    expect(response).toStrictEqual({
+      status: 403,
+      json: { message: "Seu plano não possui mais uso disponível." },
+    })
+  })
+
+  test("should return message saying user has run out of his plan max usage before steam guard is required", async () => {
+    userSteamClientsStorage = new AllUsersClientsStorage(publisher, {
+      create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
+    })
+    startFarmController = new FarmGamesController(
+      farmingUsersStorage,
+      publisher,
+      usersRepository,
+      userSteamClientsStorage
+    )
+
+    await usersRepository.dropAll()
+
+    SteamAccount.create({
+      credentials: SteamAccountCredentials.create({
+        accountName: USER_STEAM_ACCOUNT,
+        password: "steam_account_admin_pass",
+      }),
+      idGenerator,
+    })
+
+    const reachedUserID = "user_ID"
+    const reachedPlan = GuestPlan.create({
+      ownerId: reachedUserID,
+    })
+    const allUsage = Usage.create({
+      amountTime: 21600,
+      createdAt: new Date("2023-06-10T10:00:00Z"),
+      plan_id: reachedPlan.id_plan,
+      accountName: USER_STEAM_ACCOUNT,
+    })
+    reachedPlan.use(allUsage)
+    const user = makeUser(reachedUserID, "used_user", reachedPlan)
+    user.addSteamAccount(me_steamAcount)
+    await usersRepository.create(user)
+
+    const response = await promiseHandler(
+      startFarmController.handle({
+        payload: {
+          userId: user.id_user,
+          accountName: USER_STEAM_ACCOUNT,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    const { userSteamClients } = userSteamClientsStorage.get(user.id_user)
+    const { steamAccountClient: sac } = userSteamClients.getAccountClient(USER_STEAM_ACCOUNT)
+    const spyFarmGames = jest.spyOn(sac, "farmGames")
+
+    expect(spyFarmGames).not.toHaveBeenCalledWith([10892])
+
+    expect(response).toStrictEqual({
+      status: 403,
+      json: { message: "Seu plano não possui mais uso disponível." },
     })
   })
 })

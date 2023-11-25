@@ -2,6 +2,8 @@ import { WithAuthProp } from "@clerk/clerk-sdk-node"
 import { AddSteamAccount, ApplicationError, ListSteamAccounts } from "core"
 import { randomUUID } from "crypto"
 import { Request, Response, Router } from "express"
+import { prisma } from "~/infra/libs"
+import { UsersRepositoryDatabase } from "~/infra/repository"
 
 import {
   AddSteamAccountController,
@@ -17,7 +19,7 @@ import {
   usersRepository,
 } from "~/presentation/instances"
 import { loginErrorMessages } from "~/presentation/routes"
-import { getTimeoutPromise, makeResError } from "~/utils"
+import { getTimeoutPromise, makeRes, makeResError } from "~/utils"
 
 export const addSteamAccount = new AddSteamAccount(usersRepository, {
   makeID: () => randomUUID(),
@@ -50,6 +52,25 @@ command_routerSteam.post(
       })
     )
 
+    return res.status(status).json(json)
+  }
+)
+
+command_routerSteam.delete(
+  "/steam-accounts",
+  // ClerkExpressRequireAuth(),
+  async (req: WithAuthProp<Request>, res: Response) => {
+    const usersRepository = new UsersRepositoryDatabase(prisma)
+    const { userID, steamAccountID } = req.body
+
+    const perform = async () => {
+      const user = await usersRepository.getByID(userID)
+      if (!user) throw new ApplicationError("Usuário não encontrado.", 404)
+      user.steamAccounts.remove(steamAccountID)
+      await usersRepository.update(user)
+      return makeRes(200, `Successfully removed ${steamAccountID}.`)
+    }
+    const { status, json } = await promiseHandler(perform())
     return res.status(status).json(json)
   }
 )

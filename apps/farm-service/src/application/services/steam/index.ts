@@ -1,2 +1,2 @@
 export * from "./LastHandler"
-export * from "./UserSteamClient"
+export * from "./SteamAccountClient"

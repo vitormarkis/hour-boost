@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { ISteamAccountSession, ISteamGame, PlanUsage, UserSession, UsersDAO } from "core"
+import { ISteamAccountSession, PlanUsage, UserSession, UsersDAO } from "core"
 
 import { getCurrentPlanOrCreateOne } from "~/utils"
 
@@ -64,18 +64,10 @@ export class UsersDAODatabase implements UsersDAO {
       select: {
         accountName: true,
         id_steamAccount: true,
-        games: true,
       },
     })
     const userSteamAccounts: ISteamAccountSession[] = userSteamAccountsDatabase.map(sa => ({
       accountName: sa.accountName,
-      games: sa.games.map(
-        g =>
-          ({
-            gameId: g.gameId,
-            id_steamGame: g.id_steamGame,
-          }) satisfies ISteamGame
-      ),
       id_steamAccount: sa.id_steamAccount,
     }))
 

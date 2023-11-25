@@ -24,9 +24,6 @@ export class AllUsersClientsStorage {
   addSteamAccount({ accountName, userId, username }: AddUserProps): {
     steamAccountClient: SteamAccountClient
   } {
-    console.log({
-      addSteamAccount: { accountName, userId, username },
-    })
     const steamAccountClient = new SteamAccountClient({
       props: {
         client: this.steamBuilder.create(),
@@ -40,10 +37,6 @@ export class AllUsersClientsStorage {
     })
 
     const userClientsStorage = this.users.get(userId)
-    console.log({
-      steamAccountClient,
-      userClientsStorage,
-    })
     if (!userClientsStorage) {
       const userClientsStorage = new UserClientsStorage()
       userClientsStorage.addAccountClient(steamAccountClient)

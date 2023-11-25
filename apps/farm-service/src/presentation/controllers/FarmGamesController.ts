@@ -25,7 +25,7 @@ export class FarmGamesController {
     private readonly farmingUsersStorage: IFarmingUsersStorage,
     private readonly publisher: Publisher,
     private readonly usersRepository: UsersRepository,
-    private readonly userSteamClientsStorage: AllUsersClientsStorage
+    private readonly allUsersClientsStorage: AllUsersClientsStorage
   ) {}
 
   async handle(
@@ -39,9 +39,9 @@ export class FarmGamesController {
     const user = await this.usersRepository.getByID(req.payload.userId)
     if (!user) throw new ApplicationError("Usuário não encontrado.", 404)
     const steamAccountDomain = user.steamAccounts.data.find(sa => sa.credentials.accountName === accountName)
-    if (!steamAccountDomain) throw new ApplicationError("Steam Account não foi registrada.", 400)
+    if (!steamAccountDomain) throw new ApplicationError("Steam Account nunca foi registrada ou ela não pertence à você.", 400)
 
-    const { steamAccountClient: sac } = this.userSteamClientsStorage.getOrAddSteamAccount({
+    const { steamAccountClient: sac } = this.allUsersClientsStorage.getOrAddSteamAccount({
       accountName,
       userId,
       username: user.username,
@@ -73,7 +73,7 @@ export class FarmGamesController {
         }),
         new Promise<Resolved>((res, rej) => {
           sac.client.on("error", error => {
-            res(getUSCErrorMessage(error))
+            res(getSACErrorMessage(error))
           })
         }),
         getTimeoutPromise<Resolved>(EVENT_PROMISES_TIMEOUT_IN_SECONDS, {
@@ -99,7 +99,6 @@ export class FarmGamesController {
     }
     const noNewGameAddToFarm = areTwoArraysEqual(gamesID, sac.getGamesPlaying())
     if (noNewGameAddToFarm) return makeRes(200, "Nenhum novo game adicionado ao farm.")
-    sac.farmGames(gamesID)
 
     if (user.plan instanceof PlanInfinity) {
       const farmInfinityService = new FarmInfinityService(
@@ -109,6 +108,7 @@ export class FarmGamesController {
         user.plan.ownerId
       )
       this.farmingUsersStorage.add(farmInfinityService).startFarm()
+      sac.farmGames(gamesID)
       return makeRes(200, "Iniciando farm.")
     }
 
@@ -116,6 +116,7 @@ export class FarmGamesController {
       const farmUsageService = new FarmUsageService(this.publisher, user.plan, user.username)
       farmUsageService.farmWithAccount(accountName)
       this.farmingUsersStorage.add(farmUsageService).startFarm()
+      sac.farmGames(gamesID)
       return makeRes(200, "Iniciando farm.")
     }
 
@@ -123,7 +124,7 @@ export class FarmGamesController {
   }
 }
 
-function getUSCErrorMessage(error: EventParameters["error"][0]): Resolved {
+function getSACErrorMessage(error: EventParameters["error"][0]): Resolved {
   if (error.eresult === 18)
     return makeRes(
       404,

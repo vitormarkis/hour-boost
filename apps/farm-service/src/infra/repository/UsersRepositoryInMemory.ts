@@ -1,4 +1,4 @@
-import { User, UsersRepository } from "core"
+import { ApplicationError, User, UsersRepository } from "core"
 import { UsersInMemory } from "./UsersInMemory"
 
 export class UsersRepositoryInMemory implements UsersRepository {
@@ -17,7 +17,18 @@ export class UsersRepositoryInMemory implements UsersRepository {
   }
 
   async update(user: User): Promise<void> {
-    this.usersMemory.users = this.usersMemory.users.map(u => (u.id_user === user.id_user ? user : u))
+    console.log({
+      upcomingID: user.id_user,
+      existingIDs: this.usersMemory.users.map(s => s.id_user),
+    })
+    const foundUserIndex = this.usersMemory.users.findIndex(u => u.id_user === user.id_user)
+    if (foundUserIndex === -1)
+      throw new ApplicationError(
+        "Usuário não encontrado.",
+        404,
+        `repo em memory, tentou atualizar um usuário que não existia no bando de dados.`
+      )
+    this.usersMemory.users[foundUserIndex] = user
   }
 
   async create(user: User): Promise<string> {
