@@ -6,10 +6,13 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "test": "jest --watchAll",
+    "test": "jest --silent --verbose",
+    "test:w": "jest --verbose --watchAll",
     "dev": "npm run build -- --watch",
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "check": "tsc --noEmit",
+    "ci": "npm run check && npm run test"
   },
   "keywords": [],
   "author": "",

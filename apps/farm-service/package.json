@@ -7,13 +7,15 @@
   "scripts": {
     "dev": "tsx watch src/server.ts --clear-screen=false",
     "dev:inspect": "node --require tsx/cjs --inspect src/server.ts",
-    "build": "tsc --noEmit && tsup src/server.ts",
+    "check": "tsc --noEmit",
+    "build": "npm run check && tsup src/server.ts",
     "build:f": "tsup src/server.ts",
     "start": "node dist/server.js",
     "start:inspect": "node --inspect dist/src/server.js",
-    "build:s": "bun run build && bun start",
+    "build:s": "npm run build && npm start",
     "seed": "tsx seed.ts",
-    "test": "jest --silent --verbose"
+    "test": "jest --silent --verbose",
+    "ci": "npm run check && npm run test"
   },
   "keywords": [],
   "author": "",
