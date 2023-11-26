@@ -16,13 +16,8 @@ const createUser = new CreateUser(usersRepository, userAuthentication)
 const getUser = new GetUser(usersDAO)
 
 query_routerGeneral.get("/up", (req, res) => {
-  console.log({
-    farmingUsers: farmingUsersStorage.listFarmingStatusCount(),
-    date: new Date(),
-  })
-
   return res.status(200).json({
-    message: "server is up !",
+    message: "Server is up!",
   })
 })
 
