@@ -70,6 +70,7 @@ beforeAll(async () => {
       password: "steam_account_admin_pass",
     }),
     idGenerator,
+    ownerId: me.id_user,
   })
   me.addSteamAccount(me_steamAcount)
   friend = makeUser(FRIEND_ID, FRIEND)
@@ -102,7 +103,7 @@ test("should ask for the steam guard code", async () => {
 
   expect(response).toStrictEqual({
     status: 202,
-    json: { message: "SteamClient: Steam Guard required! Sendind code to your phone." },
+    json: { message: "Steam Guard requerido. Enviando para seu celular." },
   })
 })
 

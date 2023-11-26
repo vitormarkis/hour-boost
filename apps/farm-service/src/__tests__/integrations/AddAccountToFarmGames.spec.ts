@@ -1,10 +1,11 @@
-import { AddSteamAccount, IDGenerator, User, UsersDAO, UsersRepository } from "core"
+import { AddSteamAccount, IDGenerator, SteamAccountsRepository, User, UsersDAO, UsersRepository } from "core"
 import SteamUser from "steam-user"
 import { AllUsersClientsStorage, FarmingUsersStorage, IFarmingUsersStorage } from "~/application/services"
 import { SteamBuilder } from "~/contracts"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
 import { UsersInMemory, UsersRepositoryInMemory } from "~/infra/repository"
+import { SteamAccountsRepositoryInMemory } from "~/infra/repository/SteamAccountsRepositoryInMemory"
 import { SteamUserMock } from "~/infra/services/SteamUserMock"
 import { AddSteamAccountController, FarmGamesController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
@@ -16,6 +17,7 @@ const USER_USERNAME = "versale"
 
 let usersMemory: UsersInMemory
 let usersRepository: UsersRepository
+let steamAccountsRepository: SteamAccountsRepository
 let publisher: Publisher
 let steamBuilder: SteamBuilder
 let idGenerator: IDGenerator
@@ -42,8 +44,9 @@ beforeEach(async () => {
   }
   usersMemory = new UsersInMemory()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
+  steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)
   idGenerator = { makeID: () => "998" }
-  addSteamAccount = new AddSteamAccount(usersRepository, idGenerator)
+  addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
   allUsersClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder)
   usersDAO = new UsersDAOInMemory(usersMemory)
   user = makeUser(USER_ID, USER_USERNAME)
@@ -55,7 +58,11 @@ describe("should register a new steam account in the storage after addition of a
     const addSteamAccountController = new AddSteamAccountController(
       addSteamAccount,
       allUsersClientsStorage,
-      usersDAO
+      usersDAO,
+      {
+        create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
+      },
+      publisher
     )
 
     const userx1 = await usersRepository.getByID(USER_ID)

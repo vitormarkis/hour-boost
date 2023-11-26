@@ -1,14 +1,19 @@
 import { IDGenerator } from "core/contracts"
 import { ApplicationError, SteamAccount, SteamAccountCredentials } from "core/entity"
-import { UsersRepository } from "core/repository"
+import { SteamAccountsRepository, UsersRepository } from "core/repository"
 
 export class AddSteamAccount {
   constructor(
     private readonly usersRepository: UsersRepository,
+    private readonly steamAccountsRepository: SteamAccountsRepository,
     private readonly idGenerator: IDGenerator
   ) {}
 
   async execute(input: AddSteamAccountInput): Promise<AddSteamAccountOutput> {
+    const steamAccount = await this.steamAccountsRepository.getByAccountName(input.accountName)
+    if (steamAccount && steamAccount.ownerId !== input.userId) {
+      throw new ApplicationError("Essa conta da Steam já foi registrada por outro usuário.", 403)
+    }
     const user = await this.usersRepository.getByID(input.userId)
     if (!user) throw new ApplicationError("No user found!", 404)
     const newSteamAccount = SteamAccount.create({
@@ -17,6 +22,7 @@ export class AddSteamAccount {
         accountName: input.accountName,
         password: input.password,
       }),
+      ownerId: user.id_user,
     })
     user.addSteamAccount(newSteamAccount)
     await this.usersRepository.update(user)

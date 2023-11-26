@@ -4,10 +4,12 @@ import { IDGenerator } from "../contracts"
 export class SteamAccount {
   id_steamAccount: string
   credentials: SteamAccountCredentials
+  ownerId: string | null
 
   private constructor(props: SteamAccountProps) {
     this.id_steamAccount = props.id_steamAccount
     this.credentials = props.credentials
+    this.ownerId = props.ownerId
   }
 
   static create(props: SteamAccountCreateProps) {
@@ -25,9 +27,11 @@ export class SteamAccount {
 type SteamAccountProps = {
   id_steamAccount: string
   credentials: SteamAccountCredentials
+  ownerId: string | null
 }
 
 type SteamAccountCreateProps = {
   credentials: SteamAccountCredentials
   idGenerator: IDGenerator
+  ownerId: string | null
 }

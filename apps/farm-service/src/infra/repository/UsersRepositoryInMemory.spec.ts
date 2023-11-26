@@ -33,6 +33,7 @@ test("should update given user", async () => {
       idGenerator: {
         makeID: () => "998",
       },
+      ownerId: user2.id_user,
     })
   )
   expect(usersMemory.users).toHaveLength(1)
@@ -55,6 +56,7 @@ test("should throw when try to update non existing user", async () => {
       idGenerator: {
         makeID: () => "998",
       },
+      ownerId: user2.id_user,
     })
   )
 

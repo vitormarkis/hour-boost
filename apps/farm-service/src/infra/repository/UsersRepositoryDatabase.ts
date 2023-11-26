@@ -140,6 +140,7 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
           password: sa.password,
         }),
         id_steamAccount: sa.id_steamAccount,
+        ownerId: dbUser.id_user,
       })
     ),
   })

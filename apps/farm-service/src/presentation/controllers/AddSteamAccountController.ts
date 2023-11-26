@@ -7,9 +7,12 @@ import {
   UsersRepository,
 } from "core"
 import { AllUsersClientsStorage } from "~/application/services"
+import { SteamAccountClient } from "~/application/services/steam"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
+import { SteamBuilder } from "~/contracts"
 
 import { HttpClient } from "~/contracts/HttpClient"
+import { Publisher } from "~/infra/queue"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { loginErrorMessages } from "~/presentation/routes"
 import { getTimeoutPromise, makeResError } from "~/utils"
@@ -26,7 +29,9 @@ export class AddSteamAccountController {
   constructor(
     private readonly addSteamAccount: AddSteamAccount,
     private readonly allUsersClientsStorage: AllUsersClientsStorage,
-    private readonly usersDAO: UsersDAO
+    private readonly usersDAO: UsersDAO,
+    private readonly steamBuilder: SteamBuilder,
+    private readonly publisher: Publisher
   ) {}
 
   async handle(req: HttpClient.Request<IAddSteamAccount>): Promise<HttpClient.Response> {
@@ -35,11 +40,18 @@ export class AddSteamAccountController {
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
       if (!username) throw new ApplicationError("No user found with this ID.")
 
-      const { steamAccountClient: sac } = this.allUsersClientsStorage.addSteamAccount({
-        accountName,
-        userId,
-        username,
+      const sac = new SteamAccountClient({
+        props: {
+          client: this.steamBuilder.create(),
+          userId,
+          username,
+          accountName,
+        },
+        instances: {
+          publisher: this.publisher,
+        },
       })
+
       sac.login(accountName, password)
 
       try {
@@ -53,6 +65,7 @@ export class AddSteamAccountController {
                   userId,
                 })
                 .then(({ steamAccountID }) => {
+                  this.allUsersClientsStorage.addSteamAccount(userId, sac)
                   res({
                     json: { message: `${accountName} adicionada com sucesso!`, steamAccountID },
                     status: 201,

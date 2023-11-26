@@ -15,7 +15,8 @@
     "build:s": "npm run build && npm start",
     "seed": "tsx seed.ts",
     "test": "jest --silent --verbose",
-    "ci": "npm run check && npm run test"
+    "ci": "npm run check && npm run test",
+    "st": "prisma studio"
   },
   "keywords": [],
   "author": "",

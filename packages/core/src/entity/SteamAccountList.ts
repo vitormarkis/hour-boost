@@ -22,6 +22,10 @@ export class SteamAccountList {
     this.data.splice(steamAccountIndex, 1)
   }
 
+  getByAccountName(accountName: string) {
+    return this.data.find(sa => sa.credentials.accountName === accountName) ?? null
+  }
+
   getAmount() {
     return this.data.length
   }

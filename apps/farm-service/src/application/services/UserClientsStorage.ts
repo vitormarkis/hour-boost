@@ -10,6 +10,10 @@ export class UserClientsStorage {
     this.steamAccountClients.set(client.accountName, client)
   }
 
+  removeAccountClient(accountName: string) {
+    this.steamAccountClients.delete(accountName)
+  }
+
   getAccountClient(accountName: string) {
     const steamAccountClient = this.steamAccountClients.get(accountName)
     if (!steamAccountClient)
@@ -19,5 +23,15 @@ export class UserClientsStorage {
 
   hasAccountName(accountName: string) {
     return this.steamAccountClients.has(accountName)
+  }
+
+  getAccountsStatus() {
+    const accountStatus = {} as Record<string, { farming: boolean }>
+    this.steamAccountClients.forEach((client, accountName) => {
+      accountStatus[accountName] = {
+        farming: client.isFarming,
+      }
+    })
+    return accountStatus
   }
 }

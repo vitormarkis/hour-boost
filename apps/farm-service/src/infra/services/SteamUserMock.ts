@@ -1,13 +1,11 @@
 import { ApplicationError } from "core"
+import SteamUser from "steam-user"
 
 export type EventParameters = {
-  loggedOn: []
-  error: [
-    errorType: {
-      eresult: number
-    },
-  ]
+  loggedOn: [details: Record<string, any>, parental: Record<string, any>]
   steamGuard: [domain: string | null, callback: (code: string) => void, lastCodeWrong: boolean]
+  error: [err: Error & { eresult: SteamUser.EResult }]
+  disconnected: [eresult: SteamUser.EResult, msg?: string]
 }
 
 type EventName = keyof EventParameters
@@ -17,6 +15,7 @@ type SteamAccountCredentials = {
 }
 
 export class SteamUserMock {
+  events: Map<EventName, Function[]> = new Map()
   steamGuardCode: string | null = null
   logged = false
 
@@ -38,8 +37,6 @@ export class SteamUserMock {
       this.logged = false
     })
   }
-
-  events: Map<EventName, Function[]> = new Map()
 
   on<T extends keyof EventParameters, A extends EventParameters[T]>(
     eventName: T,
@@ -72,7 +69,7 @@ export class SteamUserMock {
     const isValidCredentials = this.validSteamAccounts.some(
       vsa => vsa.accountName === details.accountName && vsa.password === details.password
     )
-    console.log({})
+    console.log("loggin")
     setTimeout(() => {
       console.log("ST: loggin")
       if (!isValidCredentials) {
@@ -80,6 +77,7 @@ export class SteamUserMock {
         errorCode = 18
         if (errorCode === 18) console.log(this.validSteamAccounts)
         this.emit("error", {
+          ...new Error(),
           eresult: errorCode,
         })
       } else if (this.mobile) {
@@ -89,13 +87,13 @@ export class SteamUserMock {
           this.mobile ? null : "mail.com",
           (code: string) => {
             this.setSteamGuardCode(code)
-            this.emit("loggedOn")
+            this.emit("loggedOn", ...([] as any))
           },
           false
         )
       } else {
         console.log("is valid: loggin")
-        this.emit("loggedOn")
+        this.emit("loggedOn", ...([] as any))
       }
     }).unref()
   }

@@ -1,4 +1,5 @@
-import { ApplicationError } from "core"
+import { ApplicationError, UsersDAO } from "core"
+import SteamUser from "steam-user"
 import { UserClientsStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
@@ -16,26 +17,38 @@ export class AllUsersClientsStorage {
   getOrAddSteamAccount({ accountName, userId, username }: AddUserProps) {
     const userSteamClient = this.users.get(userId)?.hasAccountName(accountName)
     if (!userSteamClient) {
-      return this.addSteamAccount({ accountName, userId, username })
+      console.log("creating a new sac and adding")
+      const steamAccountClient = new SteamAccountClient({
+        instances: {
+          publisher: this.publisher,
+        },
+        props: {
+          accountName,
+          client: this.steamBuilder.create(),
+          userId,
+          username,
+        },
+      })
+      this.addSteamAccount(userId, steamAccountClient)
+      return { steamAccountClient }
     }
+    console.log("found a sac, return sac")
     return { steamAccountClient: this.users.get(userId)?.getAccountClient(accountName).steamAccountClient }
   }
 
-  addSteamAccount({ accountName, userId, username }: AddUserProps): {
+  createSteamAccountClient({ accountName, userId, username }: AddUserProps) {}
+
+  removeSteamAccount(userId: string, accountName: string) {
+    const { userSteamClients } = this.get(userId)
+    userSteamClients.removeAccountClient(accountName)
+  }
+
+  addSteamAccount(
+    userId: string,
+    steamAccountClient: SteamAccountClient
+  ): {
     steamAccountClient: SteamAccountClient
   } {
-    const steamAccountClient = new SteamAccountClient({
-      props: {
-        client: this.steamBuilder.create(),
-        userId,
-        username,
-        accountName,
-      },
-      instances: {
-        publisher: this.publisher,
-      },
-    })
-
     const userClientsStorage = this.users.get(userId)
     if (!userClientsStorage) {
       const userClientsStorage = new UserClientsStorage()
@@ -75,8 +88,18 @@ export class AllUsersClientsStorage {
   }
 
   listUsers() {
+    const usersIDs = {} as Record<string, Record<string, { farming: boolean }>>
+    for (const [userId, client] of this.users.entries()) {
+      usersIDs[userId] = client.getAccountsStatus()
+    }
+    return usersIDs
+    return Object.entries(this.users.entries()).map(s => {
+      console.log(s)
+      return s
+    })
     return Object.entries(this.users).reduce(
       (acc, [key, value]) => {
+        console.log(acc, key, value)
         const [classWord, instance] = value.constructor.toString().split(" ")
         acc[key] = `${classWord} ${instance}`
         return acc

@@ -99,6 +99,10 @@ export class SteamAccountClient extends LastHandler {
     console.log(`STEAM_CLIENT: Calling the client with `, gamesID)
     this.client.gamesPlayed(gamesID)
   }
+
+  get isFarming(): boolean {
+    return this.gamesPlaying.length > 0
+  }
 }
 
 function getUserFarmIntention(gamesID: number[], currentFarmingGames: number[]) {

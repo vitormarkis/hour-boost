@@ -19,6 +19,7 @@ import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { Resolved } from "~/presentation/controllers/AddSteamAccountController"
 import { loginErrorMessages } from "~/presentation/routes"
 import { EventParameters } from "~/infra/services/SteamUserMock"
+import { throwBadEventsResolved } from "~/utils/bad-events-handler/throwBadEventsResolved"
 
 export class FarmGamesController {
   constructor(
@@ -39,53 +40,46 @@ export class FarmGamesController {
     const user = await this.usersRepository.getByID(req.payload.userId)
     if (!user) throw new ApplicationError("Usuário não encontrado.", 404)
     const steamAccountDomain = user.steamAccounts.data.find(sa => sa.credentials.accountName === accountName)
-    if (!steamAccountDomain) throw new ApplicationError("Steam Account nunca foi registrada ou ela não pertence à você.", 400)
+    if (!steamAccountDomain)
+      throw new ApplicationError("Steam Account nunca foi registrada ou ela não pertence à você.", 400)
 
     const { steamAccountClient: sac } = this.allUsersClientsStorage.getOrAddSteamAccount({
       accountName,
       userId,
       username: user.username,
     })
+    console.log(this.allUsersClientsStorage.listUsers())
     if (!sac) throw new ApplicationError("Essa conta nunca se conectou à Steam.")
     if (!sac.logged) {
       sac.login(steamAccountDomain.credentials.accountName, steamAccountDomain.credentials.password)
-      const { json, status } = await Promise.race([
-        new Promise<Resolved>((res, rej) => {
-          sac.client.on("loggedOn", async () => {
-            res({
-              json: null,
-              status: 200,
-            })
+      const eventsPromisesResolved = await Promise.race([
+        new Promise<FarmGamesEventsResolve>((res, rej) => {
+          sac.client.on("loggedOn", (...args) => {
+            res({ type: "loggedOn", args })
           })
         }),
-        new Promise<Resolved>((res, rej) => {
-          sac.client.on("steamGuard", (domain, setSteamCodeCallback) => {
-            sac.setLastHandler(accountName, "steamGuard", setSteamCodeCallback)
-            res({
-              json: {
-                message: `SteamClient: Steam Guard required! Sendind code to ${
-                  domain ? `email ${domain}` : `your phone.`
-                }`,
-              },
-              status: 202,
-            })
+        new Promise<FarmGamesEventsResolve>((res, rej) => {
+          sac.client.on("steamGuard", (...args) => {
+            res({ type: "steamGuard", args })
           })
         }),
-        new Promise<Resolved>((res, rej) => {
-          sac.client.on("error", error => {
-            res(getSACErrorMessage(error))
+        new Promise<FarmGamesEventsResolve>((res, rej) => {
+          sac.client.on("error", (...args) => {
+            res({ type: "error", args })
           })
         }),
-        getTimeoutPromise<Resolved>(EVENT_PROMISES_TIMEOUT_IN_SECONDS, {
-          json: {
-            message: "Server timed out.",
-          },
-          status: 400,
-        }),
+        getTimeoutPromise<FarmGamesEventsResolve>(EVENT_PROMISES_TIMEOUT_IN_SECONDS, {
+          type: "timeout",
+          args: [],
+        } as FarmGamesEventsResolve),
       ])
-      if (json) {
-        throw new ApplicationError(json.message ?? "Error with no json was thrown.", status)
+
+      const badEvents = throwBadEventsResolved(eventsPromisesResolved)
+      if (badEvents.eventName === "steamGuard") {
+        const [_, setCode] = badEvents.args
+        sac.setLastHandler(accountName, "steamGuard", setCode)
       }
+      if (badEvents.interrupt) return badEvents.httpResponse
     }
     if (gamesID.length === 0) {
       throw new ApplicationError("Você não pode farmar 0 jogos, começe o farm a partir de 1.", 403)
@@ -124,11 +118,17 @@ export class FarmGamesController {
   }
 }
 
-function getSACErrorMessage(error: EventParameters["error"][0]): Resolved {
-  if (error.eresult === 18)
-    return makeRes(
-      404,
-      "Steam Account não existe no banco de dados da Steam, delete essa conta e crie novamente."
-    )
-  return makeRes(400, `Uncaught Steam Client Error: ${loginErrorMessages[error.eresult]}`)
+export type EventMapperGeneric = Record<string, any[]>
+
+export type FarmGamesEventsResolve<
+  EventMapper extends EventMapperGeneric = EventParameters & EventParametersTimeout,
+> = {
+  [K in keyof EventMapper]: {
+    type: K
+    args: EventMapper[K]
+  }
+}[keyof EventMapper]
+
+export type EventParametersTimeout = {
+  timeout: []
 }

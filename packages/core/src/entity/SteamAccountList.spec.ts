@@ -1,14 +1,19 @@
 import { SteamAccount, SteamAccountCredentials } from "core/entity"
 import { SteamAccountList, SteamAccountList as steamAccountList } from "core/entity/SteamAccountList"
 
-const makeSteamAccount = (accountName: string, id_steamAccount: string = "123") =>
+const makeSteamAccountGeneric = (accountName: string, id_steamAccount: string = "123", ownerId: string) =>
   SteamAccount.restore({
     id_steamAccount,
+    ownerId,
     credentials: SteamAccountCredentials.create({
       accountName,
       password: "acc_pass",
     }),
   })
+
+const makeSteamAccount = (accountName: string, id_steamAccount: string = "123") => {
+  return makeSteamAccountGeneric(accountName, id_steamAccount, "998")
+}
 
 test("should move SteamAccount to the trash", async () => {
   const steamAccountList = new SteamAccountList()

@@ -1,17 +1,19 @@
-import { AddSteamAccount, DiamondPlan, User } from "core"
+import { SteamAccountsRepository, AddSteamAccount, User, IDGenerator, DiamondPlan } from "core"
 import SteamUser from "steam-user"
 import { AllUsersClientsStorage } from "~/application/services"
-import { SteamBuilder } from "~/contracts/SteamBuilder"
+import { SteamBuilder } from "~/contracts"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
-import { UsersInMemory, UsersRepositoryInMemory } from "~/infra/repository"
-import { SteamUserMock } from "~/infra/services/SteamUserMock"
-import { AddSteamAccountController } from "~/presentation/controllers"
-import { promiseHandler } from "~/presentation/controllers/promiseHandler"
+import { UsersInMemory, UsersRepositoryInMemory, SteamAccountsRepositoryInMemory } from "~/infra/repository"
+import { SteamUserMock } from "~/infra/services"
+import { promiseHandler, AddSteamAccountController } from "~/presentation/controllers"
 import { makeUser } from "~/utils/makeUser"
 
 const ME_ID = "123"
 const ME_USERNAME = "vitormarkis"
+
+const FRIEND_ID = "ABC"
+const FRIEND_USERNAME = "matheus"
 
 const validSteamAccounts = [
   { accountName: "user1", password: "xx" },
@@ -25,21 +27,24 @@ const steamBuilder: SteamBuilder = {
 
 let usersMemory: UsersInMemory
 let usersRepository: UsersRepositoryInMemory
+let steamAccountRepository: SteamAccountsRepository
 let addSteamAccount: AddSteamAccount
 let usersDAO: UsersDAOInMemory
 const publisher = new Publisher()
-const steamFarming = new AllUsersClientsStorage(publisher, steamBuilder)
+const allUsersClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder)
 let sut: AddSteamAccountController
-let me: User
+let me, friend: User
+const idGenerator: IDGenerator = {
+  makeID: () => "random",
+}
 
 const log = console.log
 beforeEach(async () => {
   console.log = () => {}
   usersMemory = new UsersInMemory()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
-  addSteamAccount = new AddSteamAccount(usersRepository, {
-    makeID: () => "random",
-  })
+  steamAccountRepository = new SteamAccountsRepositoryInMemory(usersMemory)
+  addSteamAccount = new AddSteamAccount(usersRepository, steamAccountRepository, idGenerator)
   me = makeUser(
     ME_ID,
     ME_USERNAME,
@@ -47,9 +52,25 @@ beforeEach(async () => {
       ownerId: ME_ID,
     })
   )
+  friend = makeUser(
+    FRIEND_ID,
+    FRIEND_USERNAME,
+    DiamondPlan.create({
+      ownerId: FRIEND_ID,
+    })
+  )
   usersDAO = new UsersDAOInMemory(usersMemory)
-  sut = new AddSteamAccountController(addSteamAccount, steamFarming, usersDAO)
-  await usersRepository.create(me)
+  ;(sut = new AddSteamAccountController(
+    addSteamAccount,
+    allUsersClientsStorage,
+    usersDAO,
+    {
+      create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
+    },
+    publisher
+  )),
+    await usersRepository.create(me)
+  await usersRepository.create(friend)
 })
 
 describe("CreateSteamAccountController test suite", () => {
@@ -105,6 +126,33 @@ describe("CreateSteamAccountController test suite", () => {
     expect(dbMe2?.steamAccounts.data).toHaveLength(1)
     expect(json).toStrictEqual({ message: "Você já possui essa conta cadastrada!" })
     expect(status).toBe(400)
+  })
+
+  test("should reject when user attempts to add an account that is already owned by other user", async () => {
+    console.log = log
+    await promiseHandler(
+      sut.handle({
+        payload: {
+          accountName: "user1",
+          password: "xx",
+          userId: ME_ID,
+        },
+      })
+    )
+    const { status, json } = await promiseHandler(
+      sut.handle({
+        payload: {
+          accountName: "user1",
+          password: "xx",
+          userId: FRIEND_ID,
+        },
+      })
+    )
+
+    expect(json).toStrictEqual({
+      message: "Essa conta da Steam já foi registrada por outro usuário.",
+    })
+    expect(status).toBe(403)
   })
 
   test("should reject when user attempts to add more accounts than his plan allows", async () => {

@@ -51,6 +51,7 @@ const log = console.log
 console.log = () => {}
 
 beforeEach(async () => {
+  console.log = () => {}
   farmingUsersStorage = new FarmingUsersStorage()
   publisher = new Publisher()
   usersRepository = new UsersRepositoryInMemory(new UsersInMemory())
@@ -69,6 +70,7 @@ beforeEach(async () => {
       accountName: USER_STEAM_ACCOUNT,
       password: "steam_account_admin_pass",
     }),
+    ownerId: me.id_user,
     idGenerator,
   })
   me.addSteamAccount(me_steamAcount)
@@ -79,6 +81,7 @@ beforeEach(async () => {
 
 describe("StartFarmController test suite", () => {
   test("should start the farm", async () => {
+    console.log = log
     const response = await promiseHandler(
       startFarmController.handle({
         payload: {
@@ -153,6 +156,7 @@ describe("StartFarmController test suite", () => {
           accountName: reachedUserSteamAccountName,
           password: "REACHED_admin_pass",
         }),
+        ownerId: user.id_user,
         idGenerator,
       })
     )
@@ -295,7 +299,7 @@ describe("StartFarmController test suite", () => {
 
     expect(response).toStrictEqual({
       status: 202,
-      json: { message: "SteamClient: Steam Guard required! Sendind code to your phone." },
+      json: { message: "Steam Guard requerido. Enviando para seu celular." },
     })
   })
 
@@ -325,6 +329,7 @@ describe("StartFarmController test suite", () => {
       status: 404,
       json: {
         message: "Steam Account não existe no banco de dados da Steam, delete essa conta e crie novamente.",
+        eresult: 18,
       },
     })
   })
@@ -333,13 +338,14 @@ describe("StartFarmController test suite", () => {
     console.log = () => {}
     await usersRepository.dropAll()
 
-    SteamAccount.create({
-      credentials: SteamAccountCredentials.create({
-        accountName: USER_STEAM_ACCOUNT,
-        password: "steam_account_admin_pass",
-      }),
-      idGenerator,
-    })
+    // SteamAccount.create({
+    //   credentials: SteamAccountCredentials.create({
+    //     accountName: USER_STEAM_ACCOUNT,
+    //     password: "steam_account_admin_pass",
+    //   }),
+    //   ownerId: user.id_user,
+    //   idGenerator,
+    // })
 
     const reachedUserID = "user_ID"
     const reachedPlan = GuestPlan.create({
@@ -391,18 +397,20 @@ describe("StartFarmController test suite", () => {
 
     await usersRepository.dropAll()
 
-    SteamAccount.create({
-      credentials: SteamAccountCredentials.create({
-        accountName: USER_STEAM_ACCOUNT,
-        password: "steam_account_admin_pass",
-      }),
-      idGenerator,
-    })
-
     const reachedUserID = "user_ID"
     const reachedPlan = GuestPlan.create({
       ownerId: reachedUserID,
     })
+    const user = makeUser(reachedUserID, "used_user", reachedPlan)
+    // SteamAccount.create({
+    //   credentials: SteamAccountCredentials.create({
+    //     accountName: USER_STEAM_ACCOUNT,
+    //     password: "steam_account_admin_pass",
+    //   }),
+    //   ownerId: user.id_user,
+    //   idGenerator,
+    // })
+
     const allUsage = Usage.create({
       amountTime: 21600,
       createdAt: new Date("2023-06-10T10:00:00Z"),
@@ -410,7 +418,6 @@ describe("StartFarmController test suite", () => {
       accountName: USER_STEAM_ACCOUNT,
     })
     reachedPlan.use(allUsage)
-    const user = makeUser(reachedUserID, "used_user", reachedPlan)
     user.addSteamAccount(me_steamAcount)
     await usersRepository.create(user)
 

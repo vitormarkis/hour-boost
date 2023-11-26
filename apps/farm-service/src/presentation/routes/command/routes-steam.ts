@@ -13,7 +13,10 @@ import {
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import {
   farmingUsersStorage,
+  idGenerator,
   publisher,
+  steamAccountsRepository,
+  steamBuilder,
   userSteamClientsStorage,
   usersDAO,
   usersRepository,
@@ -21,9 +24,7 @@ import {
 import { loginErrorMessages } from "~/presentation/routes"
 import { getTimeoutPromise, makeRes, makeResError } from "~/utils"
 
-export const addSteamAccount = new AddSteamAccount(usersRepository, {
-  makeID: () => randomUUID(),
-})
+export const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
 export const listSteamAccounts = new ListSteamAccounts(usersDAO)
 
 export const command_routerSteam: Router = Router()
@@ -39,7 +40,9 @@ command_routerSteam.post(
     const createSteamAccountController = new AddSteamAccountController(
       addSteamAccount,
       userSteamClientsStorage,
-      usersDAO
+      usersDAO,
+      steamBuilder,
+      publisher
     )
     const { json, status } = await promiseHandler(
       createSteamAccountController.handle({

@@ -7,8 +7,10 @@ import { prisma } from "~/infra/libs"
 import { Publisher } from "~/infra/queue"
 import { PlanRepositoryDatabase, UsersRepositoryDatabase } from "~/infra/repository"
 import { ClerkAuthentication } from "~/infra/services"
+import { IDGeneratorUUID } from "core"
+import { SteamAccountsRepositoryDatabase } from "~/infra/repository/SteamAccountsRepositoryDatabase"
 
-const steamBuilder: SteamBuilder = {
+export const steamBuilder: SteamBuilder = {
   create: () => new SteamUser(),
 }
 
@@ -19,3 +21,5 @@ export const planRepository = new PlanRepositoryDatabase(prisma)
 export const publisher = new Publisher()
 export const userSteamClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder)
 export const usersRepository = new UsersRepositoryDatabase(prisma)
+export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)
+export const idGenerator = new IDGeneratorUUID()
