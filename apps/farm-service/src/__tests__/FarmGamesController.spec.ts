@@ -43,6 +43,7 @@ let userSteamClientsStorage: AllUsersClientsStorage
 let me: User
 let friend: User
 let me_steamAcount: SteamAccount
+let maxGuestPlanUsage: Usage
 const idGenerator: IDGenerator = {
   makeID: () => "ID",
 }
@@ -75,6 +76,13 @@ beforeEach(async () => {
   })
   me.addSteamAccount(me_steamAcount)
   friend = makeUser(FRIEND_ID, FRIEND)
+  maxGuestPlanUsage = Usage.restore({
+    id_usage: "max_guest_plan_usage",
+    accountName: USER_STEAM_ACCOUNT,
+    amountTime: 21600,
+    createdAt: new Date(),
+    plan_id: me.plan.id_plan,
+  })
   await usersRepository.create(me)
   await usersRepository.create(friend)
 })
@@ -442,4 +450,48 @@ describe("StartFarmController test suite", () => {
       json: { message: "Seu plano não possui mais uso disponível." },
     })
   })
+
+  test("should ALWAYS have the latest usage left value when user attempts to farm", async () => {
+    await appendUsageToUser(USER_ID, maxGuestPlanUsage)
+    expect((me.plan as PlanUsage).getUsageLeft()).toBe(0)
+    expect((me.plan as PlanUsage).getUsageTotal()).toBe(21600)
+
+    await promiseHandler(
+      startFarmController.handle({
+        payload: {
+          userId: USER_ID,
+          accountName: USER_STEAM_ACCOUNT,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    const me2 = await usersRepository.getByID(USER_ID)
+    if (!me2) throw new Error("User not found.")
+    ;(me2?.plan as PlanUsage).removeUsage("max_guest_plan_usage")
+    await usersRepository.update(me2)
+
+    console.log = log
+    const response = await promiseHandler(
+      startFarmController.handle({
+        payload: {
+          userId: USER_ID,
+          accountName: USER_STEAM_ACCOUNT,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    const me3 = (await usersRepository.getByID(USER_ID))!
+    expect((me3.plan as PlanUsage).getUsageLeft()).toBe(21600)
+    expect((me3.plan as PlanUsage).getUsageTotal()).toBe(0)
+    expect(response.json?.message).toBe("Iniciando farm.")
+  })
 })
+
+async function appendUsageToUser(userId: string, usage: Usage) {
+  const user = await usersRepository.getByID(userId)
+  if (!user) throw new Error("user not found")
+  ;(user.plan as PlanUsage).use(usage)
+  await usersRepository.update(user)
+}

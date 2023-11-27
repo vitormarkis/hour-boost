@@ -50,8 +50,7 @@ export class SteamUserMock {
   emit<T extends keyof EventParameters, A extends EventParameters[T]>(eventName: T, ...payload: A) {
     const eventHandlers = this.events.get(eventName)
     if (!eventHandlers) {
-      console.log(eventName)
-      throw new ApplicationError("Event never registered.")
+      throw new ApplicationError("Event never registered.", 404, eventName)
     }
     eventHandlers.forEach(cb => cb(...payload))
   }

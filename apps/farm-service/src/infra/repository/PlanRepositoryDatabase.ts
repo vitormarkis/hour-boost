@@ -6,12 +6,6 @@ export class PlanRepositoryDatabase implements PlanRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async update(plan: PlanUsage | PlanInfinity): Promise<void> {
-    console.log("DATABASE: Salvando plano novo")
-
-    console.log({
-      trashIDs: (plan as PlanUsage).usages.getTrashIDs(),
-    })
-
     await this.prisma.plan.update({
       where: { id_plan: plan.id_plan },
       data: {

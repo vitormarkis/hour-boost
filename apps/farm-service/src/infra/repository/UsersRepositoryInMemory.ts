@@ -17,10 +17,6 @@ export class UsersRepositoryInMemory implements UsersRepository {
   }
 
   async update(user: User): Promise<void> {
-    console.log({
-      upcomingID: user.id_user,
-      existingIDs: this.usersMemory.users.map(s => s.id_user),
-    })
     const foundUserIndex = this.usersMemory.users.findIndex(u => u.id_user === user.id_user)
     if (foundUserIndex === -1)
       throw new ApplicationError(

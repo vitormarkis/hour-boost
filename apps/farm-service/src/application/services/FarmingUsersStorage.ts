@@ -8,11 +8,6 @@ export class FarmingUsersStorage implements IFarmingUsersStorage {
   constructor() {}
 
   add(userFarm: IFarmService): IFarmService {
-    const existingUser = this.users.get(userFarm.username)
-    if (existingUser) {
-      // if (existingUser.status === "FARMING") throw new UserIsAlreadyFarmingException()
-      return existingUser
-    }
     this.users.set(userFarm.username, userFarm)
     this.usersHistory.add(userFarm.username)
     return userFarm

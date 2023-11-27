@@ -17,7 +17,6 @@ export class AllUsersClientsStorage {
   getOrAddSteamAccount({ accountName, userId, username }: AddUserProps) {
     const userSteamClient = this.users.get(userId)?.hasAccountName(accountName)
     if (!userSteamClient) {
-      console.log("creating a new sac and adding")
       const steamAccountClient = new SteamAccountClient({
         instances: {
           publisher: this.publisher,
@@ -32,7 +31,6 @@ export class AllUsersClientsStorage {
       this.addSteamAccount(userId, steamAccountClient)
       return { steamAccountClient }
     }
-    console.log("found a sac, return sac")
     return { steamAccountClient: this.users.get(userId)?.getAccountClient(accountName).steamAccountClient }
   }
 
@@ -53,11 +51,9 @@ export class AllUsersClientsStorage {
     if (!userClientsStorage) {
       const userClientsStorage = new UserClientsStorage()
       userClientsStorage.addAccountClient(steamAccountClient)
-      console.log(`Adding client to storage with ${steamAccountClient.accountName}`)
       this.addUser(userId, userClientsStorage)
       return { steamAccountClient }
     }
-    console.log(`Adding client to storage with ${steamAccountClient.accountName}`)
     userClientsStorage.addAccountClient(steamAccountClient)
     return { steamAccountClient }
   }
