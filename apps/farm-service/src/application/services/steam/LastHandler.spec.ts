@@ -27,9 +27,9 @@ test("should run last handler if set", async () => {
 	expect(nullish).toBe("string")
 })
 
-test("should throw if no last handler is set", async () => {
+test("should NOT throw if no last handler is set, log instead", async () => {
 	const lastHandler = new LastHandler()
 	expect(() => {
 		lastHandler.getLastHandler("loggedOn")({}, {})
-	}).toThrow()
+	}).not.toThrow()
 })

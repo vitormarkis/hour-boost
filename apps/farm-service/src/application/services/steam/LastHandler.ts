@@ -1,5 +1,6 @@
-import { ApplicationError } from "core"
 import { EventParameters } from "~/infra/services"
+
+const getGhostFunction = () => () => {}
 
 export class LastHandler {
 	private readonly lastHandler: Map<keyof EventParameters, Function> = new Map()
@@ -8,19 +9,21 @@ export class LastHandler {
 
 	getManualHandler = <K extends keyof HandlersEventMapping = keyof HandlersEventMapping>(eventName: K) => {
 		const manualHandler = this.manualHandlers.get(eventName)
-		if (!manualHandler)
-			throw new Error(
-				`[Manual]: Disparou evento ${eventName}, tentou rodar handler, mas nenhum handler foi setado.`
+		if (!manualHandler) {
+			console.log(
+				`[ManualHandler]: Warning! Attempt to run ${eventName}, but there is no handler set for it.`
 			)
+			return getGhostFunction()
+		}
 		return manualHandler as (...args: HandlersEventMapping[K]) => void
 	}
 
 	getLastHandler = <K extends keyof EventParameters = keyof EventParameters>(eventName: K) => {
 		const lastHandler = this.lastHandler.get(eventName)
-		if (!lastHandler)
-			throw new Error(
-				`[Last]: Disparou evento ${eventName}, tentou rodar handler, mas nenhum handler foi setado.`
-			)
+		if (!lastHandler) {
+			console.log(`[LastHandler]: Warning! Attempt to run ${eventName}, but there is no handler set for it.`)
+			return getGhostFunction()
+		}
 		return lastHandler as (...args: EventParameters[K]) => void
 	}
 
