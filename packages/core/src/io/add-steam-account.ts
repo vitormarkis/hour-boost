@@ -1,5 +1,5 @@
 export interface IAddSteamAccount {
-  accountName: string
-  password: string
-  userId: string
+	accountName: string
+	password: string
+	userId: string
 }

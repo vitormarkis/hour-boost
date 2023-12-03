@@ -16,7 +16,8 @@
     "seed": "tsx seed.ts",
     "test": "jest --silent --verbose",
     "ci": "npm run check && npm run test",
-    "st": "prisma studio"
+    "st": "prisma studio",
+    "t": "jest"
   },
   "keywords": [],
   "author": "",

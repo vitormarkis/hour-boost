@@ -1,5 +1,5 @@
 export abstract class Role {
-  abstract name: RoleName
+	abstract name: RoleName
 }
 
 export type RoleName = "ADMIN" | "USER"

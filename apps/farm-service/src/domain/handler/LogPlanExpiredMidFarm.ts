@@ -2,13 +2,13 @@ import { PlanUsageExpiredMidFarmCommand } from "~/application/commands/PlanUsage
 import { EventNames, Observer } from "~/infra/queue"
 
 export class LogPlanExpiredMidFarm implements Observer {
-  operation: EventNames = "plan-usage-expired-mid-farm"
+	operation: EventNames = "plan-usage-expired-mid-farm"
 
-  async notify(command: PlanUsageExpiredMidFarmCommand): Promise<void> {
-    console.log(
-      `[PLAN-EXPIRED-MID-FARM]: Plano de ${
-        command.username
-      } expirou em ${command.when.toUTCString()} enquanto farmava.`
-    )
-  }
+	async notify(command: PlanUsageExpiredMidFarmCommand): Promise<void> {
+		console.log(
+			`[PLAN-EXPIRED-MID-FARM]: Plano de ${
+				command.username
+			} expirou em ${command.when.toUTCString()} enquanto farmava.`
+		)
+	}
 }

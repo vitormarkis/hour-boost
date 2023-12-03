@@ -1,3 +1,3 @@
 export interface IDGenerator {
-  makeID(): string
+	makeID(): string
 }
