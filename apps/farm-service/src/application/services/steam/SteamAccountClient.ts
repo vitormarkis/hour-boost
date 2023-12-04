@@ -61,9 +61,10 @@ export class SteamAccountClient extends LastHandler {
 			this.setLastArguments("error", args)
 			this.logoff()
 		})
+
 		this.client.on("disconnected", (...args) => {
 			this.logoff()
-			console.log("Rodou disconnected")
+			console.log("Rodou disconnected", ...args)
 			this.getLastHandler("disconnected")(...args)
 			this.setLastArguments("disconnected", args)
 		})

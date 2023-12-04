@@ -10,19 +10,10 @@ import { PlanRepositoryDatabase, UsersRepositoryDatabase } from "~/infra/reposit
 import { SteamAccountsRepositoryDatabase } from "~/infra/repository/SteamAccountsRepositoryDatabase"
 import { ClerkAuthentication } from "~/infra/services"
 
-const httpProxy = "vitormarkis2369_gmail_com:998Vmarkis@la.residential.rayobyte.com:8000"
-// const socksProxy = "191.242.126.249:4145"
-console.log({
-	httpProxy,
-	// socksProxy,
-})
+const httpProxy = process.env.PROXY_URL
 
 export const steamBuilder: SteamBuilder = {
-	create: () =>
-		// new SteamUser({
-		// 	httpProxy,
-		// }),
-		new SteamUser(),
+  create: () => new SteamUser(httpProxy ? { httpProxy } : undefined),
 }
 
 export const farmingUsersStorage = new FarmingUsersStorage()
