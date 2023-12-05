@@ -4,8 +4,8 @@ import { setPrefixDoubleDashes } from "@/util/units/setPrefixDoubleDashes"
 type UpcomingCSSVariables = [cssVariable: string, value: string | number, sufix?: string]
 
 export function cssVariables(
-	upcomingCSSVariables: UpcomingCSSVariables[],
-	mergingStyles?: CSSProperties
+  upcomingCSSVariables: UpcomingCSSVariables[],
+  mergingStyles?: CSSProperties
 ): CSSProperties
 
 /**
@@ -26,47 +26,47 @@ export function cssVariables(
  * ```
  */
 export function cssVariables(
-	upcomingCSSVariables: UpcomingCSSVariables,
-	mergingStyles?: CSSProperties
+  upcomingCSSVariables: UpcomingCSSVariables,
+  mergingStyles?: CSSProperties
 ): CSSProperties
 
 export function cssVariables(
-	upcomingCSSVariables: unknown,
-	mergingStyles: CSSProperties = {}
+  upcomingCSSVariables: unknown,
+  mergingStyles: CSSProperties = {}
 ): CSSProperties {
-	if (typeof (upcomingCSSVariables as UpcomingCSSVariables)[0] === "string") {
-		const [cssVariable, userValue, sufix] = upcomingCSSVariables as UpcomingCSSVariables
-		const prefix = setPrefixDoubleDashes(cssVariable)
+  if (typeof (upcomingCSSVariables as UpcomingCSSVariables)[0] === "string") {
+    const [cssVariable, userValue, sufix] = upcomingCSSVariables as UpcomingCSSVariables
+    const prefix = setPrefixDoubleDashes(cssVariable)
 
-		const value = sufix ? String(userValue) + sufix ?? "" : userValue
+    const value = sufix ? String(userValue) + sufix ?? "" : userValue
 
-		return {
-			...mergingStyles,
-			[prefix]: value,
-		}
-	}
+    return {
+      ...mergingStyles,
+      [prefix]: value,
+    }
+  }
 
-	const cssVariables = (upcomingCSSVariables as UpcomingCSSVariables[]).reduce(
-		(acc: CSSProperties, [cssVariable, userValue, sufix]) => {
-			const prefix = setPrefixDoubleDashes(cssVariable)
+  const cssVariables = (upcomingCSSVariables as UpcomingCSSVariables[]).reduce(
+    (acc: CSSProperties, [cssVariable, userValue, sufix]) => {
+      const prefix = setPrefixDoubleDashes(cssVariable)
 
-			const value = sufix ? String(userValue) + sufix ?? "" : userValue
+      const value = sufix ? String(userValue) + sufix ?? "" : userValue
 
-			return {
-				...acc,
-				[prefix]: value,
-			}
-		},
-		{} as CSSProperties
-	)
+      return {
+        ...acc,
+        [prefix]: value,
+      }
+    },
+    {} as CSSProperties
+  )
 
-	return {
-		...mergingStyles,
-		...cssVariables,
-	}
+  return {
+    ...mergingStyles,
+    ...cssVariables,
+  }
 }
 
 function handleCSSVariablePrefix(cssVariable: string) {
-	const hasDoubleDashesPrefix = setPrefixDoubleDashes(cssVariable)
-	return hasDoubleDashesPrefix ? cssVariable : `--${cssVariable}`
+  const hasDoubleDashesPrefix = setPrefixDoubleDashes(cssVariable)
+  return hasDoubleDashesPrefix ? cssVariable : `--${cssVariable}`
 }

@@ -4,19 +4,19 @@ import "dotenv/config"
 import express, { Application, NextFunction, Request, Response } from "express"
 
 declare global {
-	namespace Express {
-		interface Request extends LooseAuthProp {}
-	}
+  namespace Express {
+    interface Request extends LooseAuthProp {}
+  }
 }
 
 import {
-	LogCompleteInfinityFarmSessionHandler,
-	LogSteamStartFarmHandler,
-	LogSteamStopFarmHandler,
-	LogUserCompleteFarmSessionHandler,
-	PersistUsageHandler,
-	PlanExpiredMidFarmPersistPlanHandler,
-	StartFarmPlanHandler,
+  LogCompleteInfinityFarmSessionHandler,
+  LogSteamStartFarmHandler,
+  LogSteamStopFarmHandler,
+  LogUserCompleteFarmSessionHandler,
+  PersistUsageHandler,
+  PlanExpiredMidFarmPersistPlanHandler,
+  StartFarmPlanHandler,
 } from "~/domain/handler"
 import { LogPlanExpiredMidFarm } from "~/domain/handler/LogPlanExpiredMidFarm"
 import { planRepository, publisher } from "~/presentation/instances"
@@ -24,17 +24,17 @@ import { planRepository, publisher } from "~/presentation/instances"
 import { command_routerSteam } from "~/presentation/routes/command"
 import { command_routerPlan } from "~/presentation/routes/command/routes-plan"
 import {
-	query_routerGeneral,
-	query_routerPlan,
-	query_routerSteam,
-	query_routerUser,
+  query_routerGeneral,
+  query_routerPlan,
+  query_routerSteam,
+  query_routerUser,
 } from "~/presentation/routes/query"
 
 const app: Application = express()
 app.use(
-	cors({
-		origin: "*",
-	})
+  cors({
+    origin: "*",
+  })
 )
 app.use(express.json())
 
@@ -46,11 +46,11 @@ app.use(command_routerSteam)
 app.use(command_routerPlan)
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-	console.log(err)
-	return res.status(500).json({
-		message: "Something went wrong.",
-		err,
-	})
+  console.log(err)
+  return res.status(500).json({
+    message: "Something went wrong.",
+    err,
+  })
 })
 
 publisher.register(new PersistUsageHandler(planRepository))
@@ -66,5 +66,5 @@ publisher.register(new LogSteamStartFarmHandler())
 publisher.register(new LogUserCompleteFarmSessionHandler())
 
 app.listen(process.env.PORT ?? 4000, () => {
-	console.log(`Server is running on port ${process.env.PORT ?? 4000}`)
+  console.log(`Server is running on port ${process.env.PORT ?? 4000}`)
 })

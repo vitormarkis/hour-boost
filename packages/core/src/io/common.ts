@@ -1,4 +1,4 @@
 export interface ISteamAccountSession {
-	id_steamAccount: string
-	accountName: string
+  id_steamAccount: string
+  accountName: string
 }

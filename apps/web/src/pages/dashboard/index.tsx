@@ -28,43 +28,43 @@ import { useAuth } from "@clerk/clerk-react"
 // }
 
 type UserSessionParams = {
-	user: UserSession
+  user: UserSession
 }
 
 export default function DashboardPage({}: UserSessionParams) {
-	const user: UserSession = {
-		email: "vitormarkis2369@gmail.com",
-		id_user: "user_2XhCIwGjiPYDC35lIWBpF0OapkN",
-		plan: {
-			type: "USAGE",
-			name: "GUEST",
-			autoRestarter: true,
-			maxGamesAllowed: 42,
-			maxSteamAccounts: 4,
-			maxUsageTime: 24800,
-		},
-		profilePic:
-			"https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yWGhDSXdyQXJhdDFyc09KVkROYUZmYmNOcjgifQ",
-		purchases: [],
-		role: "USER",
-		status: "ACTIVE",
-		steamAccounts: ["2c688339-d4fb-454e-a40e-16c773077a13", "2f225aef-af7b-4ed8-9df1-8d9ecbaaba28"],
-		username: "vitormarkisx",
-	}
+  const user: UserSession = {
+    email: "vitormarkis2369@gmail.com",
+    id_user: "user_2XhCIwGjiPYDC35lIWBpF0OapkN",
+    plan: {
+      type: "USAGE",
+      name: "GUEST",
+      autoRestarter: true,
+      maxGamesAllowed: 42,
+      maxSteamAccounts: 4,
+      maxUsageTime: 24800,
+    },
+    profilePic:
+      "https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yWGhDSXdyQXJhdDFyc09KVkROYUZmYmNOcjgifQ",
+    purchases: [],
+    role: "USER",
+    status: "ACTIVE",
+    steamAccounts: ["2c688339-d4fb-454e-a40e-16c773077a13", "2f225aef-af7b-4ed8-9df1-8d9ecbaaba28"],
+    username: "vitormarkisx",
+  }
 
-	return (
-		<>
-			<HeaderDashboard user={user} />
-			{/* <div className="max-w-[1440px] w-full mx-auto px-8">
+  return (
+    <>
+      <HeaderDashboard user={user} />
+      {/* <div className="max-w-[1440px] w-full mx-auto px-8">
         <ModalAddSteamAccount userId={user.id_user}>
           <Button className="h-9">Adicionar conta +</Button>
         </ModalAddSteamAccount>
       </div> */}
-			<div className="max-w-[1440px] w-full mx-auto px-8">
-				<DashboardSteamAccountsList user={user} />
-			</div>
-		</>
-	)
+      <div className="max-w-[1440px] w-full mx-auto px-8">
+        <DashboardSteamAccountsList user={user} />
+      </div>
+    </>
+  )
 }
 
 import { cn } from "@/lib/utils"
@@ -72,5 +72,5 @@ import { SteamAccountListItem } from "@/components/molecules/SteamAccountListIte
 import { DashboardSteamAccountsList } from "@/components/layouts/DashboardSteamAccountsList"
 
 export function isResponseOK(status: number) {
-	return status >= 200 && status <= 299
+  return status >= 200 && status <= 299
 }

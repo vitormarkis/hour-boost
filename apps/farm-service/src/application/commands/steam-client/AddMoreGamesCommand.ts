@@ -2,17 +2,17 @@ import { Command } from "~/application/commands/Command"
 import { EventNames } from "~/infra/queue"
 
 interface AddMoreGamesCommandProps {
-	when: Date
-	newGames: number[]
+  when: Date
+  newGames: number[]
 }
 
 export class AddMoreGamesCommand implements Command {
-	operation: EventNames = "STEAMCLIENT:add-more-games"
-	newGames: number[]
-	when: Date
+  operation: EventNames = "STEAMCLIENT:add-more-games"
+  newGames: number[]
+  when: Date
 
-	constructor(props: AddMoreGamesCommandProps) {
-		this.when = props.when
-		this.newGames = props.newGames
-	}
+  constructor(props: AddMoreGamesCommandProps) {
+    this.when = props.when
+    this.newGames = props.newGames
+  }
 }

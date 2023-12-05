@@ -12,6 +12,10 @@ import { ClerkAuthentication } from "~/infra/services"
 
 const httpProxy = process.env.PROXY_URL
 
+if (httpProxy) {
+  console.log(`Usando proxy ${httpProxy.slice(0, 9) + "*******"}`)
+}
+
 export const steamBuilder: SteamBuilder = {
   create: () => new SteamUser(httpProxy ? { httpProxy } : undefined),
 }

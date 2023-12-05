@@ -18,65 +18,65 @@ let me: User
 let friend: User
 
 beforeEach(async () => {
-	const usersMemory = new UsersInMemory()
-	farmingUsersStorage = new FarmingUsersStorage()
-	publisher = new Publisher()
-	usersRepository = new UsersRepositoryInMemory(usersMemory)
+  const usersMemory = new UsersInMemory()
+  farmingUsersStorage = new FarmingUsersStorage()
+  publisher = new Publisher()
+  usersRepository = new UsersRepositoryInMemory(usersMemory)
 
-	me = makeUser(USER_ID, USERNAME)
-	friend = makeUser(FRIEND_ID, FRIEND)
-	await usersRepository.create(me)
-	await usersRepository.create(friend)
+  me = makeUser(USER_ID, USERNAME)
+  friend = makeUser(FRIEND_ID, FRIEND)
+  await usersRepository.create(me)
+  await usersRepository.create(friend)
 })
 
 afterEach(() => {
-	publisher.observers = []
+  publisher.observers = []
 })
 
 describe("StopFarmController test suite", () => {
-	test("should reject is not registered user is provided", async () => {
-		const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
-		const { status, json } = await stopFarmController.handle({
-			payload: {
-				userId: "RANDOM_ID",
-			},
-		})
+  test("should reject is not registered user is provided", async () => {
+    const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
+    const { status, json } = await stopFarmController.handle({
+      payload: {
+        userId: "RANDOM_ID",
+      },
+    })
 
-		expect(json).toMatchObject({
-			message: "Usuário não encontrado.",
-		})
-		expect(status).toBe(404)
-		expect(farmingUsersStorage.users.size).toBe(0)
-	})
+    expect(json).toMatchObject({
+      message: "Usuário não encontrado.",
+    })
+    expect(status).toBe(404)
+    expect(farmingUsersStorage.users.size).toBe(0)
+  })
 
-	test("should reject if user is not farming", async () => {
-		const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
-		const { status, json } = await stopFarmController.handle({
-			payload: {
-				userId: USER_ID,
-			},
-		})
+  test("should reject if user is not farming", async () => {
+    const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
+    const { status, json } = await stopFarmController.handle({
+      payload: {
+        userId: USER_ID,
+      },
+    })
 
-		expect(json).toMatchObject({
-			message: "Usuário não está farmando.",
-		})
-		expect(status).toBe(400)
-		expect(farmingUsersStorage.users.size).toBe(0)
-	})
+    expect(json).toMatchObject({
+      message: "Usuário não está farmando.",
+    })
+    expect(status).toBe(400)
+    expect(farmingUsersStorage.users.size).toBe(0)
+  })
 
-	test("should delete farming user from storage after stop farm", async () => {
-		const meFarmingService = new FarmUsageService(publisher, me.plan as PlanUsage, me.username)
-		meFarmingService.farmWithAccount("acc1")
-		farmingUsersStorage.add(meFarmingService).startFarm()
-		const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
-		const { status, json } = await stopFarmController.handle({
-			payload: {
-				userId: USER_ID,
-			},
-		})
+  test("should delete farming user from storage after stop farm", async () => {
+    const meFarmingService = new FarmUsageService(publisher, me.plan as PlanUsage, me.username)
+    meFarmingService.farmWithAccount("acc1")
+    farmingUsersStorage.add(meFarmingService).startFarm()
+    const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
+    const { status, json } = await stopFarmController.handle({
+      payload: {
+        userId: USER_ID,
+      },
+    })
 
-		expect(json).toBeNull()
-		expect(status).toBe(200)
-		expect(farmingUsersStorage.users.size).toBe(0)
-	})
+    expect(json).toBeNull()
+    expect(status).toBe(200)
+    expect(farmingUsersStorage.users.size).toBe(0)
+  })
 })

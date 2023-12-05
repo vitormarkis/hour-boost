@@ -24,7 +24,7 @@
 .divisor::after {
   content: "";
   position: absolute;
-  background: theme('colors.slate.950');
+  background: theme("colors.slate.950");
   width: 400%;
   left: -150%;
   aspect-ratio: 1 / 0.6;

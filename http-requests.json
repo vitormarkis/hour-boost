@@ -1,241 +1,241 @@
 {
-	"_type": "export",
-	"__export_format": 4,
-	"__export_date": "2023-11-23T23:38:50.578Z",
-	"__export_source": "insomnia.desktop.app:v2023.5.8",
-	"resources": [
-		{
-			"_id": "req_8d75fc4b667a4132bf6cdbaa6d57699a",
-			"parentId": "wrk_e303eb36667844528e529cba3457b14c",
-			"modified": 1700304828552,
-			"created": 1700304557178,
-			"url": "{{ _.baseURL }}/up",
-			"name": "Is server up?",
-			"description": "",
-			"method": "GET",
-			"body": {},
-			"parameters": [],
-			"headers": [{ "name": "User-Agent", "value": "insomnia/2023.5.8" }],
-			"authentication": {},
-			"metaSortKey": -1700304609982,
-			"isPrivate": false,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
-			"settingDisableRenderRequestBody": false,
-			"settingEncodeUrl": true,
-			"settingRebuildPath": true,
-			"settingFollowRedirects": "global",
-			"_type": "request"
-		},
-		{
-			"_id": "wrk_e303eb36667844528e529cba3457b14c",
-			"parentId": null,
-			"modified": 1700304554957,
-			"created": 1700304554957,
-			"name": "Development",
-			"description": "",
-			"scope": "collection",
-			"_type": "workspace"
-		},
-		{
-			"_id": "req_da7fa263e6e04969926b3dd8d4e84dc1",
-			"parentId": "wrk_e303eb36667844528e529cba3457b14c",
-			"modified": 1700348349043,
-			"created": 1700348314754,
-			"url": "{{ _.baseURL }}/farm/plan-status",
-			"name": "Get Plan Status",
-			"description": "",
-			"method": "GET",
-			"body": {
-				"mimeType": "application/json",
-				"text": "{\n  \"userId\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\"\n}"
-			},
-			"parameters": [],
-			"headers": [
-				{ "name": "Content-Type", "value": "application/json" },
-				{ "name": "User-Agent", "value": "insomnia/2023.5.8" }
-			],
-			"authentication": {},
-			"metaSortKey": -1700304603369.125,
-			"isPrivate": false,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
-			"settingDisableRenderRequestBody": false,
-			"settingEncodeUrl": true,
-			"settingRebuildPath": true,
-			"settingFollowRedirects": "global",
-			"_type": "request"
-		},
-		{
-			"_id": "req_320ccd433c0543bea9e9d4a34945d599",
-			"parentId": "wrk_e303eb36667844528e529cba3457b14c",
-			"modified": 1700734314125,
-			"created": 1700304609882,
-			"url": "{{ _.baseURL }}/steam-accounts",
-			"name": "Create Steam Account",
-			"description": "",
-			"method": "POST",
-			"body": {
-				"mimeType": "application/json",
-				"text": "{\n  \"userId\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\",\n  \"accountName\": \"ACCOUNT_NAME\",\n  \"password\": \"PASSWORD\"\n}"
-			},
-			"parameters": [],
-			"headers": [
-				{ "name": "Content-Type", "value": "application/json" },
-				{ "name": "User-Agent", "value": "insomnia/2023.5.8" }
-			],
-			"authentication": {},
-			"metaSortKey": -1700304596756.25,
-			"isPrivate": false,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
-			"settingDisableRenderRequestBody": false,
-			"settingEncodeUrl": true,
-			"settingRebuildPath": true,
-			"settingFollowRedirects": "global",
-			"_type": "request"
-		},
-		{
-			"_id": "req_5d3ea04ae7e148ffac480b18113f2714",
-			"parentId": "wrk_e303eb36667844528e529cba3457b14c",
-			"modified": 1700746435173,
-			"created": 1700304695392,
-			"url": "{{ _.baseURL }}/code",
-			"name": "Add Steam Guard",
-			"description": "",
-			"method": "POST",
-			"body": {
-				"mimeType": "application/json",
-				"text": "{\n  \"code\": \"W337G\",\n  \"userId\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\",\n  \"accountName\": \"ACCOUNT_NAME\"\n}"
-			},
-			"parameters": [],
-			"headers": [
-				{ "name": "Content-Type", "value": "application/json" },
-				{ "name": "User-Agent", "value": "insomnia/2023.5.8" }
-			],
-			"authentication": {},
-			"metaSortKey": -1700304583530.5,
-			"isPrivate": false,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
-			"settingDisableRenderRequestBody": false,
-			"settingEncodeUrl": true,
-			"settingRebuildPath": true,
-			"settingFollowRedirects": "global",
-			"_type": "request"
-		},
-		{
-			"_id": "req_b54e37142f7c48a0bb0b631ec43dffcb",
-			"parentId": "wrk_e303eb36667844528e529cba3457b14c",
-			"modified": 1700717720576,
-			"created": 1700304844220,
-			"url": "{{ _.baseURL }}/farm/start",
-			"name": "Farm Games",
-			"description": "",
-			"method": "POST",
-			"body": {
-				"mimeType": "application/json",
-				"text": "{\n  \"userId\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\",\n  \"gamesID\": [489520],\n\t\"accountName\": \"ACCOUNT_NAME\"\n}"
-			},
-			"parameters": [],
-			"headers": [
-				{ "name": "Content-Type", "value": "application/json" },
-				{ "name": "User-Agent", "value": "insomnia/2023.5.8" }
-			],
-			"authentication": {},
-			"metaSortKey": -1698744285394.25,
-			"isPrivate": false,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
-			"settingDisableRenderRequestBody": false,
-			"settingEncodeUrl": true,
-			"settingRebuildPath": true,
-			"settingFollowRedirects": "global",
-			"_type": "request"
-		},
-		{
-			"_id": "req_79bbdffc98a4471184e4598c71db0c7c",
-			"parentId": "wrk_e303eb36667844528e529cba3457b14c",
-			"modified": 1700718145430,
-			"created": 1700304899278,
-			"url": "{{ _.baseURL }}/farm/stop",
-			"name": "Stop Farming",
-			"description": "",
-			"method": "POST",
-			"body": {
-				"mimeType": "application/json",
-				"text": "{\n  \"userId\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\",\n\t\"accountName\": \"ACCOUNT_NAME\"\n}"
-			},
-			"parameters": [],
-			"headers": [
-				{ "name": "Content-Type", "value": "application/json" },
-				{ "name": "User-Agent", "value": "insomnia/2023.5.8" }
-			],
-			"authentication": {},
-			"metaSortKey": -1697964136326.125,
-			"isPrivate": false,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
-			"settingDisableRenderRequestBody": false,
-			"settingEncodeUrl": true,
-			"settingRebuildPath": true,
-			"settingFollowRedirects": "global",
-			"_type": "request"
-		},
-		{
-			"_id": "req_3a8defad7aaa4c1b983e2666a12b95ba",
-			"parentId": "wrk_e303eb36667844528e529cba3457b14c",
-			"modified": 1700746527498,
-			"created": 1700734242698,
-			"url": "{{ _.baseURL }}/steam-accounts",
-			"name": "Remove steam account",
-			"description": "",
-			"method": "DELETE",
-			"body": {
-				"mimeType": "application/json",
-				"text": "{\n\t\"userID\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\",\n\t\"steamAccountID\": \"e93fd77d-34e8-465a-9924-cd50593bc031\"\n}"
-			},
-			"parameters": [],
-			"headers": [
-				{ "name": "Content-Type", "value": "application/json" },
-				{ "name": "User-Agent", "value": "insomnia/2023.5.8" }
-			],
-			"authentication": {},
-			"metaSortKey": -1697574061692.0625,
-			"isPrivate": false,
-			"settingStoreCookies": true,
-			"settingSendCookies": true,
-			"settingDisableRenderRequestBody": false,
-			"settingEncodeUrl": true,
-			"settingRebuildPath": true,
-			"settingFollowRedirects": "global",
-			"_type": "request"
-		},
-		{
-			"_id": "env_234f3b9dd088a40df8da263e1de6ac9c3cfe8a26",
-			"parentId": "wrk_e303eb36667844528e529cba3457b14c",
-			"modified": 1700746374695,
-			"created": 1700304554973,
-			"name": "Base Environment",
-			"data": {
-				"baseURL": "http://54.233.154.239:4000",
-				"root": "http://54.233.154.239:4000",
-				"localbaseURL": "http://localhost:4000"
-			},
-			"dataPropertyOrder": { "&": ["baseURL", "root", "localbaseURL"] },
-			"color": null,
-			"isPrivate": false,
-			"metaSortKey": 1700304554973,
-			"_type": "environment"
-		},
-		{
-			"_id": "jar_234f3b9dd088a40df8da263e1de6ac9c3cfe8a26",
-			"parentId": "wrk_e303eb36667844528e529cba3457b14c",
-			"modified": 1700304554979,
-			"created": 1700304554979,
-			"name": "Default Jar",
-			"cookies": [],
-			"_type": "cookie_jar"
-		}
-	]
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2023-11-23T23:38:50.578Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "req_8d75fc4b667a4132bf6cdbaa6d57699a",
+      "parentId": "wrk_e303eb36667844528e529cba3457b14c",
+      "modified": 1700304828552,
+      "created": 1700304557178,
+      "url": "{{ _.baseURL }}/up",
+      "name": "Is server up?",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [{ "name": "User-Agent", "value": "insomnia/2023.5.8" }],
+      "authentication": {},
+      "metaSortKey": -1700304609982,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "wrk_e303eb36667844528e529cba3457b14c",
+      "parentId": null,
+      "modified": 1700304554957,
+      "created": 1700304554957,
+      "name": "Development",
+      "description": "",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "req_da7fa263e6e04969926b3dd8d4e84dc1",
+      "parentId": "wrk_e303eb36667844528e529cba3457b14c",
+      "modified": 1700348349043,
+      "created": 1700348314754,
+      "url": "{{ _.baseURL }}/farm/plan-status",
+      "name": "Get Plan Status",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"userId\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "User-Agent", "value": "insomnia/2023.5.8" }
+      ],
+      "authentication": {},
+      "metaSortKey": -1700304603369.125,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_320ccd433c0543bea9e9d4a34945d599",
+      "parentId": "wrk_e303eb36667844528e529cba3457b14c",
+      "modified": 1700734314125,
+      "created": 1700304609882,
+      "url": "{{ _.baseURL }}/steam-accounts",
+      "name": "Create Steam Account",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"userId\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\",\n  \"accountName\": \"ACCOUNT_NAME\",\n  \"password\": \"PASSWORD\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "User-Agent", "value": "insomnia/2023.5.8" }
+      ],
+      "authentication": {},
+      "metaSortKey": -1700304596756.25,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_5d3ea04ae7e148ffac480b18113f2714",
+      "parentId": "wrk_e303eb36667844528e529cba3457b14c",
+      "modified": 1700746435173,
+      "created": 1700304695392,
+      "url": "{{ _.baseURL }}/code",
+      "name": "Add Steam Guard",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"code\": \"W337G\",\n  \"userId\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\",\n  \"accountName\": \"ACCOUNT_NAME\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "User-Agent", "value": "insomnia/2023.5.8" }
+      ],
+      "authentication": {},
+      "metaSortKey": -1700304583530.5,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_b54e37142f7c48a0bb0b631ec43dffcb",
+      "parentId": "wrk_e303eb36667844528e529cba3457b14c",
+      "modified": 1700717720576,
+      "created": 1700304844220,
+      "url": "{{ _.baseURL }}/farm/start",
+      "name": "Farm Games",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"userId\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\",\n  \"gamesID\": [489520],\n\t\"accountName\": \"ACCOUNT_NAME\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "User-Agent", "value": "insomnia/2023.5.8" }
+      ],
+      "authentication": {},
+      "metaSortKey": -1698744285394.25,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_79bbdffc98a4471184e4598c71db0c7c",
+      "parentId": "wrk_e303eb36667844528e529cba3457b14c",
+      "modified": 1700718145430,
+      "created": 1700304899278,
+      "url": "{{ _.baseURL }}/farm/stop",
+      "name": "Stop Farming",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"userId\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\",\n\t\"accountName\": \"ACCOUNT_NAME\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "User-Agent", "value": "insomnia/2023.5.8" }
+      ],
+      "authentication": {},
+      "metaSortKey": -1697964136326.125,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_3a8defad7aaa4c1b983e2666a12b95ba",
+      "parentId": "wrk_e303eb36667844528e529cba3457b14c",
+      "modified": 1700746527498,
+      "created": 1700734242698,
+      "url": "{{ _.baseURL }}/steam-accounts",
+      "name": "Remove steam account",
+      "description": "",
+      "method": "DELETE",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"userID\": \"user_2XhCIwGjiPYDC35lIWBpF0OapkN\",\n\t\"steamAccountID\": \"e93fd77d-34e8-465a-9924-cd50593bc031\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "User-Agent", "value": "insomnia/2023.5.8" }
+      ],
+      "authentication": {},
+      "metaSortKey": -1697574061692.0625,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "env_234f3b9dd088a40df8da263e1de6ac9c3cfe8a26",
+      "parentId": "wrk_e303eb36667844528e529cba3457b14c",
+      "modified": 1700746374695,
+      "created": 1700304554973,
+      "name": "Base Environment",
+      "data": {
+        "baseURL": "http://54.233.154.239:4000",
+        "root": "http://54.233.154.239:4000",
+        "localbaseURL": "http://localhost:4000"
+      },
+      "dataPropertyOrder": { "&": ["baseURL", "root", "localbaseURL"] },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1700304554973,
+      "_type": "environment"
+    },
+    {
+      "_id": "jar_234f3b9dd088a40df8da263e1de6ac9c3cfe8a26",
+      "parentId": "wrk_e303eb36667844528e529cba3457b14c",
+      "modified": 1700304554979,
+      "created": 1700304554979,
+      "name": "Default Jar",
+      "cookies": [],
+      "_type": "cookie_jar"
+    }
+  ]
 }

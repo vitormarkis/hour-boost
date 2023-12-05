@@ -3,20 +3,20 @@ import { PlanUsageExpiredMidFarmCommand } from "~/application/commands/PlanUsage
 import { EventNames, Observer } from "~/infra/queue"
 
 export class PlanExpiredMidFarmPersistPlanHandler implements Observer {
-	operation: EventNames = "plan-usage-expired-mid-farm"
+  operation: EventNames = "plan-usage-expired-mid-farm"
 
-	constructor(private readonly planRepository: PlanRepository) {}
+  constructor(private readonly planRepository: PlanRepository) {}
 
-	async notify(command: PlanUsageExpiredMidFarmCommand): Promise<void> {
-		const plan = await this.planRepository.getById(command.planId)
-		if (plan instanceof PlanUsage) {
-			plan.stopFarm()
-			const persistPromises = command.usages.map(usage => {
-				plan.use(usage)
-				return this.planRepository.update(plan)
-			})
+  async notify(command: PlanUsageExpiredMidFarmCommand): Promise<void> {
+    const plan = await this.planRepository.getById(command.planId)
+    if (plan instanceof PlanUsage) {
+      plan.stopFarm()
+      const persistPromises = command.usages.map(usage => {
+        plan.use(usage)
+        return this.planRepository.update(plan)
+      })
 
-			await Promise.all(persistPromises)
-		}
-	}
+      await Promise.all(persistPromises)
+    }
+  }
 }
