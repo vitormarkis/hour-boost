@@ -97,6 +97,9 @@ export class FarmGamesController {
     if (noNewGameAddToFarm) return makeRes(200, "Nenhum novo game adicionado ao farm.")
 
     if (user.plan instanceof PlanInfinity) {
+      // const { safCluster } = this.steamAccountFarmingCluster.getByAccountName(accountName)
+      // safCluster.farmGames(gamesID)
+
       const farmInfinityService = new FarmInfinityService(
         this.publisher,
         user.username,
