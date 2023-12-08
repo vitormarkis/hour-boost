@@ -1,7 +1,7 @@
 import { AddSteamAccount, ApplicationError, IAddSteamAccount, UsersDAO } from "core"
 import { EResult } from "steam-user"
-import { AllUsersClientsStorage } from "~/application/services"
-import { SteamAccountClient } from "~/application/services/steam"
+import { AllUsersClientsStorage, EventEmitter } from "~/application/services"
+import { SteamAccountClient, SteamApplicationEvents } from "~/application/services/steam"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { SteamBuilder } from "~/contracts"
 
@@ -41,6 +41,7 @@ export class AddSteamAccountController {
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
       if (!username) throw new ApplicationError("No user found with this ID.")
 
+      const sacEmitter = new EventEmitter<SteamApplicationEvents>()
       const sac = new SteamAccountClient({
         props: {
           client: this.steamBuilder.create(),
@@ -50,6 +51,7 @@ export class AddSteamAccountController {
         },
         instances: {
           publisher: this.publisher,
+          emitter: sacEmitter,
         },
       })
 

@@ -105,6 +105,11 @@ export class FarmGamesController {
       )
       this.farmingUsersStorage.add(farmInfinityService).startFarm()
       sac.farmGames(gamesID)
+      sac.emitter.on("interrupt", () => {
+        console.log("[sac emitter]: interrupt -> parando sac e service")
+        sac.stopFarm()
+        farmInfinityService.stopFarm()
+      })
       return makeRes(200, "Iniciando farm.")
     }
 
@@ -113,6 +118,11 @@ export class FarmGamesController {
       farmUsageService.farmWithAccount(accountName)
       this.farmingUsersStorage.add(farmUsageService).startFarm()
       sac.farmGames(gamesID)
+      sac.emitter.on("interrupt", () => {
+        console.log("[sac emitter]: interrupt -> parando sac e service")
+        sac.stopFarm()
+        farmUsageService.stopFarm()
+      })
       return makeRes(200, "Iniciando farm.")
     }
 

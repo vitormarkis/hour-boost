@@ -7,12 +7,15 @@ import {
   StartFarmingCommand,
   StopFarmingCommand,
 } from "~/application/commands/steam-client"
+import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
+import { EventParameters } from "~/infra/services"
 import { areTwoArraysEqual } from "~/utils"
 
 export class SteamAccountClient extends LastHandler {
   private readonly publisher: Publisher
+  readonly emitter: EventEmitter<SteamApplicationEvents>
   client: SteamUser
   userId: string
   username: string
@@ -27,6 +30,7 @@ export class SteamAccountClient extends LastHandler {
     this.username = props.username
     this.client = props.client
     this.publisher = instances.publisher
+    this.emitter = instances.emitter
     this.accountName = props.accountName
 
     this.client.on("loggedOn", (...args) => {
@@ -57,6 +61,7 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("error", (...args) => {
       console.log("Rodou error")
+      this.emitter.emit("interrupt")
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
       this.logoff()
@@ -64,6 +69,7 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("disconnected", (...args) => {
       this.logoff()
+      this.emitter.emit("interrupt")
       console.log("Rodou disconnected", ...args)
       this.getLastHandler("disconnected")(...args)
       this.setLastArguments("disconnected", args)
@@ -87,6 +93,10 @@ export class SteamAccountClient extends LastHandler {
 
   getGamesPlaying() {
     return this.gamesPlaying
+  }
+
+  stopFarm() {
+    this.farmGames([])
   }
 
   setGamesPlaying(gamesID: number[]) {
@@ -155,6 +165,7 @@ type SteamAccountClientProps = {
   }
   instances: {
     publisher: Publisher
+    emitter: EventEmitter<SteamApplicationEvents>
   }
 }
 
@@ -165,4 +176,8 @@ type LoginAttemptsConfig = {
 export type OnEventReturn = {
   message: string
   status: number
+}
+
+export type SteamApplicationEvents = {
+  interrupt: []
 }

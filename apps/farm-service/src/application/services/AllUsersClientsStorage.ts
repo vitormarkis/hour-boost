@@ -1,6 +1,6 @@
 import { ApplicationError } from "core"
-import { UserClientsStorage } from "~/application/services"
-import { SteamAccountClient } from "~/application/services/steam"
+import { EventEmitter, UserClientsStorage } from "~/application/services"
+import { SteamAccountClient, SteamApplicationEvents } from "~/application/services/steam"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import { Publisher } from "~/infra/queue"
 
@@ -16,9 +16,11 @@ export class AllUsersClientsStorage {
   getOrAddSteamAccount({ accountName, userId, username }: AddUserProps) {
     const userSteamClient = this.users.get(userId)?.hasAccountName(accountName)
     if (!userSteamClient) {
+      const sacEmitter = new EventEmitter<SteamApplicationEvents>()
       const steamAccountClient = new SteamAccountClient({
         instances: {
           publisher: this.publisher,
+          emitter: sacEmitter,
         },
         props: {
           accountName,

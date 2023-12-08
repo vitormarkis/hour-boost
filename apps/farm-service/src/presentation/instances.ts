@@ -13,11 +13,18 @@ import { ClerkAuthentication } from "~/infra/services"
 const httpProxy = process.env.PROXY_URL
 
 if (httpProxy) {
-  console.log(`Usando proxy ${httpProxy.slice(0, 9) + "*******"}`)
+  console.log(`Usando proxy ${httpProxy.slice(0, 18) + "*******"}`)
 }
 
 export const steamBuilder: SteamBuilder = {
-  create: () => new SteamUser(httpProxy ? { httpProxy } : undefined),
+  create: () => {
+    try {
+      return new SteamUser(httpProxy ? { httpProxy } : undefined)
+    } catch (error) {
+      console.log(`[PROXY ERROR CAUGHT] `, error)
+      return new SteamUser()
+    }
+  },
 }
 
 export const farmingUsersStorage = new FarmingUsersStorage()

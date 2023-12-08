@@ -3,7 +3,7 @@ import { AllUsersClientsStorage } from "~/application/services"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { HttpClient } from "~/contracts"
 import { FarmGamesEventsResolve, SteamClientEventsRequired } from "~/presentation/controllers"
-import { getTimeoutPromise, throwBadEventsResolved } from "~/utils"
+import { getTimeoutPromise, makeRes, throwBadEventsResolved } from "~/utils"
 
 export class AddSteamGuardCodeController {
   constructor(private readonly allUsersClientsStorage: AllUsersClientsStorage) {}
@@ -31,15 +31,14 @@ export class AddSteamGuardCodeController {
 
     const steamClientEventsRequired = new SteamClientEventsRequired(sac, EVENT_PROMISES_TIMEOUT_IN_SECONDS)
 
-    console.log("AAA")
     const eventsPromisesResolved = await Promise.race(
       steamClientEventsRequired.getEventPromises({
         loggedOn: true,
+        steamGuard: true,
         error: true,
         timeout: true,
       })
     )
-    console.log("BBB")
 
     console.log({
       eventsPromisesResolved,
@@ -49,6 +48,9 @@ export class AddSteamGuardCodeController {
         status: 200,
         json: eventsPromisesResolved.args,
       }
+    }
+    if (eventsPromisesResolved.type === "steamGuard") {
+      return makeRes(202, "Steam Guard required again.")
     }
     throw new ApplicationError("Bad resolver, didn't throw or returned logged in event.")
   }
