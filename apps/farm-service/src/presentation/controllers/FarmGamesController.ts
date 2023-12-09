@@ -1,31 +1,30 @@
 import {
   ApplicationError,
-  PlanInfinity,
-  PlanUsage,
-  UserIsAlreadyFarmingException,
+  SteamAccountClientStateCacheRepository,
   UsersRepository,
 } from "core"
+import { FarmServiceFactory } from "~/application/factories"
 
 import {
   AllUsersClientsStorage,
-  FarmInfinityService,
-  FarmUsageService,
   IFarmingUsersStorage,
+  UserSACsFarmingCluster,
+  UsersSACsFarmingClusterStorage,
 } from "~/application/services"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
-import { HttpClient } from "~/contracts/HttpClient"
+import { HttpClient } from "~/contracts"
 import { Publisher } from "~/infra/queue"
-import { EventParameters } from "~/infra/services/SteamUserMock"
-import { SteamClientEventsRequired } from "~/presentation/controllers/AddSteamAccountController"
+import { SteamClientEventsRequired } from "~/presentation/controllers"
 import { areTwoArraysEqual, makeRes } from "~/utils"
 
 export class FarmGamesController {
   constructor(
-    private readonly farmingUsersStorage: IFarmingUsersStorage,
     private readonly publisher: Publisher,
     private readonly usersRepository: UsersRepository,
-    private readonly allUsersClientsStorage: AllUsersClientsStorage
-  ) {}
+    private readonly allUsersClientsStorage: AllUsersClientsStorage,
+    private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository,
+    private readonly usersClusterStorage: UsersSACsFarmingClusterStorage
+  ) { }
 
   async handle(
     req: HttpClient.Request<{
@@ -96,65 +95,80 @@ export class FarmGamesController {
     const noNewGameAddToFarm = areTwoArraysEqual(gamesID, sac.getGamesPlaying())
     if (noNewGameAddToFarm) return makeRes(200, "Nenhum novo game adicionado ao farm.")
 
-    if (user.plan instanceof PlanInfinity) {
-      // const { safCluster } = this.steamAccountFarmingCluster.getByAccountName(accountName)
-      // safCluster.farmGames(gamesID)
 
-      const farmInfinityService = new FarmInfinityService(
-        this.publisher,
+    // const KEY_USER_ACCOUNTNAME = `${user.username}:${accountName}`
+
+    // const managementSteamAccountFarmingClusterStorage = new ManagementSteamAccountFarmingClusterStorage(
+    //   this.steamAccountFarmingClusterStorage,
+    //   sac,
+    //   this.sacStateCacheRepository
+    // )
+    // const userCluster = managementSteamAccountFarmingClusterStorage.getOrAddUserCluster(
+    //   KEY_USER_ACCOUNTNAME,
+    //   farmServiceFactory.getFarmService(user.plan)
+    // )
+
+    const farmServiceFactory = new FarmServiceFactory({
+      publisher: this.publisher,
+      username: user.username,
+    })
+
+    const userCluster =
+      this.usersClusterStorage.get(user.username) ?? this.usersClusterStorage.add(
         user.username,
-        user.plan.id_plan,
-        user.plan.ownerId
+        new UserSACsFarmingCluster({
+          farmService: farmServiceFactory.createNewFarmService(user.plan),
+          username: user.username,
+          accountName: accountName,
+          sacStateCacheRepository: this.sacStateCacheRepository
+        })
       )
-      this.farmingUsersStorage.add(farmInfinityService).startFarm()
-      sac.farmGames(gamesID)
-      sac.emitter.on("interrupt", () => {
-        console.log("[sac emitter]: interrupt -> parando sac e service")
-        sac.stopFarm()
-        farmInfinityService.stopFarm()
-      })
-      return makeRes(200, "Iniciando farm.")
-    }
 
-    if (user.plan instanceof PlanUsage) {
-      const farmUsageService = new FarmUsageService(this.publisher, user.plan, user.username)
-      farmUsageService.farmWithAccount(accountName)
-      this.farmingUsersStorage.add(farmUsageService).startFarm()
-      sac.farmGames(gamesID)
-      sac.emitter.on("interrupt", () => {
-        console.log("[sac emitter]: interrupt -> parando sac e service")
-        sac.stopFarm()
-        farmUsageService.stopFarm()
-      })
-      return makeRes(200, "Iniciando farm.")
-    }
 
-    throw new ApplicationError("Instância do plano do usuário não suportado.")
+
+    // possui service farmando
+    // possui service sem ninguem farmando
+    // nao possui service, precisa criar
+    if (!userCluster.farmService.hasAccountsFarming()) {
+      const farmService = farmServiceFactory.createNewFarmService(user.plan)
+      userCluster.setFarmService(farmService)
+    }
+    userCluster.farmWithAccount(accountName, gamesID, user.plan)
+
+    return makeRes(200, "Iniciando farm.")
+
+
+    // if (user.plan instanceof PlanInfinity) {
+    //   // const farmInfinityService = new FarmInfinityService(
+    //   //   this.publisher,
+    //   //   user.username,
+    //   //   user.plan.id_plan,
+    //   //   user.plan.ownerId
+    //   // )
+
+    //   // essa instanciação pode estar dentro do cluster, com base no user.plan.type
+
+    // }
+
+    // if (user.plan instanceof PlanUsage) {
+    //   // const { safCluster } = this.steamAccountFarmingCluster.getByAccountName(accountName)
+    //   // safCluster.farmGames(gamesID)
+
+    //   const farmUsageService = new FarmUsageService(this.publisher, user.plan, user.username)
+    //   farmUsageService.farmWithAccount(accountName)
+    //   this.farmingUsersStorage.add(farmUsageService).startFarm()
+    //   sac.farmGames(gamesID)
+    //   // sac.emitter.on("interrupt", () => {
+    //   //   console.log("[sac emitter]: interrupt -> parando sac e service")
+    //   //   sac.stopFarm()
+    //   //   farmUsageService.stopFarm()
+    //   //   // this.farmingUsersStorage.get(user.username).getAccount()
+    //   //   // remover o farm que possui o set interval, pra conseguir adicinoar um novo depois
+    //   // })
+    //   return makeRes(200, "Iniciando farm.")
+    // }
+
+    // throw new ApplicationError("Instância do plano do usuário não suportado.")
   }
 }
 
-export type EventMapperGeneric = Record<string, any[]>
-
-export type FarmGamesEventsGenericResolve =
-  | FarmGamesEventsResolve<EventParameters>
-  | FarmGamesEventsTimeoutResolve
-
-export type FarmGamesEventsResolve<EventMapper extends EventMapperGeneric> = {
-  [K in keyof EventMapper]: SingleEventResolver<EventMapper, K>
-}[keyof EventMapper]
-
-export type SingleEventResolver<EventMapper extends EventMapperGeneric, K extends keyof EventMapper> = {
-  type: K
-  args: EventMapper[K]
-}
-
-export type FarmGamesEventsTimeoutResolve<EventMapper extends EventMapperGeneric = EventParametersTimeout> = {
-  [K in keyof EventMapper]: {
-    type: K
-    args: EventMapper[K]
-  }
-}[keyof EventMapper]
-
-export type EventParametersTimeout = {
-  timeout: []
-}

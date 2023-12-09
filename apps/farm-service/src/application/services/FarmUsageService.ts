@@ -8,8 +8,8 @@ import { Publisher } from "~/infra/queue"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
 
-type FarmingAccountDetails = {
-  usageAmount: number
+export type FarmingAccountDetails = {
+  usageAmountInSeconds: number
   status: "FARMING" | "IDDLE"
 }
 
@@ -49,19 +49,8 @@ export class FarmUsageService implements IFarmService {
 
   private addUsageToAccount(usageAmount: number) {
     for (const [_, acc] of this.accountsFarming.entries()) {
-      if (acc.status === "FARMING") acc.usageAmount += usageAmount
+      if (acc.status === "FARMING") acc.usageAmountInSeconds += usageAmount
     }
-  }
-
-  getAccountDetails(accountName: string) {
-    return this.accountsFarming.get(accountName) ?? null
-  }
-
-  private appendAccount(accountName: string) {
-    this.accountsFarming.set(accountName, {
-      usageAmount: 0,
-      status: "FARMING",
-    })
   }
 
   private setAccountStatus(accountName: string, status: "FARMING" | "IDDLE") {
@@ -71,12 +60,23 @@ export class FarmUsageService implements IFarmService {
     account.status = status
   }
 
+  appendAccount(accountName: string) {
+    this.accountsFarming.set(accountName, {
+      usageAmountInSeconds: 0,
+      status: "FARMING",
+    })
+  }
+
   resumeFarming(accountName: string) {
     this.setAccountStatus(accountName, "FARMING")
   }
 
   pauseFarmOnAccount(accountName: string) {
     this.setAccountStatus(accountName, "IDDLE")
+  }
+
+  getAccountDetails(accountName: string) {
+    return this.accountsFarming.get(accountName) ?? null
   }
 
   private isAccountAdded(accountName: string) {
@@ -95,6 +95,10 @@ export class FarmUsageService implements IFarmService {
     return this.getActiveFarmingAccounts().length
   }
 
+  hasAccountsFarming() {
+    return this.getActiveFarmingAccountsAmount() > 0
+  }
+
   startFarm() {
     if (!this.hasAccounts)
       throw new ApplicationError("Você não pode começar uma sessão de farm sem uma conta atribuída.")
@@ -102,10 +106,10 @@ export class FarmUsageService implements IFarmService {
     this.startedAt = new Date()
     if (this.usageLeft <= 0) throw new ApplicationError("Seu plano não possui mais uso disponível.", 403)
     this.farmingInterval = setInterval(() => {
-      const amountFarmed = this.FARMING_GAP * this.getActiveFarmingAccountsAmount()
-      const amountFarmedIndividually = this.FARMING_GAP
+      const allAccountsFarmedTotalAmount = this.FARMING_GAP * this.getActiveFarmingAccountsAmount()
+      const individualAccountFarmedAmount = this.FARMING_GAP
 
-      if (this.usageLeft - amountFarmed < 0) {
+      if (this.usageLeft - allAccountsFarmedTotalAmount < 0) {
         this.publisher.publish(
           new PlanUsageExpiredMidFarmCommand({
             planId: this.planId,
@@ -118,8 +122,8 @@ export class FarmUsageService implements IFarmService {
         return this.stopFarmSetInternals()
       }
       // this.sharedUsageLeft.farm(this.FARMING_GAP)
-      this.usageLeft -= amountFarmed
-      this.addUsageToAccount(amountFarmedIndividually)
+      this.usageLeft -= allAccountsFarmedTotalAmount
+      this.addUsageToAccount(individualAccountFarmedAmount)
       this.publisher.publish(
         new UserFarmedCommand({
           amount: this.FARMING_GAP,
@@ -146,7 +150,7 @@ export class FarmUsageService implements IFarmService {
 
   private getAccountsUsageAmount() {
     const accountNameAndTheirUsage: AccountNameAndTheirUsage[] = []
-    for (const [accountName, { usageAmount }] of this.accountsFarming.entries()) {
+    for (const [accountName, { usageAmountInSeconds: usageAmount }] of this.accountsFarming.entries()) {
       accountNameAndTheirUsage.push({
         accountName,
         usageAmount,

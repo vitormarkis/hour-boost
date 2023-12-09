@@ -1,9 +1,17 @@
 export interface SteamAccountClientStateCacheRepository {
-  getByAccountName(accontName: string): Promise<SACStateCache>
-  set(sacStateCache: SACStateCache): Promise<any>
+  get(keyUserAccountName: string): Promise<SACStateCache | null>
+  set(keyUserAccountName: string, sacStateCache: SACStateCache): Promise<void>
 }
 
-export interface SACStateCache {
-  gamesPlaying: number[]
-  isLogged: boolean
+export class SACStateCache {
+
+  constructor(
+    readonly gamesPlaying: number[],
+    readonly accountName: string,
+  ) {
+  }
+  isFarming() {
+    return this.gamesPlaying.length > 0
+  }
 }
+

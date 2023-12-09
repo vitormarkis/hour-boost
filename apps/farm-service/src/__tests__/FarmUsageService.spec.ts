@@ -75,7 +75,7 @@ describe("FarmUsageService test suite", () => {
       plan_id: me.plan.id_plan,
       accountName: "acc1",
     })
-    ;(me.plan as PlanUsage).use(allPlanUsage)
+      ; (me.plan as PlanUsage).use(allPlanUsage)
     await usersRepository.update(me)
     const dbMe = await usersRepository.getByID(ME_ID)
     if (!dbMe) throw new Error()
@@ -194,7 +194,7 @@ describe("FarmUsageService test suite", () => {
     meFarmService.startFarm()
     jest.advanceTimersByTime(1000 * 60 * 60 * 6) // 6 horas
     meFarmService.stopFarm()
-    const { usageAmount } = meFarmService.getAccountDetails("acc1") ?? {}
+    const { usageAmountInSeconds: usageAmount } = meFarmService.getAccountDetails("acc1") ?? {}
     expect(usageAmount).toBe(21600)
     await sleep(50)
     jest.advanceTimersByTime(60)
@@ -212,8 +212,8 @@ describe("FarmUsageService test suite", () => {
     meFarmService.stopFarm()
     const acc1Details = meFarmService.getAccountDetails("acc1")
     const acc2Details = meFarmService.getAccountDetails("acc2")
-    expect(acc1Details?.usageAmount).toBe(10800)
-    expect(acc2Details?.usageAmount).toBe(10800)
+    expect(acc1Details?.usageAmountInSeconds).toBe(10800)
+    expect(acc2Details?.usageAmountInSeconds).toBe(10800)
   })
 
   test("should call one persist event to each one of the farming accounts", async () => {
@@ -388,5 +388,5 @@ describe("FarmUsageService test suite", () => {
     expect(handleExpiredMidFarm).toHaveBeenCalledTimes(1)
   })
 
-  test("should call event when user end farm session", async () => {})
+  test("should call event when user end farm session", async () => { })
 })

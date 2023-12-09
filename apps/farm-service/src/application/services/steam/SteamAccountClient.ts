@@ -1,4 +1,4 @@
-import { ApplicationError } from "core"
+import { ApplicationError, SACStateCache } from "core"
 import { writeFile } from "fs"
 import SteamUser from "steam-user"
 import {
@@ -61,7 +61,10 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("error", (...args) => {
       console.log("Rodou error")
-      this.emitter.emit("interrupt")
+      this.emitter.emit("interrupt", {
+        gamesPlaying: this.gamesPlaying,
+        isLogged: this.logged,
+      })
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
       this.logoff()
@@ -69,13 +72,17 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("disconnected", (...args) => {
       this.logoff()
-      this.emitter.emit("interrupt")
+      this.emitter.emit("interrupt", {
+        gamesPlaying: this.gamesPlaying,
+        isLogged: this.logged,
+      })
       console.log("Rodou disconnected", ...args)
       this.getLastHandler("disconnected")(...args)
       this.setLastArguments("disconnected", args)
     })
 
     this.client.on("webSession", async (...args) => {
+      this.emitter.emit("hasSession")
       console.log(`Got a web session for account ${this.accountName}`, ...args)
       console.log("Rodou webSession")
       this.getLastHandler("webSession")(...args)
@@ -179,5 +186,8 @@ export type OnEventReturn = {
 }
 
 export type SteamApplicationEvents = {
-  interrupt: []
+  interrupt: [sacStateCache: SACStateCache]
+  hasSession: []
+  "relog-with-state": [sacStateCache: SACStateCache]
+  "relog": []
 }

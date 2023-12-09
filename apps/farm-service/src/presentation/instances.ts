@@ -27,12 +27,14 @@ export const steamBuilder: SteamBuilder = {
   },
 }
 
+export const publisher = new Publisher()
+
 export const farmingUsersStorage = new FarmingUsersStorage()
+export const allUsersSteamClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder)
+
 export const usersDAO = new UsersDAODatabase(prisma)
 export const userAuthentication = new ClerkAuthentication(clerkClient)
 export const planRepository = new PlanRepositoryDatabase(prisma)
-export const publisher = new Publisher()
-export const allUsersSteamClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder)
 export const usersRepository = new UsersRepositoryDatabase(prisma)
 export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)
 export const idGenerator = new IDGeneratorUUID()
