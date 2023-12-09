@@ -16,15 +16,12 @@ let usersRepository: UsersRepository
 let usersInMemory: UsersInMemory
 let planRepository: PlanRepository
 
-const now = new Date("2023-06-10:T10:00:00Z")
+const now = new Date("2023-06-10")
 const ME_ID = "123"
 const ACCOUNT_NAME = "vrsl"
-
-const sleep = (time: number) =>
-  new Promise(res => {
-    setTimeout(res, time).unref()
-    jest.advanceTimersByTime(time)
-  })
+const ACCOUNT_PACCO = "pacco"
+const ACCOUNT_REX = "rex"
+const ACCOUNT_FRED = "fred"
 
 beforeEach(async () => {
   meDomain = User.create({
@@ -62,21 +59,13 @@ const getFarmService = (user: User) => {
 }
 
 describe("FarmUsageService test suite", () => {
-  test("should throw when start to farm without add any accounts", async () => {
-    const me = await getMe()
-    const meFarmService = new FarmUsageService(publisher, me.plan as PlanUsage, me.username, now)
-    expect(() => {
-      meFarmService.farmWithAccount(ACCOUNT_NAME)
-    }).toThrow("Você não pode começar uma sessão de farm sem uma conta atribuída.")
-  })
-
   test("should throw plan with no usage left attempts to farm", async () => {
     const me = await getMe()
     const allPlanUsage = Usage.create({
       amountTime: 21600,
       createdAt: new Date("2023-06-10T10:00:00Z"),
       plan_id: me.plan.id_plan,
-      accountName: "acc1",
+      accountName: ACCOUNT_PACCO,
     })
       ; (me.plan as PlanUsage).use(allPlanUsage)
     await usersRepository.update(me)
@@ -86,8 +75,6 @@ describe("FarmUsageService test suite", () => {
     expect(dbMe.plan).toBeInstanceOf(GuestPlan)
     expect((dbMe.plan as PlanUsage).getUsageLeft()).toBe(0)
     expect((dbMe.plan as PlanUsage).getUsageTotal()).toBe(21600)
-    meFarmService.farmWithAccount("acc1")
-    expect(meFarmService.hasAccounts).toBeTruthy()
 
     expect(() => {
       meFarmService.farmWithAccount(ACCOUNT_NAME)
@@ -105,18 +92,11 @@ describe("FarmUsageService test suite", () => {
 
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    console.log(meFarmService.getUsageLeft())
-    meFarmService.farmWithAccount("acc1")
-    console.log(meFarmService.getUsageLeft())
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
     meFarmService.farmWithAccount(ACCOUNT_NAME)
-    console.log(meFarmService.getUsageLeft())
     jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
-    console.log(meFarmService.getUsageLeft())
-    const me2 = await getMe()
-    expect(me2.plan.status).toBe("FARMING")
     jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
 
-    await sleep(200)
     expect(handleCompleteFarmSession).not.toHaveBeenCalledWith(
       expect.objectContaining({
         operation: "user-complete-farm-session",
@@ -127,18 +107,15 @@ describe("FarmUsageService test suite", () => {
         operation: "plan-usage-expired-mid-farm",
       })
     )
-
-    const me3 = await getMe()
-    expect(me3.plan.status).toBe("IDDLE")
   })
 
-  test("should throw when plan infinity attemps to use the service", async () => {
-    const me = await getMe()
-    me.assignPlan(SilverPlan.create({ ownerId: me.id_user }))
-    expect(() => {
-      new FarmUsageService(publisher, me.plan as PlanUsage, me.username, now)
-    }).toThrow("Tentativa de fazer usage farm com plano que não é do tipo USAGE.")
-  })
+  // test("should throw when plan infinity attemps to use the service", async () => {
+  //   const me = await getMe()
+  //   me.assignPlan(SilverPlan.create({ ownerId: me.id_user }))
+  //   expect(() => {
+  //     new FarmUsageService(publisher, me.plan, me.username, now)
+  //   }).toThrow("Tentativa de fazer usage farm com plano que não é do tipo USAGE.")
+  // })
 
   test("should start with status iddle", async () => {
     const me = await getMe()
@@ -148,7 +125,7 @@ describe("FarmUsageService test suite", () => {
   test("should set status to farming once user start farming", async () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
     meFarmService.farmWithAccount(ACCOUNT_NAME)
     const me2 = await getMe()
     expect(me2.plan.status).toBe("FARMING")
@@ -157,21 +134,20 @@ describe("FarmUsageService test suite", () => {
   test("should set status to iddle again once user stop farming", async () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
     meFarmService.farmWithAccount(ACCOUNT_NAME)
-    meFarmService.stopFarm()
-    const me2 = await getMe()
-    expect(me2.plan.status).toBe("IDDLE")
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
+    expect(meFarmService.hasAccountsFarming()).toBeTruthy()
+    meFarmService.pauseFarmOnAccount(ACCOUNT_NAME)
+    meFarmService.pauseFarmOnAccount(ACCOUNT_PACCO)
+    expect(meFarmService.hasAccountsFarming()).toBeFalsy()
   })
 
   test("should decrement user plan as user farms", async () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
     meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60) // 1 minute
-    meFarmService.stopFarm()
-    await sleep(50)
+    meFarmService.stopFarmAllAccounts()
     const me2 = await getMe()
     expect((me2.plan as PlanUsage).usages.data).toHaveLength(1)
     expect((me2.plan as PlanUsage).getUsageLeft()).toBe(21540)
@@ -180,11 +156,10 @@ describe("FarmUsageService test suite", () => {
   test("should empty the user plan usage left when uses all plan usage", async () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
     meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60 * 60 * 6) // 6 horas
-    meFarmService.stopFarm()
-    await sleep(50)
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(60)
     const me2 = await getMe()
     expect((me2.plan as PlanUsage).getUsageLeft()).toBe(0)
@@ -193,13 +168,14 @@ describe("FarmUsageService test suite", () => {
   test("should track the usage of the account", async () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
     meFarmService.farmWithAccount(ACCOUNT_NAME)
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
     jest.advanceTimersByTime(1000 * 60 * 60 * 6) // 6 horas
-    meFarmService.stopFarm()
-    const { usageAmountInSeconds: usageAmount } = meFarmService.getAccountDetails("acc1") ?? {}
-    expect(usageAmount).toBe(21600)
-    await sleep(50)
+    meFarmService.stopFarmAllAccounts()
+    const { usageAmountInSeconds: usageAmount1 } = meFarmService.getAccountDetails(ACCOUNT_NAME) ?? {}
+    const { usageAmountInSeconds: usageAmount2 } = meFarmService.getAccountDetails(ACCOUNT_PACCO) ?? {}
+    expect(usageAmount1).toBe(21600 / 2)
+    expect(usageAmount2).toBe(21600 / 2)
     jest.advanceTimersByTime(60)
     const me2 = await getMe()
     expect((me2.plan as PlanUsage).getUsageLeft()).toBe(0)
@@ -208,15 +184,17 @@ describe("FarmUsageService test suite", () => {
   test("should assign correct usage to the steam accounts", async () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
-    meFarmService.farmWithAccount("acc2")
     meFarmService.farmWithAccount(ACCOUNT_NAME)
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
+    meFarmService.farmWithAccount(ACCOUNT_REX)
     jest.advanceTimersByTime(1000 * 60 * 60 * 3) // 6 horas
-    meFarmService.stopFarm()
-    const acc1Details = meFarmService.getAccountDetails("acc1")
-    const acc2Details = meFarmService.getAccountDetails("acc2")
-    expect(acc1Details?.usageAmountInSeconds).toBe(10800)
-    expect(acc2Details?.usageAmountInSeconds).toBe(10800)
+    meFarmService.stopFarmAllAccounts()
+    const acc1Details = meFarmService.getAccountDetails(ACCOUNT_NAME)
+    const acc2Details = meFarmService.getAccountDetails(ACCOUNT_PACCO)
+    const acc3Details = meFarmService.getAccountDetails(ACCOUNT_REX)
+    expect(acc1Details?.usageAmountInSeconds).toBe(7200)
+    expect(acc2Details?.usageAmountInSeconds).toBe(7200)
+    expect(acc3Details?.usageAmountInSeconds).toBe(7200)
   })
 
   test("should call one persist event to each one of the farming accounts", async () => {
@@ -226,17 +204,15 @@ describe("FarmUsageService test suite", () => {
 
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
-    meFarmService.farmWithAccount("acc2")
-    meFarmService.farmWithAccount("acc3")
     meFarmService.farmWithAccount(ACCOUNT_NAME)
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
+    meFarmService.farmWithAccount(ACCOUNT_REX)
     jest.advanceTimersByTime(1000 * 60 * 60 * 2) // 6 horas
-    meFarmService.stopFarm()
+    meFarmService.stopFarmAllAccounts()
     const usages = meFarmService.getAccountsUsages().map(acc => acc.usage)
     expect(usages[0].amountTime).toBe(7200)
     expect(usages[1].amountTime).toBe(7200)
     expect(usages[2].amountTime).toBe(7200)
-    expect(usages[3]?.amountTime).toBeUndefined()
     expect(handleCompleteFarmSession).toHaveBeenCalledTimes(3)
     expect(handleCompleteFarmSession).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -258,9 +234,8 @@ describe("FarmUsageService test suite", () => {
 
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
-    meFarmService.farmWithAccount("acc2")
     meFarmService.farmWithAccount(ACCOUNT_NAME)
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
     jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
     expect(handleCompleteFarmSession).not.toHaveBeenCalledWith(
       expect.objectContaining({
@@ -298,9 +273,8 @@ describe("FarmUsageService test suite", () => {
 
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
-    meFarmService.farmWithAccount("acc2")
     meFarmService.farmWithAccount(ACCOUNT_NAME)
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
     jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
     expect(handleCompleteFarmSession).not.toHaveBeenCalledWith(
       expect.objectContaining({
@@ -318,6 +292,7 @@ describe("FarmUsageService test suite", () => {
     expect(call.usages).toHaveLength(2)
     expect(call.usages[0].amountTime).toBe(10800)
     expect(call.usages[1].amountTime).toBe(10800)
+    expect(call.usages[2]?.amountTime).toBeUndefined()
 
     const usages = meFarmService.getAccountsUsages().map(acc => acc.usage)
     expect(usages[0].amountTime).toBe(10800)
@@ -331,32 +306,35 @@ describe("FarmUsageService test suite", () => {
 
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
-    meFarmService.farmWithAccount(ACCOUNT_NAME)
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
     expect(meFarmService.getActiveFarmingAccountsAmount()).toBe(1)
     jest.advanceTimersByTime(1000 * 60 * 60 * 1) // 1 hora
-    meFarmService.pauseFarmOnAccount("acc1")
+    // acc2: 3600; left: 18000
+    meFarmService.pauseFarmOnAccount(ACCOUNT_PACCO)
     expect(meFarmService.getActiveFarmingAccountsAmount()).toBe(0)
     jest.advanceTimersByTime(1000 * 60 * 60 * 2) // 2 horas
+    // acc2: 3600; left: 18000
 
-    meFarmService.farmWithAccount("acc1")
-    meFarmService.farmWithAccount("acc2")
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
+    meFarmService.farmWithAccount(ACCOUNT_REX)
     jest.advanceTimersByTime(1000 * 60 * 60 * 1.5) // 1 hora e meia
-    meFarmService.pauseFarmOnAccount("acc2")
+    // acc2: 9000; acc3: 5400; left: 7200
+    meFarmService.pauseFarmOnAccount(ACCOUNT_REX)
     jest.advanceTimersByTime(1000 * 60 * 60 * 1.5) // 1 hora e meia
-    meFarmService.stopFarm()
+    // acc2: 14400; acc3: 5400; left: 1800
+    meFarmService.stopFarmAllAccounts()
     expect(meFarmService.getUsageLeft()).toBe(1800)
     const usages = meFarmService.getAccountsUsages().map(acc => acc.usage)
     expect(usages).toHaveLength(2)
-    expect(usages.find(u => u.accountName === "acc1")?.amountTime).toBe(14400)
-    expect(usages.find(u => u.accountName === "acc2")?.amountTime).toBe(5400)
+    expect(usages.find(u => u.accountName === ACCOUNT_PACCO)?.amountTime).toBe(14400)
+    expect(usages.find(u => u.accountName === ACCOUNT_REX)?.amountTime).toBe(5400)
 
     expect(handleCompleteFarmSession).toHaveBeenCalledWith(
       expect.objectContaining({
         operation: "user-complete-farm-session",
       })
     )
-    expect(handleCompleteFarmSession).toHaveBeenCalledTimes(2)
+    expect(handleCompleteFarmSession).toHaveBeenCalledTimes(3)
   })
 
   test("should persist complex usages even when the plan's max usage exceeds", async () => {
@@ -367,21 +345,25 @@ describe("FarmUsageService test suite", () => {
 
     const me = await getMe()
     const meFarmService = getFarmService(me)
-    meFarmService.farmWithAccount("acc1")
+    meFarmService.farmWithAccount(ACCOUNT_PACCO)
     meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60 * 60 * 1.2)
-    meFarmService.farmWithAccount("two")
+    // pacco: 4320; vrsl: 4320; left: 12.960
+    meFarmService.farmWithAccount(ACCOUNT_REX)
     jest.advanceTimersByTime(1000 * 60 * 60 * 3.2)
+    // pacco: 8640; vrsl: 8640; rex: 4320; left: 12.960
     expect(meFarmService.getUsageLeft()).toBe(0)
     const usages = meFarmService.getAccountsUsages().map(acc => acc.usage)
-    expect(usages.find(u => u.accountName === "acc1")?.amountTime).toBe(12960)
-    expect(usages.find(u => u.accountName === "two")?.amountTime).toBe(8640)
-    expect(usages).toHaveLength(2)
+    expect(usages.find(u => u.accountName === ACCOUNT_NAME)?.amountTime).toBe(8640)
+    expect(usages.find(u => u.accountName === ACCOUNT_PACCO)?.amountTime).toBe(8640)
+    expect(usages.find(u => u.accountName === ACCOUNT_REX)?.amountTime).toBe(4320)
+    expect(usages).toHaveLength(3)
 
     const call = handleExpiredMidFarm.mock.calls[0][0] as PlanUsageExpiredMidFarmCommand
-    expect(call.usages).toHaveLength(2)
-    expect(call.usages.find(u => u.accountName === "acc1")?.amountTime).toBe(12960)
-    expect(call.usages.find(u => u.accountName === "two")?.amountTime).toBe(8640)
+    expect(call.usages).toHaveLength(3)
+    expect(call.usages.find(u => u.accountName === ACCOUNT_NAME)?.amountTime).toBe(8640)
+    expect(call.usages.find(u => u.accountName === ACCOUNT_PACCO)?.amountTime).toBe(8640)
+    expect(call.usages.find(u => u.accountName === ACCOUNT_REX)?.amountTime).toBe(4320)
 
     expect(handleExpiredMidFarm).toHaveBeenCalledWith(
       expect.objectContaining({

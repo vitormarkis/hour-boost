@@ -30,8 +30,6 @@ export class FarmUsageService extends FarmService {
   }
 
   protected startFarmImpl(): void {
-    if (!this.hasAccounts)
-      throw new ApplicationError("Você não pode começar uma sessão de farm sem uma conta atribuída.")
     if (this.usageLeft <= 0) throw new ApplicationError("Seu plano não possui mais uso disponível.", 403)
     this.farmingInterval = setInterval(() => {
       const allAccountsFarmedTotalAmount = this.FARMING_GAP * this.getActiveFarmingAccountsAmount()
@@ -92,10 +90,6 @@ export class FarmUsageService extends FarmService {
     return this.usageLeft
   }
 
-  get hasAccounts() {
-    return this.accountsFarming.size > 0
-  }
-
   private addUsageToAccount(usageAmount: number) {
     for (const [_, acc] of this.accountsFarming.entries()) {
       if (acc.status === "FARMING") acc.usageAmountInSeconds += usageAmount
@@ -129,9 +123,6 @@ export class FarmUsageService extends FarmService {
         }),
       }
     })
-  }
-
-  stopFarm() {
   }
 }
 

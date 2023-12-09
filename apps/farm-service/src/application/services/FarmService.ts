@@ -76,14 +76,18 @@ export abstract class FarmService {
     return this.status
   }
 
-  protected startFarm(): void {
+  private startFarm(): void {
     this.status = "FARMING"
     return this.startFarmImpl()
   }
 
-  protected stopFarm(): void {
+  private stopFarm(): void {
     this.status = "IDDLE"
     return this.stopFarmImpl()
+  }
+
+  stopFarmAllAccounts() {
+    this.stopFarm()
   }
 
   protected abstract startFarmImpl(): void
