@@ -1,5 +1,5 @@
 import { ApplicationError, PlanType } from "core"
-import { FarmServiceStatus, IFarmService } from "~/application/services"
+import { FarmServiceStatus } from "~/application/services"
 
 type AccountFarmingStatus = "FARMING" | "IDDLE"
 
@@ -8,22 +8,31 @@ export type FarmingAccountDetails = {
   status: AccountFarmingStatus
 }
 
-type FarmServiceRootProps = {
-  ownerId: string
+export type FarmServiceProps = {
+  startedAt: Date
+  planId: string
+  userId: string
+  username: string
 }
 
 export abstract class FarmService {
-  private readonly accountsFarming = new Map<string, FarmingAccountDetails>()
+  protected readonly accountsFarming = new Map<string, FarmingAccountDetails>()
   abstract readonly type: PlanType
-  private status: FarmServiceStatus
-  readonly ownerId: string
+  protected status: FarmServiceStatus
+  protected readonly startedAt: Date
+  protected readonly planId: string
+  protected readonly userId: string
+  protected readonly username: string
 
-  constructor(props: FarmServiceRootProps) {
+  constructor(props: FarmServiceProps) {
     this.status = "IDDLE"
-    this.ownerId = props.ownerId
+    this.startedAt = props.startedAt
+    this.planId = props.planId
+    this.userId = props.userId
+    this.username = props.username
   }
 
-  private getAccountDetails(accountName: string) {
+  getAccountDetails(accountName: string) {
     return this.accountsFarming.get(accountName) ?? null
   }
 
@@ -98,5 +107,17 @@ export abstract class FarmService {
       farmingAccounts[accountName] = details.status
     }
     return farmingAccounts
+  }
+
+  getPlanId() {
+    return this.planId
+  }
+
+  getUserId() {
+    return this.userId
+  }
+
+  getUsername() {
+    return this.username
   }
 }

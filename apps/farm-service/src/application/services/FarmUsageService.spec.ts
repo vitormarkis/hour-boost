@@ -1,14 +1,14 @@
 import { GuestPlan, PlanRepository, PlanUsage, SilverPlan, Usage, User, UsersRepository } from "core"
 
 import { PlanUsageExpiredMidFarmCommand } from "~/application/commands/PlanUsageExpiredMidFarmCommand"
-import { FarmUsageService, IFarmService } from "~/application/services"
+import { FarmUsageService } from "~/application/services"
 import {
   ChangePlanStatusHandler,
   PersistUsageHandler,
   PlanExpiredMidFarmPersistPlanHandler,
 } from "~/domain/handler"
-import { Publisher } from "../infra/queue"
-import { PlanRepositoryInMemory, UsersInMemory, UsersRepositoryInMemory } from "../infra/repository"
+import { Publisher } from "../../infra/queue"
+import { PlanRepositoryInMemory, UsersInMemory, UsersRepositoryInMemory } from "../../infra/repository"
 
 const publisher = new Publisher()
 let meDomain: User
@@ -16,7 +16,10 @@ let usersRepository: UsersRepository
 let usersInMemory: UsersInMemory
 let planRepository: PlanRepository
 
+const now = new Date("2023-06-10:T10:00:00Z")
 const ME_ID = "123"
+const ACCOUNT_NAME = "vrsl"
+
 const sleep = (time: number) =>
   new Promise(res => {
     setTimeout(res, time).unref()
@@ -55,15 +58,15 @@ const getMe = async () => {
 }
 
 const getFarmService = (user: User) => {
-  return new FarmUsageService(publisher, user.plan as PlanUsage, user.username)
+  return new FarmUsageService(publisher, user.plan as PlanUsage, user.username, now)
 }
 
 describe("FarmUsageService test suite", () => {
   test("should throw when start to farm without add any accounts", async () => {
     const me = await getMe()
-    const meFarmService = new FarmUsageService(publisher, me.plan as PlanUsage, me.username)
+    const meFarmService = new FarmUsageService(publisher, me.plan as PlanUsage, me.username, now)
     expect(() => {
-      meFarmService.startFarm()
+      meFarmService.farmWithAccount(ACCOUNT_NAME)
     }).toThrow("Você não pode começar uma sessão de farm sem uma conta atribuída.")
   })
 
@@ -79,7 +82,7 @@ describe("FarmUsageService test suite", () => {
     await usersRepository.update(me)
     const dbMe = await usersRepository.getByID(ME_ID)
     if (!dbMe) throw new Error()
-    const meFarmService = new FarmUsageService(publisher, dbMe.plan as PlanUsage, dbMe.username)
+    const meFarmService = new FarmUsageService(publisher, dbMe.plan as PlanUsage, dbMe.username, now)
     expect(dbMe.plan).toBeInstanceOf(GuestPlan)
     expect((dbMe.plan as PlanUsage).getUsageLeft()).toBe(0)
     expect((dbMe.plan as PlanUsage).getUsageTotal()).toBe(21600)
@@ -87,7 +90,7 @@ describe("FarmUsageService test suite", () => {
     expect(meFarmService.hasAccounts).toBeTruthy()
 
     expect(() => {
-      meFarmService.startFarm()
+      meFarmService.farmWithAccount(ACCOUNT_NAME)
     }).toThrow("Seu plano não possui mais uso disponível.")
   })
 
@@ -105,7 +108,7 @@ describe("FarmUsageService test suite", () => {
     console.log(meFarmService.getUsageLeft())
     meFarmService.farmWithAccount("acc1")
     console.log(meFarmService.getUsageLeft())
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     console.log(meFarmService.getUsageLeft())
     jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
     console.log(meFarmService.getUsageLeft())
@@ -133,7 +136,7 @@ describe("FarmUsageService test suite", () => {
     const me = await getMe()
     me.assignPlan(SilverPlan.create({ ownerId: me.id_user }))
     expect(() => {
-      new FarmUsageService(publisher, me.plan as PlanUsage, me.username)
+      new FarmUsageService(publisher, me.plan as PlanUsage, me.username, now)
     }).toThrow("Tentativa de fazer usage farm com plano que não é do tipo USAGE.")
   })
 
@@ -146,7 +149,7 @@ describe("FarmUsageService test suite", () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount("acc1")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     const me2 = await getMe()
     expect(me2.plan.status).toBe("FARMING")
   })
@@ -155,7 +158,7 @@ describe("FarmUsageService test suite", () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount("acc1")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     meFarmService.stopFarm()
     const me2 = await getMe()
     expect(me2.plan.status).toBe("IDDLE")
@@ -165,7 +168,7 @@ describe("FarmUsageService test suite", () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount("acc1")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60) // 1 minute
     meFarmService.stopFarm()
     await sleep(50)
@@ -178,7 +181,7 @@ describe("FarmUsageService test suite", () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount("acc1")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60 * 60 * 6) // 6 horas
     meFarmService.stopFarm()
     await sleep(50)
@@ -191,7 +194,7 @@ describe("FarmUsageService test suite", () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount("acc1")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60 * 60 * 6) // 6 horas
     meFarmService.stopFarm()
     const { usageAmountInSeconds: usageAmount } = meFarmService.getAccountDetails("acc1") ?? {}
@@ -207,7 +210,7 @@ describe("FarmUsageService test suite", () => {
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount("acc1")
     meFarmService.farmWithAccount("acc2")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60 * 60 * 3) // 6 horas
     meFarmService.stopFarm()
     const acc1Details = meFarmService.getAccountDetails("acc1")
@@ -226,7 +229,7 @@ describe("FarmUsageService test suite", () => {
     meFarmService.farmWithAccount("acc1")
     meFarmService.farmWithAccount("acc2")
     meFarmService.farmWithAccount("acc3")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60 * 60 * 2) // 6 horas
     meFarmService.stopFarm()
     const usages = meFarmService.getAccountsUsages().map(acc => acc.usage)
@@ -257,7 +260,7 @@ describe("FarmUsageService test suite", () => {
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount("acc1")
     meFarmService.farmWithAccount("acc2")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
     expect(handleCompleteFarmSession).not.toHaveBeenCalledWith(
       expect.objectContaining({
@@ -297,7 +300,7 @@ describe("FarmUsageService test suite", () => {
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount("acc1")
     meFarmService.farmWithAccount("acc2")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 4 horas
     expect(handleCompleteFarmSession).not.toHaveBeenCalledWith(
       expect.objectContaining({
@@ -329,7 +332,7 @@ describe("FarmUsageService test suite", () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount("acc1")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     expect(meFarmService.getActiveFarmingAccountsAmount()).toBe(1)
     jest.advanceTimersByTime(1000 * 60 * 60 * 1) // 1 hora
     meFarmService.pauseFarmOnAccount("acc1")
@@ -365,7 +368,7 @@ describe("FarmUsageService test suite", () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount("acc1")
-    meFarmService.startFarm()
+    meFarmService.farmWithAccount(ACCOUNT_NAME)
     jest.advanceTimersByTime(1000 * 60 * 60 * 1.2)
     meFarmService.farmWithAccount("two")
     jest.advanceTimersByTime(1000 * 60 * 60 * 3.2)

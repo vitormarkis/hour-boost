@@ -1,9 +1,9 @@
 import { ApplicationError, PlanInfinity, PlanUsage, SACStateCache, SteamAccountClientStateCacheRepository } from "core";
-import { IFarmService } from "~/application/services";
+import { FarmService } from "~/application/services";
 import { SteamAccountClient } from "~/application/services/steam";
 
 export class UserSACsFarmingCluster {
-  farmService: IFarmService
+  farmService: FarmService
   private readonly sacList: Map<string, SteamAccountClient> = new Map()
   readonly keyUserAccountName: string
   private readonly username: string
@@ -91,14 +91,14 @@ export class UserSACsFarmingCluster {
     sac.stopFarm()
   }
 
-  setFarmService(newFarmService: IFarmService) {
+  setFarmService(newFarmService: FarmService) {
     this.farmService = newFarmService
   }
 }
 
 
 export type UserSACsFarmingClusterProps = {
-  farmService: IFarmService,
+  farmService: FarmService,
   username: string,
   accountName: string,
   sacStateCacheRepository: SteamAccountClientStateCacheRepository

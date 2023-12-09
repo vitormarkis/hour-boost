@@ -2,6 +2,8 @@ import { PlanType } from "core"
 import { FarmService } from "~/application/services/FarmService"
 
 const USER_ID = "123"
+const PLAN_ID = "PLAN_123"
+const USERNAME = "Name"
 const ACCOUNT_NAME = "vrsl"
 const ACCOUNT_NAME_2 = "pacco"
 const ACCOUNT_NAME_3 = "rex"
@@ -10,15 +12,15 @@ let farmService: FarmService
 
 beforeEach(() => {
   farmService = new FarmServiceImpl({
-    ownerId: USER_ID,
+    startedAt: new Date("2023-06-10T10:00:00Z"),
+    planId: PLAN_ID,
+    userId: USER_ID,
+    username: USERNAME
   })
 })
 
 describe("FarmService test suite", () => {
   test("should set the status to FARMING", async () => {
-    const farmService = new FarmServiceImpl({
-      ownerId: USER_ID,
-    })
     expect(farmService.getServiceStatus()).toBe("IDDLE")
     farmService.farmWithAccount(ACCOUNT_NAME)
     expect(farmService.getServiceStatus()).toBe("FARMING")

@@ -1,5 +1,6 @@
 import { PlanInfinity, PlanUsage } from "core"
-import { FarmInfinityService, FarmUsageService, IFarmService } from "~/application/services"
+import { FarmInfinityService, FarmUsageService } from "~/application/services"
+import { FarmService } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 
 export class FarmServiceFactory {
@@ -12,13 +13,9 @@ export class FarmServiceFactory {
     this.username = props.username
   }
 
-  createNewFarmService(plan: PlanUsage | PlanInfinity): IFarmService {
-    if (plan.type === "INFINITY") return new FarmInfinityService(
-      this.publisher,
-      plan.id_plan,
-      plan.ownerId
-    )
-    if (plan.type === "USAGE") return new FarmUsageService(this.publisher, plan as PlanUsage, this.username)
+  createNewFarmService(plan: PlanUsage | PlanInfinity): FarmService {
+    if (plan.type === "INFINITY") return new FarmInfinityService(this.publisher, plan as PlanInfinity, this.username, new Date())
+    if (plan.type === "USAGE") return new FarmUsageService(this.publisher, plan as PlanUsage, this.username, new Date())
     console.log(plan.type)
     throw new Error("Invalid planType provided.")
   }
