@@ -1,27 +1,25 @@
 import { ApplicationError, PlanType } from "core"
 import { FarmServiceStatus, IFarmService } from "~/application/services"
 
+type AccountFarmingStatus = "FARMING" | "IDDLE"
+
 export type FarmingAccountDetails = {
   usageAmountInSeconds: number
-  status: "FARMING" | "IDDLE"
+  status: AccountFarmingStatus
 }
 
-
 type FarmServiceRootProps = {
-  type: PlanType
-  status: FarmServiceStatus
   ownerId: string
 }
 
 export abstract class FarmService {
-  readonly accountsFarming = new Map<string, FarmingAccountDetails>()
-  readonly type: PlanType
-  readonly status: FarmServiceStatus
+  private readonly accountsFarming = new Map<string, FarmingAccountDetails>()
+  abstract readonly type: PlanType
+  private status: FarmServiceStatus
   readonly ownerId: string
 
   constructor(props: FarmServiceRootProps) {
-    this.type = props.type
-    this.status = props.status
+    this.status = "IDDLE"
     this.ownerId = props.ownerId
   }
 
@@ -52,28 +50,41 @@ export abstract class FarmService {
   }
 
   farmWithAccount(accountName: string): void {
-    this.isAccountAdded(accountName) ? this.resumeFarming(accountName) : this.appendAccount(accountName)
     if (this.getActiveFarmingAccountsAmount() === 0) {
       this.startFarm()
     }
+    this.isAccountAdded(accountName) ? this.resumeFarming(accountName) : this.appendAccount(accountName)
   }
 
   pauseFarmOnAccount(accountName: string): void {
-    this.setAccountStatus(accountName, "IDDLE")
     if (this.getActiveFarmingAccountsAmount() === 1) {
       this.stopFarm()
     }
+    this.setAccountStatus(accountName, "IDDLE")
   }
 
-  protected abstract startFarm(): void
+  getServiceStatus() {
+    return this.status
+  }
 
-  protected abstract stopFarm(): void
+  protected startFarm(): void {
+    this.status = "FARMING"
+    return this.startFarmImpl()
+  }
+
+  protected stopFarm(): void {
+    this.status = "IDDLE"
+    return this.stopFarmImpl()
+  }
+
+  protected abstract startFarmImpl(): void
+  protected abstract stopFarmImpl(): void
 
   private getActiveFarmingAccounts() {
     return Array.from(this.accountsFarming).filter(([_, details]) => details.status === "FARMING")
   }
 
-  private getActiveFarmingAccountsAmount() {
+  getActiveFarmingAccountsAmount() {
     return this.getActiveFarmingAccounts().length
   }
 
@@ -81,4 +92,11 @@ export abstract class FarmService {
     return this.getActiveFarmingAccountsAmount() > 0
   }
 
+  getFarmingAccounts() {
+    const farmingAccounts: Record<string, AccountFarmingStatus> = {}
+    for (const [accountName, details] of this.accountsFarming) {
+      farmingAccounts[accountName] = details.status
+    }
+    return farmingAccounts
+  }
 }
