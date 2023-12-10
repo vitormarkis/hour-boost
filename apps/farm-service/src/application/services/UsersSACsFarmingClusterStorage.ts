@@ -1,4 +1,4 @@
-import { UserSACsFarmingCluster } from "~/application/services/UserSACsFarmingCluster";
+import { UserSACsFarmingCluster } from "~/application/services";
 
 export class UsersSACsFarmingClusterStorage {
   usersCluster: Map<string, UserSACsFarmingCluster> = new Map()
@@ -10,5 +10,13 @@ export class UsersSACsFarmingClusterStorage {
   add(username: string, userCluster: UserSACsFarmingCluster) {
     this.usersCluster.set(username, userCluster)
     return userCluster
+  }
+
+  getAccountsStatus() {
+    let accountStatus: any = {}
+    for (const [username, userCluster] of this.usersCluster) {
+      accountStatus[username] = userCluster.getAccountsStatus()
+    }
+    return accountStatus
   }
 }

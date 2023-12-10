@@ -18,13 +18,20 @@ import { SteamClientEventsRequired } from "~/presentation/controllers"
 import { areTwoArraysEqual, makeRes } from "~/utils"
 
 export class FarmGamesController {
-  constructor(
-    private readonly publisher: Publisher,
-    private readonly usersRepository: UsersRepository,
-    private readonly allUsersClientsStorage: AllUsersClientsStorage,
-    private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository,
-    private readonly usersClusterStorage: UsersSACsFarmingClusterStorage
-  ) { }
+  private readonly publisher: Publisher
+  private readonly usersRepository: UsersRepository
+  private readonly allUsersClientsStorage: AllUsersClientsStorage
+  private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
+  private readonly usersClusterStorage: UsersSACsFarmingClusterStorage
+
+  constructor(props: FarmGamesControllerProps
+  ) {
+    this.publisher = props.publisher
+    this.usersRepository = props.usersRepository
+    this.allUsersClientsStorage = props.allUsersClientsStorage
+    this.sacStateCacheRepository = props.sacStateCacheRepository
+    this.usersClusterStorage = props.usersClusterStorage
+  }
 
   async handle(
     req: HttpClient.Request<{
@@ -133,6 +140,9 @@ export class FarmGamesController {
       const farmService = farmServiceFactory.createNewFarmService(user.plan)
       userCluster.setFarmService(farmService)
     }
+    if (!userCluster.hasSteamAccountClient(accountName)) {
+      userCluster.addSAC(sac)
+    }
     userCluster.farmWithAccount(accountName, gamesID, user.plan)
 
     return makeRes(200, "Iniciando farm.")
@@ -170,5 +180,13 @@ export class FarmGamesController {
 
     // throw new ApplicationError("Instância do plano do usuário não suportado.")
   }
+}
+
+type FarmGamesControllerProps = {
+  publisher: Publisher,
+  usersRepository: UsersRepository,
+  allUsersClientsStorage: AllUsersClientsStorage,
+  sacStateCacheRepository: SteamAccountClientStateCacheRepository,
+  usersClusterStorage: UsersSACsFarmingClusterStorage
 }
 

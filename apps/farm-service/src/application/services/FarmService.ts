@@ -36,6 +36,14 @@ export abstract class FarmService {
     return this.accountsFarming.get(accountName) ?? null
   }
 
+  getAccountsStatus() {
+    let accountStatus: any = {}
+    for (const [accountName, details] of this.accountsFarming) {
+      accountStatus[accountName] = details.status
+    }
+    return accountStatus
+  }
+
   private setAccountStatus(accountName: string, status: "FARMING" | "IDDLE") {
     const account = this.getAccountDetails(accountName)
     if (!account)

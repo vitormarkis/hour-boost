@@ -5,28 +5,35 @@ import { SteamAccountClient } from "~/application/services/steam";
 export class UserSACsFarmingCluster {
   farmService: FarmService
   private readonly sacList: Map<string, SteamAccountClient> = new Map()
-  readonly keyUserAccountName: string
   private readonly username: string
   private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
 
   constructor(props: UserSACsFarmingClusterProps) {
-    this.keyUserAccountName = `${props.username}:${props.accountName}`
     this.farmService = props.farmService
     this.username = props.username
     this.sacStateCacheRepository = props.sacStateCacheRepository
   }
 
-  addSAC(sac: SteamAccountClient) {
-    if (this.sacList.has(sac.accountName)) return console.log("[SAC Cluster]: Attempt to add sac that already exists.")
+  getAccountsStatus() {
+    let accountStatus = {}
+    return this.farmService.getAccountsStatus()
+  }
+
+  private getKeyUserAccountName(accountName: string) {
+    return `${this.username}:${accountName}`
+  }
+
+  addSAC(sac: SteamAccountClient): UserSACsFarmingCluster {
+    if (this.sacList.has(sac.accountName)) throw new ApplicationError("[SAC Cluster]: Attempt to add sac that already exists.")
     this.sacList.set(sac.accountName, sac)
 
     sac.emitter.on("interrupt", sacStateCache => {
-      this.sacStateCacheRepository.set(this.keyUserAccountName, sacStateCache)
-      this.stopFarm(sacStateCache.accountName)
+      this.sacStateCacheRepository.set(this.getKeyUserAccountName(sac.accountName), sacStateCache)
+      this.pauseFarmOnAccount(sacStateCache.accountName)
     })
 
     sac.emitter.on("hasSession", async () => {
-      const sacStateCache = await this.sacStateCacheRepository.get(this.keyUserAccountName)
+      const sacStateCache = await this.sacStateCacheRepository.get(this.getKeyUserAccountName(sac.accountName))
       if (sacStateCache) sac.emitter.emit("relog-with-state", sacStateCache)
       else sac.emitter.emit("relog")
       // sac.farmGames(gamesPlaying)
@@ -48,6 +55,8 @@ export class UserSACsFarmingCluster {
     sac.emitter.on("relog", () => {
       console.log(`[SAC-EMITTER]: Usuário relogou sem state.`)
     })
+
+    return this
   }
 
   updateState({ gamesPlaying, accountName }: SACStateCache) {
@@ -70,6 +79,10 @@ export class UserSACsFarmingCluster {
     return isFarmingSACs
   }
 
+  hasSteamAccountClient(accountName: string) {
+    return !!this.sacList.has(accountName)
+  }
+
   farmWithAccount(accountName: string, gamesID: number[], plan: PlanUsage | PlanInfinity) {
     // esse método precisa cobrir esses 3 cenarios
 
@@ -84,7 +97,7 @@ export class UserSACsFarmingCluster {
     sac.farmGames(gamesID)
   }
 
-  stopFarm(accountName: string) {
+  pauseFarmOnAccount(accountName: string) {
     const sac = this.sacList.get(accountName)
     if (!sac) throw new ApplicationError(`[SAC Cluster.stopFarm()]: Tried to stop farm, but no SAC was found with name: ${accountName}`)
     this.farmService.pauseFarmOnAccount(accountName)
@@ -100,6 +113,5 @@ export class UserSACsFarmingCluster {
 export type UserSACsFarmingClusterProps = {
   farmService: FarmService,
   username: string,
-  accountName: string,
   sacStateCacheRepository: SteamAccountClientStateCacheRepository
 }

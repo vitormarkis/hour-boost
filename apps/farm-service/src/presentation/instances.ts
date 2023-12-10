@@ -1,7 +1,7 @@
 import clerkClient from "@clerk/clerk-sdk-node"
 import { IDGeneratorUUID } from "core"
 import SteamUser from "steam-user"
-import { AllUsersClientsStorage, FarmingUsersStorage } from "~/application/services"
+import { AllUsersClientsStorage } from "~/application/services"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import { UsersDAODatabase } from "~/infra/dao"
 import { prisma } from "~/infra/libs"
@@ -29,7 +29,7 @@ export const steamBuilder: SteamBuilder = {
 
 export const publisher = new Publisher()
 
-export const farmingUsersStorage = new FarmingUsersStorage()
+// export const farmingUsersStorage = new FarmingUsersStorage()
 export const allUsersSteamClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder)
 
 export const usersDAO = new UsersDAODatabase(prisma)
