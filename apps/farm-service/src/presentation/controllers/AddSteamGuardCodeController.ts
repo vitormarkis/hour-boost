@@ -2,8 +2,8 @@ import { ApplicationError } from "core"
 import { AllUsersClientsStorage } from "~/application/services"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { HttpClient } from "~/contracts"
-import { FarmGamesEventsResolve, SteamClientEventsRequired } from "~/presentation/controllers"
-import { getTimeoutPromise, makeRes, throwBadEventsResolved } from "~/utils"
+import { SteamClientEventsRequired } from "~/presentation/controllers"
+import { makeRes } from "~/utils"
 
 export class AddSteamGuardCodeController {
   constructor(private readonly allUsersClientsStorage: AllUsersClientsStorage) {}

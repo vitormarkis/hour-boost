@@ -5,9 +5,7 @@ import {
   EventMapperGeneric,
   EventParametersTimeout,
   FarmGamesEventsGenericResolve,
-  FarmGamesEventsResolve,
-} from "~/presentation/controllers"
-import { loginErrorMessages } from "~/presentation/routes"
+} from "~/types/EventsApp.types"
 import { makeRes } from "~/utils/makeResError"
 
 export function throwBadEventsResolved(events: FarmGamesEventsGenericResolve): BadEventsResponse {

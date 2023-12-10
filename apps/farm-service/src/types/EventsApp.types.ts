@@ -25,4 +25,3 @@ export type FarmGamesEventsTimeoutResolve<EventMapper extends EventMapperGeneric
 export type EventParametersTimeout = {
   timeout: []
 }
-

@@ -63,7 +63,8 @@ export class SteamAccountClient extends LastHandler {
       console.log("Rodou error")
       this.emitter.emit("interrupt", {
         gamesPlaying: this.gamesPlaying,
-        isLogged: this.logged,
+        accountName: this.accountName,
+        isFarming: () => this.isFarming,
       })
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
@@ -74,7 +75,8 @@ export class SteamAccountClient extends LastHandler {
       this.logoff()
       this.emitter.emit("interrupt", {
         gamesPlaying: this.gamesPlaying,
-        isLogged: this.logged,
+        accountName: this.accountName,
+        isFarming: () => this.isFarming,
       })
       console.log("Rodou disconnected", ...args)
       this.getLastHandler("disconnected")(...args)
@@ -189,5 +191,5 @@ export type SteamApplicationEvents = {
   interrupt: [sacStateCache: SACStateCache]
   hasSession: []
   "relog-with-state": [sacStateCache: SACStateCache]
-  "relog": []
+  relog: []
 }

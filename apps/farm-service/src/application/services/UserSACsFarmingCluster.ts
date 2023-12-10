@@ -1,6 +1,12 @@
-import { ApplicationError, PlanInfinity, PlanUsage, SACStateCache, SteamAccountClientStateCacheRepository } from "core";
-import { FarmService } from "~/application/services";
-import { SteamAccountClient } from "~/application/services/steam";
+import {
+  ApplicationError,
+  PlanInfinity,
+  PlanUsage,
+  SACStateCache,
+  SteamAccountClientStateCacheRepository,
+} from "core"
+import { FarmService } from "~/application/services"
+import { SteamAccountClient } from "~/application/services/steam"
 
 export class UserSACsFarmingCluster {
   farmService: FarmService
@@ -24,7 +30,8 @@ export class UserSACsFarmingCluster {
   }
 
   addSAC(sac: SteamAccountClient): UserSACsFarmingCluster {
-    if (this.sacList.has(sac.accountName)) throw new ApplicationError("[SAC Cluster]: Attempt to add sac that already exists.")
+    if (this.sacList.has(sac.accountName))
+      throw new ApplicationError("[SAC Cluster]: Attempt to add sac that already exists.")
     this.sacList.set(sac.accountName, sac)
 
     sac.emitter.on("interrupt", sacStateCache => {
@@ -33,7 +40,9 @@ export class UserSACsFarmingCluster {
     })
 
     sac.emitter.on("hasSession", async () => {
-      const sacStateCache = await this.sacStateCacheRepository.get(this.getKeyUserAccountName(sac.accountName))
+      const sacStateCache = await this.sacStateCacheRepository.get(
+        this.getKeyUserAccountName(sac.accountName)
+      )
       if (sacStateCache) sac.emitter.emit("relog-with-state", sacStateCache)
       else sac.emitter.emit("relog")
       // sac.farmGames(gamesPlaying)
@@ -46,7 +55,10 @@ export class UserSACsFarmingCluster {
       console.log(`[SAC-EMITTER]: Usuário relogou com state. `, sacStateCache)
       const { accountName, gamesPlaying } = sacStateCache
       const sac = this.sacList.get(accountName)
-      if (!sac) return console.log(`[SAC Cluster]: Tried to update state, but no SAC was found with name: ${accountName}`)
+      if (!sac)
+        return console.log(
+          `[SAC Cluster]: Tried to update state, but no SAC was found with name: ${accountName}`
+        )
       sac.farmGames(gamesPlaying)
       this.farmService.hasAccountsFarming()
       // this.farmService.farmWithAccount(sac.accountName)
@@ -63,19 +75,20 @@ export class UserSACsFarmingCluster {
     // const sac = this.sacList.get(accountName)
   }
 
-
   isFarming() {
     let isFarmingSACs = false
     for (const [_, sac] of this.sacList) {
       if (sac.gamesPlaying.length > 0) {
         isFarmingSACs = true
-        break;
+        break
       }
     }
 
     const isFarmingService = this.farmService.hasAccountsFarming()
-    if (!isFarmingService && isFarmingSACs) throw new ApplicationError("Erro. SAC farmando, porém sem Farm Service!")
-    if (isFarmingSACs !== isFarmingService) throw new ApplicationError("Mismatch entre isFarmingSACs e isFarmingService")
+    if (!isFarmingService && isFarmingSACs)
+      throw new ApplicationError("Erro. SAC farmando, porém sem Farm Service!")
+    if (isFarmingSACs !== isFarmingService)
+      throw new ApplicationError("Mismatch entre isFarmingSACs e isFarmingService")
     return isFarmingSACs
   }
 
@@ -92,14 +105,20 @@ export class UserSACsFarmingCluster {
     // se não tiver SAC, nem deveria tentar rodar farm
 
     const sac = this.sacList.get(accountName)
-    if (!sac) throw new ApplicationError(`[SAC Cluster.startFarm()]: Tried to start farm, but no SAC was found with name: ${accountName}. This account never logged on the application, or don't belong to the user ${this.username}.`)
+    if (!sac)
+      throw new ApplicationError(
+        `[SAC Cluster.startFarm()]: Tried to start farm, but no SAC was found with name: ${accountName}. This account never logged on the application, or don't belong to the user ${this.username}.`
+      )
     this.farmService.farmWithAccount(accountName)
     sac.farmGames(gamesID)
   }
 
   pauseFarmOnAccount(accountName: string) {
     const sac = this.sacList.get(accountName)
-    if (!sac) throw new ApplicationError(`[SAC Cluster.stopFarm()]: Tried to stop farm, but no SAC was found with name: ${accountName}`)
+    if (!sac)
+      throw new ApplicationError(
+        `[SAC Cluster.stopFarm()]: Tried to stop farm, but no SAC was found with name: ${accountName}`
+      )
     this.farmService.pauseFarmOnAccount(accountName)
     sac.stopFarm()
   }
@@ -109,9 +128,8 @@ export class UserSACsFarmingCluster {
   }
 }
 
-
 export type UserSACsFarmingClusterProps = {
-  farmService: FarmService,
-  username: string,
+  farmService: FarmService
+  username: string
   sacStateCacheRepository: SteamAccountClientStateCacheRepository
 }

@@ -1,9 +1,21 @@
-import { DiamondPlan, IDGenerator, SteamAccount, SteamAccountCredentials, User, UsersDAO } from "core"
+import {
+  DiamondPlan,
+  IDGenerator,
+  SteamAccount,
+  SteamAccountClientStateCacheRepository,
+  SteamAccountCredentials,
+  User,
+  UsersDAO,
+} from "core"
 import SteamUser from "steam-user"
-import { AllUsersClientsStorage, FarmingUsersStorage } from "~/application/services"
+import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
-import { UsersInMemory, UsersRepositoryInMemory } from "~/infra/repository"
+import {
+  SteamAccountClientStateCacheInMemory,
+  UsersInMemory,
+  UsersRepositoryInMemory,
+} from "~/infra/repository"
 import { SteamUserMock } from "~/infra/services/SteamUserMock"
 import { FarmGamesController } from "~/presentation/controllers"
 import { makeUser } from "~/utils/makeUser"
@@ -31,11 +43,10 @@ const validSteamAccounts = [
   },
 ]
 
-let farmingUsersStorage: FarmingUsersStorage
 let publisher: Publisher
 let usersRepository: UsersRepositoryInMemory
 let farmGamesController: FarmGamesController
-let userSteamClientsStorage: AllUsersClientsStorage
+let allUsersClientsStorage: AllUsersClientsStorage
 let usersMemory: UsersInMemory
 let usersDAO: UsersDAO
 let me: User
@@ -43,6 +54,9 @@ let friend: User
 let me_steamAcount: SteamAccount
 let me_steamAcount2: SteamAccount
 let friend_steamAcount: SteamAccount
+let sacStateCacheRepository: SteamAccountClientStateCacheRepository
+let usersClusterStorage: UsersSACsFarmingClusterStorage
+
 const idGenerator: IDGenerator = {
   makeID: () => "ID",
 }
@@ -51,20 +65,23 @@ const log = console.log
 // console.log = () => {}
 
 beforeEach(async () => {
-  farmingUsersStorage = new FarmingUsersStorage()
   publisher = new Publisher()
   usersMemory = new UsersInMemory()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
   usersDAO = new UsersDAOInMemory(usersMemory)
-  userSteamClientsStorage = new AllUsersClientsStorage(publisher, {
+  allUsersClientsStorage = new AllUsersClientsStorage(publisher, {
     create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
   })
-  farmGamesController = new FarmGamesController(
-    farmingUsersStorage,
+  sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
+
+  usersClusterStorage = new UsersSACsFarmingClusterStorage()
+  farmGamesController = new FarmGamesController({
+    allUsersClientsStorage,
     publisher,
+    sacStateCacheRepository,
+    usersClusterStorage,
     usersRepository,
-    userSteamClientsStorage
-  )
+  })
   me = makeUser(USER_ID, USERNAME)
   me.assignPlan(
     DiamondPlan.create({
@@ -124,7 +141,7 @@ test("should stop all farms", async () => {
     },
   })
 
-  expect(userSteamClientsStorage.listUsers()).toStrictEqual({
+  expect(allUsersClientsStorage.listUsers()).toStrictEqual({
     vitor_id: {
       steam_account: {
         farming: true,

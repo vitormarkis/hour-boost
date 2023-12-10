@@ -3,7 +3,7 @@ import { Router } from "express"
 import { HttpClient } from "~/contracts"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import {
-  allUsersSteamClientsStorage,
+  allUsersClientsStorage,
   userAuthentication,
   usersDAO,
   usersRepository,
@@ -22,13 +22,13 @@ query_routerGeneral.get("/up", (req, res) => {
 
 query_routerGeneral.get("/list", (req, res) => {
   return res.status(200).json({
-    users: allUsersSteamClientsStorage.listUsers(),
+    users: allUsersClientsStorage.listUsers(),
   })
 })
 
 query_routerGeneral.get("/farming-users", async (req, res) => {
   const perform = async () => {
-    const json = allUsersSteamClientsStorage.listUsers()
+    const json = allUsersClientsStorage.listUsers()
 
     return {
       status: 200,
@@ -40,6 +40,6 @@ query_routerGeneral.get("/farming-users", async (req, res) => {
   return res.status(status).json(json)
 
   return res.status(200).json({
-    users: allUsersSteamClientsStorage.listUsers(),
+    users: allUsersClientsStorage.listUsers(),
   })
 })

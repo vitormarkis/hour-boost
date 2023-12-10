@@ -13,13 +13,15 @@ import {
 import SteamUser from "steam-user"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { Publisher } from "~/infra/queue"
-import { SteamUserMock } from "~/infra/services/SteamUserMock"
 import { FarmGamesController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { makeUser } from "~/utils/makeUser"
-import { UsersInMemory, UsersRepositoryInMemory } from "../infra/repository"
-import { allUsersSteamClientsStorage } from "~/presentation/instances"
-import { SteamAccountClientStateCacheInMemory } from "~/infra/repository"
+import {
+  SteamAccountClientStateCacheInMemory,
+  UsersInMemory,
+  UsersRepositoryInMemory,
+} from "~/infra/repository"
+import { SteamUserMock } from "~/infra/services"
 
 const USER_ID = "123"
 const USER_STEAM_ACCOUNT = "steam_account"
@@ -53,10 +55,10 @@ const idGenerator: IDGenerator = {
 }
 
 const log = console.log
-console.log = () => { }
+console.log = () => {}
 
 beforeEach(async () => {
-  console.log = () => { }
+  console.log = () => {}
   usersClusterStorage = new UsersSACsFarmingClusterStorage()
   publisher = new Publisher()
   usersRepository = new UsersRepositoryInMemory(new UsersInMemory())
@@ -69,7 +71,7 @@ beforeEach(async () => {
     usersRepository,
     allUsersClientsStorage,
     sacStateCacheRepository,
-    usersClusterStorage
+    usersClusterStorage,
   })
   me = makeUser(USER_ID, USERNAME)
   me_steamAcount = SteamAccount.create({
@@ -320,7 +322,7 @@ describe("StartFarmController test suite", () => {
     })
   })
 
-  test("should set the steam guard code across farm attempts", async () => { })
+  test("should set the steam guard code across farm attempts", async () => {})
 
   test("should reject when account that don't exists on steam database is somehow", async () => {
     startFarmController = new FarmGamesController({
@@ -330,7 +332,7 @@ describe("StartFarmController test suite", () => {
       usersRepository,
       allUsersClientsStorage: new AllUsersClientsStorage(publisher, {
         create: () => new SteamUserMock([]) as unknown as SteamUser,
-      })
+      }),
     })
 
     const response = await promiseHandler(
@@ -353,7 +355,7 @@ describe("StartFarmController test suite", () => {
   })
 
   test("should NOT call the farm on client when plan has no usage left", async () => {
-    console.log = () => { }
+    console.log = () => {}
     await usersRepository.dropAll()
 
     // SteamAccount.create({
@@ -411,7 +413,7 @@ describe("StartFarmController test suite", () => {
       usersClusterStorage,
       publisher,
       usersRepository,
-      allUsersClientsStorage
+      allUsersClientsStorage,
     })
 
     await usersRepository.dropAll()
@@ -479,7 +481,7 @@ describe("StartFarmController test suite", () => {
 
     const me2 = await usersRepository.getByID(USER_ID)
     if (!me2) throw new Error("User not found.")
-      ; (me2?.plan as PlanUsage).removeUsage("max_guest_plan_usage")
+    ;(me2?.plan as PlanUsage).removeUsage("max_guest_plan_usage")
     await usersRepository.update(me2)
 
     console.log = log
@@ -503,6 +505,6 @@ describe("StartFarmController test suite", () => {
 async function appendUsageToUser(userId: string, usage: Usage) {
   const user = await usersRepository.getByID(userId)
   if (!user) throw new Error("user not found")
-    ; (user.plan as PlanUsage).use(usage)
+  ;(user.plan as PlanUsage).use(usage)
   await usersRepository.update(user)
 }

@@ -1,6 +1,6 @@
-import { PlanInfinity, PlanType } from "core";
-import { FarmService } from "~/application/services/FarmService";
-import { Publisher } from "~/infra/queue";
+import { PlanInfinity, PlanType } from "core"
+import { FarmService } from "~/application/services/FarmService"
+import { Publisher } from "~/infra/queue"
 
 export class FarmInfinityService extends FarmService {
   type: PlanType = "INFINITY"
@@ -10,14 +10,14 @@ export class FarmInfinityService extends FarmService {
       planId: plan.id_plan,
       startedAt: now,
       userId: plan.ownerId,
-      username
+      username,
     })
   }
 
   protected startFarmImpl(): void {
-    throw new Error("Method not implemented.");
+    console.log(`${this.username} starting farming`)
   }
   protected stopFarmImpl(): void {
-    throw new Error("Method not implemented.");
+    console.log(`${this.username} stopping farming`)
   }
 }

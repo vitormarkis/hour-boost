@@ -67,7 +67,7 @@ describe("FarmUsageService test suite", () => {
       plan_id: me.plan.id_plan,
       accountName: ACCOUNT_PACCO,
     })
-      ; (me.plan as PlanUsage).use(allPlanUsage)
+    ;(me.plan as PlanUsage).use(allPlanUsage)
     await usersRepository.update(me)
     const dbMe = await usersRepository.getByID(ME_ID)
     if (!dbMe) throw new Error()
@@ -373,5 +373,5 @@ describe("FarmUsageService test suite", () => {
     expect(handleExpiredMidFarm).toHaveBeenCalledTimes(1)
   })
 
-  test("should call event when user end farm session", async () => { })
+  test("should call event when user end farm session", async () => {})
 })

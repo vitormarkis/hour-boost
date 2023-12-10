@@ -8,15 +8,9 @@ import { SteamBuilder } from "~/contracts"
 import { HttpClient } from "~/contracts/HttpClient"
 import { Publisher } from "~/infra/queue"
 import { EventParameters } from "~/infra/services"
-import {
-  EventMapperGeneric,
-  EventParametersTimeout,
-  FarmGamesEventsGenericResolve,
-  FarmGamesEventsResolve,
-  SingleEventResolver,
-} from "~/presentation/controllers/FarmGamesController"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
-import { getTimeoutPromise, makeRes, throwBadEventsResolved } from "~/utils"
+import { EventParametersTimeout, FarmGamesEventsResolve, SingleEventResolver } from "~/types/EventsApp.types"
+import { makeRes } from "~/utils"
 
 export type Resolved = {
   json:

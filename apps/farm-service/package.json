@@ -17,7 +17,8 @@
     "test": "jest --silent --verbose",
     "ci": "npm run check && npm run test",
     "st": "prisma studio",
-    "t": "jest"
+    "t": "jest",
+    "generate": "prisma generate"
   },
   "keywords": [],
   "author": "",

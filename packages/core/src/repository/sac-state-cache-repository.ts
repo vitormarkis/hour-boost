@@ -4,14 +4,11 @@ export interface SteamAccountClientStateCacheRepository {
 }
 
 export class SACStateCache {
-
   constructor(
     readonly gamesPlaying: number[],
-    readonly accountName: string,
-  ) {
-  }
+    readonly accountName: string
+  ) {}
   isFarming() {
     return this.gamesPlaying.length > 0
   }
 }
-

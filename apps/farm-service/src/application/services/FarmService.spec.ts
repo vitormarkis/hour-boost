@@ -15,7 +15,7 @@ beforeEach(() => {
     startedAt: new Date("2023-06-10T10:00:00Z"),
     planId: PLAN_ID,
     userId: USER_ID,
-    username: USERNAME
+    username: USERNAME,
   })
 })
 
@@ -68,16 +68,13 @@ describe("FarmService test suite", () => {
     expect(farmService.getFarmingAccounts()).toStrictEqual({
       vrsl: "IDDLE",
       pacco: "FARMING",
-      rex: "FARMING"
+      rex: "FARMING",
     })
   })
-
 })
 
 class FarmServiceImpl extends FarmService {
   type: PlanType = "USAGE"
-  protected startFarmImpl(): void {
-  }
-  protected stopFarmImpl(): void {
-  }
+  protected startFarmImpl(): void {}
+  protected stopFarmImpl(): void {}
 }

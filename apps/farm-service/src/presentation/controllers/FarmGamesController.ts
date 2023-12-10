@@ -1,13 +1,8 @@
-import {
-  ApplicationError,
-  SteamAccountClientStateCacheRepository,
-  UsersRepository,
-} from "core"
+import { ApplicationError, SteamAccountClientStateCacheRepository, UsersRepository } from "core"
 import { FarmServiceFactory } from "~/application/factories"
 
 import {
   AllUsersClientsStorage,
-  IFarmingUsersStorage,
   UserSACsFarmingCluster,
   UsersSACsFarmingClusterStorage,
 } from "~/application/services"
@@ -24,8 +19,7 @@ export class FarmGamesController {
   private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
   private readonly usersClusterStorage: UsersSACsFarmingClusterStorage
 
-  constructor(props: FarmGamesControllerProps
-  ) {
+  constructor(props: FarmGamesControllerProps) {
     this.publisher = props.publisher
     this.usersRepository = props.usersRepository
     this.allUsersClientsStorage = props.allUsersClientsStorage
@@ -102,7 +96,6 @@ export class FarmGamesController {
     const noNewGameAddToFarm = areTwoArraysEqual(gamesID, sac.getGamesPlaying())
     if (noNewGameAddToFarm) return makeRes(200, "Nenhum novo game adicionado ao farm.")
 
-
     // const KEY_USER_ACCOUNTNAME = `${user.username}:${accountName}`
 
     // const managementSteamAccountFarmingClusterStorage = new ManagementSteamAccountFarmingClusterStorage(
@@ -121,17 +114,15 @@ export class FarmGamesController {
     })
 
     const userCluster =
-      this.usersClusterStorage.get(user.username) ?? this.usersClusterStorage.add(
+      this.usersClusterStorage.get(user.username) ??
+      this.usersClusterStorage.add(
         user.username,
         new UserSACsFarmingCluster({
           farmService: farmServiceFactory.createNewFarmService(user.plan),
           username: user.username,
-          accountName: accountName,
-          sacStateCacheRepository: this.sacStateCacheRepository
+          sacStateCacheRepository: this.sacStateCacheRepository,
         })
       )
-
-
 
     // possui service farmando
     // possui service sem ninguem farmando
@@ -146,7 +137,6 @@ export class FarmGamesController {
     userCluster.farmWithAccount(accountName, gamesID, user.plan)
 
     return makeRes(200, "Iniciando farm.")
-
 
     // if (user.plan instanceof PlanInfinity) {
     //   // const farmInfinityService = new FarmInfinityService(
@@ -183,10 +173,9 @@ export class FarmGamesController {
 }
 
 type FarmGamesControllerProps = {
-  publisher: Publisher,
-  usersRepository: UsersRepository,
-  allUsersClientsStorage: AllUsersClientsStorage,
-  sacStateCacheRepository: SteamAccountClientStateCacheRepository,
+  publisher: Publisher
+  usersRepository: UsersRepository
+  allUsersClientsStorage: AllUsersClientsStorage
+  sacStateCacheRepository: SteamAccountClientStateCacheRepository
   usersClusterStorage: UsersSACsFarmingClusterStorage
 }
-

@@ -5,6 +5,6 @@ export class LogCompleteInfinityFarmSessionHandler implements Observer {
   operation: EventNames = "user-pause-infinity-farm-session-command"
 
   async notify(command: UserPauseInfinityFarmSessionCommand): Promise<void> {
-    console.log(`${command.props.username} terminou uma infinity farm session.`)
+    console.log(`${command.username} terminou uma infinity farm session.`)
   }
 }

@@ -1,6 +1,4 @@
-test("should not exists", async () => {
-
-})
+test("should not exists", async () => {})
 
 // import { PlanRepository, PlanUsage, User } from "core"
 

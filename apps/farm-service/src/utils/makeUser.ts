@@ -14,6 +14,6 @@ export const makeUser = (userId: string, username: string, plan?: PlanUsage | Pl
     role: new UserRole(),
     status: new ActiveStatus(),
     steamAccounts: new SteamAccountList(),
-    username: username,
+    username,
   })
 }

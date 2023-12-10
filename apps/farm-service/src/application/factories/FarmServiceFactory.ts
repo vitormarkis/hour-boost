@@ -7,22 +7,22 @@ export class FarmServiceFactory {
   private readonly publisher: Publisher
   private readonly username: string
 
-  constructor(props: FarmServiceFactoryProps
-  ) {
+  constructor(props: FarmServiceFactoryProps) {
     this.publisher = props.publisher
     this.username = props.username
   }
 
   createNewFarmService(plan: PlanUsage | PlanInfinity): FarmService {
-    if (plan.type === "INFINITY") return new FarmInfinityService(this.publisher, plan as PlanInfinity, this.username, new Date())
-    if (plan.type === "USAGE") return new FarmUsageService(this.publisher, plan as PlanUsage, this.username, new Date())
+    if (plan.type === "INFINITY")
+      return new FarmInfinityService(this.publisher, plan as PlanInfinity, this.username, new Date())
+    if (plan.type === "USAGE")
+      return new FarmUsageService(this.publisher, plan as PlanUsage, this.username, new Date())
     console.log(plan.type)
     throw new Error("Invalid planType provided.")
   }
 }
 
 export type FarmServiceFactoryProps = {
-  publisher: Publisher,
-  username: string,
-
+  publisher: Publisher
+  username: string
 }

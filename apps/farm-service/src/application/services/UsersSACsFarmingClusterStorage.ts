@@ -1,4 +1,4 @@
-import { UserSACsFarmingCluster } from "~/application/services";
+import { UserSACsFarmingCluster } from "~/application/services"
 
 export class UsersSACsFarmingClusterStorage {
   usersCluster: Map<string, UserSACsFarmingCluster> = new Map()

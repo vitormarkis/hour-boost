@@ -1,11 +1,23 @@
-import { AddSteamAccount, IDGenerator, SteamAccountsRepository, User, UsersDAO, UsersRepository } from "core"
+import {
+  AddSteamAccount,
+  IDGenerator,
+  SteamAccountClientStateCacheRepository,
+  SteamAccountsRepository,
+  User,
+  UsersDAO,
+  UsersRepository,
+} from "core"
 import SteamUser from "steam-user"
-import { AllUsersClientsStorage, FarmingUsersStorage, IFarmingUsersStorage } from "~/application/services"
+import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamBuilder } from "~/contracts"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
-import { UsersInMemory, UsersRepositoryInMemory } from "~/infra/repository"
-import { SteamAccountsRepositoryInMemory } from "~/infra/repository/SteamAccountsRepositoryInMemory"
+import {
+  SteamAccountClientStateCacheInMemory,
+  SteamAccountsRepositoryInMemory,
+  UsersInMemory,
+  UsersRepositoryInMemory,
+} from "~/infra/repository"
 import { SteamUserMock } from "~/infra/services/SteamUserMock"
 import { AddSteamAccountController, FarmGamesController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
@@ -25,8 +37,9 @@ let addSteamAccount: AddSteamAccount
 let usersDAO: UsersDAO
 let user: User
 let allUsersClientsStorage: AllUsersClientsStorage
-let farmingUsersStorage: IFarmingUsersStorage
 let addSteamAccountController: AddSteamAccountController
+let sacStateCacheRepository: SteamAccountClientStateCacheRepository
+let usersClusterStorage: UsersSACsFarmingClusterStorage
 
 const validSteamAccounts = [
   { accountName: "user1", password: "user1_PASS" },
@@ -38,7 +51,6 @@ const log = console.log
 
 beforeEach(async () => {
   console.log = () => {}
-  farmingUsersStorage = new FarmingUsersStorage()
   publisher = new Publisher()
   steamBuilder = {
     create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
@@ -46,6 +58,8 @@ beforeEach(async () => {
   usersMemory = new UsersInMemory()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
   steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)
+  sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
+  usersClusterStorage = new UsersSACsFarmingClusterStorage()
   idGenerator = { makeID: () => "998" }
   addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
   allUsersClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder)
@@ -84,12 +98,13 @@ describe("should register a new steam account in the storage after addition of a
      * test2
      */
 
-    const farmGamesController = new FarmGamesController(
-      farmingUsersStorage,
+    const farmGamesController = new FarmGamesController({
+      allUsersClientsStorage,
       publisher,
+      sacStateCacheRepository,
+      usersClusterStorage,
       usersRepository,
-      allUsersClientsStorage
-    )
+    })
     const userx3 = await usersRepository.getByID(USER_ID)
     expect(userx3?.steamAccounts.data).toHaveLength(1)
     console.log = log

@@ -22,7 +22,7 @@ export class FarmUsageService extends FarmService {
       planId: plan.id_plan,
       startedAt: now,
       userId: plan.ownerId,
-      username: username
+      username: username,
     })
     this.usageLeft = plan.getUsageLeft()
     this.initialUsageLeft = plan.getUsageLeft()

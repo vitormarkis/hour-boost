@@ -12,12 +12,13 @@ import {
 import { AddSteamGuardCodeController } from "~/presentation/controllers/AddSteamGuardCodeController"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import {
-  allUsersSteamClientsStorage,
-  farmingUsersStorage,
+  allUsersClientsStorage,
   idGenerator,
   publisher,
+  sacStateCacheRepository,
   steamAccountsRepository,
   steamBuilder,
+  usersClusterStorage,
   usersDAO,
   usersRepository,
 } from "~/presentation/instances"
@@ -38,7 +39,7 @@ command_routerSteam.post(
   async (req: WithAuthProp<Request>, res: Response) => {
     const createSteamAccountController = new AddSteamAccountController(
       addSteamAccount,
-      allUsersSteamClientsStorage,
+      allUsersClientsStorage,
       usersDAO,
       steamBuilder,
       publisher
@@ -79,12 +80,13 @@ command_routerSteam.delete(
 
 // command_routerSteam.post("/farm/start", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
 command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: Response) => {
-  const startFarmController = new FarmGamesController(
-    farmingUsersStorage,
+  const startFarmController = new FarmGamesController({
+    allUsersClientsStorage,
     publisher,
+    sacStateCacheRepository,
+    usersClusterStorage,
     usersRepository,
-    allUsersSteamClientsStorage
-  )
+  })
   const { json, status } = await promiseHandler(
     startFarmController.handle({
       payload: {
@@ -103,15 +105,16 @@ command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: 
 command_routerSteam.post("/farm/stop", async (req: WithAuthProp<Request>, res: Response) => {
   const perform = async () => {
     const { userId, accountName } = req.body
-    const { userSteamClients } = allUsersSteamClientsStorage.get(userId)
+    const { userSteamClients } = allUsersClientsStorage.get(userId)
     const { steamAccountClient: sac } = userSteamClients.getAccountClient(accountName)
     sac.farmGames([])
 
-    const stopFarmController = new StopFarmController(farmingUsersStorage, publisher, usersRepository)
+    const stopFarmController = new StopFarmController(usersClusterStorage, usersRepository)
     return await stopFarmController.handle({
       payload: {
         // userId: req.auth.userId!,
-        userId: req.body.userId,
+        accountName,
+        userId,
       },
     })
   }
@@ -121,7 +124,7 @@ command_routerSteam.post("/farm/stop", async (req: WithAuthProp<Request>, res: R
 })
 
 command_routerSteam.post("/code", async (req, res) => {
-  const addSteamGuardCodeController = new AddSteamGuardCodeController(allUsersSteamClientsStorage)
+  const addSteamGuardCodeController = new AddSteamGuardCodeController(allUsersClientsStorage)
   const { json, status } = await promiseHandler(
     addSteamGuardCodeController.handle({
       payload: {
