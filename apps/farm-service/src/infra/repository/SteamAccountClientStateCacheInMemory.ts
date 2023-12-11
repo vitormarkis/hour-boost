@@ -1,13 +1,13 @@
-import { SACStateCache, SteamAccountClientStateCacheRepository } from "core"
+import { SACStateCacheDTO, SteamAccountClientStateCacheRepository } from "core"
 
 export class SteamAccountClientStateCacheInMemory implements SteamAccountClientStateCacheRepository {
-  private readonly cache: Map<string, SACStateCache> = new Map()
+  private readonly cache: Map<string, SACStateCacheDTO> = new Map()
 
-  async get(keyUserAccountName: string): Promise<SACStateCache | null> {
+  async get(keyUserAccountName: string): Promise<SACStateCacheDTO | null> {
     return this.cache.get(keyUserAccountName) ?? null
   }
 
-  async set(keyUserAccountName: string, sacStateCache: SACStateCache): Promise<void> {
+  async set(keyUserAccountName: string, sacStateCache: SACStateCacheDTO): Promise<void> {
     this.cache.set(keyUserAccountName, sacStateCache)
   }
 }

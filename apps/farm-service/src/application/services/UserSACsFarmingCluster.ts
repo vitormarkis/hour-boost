@@ -5,12 +5,12 @@ import {
   SACStateCache,
   SteamAccountClientStateCacheRepository,
 } from "core"
-import { FarmService } from "~/application/services"
-import { SteamAccountClient } from "~/application/services/steam"
+import { FarmService, SACList } from "~/application/services"
+import { SACStateCacheFactory, SteamAccountClient } from "~/application/services/steam"
 
 export class UserSACsFarmingCluster {
-  farmService: FarmService
-  private readonly sacList: Map<string, SteamAccountClient> = new Map()
+  private farmService: FarmService
+  private readonly sacList: SACList = new SACList()
   private readonly username: string
   private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
 
@@ -29,13 +29,18 @@ export class UserSACsFarmingCluster {
     return `${this.username}:${accountName}`
   }
 
+  stopFarmAllAccounts() {
+    this.sacList.stopFarmAllAccounts()
+    this.farmService.stopFarmAllAccounts()
+  }
+
   addSAC(sac: SteamAccountClient): UserSACsFarmingCluster {
     if (this.sacList.has(sac.accountName))
       throw new ApplicationError("[SAC Cluster]: Attempt to add sac that already exists.")
     this.sacList.set(sac.accountName, sac)
 
     sac.emitter.on("interrupt", sacStateCache => {
-      this.sacStateCacheRepository.set(this.getKeyUserAccountName(sac.accountName), sacStateCache)
+      this.sacStateCacheRepository.set(this.getKeyUserAccountName(sac.accountName), SACStateCacheFactory.createDTO(sac))
       this.pauseFarmOnAccount(sacStateCache.accountName)
     })
 
@@ -76,14 +81,7 @@ export class UserSACsFarmingCluster {
   }
 
   isFarming() {
-    let isFarmingSACs = false
-    for (const [_, sac] of this.sacList) {
-      if (sac.gamesPlaying.length > 0) {
-        isFarmingSACs = true
-        break
-      }
-    }
-
+    let isFarmingSACs = this.sacList.hasAccountsFarming()
     const isFarmingService = this.farmService.hasAccountsFarming()
     if (!isFarmingService && isFarmingSACs)
       throw new ApplicationError("Erro. SAC farmando, porém sem Farm Service!")

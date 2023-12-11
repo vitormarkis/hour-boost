@@ -9,6 +9,7 @@ export * from "./event-emitter"
 export * from "./UserSACsFarmingCluster"
 export * from "./UsersSACsFarmingClusterStorage"
 export * from "./FarmService"
+export * from "./SACList"
 
 export type FarmServiceStatus = "FARMING" | "IDDLE"
 

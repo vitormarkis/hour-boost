@@ -1,5 +1,6 @@
 import { ApplicationError } from "core"
-import SteamUser from "steam-user"
+import SteamUser, { EResult } from "steam-user"
+import { connection } from "~/__tests__/connection"
 import { LastHandler } from "~/application/services/steam"
 import { sleep } from "~/utils"
 
@@ -12,7 +13,7 @@ export type EventParameters = {
 }
 
 type EventName = keyof EventParameters
-type SteamAccountCredentials = {
+export type SteamAccountCredentials = {
   accountName: string
   password: string
 }
@@ -40,6 +41,10 @@ export class SteamUserMock {
     })
     this.on("steamGuard", (...args) => {
       this.logged = false
+    })
+    connection.on("break", () => {
+      console.log("Connection break")
+      this.emit("disconnected", EResult.NoConnection)
     })
   }
 
@@ -105,6 +110,6 @@ export class SteamUserMock {
     }).unref()
   }
 
-  setPersona(persona: string) {}
-  gamesPlayed(gamesID: number[]) {}
+  setPersona(persona: string) { }
+  gamesPlayed(gamesID: number[]) { }
 }

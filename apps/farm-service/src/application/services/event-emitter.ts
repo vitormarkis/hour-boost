@@ -1,5 +1,5 @@
 type ArgsTuple = any[]
-type EventsTuple = Record<string, ArgsTuple>
+export type EventsTuple = Record<string, ArgsTuple>
 type EventHandler<T extends ArgsTuple> = (...args: T) => void
 type EventHandlers<T extends ArgsTuple> = EventHandler<T>[]
 type HandlersMapping<Events extends EventsTuple> = {

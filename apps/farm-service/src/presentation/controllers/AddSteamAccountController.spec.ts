@@ -7,6 +7,7 @@ import { Publisher } from "~/infra/queue"
 import { SteamAccountsRepositoryInMemory, UsersInMemory, UsersRepositoryInMemory } from "~/infra/repository"
 import { SteamUserMock } from "~/infra/services"
 import { AddSteamAccountController, promiseHandler } from "~/presentation/controllers"
+import { makeSteamBuilder } from "~/utils/builders"
 import { makeUser } from "~/utils/makeUser"
 
 const TIMEOUT = 300
@@ -23,17 +24,13 @@ const validSteamAccounts = [
   { accountName: "user3", password: "xx" },
 ]
 
-const steamBuilder: SteamBuilder = {
-  create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
-}
-
 let usersMemory: UsersInMemory
 let usersRepository: UsersRepositoryInMemory
 let steamAccountRepository: SteamAccountsRepository
 let addSteamAccount: AddSteamAccount
 let usersDAO: UsersDAOInMemory
 const publisher = new Publisher()
-const allUsersClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder)
+const allUsersClientsStorage = new AllUsersClientsStorage(publisher, makeSteamBuilder(validSteamAccounts))
 let sut: AddSteamAccountController
 let me, friend: User
 const idGenerator: IDGenerator = {
@@ -42,7 +39,7 @@ const idGenerator: IDGenerator = {
 
 const log = console.log
 beforeEach(async () => {
-  console.log = () => {}
+  console.log = () => { }
   usersMemory = new UsersInMemory()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
   steamAccountRepository = new SteamAccountsRepositoryInMemory(usersMemory)
@@ -62,16 +59,16 @@ beforeEach(async () => {
     })
   )
   usersDAO = new UsersDAOInMemory(usersMemory)
-  ;(sut = new AddSteamAccountController(
-    addSteamAccount,
-    allUsersClientsStorage,
-    usersDAO,
-    {
-      create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
-    },
-    publisher
-  )),
-    await usersRepository.create(me)
+    ; (sut = new AddSteamAccountController(
+      addSteamAccount,
+      allUsersClientsStorage,
+      usersDAO,
+      {
+        create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
+      },
+      publisher
+    )),
+      await usersRepository.create(me)
   await usersRepository.create(friend)
 })
 

@@ -1,4 +1,4 @@
-import { ApplicationError, SACStateCache } from "core"
+import { ApplicationError, SACStateCache, SACStateCacheDTO } from "core"
 import { writeFile } from "fs"
 import SteamUser from "steam-user"
 import {
@@ -61,11 +61,7 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("error", (...args) => {
       console.log("Rodou error")
-      this.emitter.emit("interrupt", {
-        gamesPlaying: this.gamesPlaying,
-        accountName: this.accountName,
-        isFarming: () => this.isFarming,
-      })
+      this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
       this.logoff()
@@ -73,11 +69,7 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("disconnected", (...args) => {
       this.logoff()
-      this.emitter.emit("interrupt", {
-        gamesPlaying: this.gamesPlaying,
-        accountName: this.accountName,
-        isFarming: () => this.isFarming,
-      })
+      this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
       console.log("Rodou disconnected", ...args)
       this.getLastHandler("disconnected")(...args)
       this.setLastArguments("disconnected", args)
@@ -148,7 +140,7 @@ export class SteamAccountClient extends LastHandler {
     this.client.gamesPlayed(gamesID)
   }
 
-  get isFarming(): boolean {
+  isFarming(): boolean {
     return this.gamesPlaying.length > 0
   }
 }
@@ -188,8 +180,19 @@ export type OnEventReturn = {
 }
 
 export type SteamApplicationEvents = {
-  interrupt: [sacStateCache: SACStateCache]
+  interrupt: [sacStateCache: SACStateCacheDTO]
   hasSession: []
-  "relog-with-state": [sacStateCache: SACStateCache]
+  "relog-with-state": [sacStateCache: SACStateCacheDTO]
   relog: []
 }
+
+export class SACStateCacheFactory {
+  static createDTO(sac: SteamAccountClient): SACStateCacheDTO {
+    return {
+      accountName: sac.accountName,
+      gamesPlaying: sac.gamesPlaying,
+      isFarming: sac.isFarming()
+    }
+  }
+}
+

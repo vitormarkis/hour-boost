@@ -29,7 +29,7 @@ export class UserClientsStorage {
     const accountStatus = {} as Record<string, { farming: boolean }>
     this.steamAccountClients.forEach((client, accountName) => {
       accountStatus[accountName] = {
-        farming: client.isFarming,
+        farming: client.isFarming(),
       }
     })
     return accountStatus
