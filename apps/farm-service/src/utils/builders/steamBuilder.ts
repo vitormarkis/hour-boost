@@ -1,6 +1,6 @@
-import SteamUser from "steam-user";
-import { SteamBuilder } from "~/contracts";
-import { SteamAccountCredentials, SteamUserMock } from "~/infra/services";
+import SteamUser from "steam-user"
+import { SteamBuilder } from "~/contracts"
+import { SteamAccountCredentials, SteamUserMock } from "~/infra/services"
 
 export function makeSteamBuilder(validSteamAccounts: SteamAccountCredentials[]): SteamBuilder {
   const steamBuilder: SteamBuilder = {
@@ -9,4 +9,3 @@ export function makeSteamBuilder(validSteamAccounts: SteamAccountCredentials[]):
 
   return steamBuilder
 }
-

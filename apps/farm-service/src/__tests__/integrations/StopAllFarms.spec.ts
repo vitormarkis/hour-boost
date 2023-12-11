@@ -1,6 +1,7 @@
 import {
   DiamondPlan,
   IDGenerator,
+  PlanRepository,
   SteamAccount,
   SteamAccountClientStateCacheRepository,
   SteamAccountCredentials,
@@ -12,6 +13,7 @@ import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/applic
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
 import {
+  PlanRepositoryInMemory,
   SteamAccountClientStateCacheInMemory,
   UsersInMemory,
   UsersRepositoryInMemory,
@@ -55,6 +57,7 @@ let me_steamAcount: SteamAccount
 let me_steamAcount2: SteamAccount
 let friend_steamAcount: SteamAccount
 let sacStateCacheRepository: SteamAccountClientStateCacheRepository
+let planRepository: PlanRepository
 let usersClusterStorage: UsersSACsFarmingClusterStorage
 
 const idGenerator: IDGenerator = {
@@ -75,12 +78,15 @@ beforeEach(async () => {
   sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
 
   usersClusterStorage = new UsersSACsFarmingClusterStorage()
+
+  planRepository = new PlanRepositoryInMemory(usersMemory)
   farmGamesController = new FarmGamesController({
     allUsersClientsStorage,
     publisher,
     sacStateCacheRepository,
     usersClusterStorage,
     usersRepository,
+    planRepository,
   })
   me = makeUser(USER_ID, USERNAME)
   me.assignPlan(

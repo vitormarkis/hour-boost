@@ -1,4 +1,12 @@
-import { IDGenerator, PlanUsage, SteamAccount, SteamAccountCredentials, User, UsersRepository } from "core"
+import {
+  IDGenerator,
+  PlanRepository,
+  PlanUsage,
+  SteamAccount,
+  SteamAccountCredentials,
+  User,
+  UsersRepository,
+} from "core"
 import SteamUser from "steam-user"
 
 import {
@@ -8,6 +16,7 @@ import {
 } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 import {
+  PlanRepositoryInMemory,
   SteamAccountClientStateCacheInMemory,
   UsersInMemory,
   UsersRepositoryInMemory,
@@ -34,6 +43,7 @@ let friend: User
 let allUsersClientsStorage: AllUsersClientsStorage
 let sacStateCacheRepository: SteamAccountClientStateCacheInMemory
 let me_steamAccount: SteamAccount
+let planRepository: PlanRepository
 const idGenerator: IDGenerator = {
   makeID: () => "ID",
 }
@@ -57,10 +67,12 @@ beforeEach(async () => {
   const steamBuilder = {
     create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
   }
+
   usersMemory = new UsersInMemory()
   usersClusterStorage = new UsersSACsFarmingClusterStorage()
   publisher = new Publisher()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
+  planRepository = new PlanRepositoryInMemory(usersMemory)
   me_steamAccount = makeSteamAccount(ME_ID, ME_ACCOUNTNAME)
   me = makeUser(ME_ID, ME_USERNAME)
   me.addSteamAccount(me_steamAccount)
@@ -73,6 +85,7 @@ beforeEach(async () => {
     sacStateCacheRepository,
     usersClusterStorage,
     usersRepository,
+    planRepository,
   })
   await usersRepository.create(me)
   await usersRepository.create(friend)

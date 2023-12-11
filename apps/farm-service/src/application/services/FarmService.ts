@@ -1,3 +1,5 @@
+const log = console.log
+
 import { ApplicationError, PlanType } from "core"
 import { FarmServiceStatus } from "~/application/services"
 
@@ -46,8 +48,10 @@ export abstract class FarmService {
 
   private setAccountStatus(accountName: string, status: "FARMING" | "IDDLE") {
     const account = this.getAccountDetails(accountName)
-    if (!account)
-      throw new ApplicationError("NSTH: Tried to resume farming on account that don't exists.", 500)
+    if (!account) {
+      const msg = `NSTH: Tried to resume farming on account that don't exists. ${accountName}`
+      throw new ApplicationError(msg, 500)
+    }
     account.status = status
   }
 
@@ -70,13 +74,23 @@ export abstract class FarmService {
     if (this.getActiveFarmingAccountsAmount() === 0) {
       this.startFarm()
     }
-    this.isAccountAdded(accountName) ? this.resumeFarming(accountName) : this.appendAccount(accountName)
+
+    if (this.isAccountAdded(accountName)) {
+      this.resumeFarming(accountName)
+    } else {
+      this.appendAccount(accountName)
+    }
   }
 
   pauseFarmOnAccount(accountName: string): void {
+    console.log(
+      `pauseFarmOnAccount counter; activeFarmingAccountsAmount: `,
+      this.getActiveFarmingAccountsAmount()
+    )
     if (this.getActiveFarmingAccountsAmount() === 1) {
       this.stopFarm()
     }
+    console.log({ settingStatusToIDDLE: accountName })
     this.setAccountStatus(accountName, "IDDLE")
   }
 

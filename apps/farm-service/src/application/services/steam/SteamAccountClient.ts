@@ -1,6 +1,6 @@
 import { ApplicationError, SACStateCache, SACStateCacheDTO } from "core"
-import { writeFile } from "fs"
 import SteamUser from "steam-user"
+import { connection } from "~/__tests__/connection"
 import {
   AddMoreGamesCommand,
   PausedSomeGamesCommand,
@@ -10,7 +10,7 @@ import {
 import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
-import { EventParameters } from "~/infra/services"
+import { EventName } from "~/infra/services"
 import { areTwoArraysEqual } from "~/utils"
 
 export class SteamAccountClient extends LastHandler {
@@ -20,7 +20,6 @@ export class SteamAccountClient extends LastHandler {
   userId: string
   username: string
   logged = false
-  readonly loginAttempts: Map<string, LoginAttemptsConfig> = new Map()
   gamesPlaying: number[] = []
   accountName: string
 
@@ -74,6 +73,17 @@ export class SteamAccountClient extends LastHandler {
       this.getLastHandler("disconnected")(...args)
       this.setLastArguments("disconnected", args)
     })
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("CRIOU HANDLER DO BREAK")
+      connection.on("break", () => {
+        console.log("break cb: Erro no SAC Client NoConnection")
+        this.client.emit("error", { eresult: SteamUser.EResult.NoConnection })
+        setTimeout(() => {
+          this.client.emit("webSession")
+        }, 500)
+      })
+    }
 
     this.client.on("webSession", async (...args) => {
       this.emitter.emit("hasSession")
@@ -191,8 +201,7 @@ export class SACStateCacheFactory {
     return {
       accountName: sac.accountName,
       gamesPlaying: sac.gamesPlaying,
-      isFarming: sac.isFarming()
+      isFarming: sac.isFarming(),
     }
   }
 }
-

@@ -5,6 +5,10 @@ export class PlanRepositoryInMemory implements PlanRepository {
   constructor(private readonly usersMemory: UsersInMemory) {}
 
   async getById(planId: string): Promise<PlanUsage | PlanInfinity | null> {
+    console.log({
+      users: this.usersMemory.users.map(u => u.plan.id_plan),
+      planId,
+    })
     return this.usersMemory.users.find(user => user.plan.id_plan === planId)?.plan ?? null
   }
 

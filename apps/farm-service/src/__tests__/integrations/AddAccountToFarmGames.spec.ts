@@ -1,6 +1,7 @@
 import {
   AddSteamAccount,
   IDGenerator,
+  PlanRepository,
   SteamAccountClientStateCacheRepository,
   SteamAccountsRepository,
   User,
@@ -13,6 +14,7 @@ import { SteamBuilder } from "~/contracts"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
 import {
+  PlanRepositoryInMemory,
   SteamAccountClientStateCacheInMemory,
   SteamAccountsRepositoryInMemory,
   UsersInMemory,
@@ -39,6 +41,7 @@ let user: User
 let allUsersClientsStorage: AllUsersClientsStorage
 let addSteamAccountController: AddSteamAccountController
 let sacStateCacheRepository: SteamAccountClientStateCacheRepository
+let planRepository: PlanRepository
 let usersClusterStorage: UsersSACsFarmingClusterStorage
 
 const validSteamAccounts = [
@@ -58,6 +61,7 @@ beforeEach(async () => {
   usersMemory = new UsersInMemory()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
   steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)
+  planRepository = new PlanRepositoryInMemory(usersMemory)
   sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
   usersClusterStorage = new UsersSACsFarmingClusterStorage()
   idGenerator = { makeID: () => "998" }
@@ -104,6 +108,7 @@ describe("should register a new steam account in the storage after addition of a
       sacStateCacheRepository,
       usersClusterStorage,
       usersRepository,
+      planRepository,
     })
     const userx3 = await usersRepository.getByID(USER_ID)
     expect(userx3?.steamAccounts.data).toHaveLength(1)

@@ -39,7 +39,7 @@ const idGenerator: IDGenerator = {
 
 const log = console.log
 beforeEach(async () => {
-  console.log = () => { }
+  console.log = () => {}
   usersMemory = new UsersInMemory()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
   steamAccountRepository = new SteamAccountsRepositoryInMemory(usersMemory)
@@ -59,16 +59,16 @@ beforeEach(async () => {
     })
   )
   usersDAO = new UsersDAOInMemory(usersMemory)
-    ; (sut = new AddSteamAccountController(
-      addSteamAccount,
-      allUsersClientsStorage,
-      usersDAO,
-      {
-        create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
-      },
-      publisher
-    )),
-      await usersRepository.create(me)
+  ;(sut = new AddSteamAccountController(
+    addSteamAccount,
+    allUsersClientsStorage,
+    usersDAO,
+    {
+      create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
+    },
+    publisher
+  )),
+    await usersRepository.create(me)
   await usersRepository.create(friend)
 })
 

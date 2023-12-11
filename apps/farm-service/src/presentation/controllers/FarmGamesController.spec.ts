@@ -1,6 +1,7 @@
 import {
   GuestPlan,
   IDGenerator,
+  PlanRepository,
   PlanUsage,
   SilverPlan,
   SteamAccount,
@@ -17,6 +18,7 @@ import { FarmGamesController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { makeUser } from "~/utils/makeUser"
 import {
+  PlanRepositoryInMemory,
   SteamAccountClientStateCacheInMemory,
   UsersInMemory,
   UsersRepositoryInMemory,
@@ -40,6 +42,7 @@ const validSteamAccounts = [
   },
 ]
 
+let usersMemory: UsersInMemory
 let usersClusterStorage: UsersSACsFarmingClusterStorage
 let publisher: Publisher
 let usersRepository: UsersRepositoryInMemory
@@ -50,6 +53,7 @@ let me: User
 let friend: User
 let me_steamAcount: SteamAccount
 let maxGuestPlanUsage: Usage
+let planRepository: PlanRepository
 const idGenerator: IDGenerator = {
   makeID: () => "ID",
 }
@@ -59,10 +63,12 @@ console.log = () => {}
 
 beforeEach(async () => {
   console.log = () => {}
+  usersMemory = new UsersInMemory()
   usersClusterStorage = new UsersSACsFarmingClusterStorage()
   publisher = new Publisher()
-  usersRepository = new UsersRepositoryInMemory(new UsersInMemory())
+  usersRepository = new UsersRepositoryInMemory(usersMemory)
   sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
+  planRepository = new PlanRepositoryInMemory(usersMemory)
   allUsersClientsStorage = new AllUsersClientsStorage(publisher, {
     create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
   })
@@ -72,6 +78,7 @@ beforeEach(async () => {
     allUsersClientsStorage,
     sacStateCacheRepository,
     usersClusterStorage,
+    planRepository,
   })
   me = makeUser(USER_ID, USERNAME)
   me_steamAcount = SteamAccount.create({
@@ -107,6 +114,9 @@ describe("StartFarmController test suite", () => {
         },
       })
     )
+
+    const user = await usersRepository.getByID(USER_ID)
+    console.log({ planID: user?.plan.id_plan })
 
     expect(response).toStrictEqual({
       status: 200,
@@ -304,6 +314,7 @@ describe("StartFarmController test suite", () => {
       sacStateCacheRepository,
       usersClusterStorage,
       usersRepository,
+      planRepository,
     })
 
     const response = await promiseHandler(
@@ -330,6 +341,7 @@ describe("StartFarmController test suite", () => {
       sacStateCacheRepository,
       usersClusterStorage,
       usersRepository,
+      planRepository,
       allUsersClientsStorage: new AllUsersClientsStorage(publisher, {
         create: () => new SteamUserMock([]) as unknown as SteamUser,
       }),
@@ -414,6 +426,7 @@ describe("StartFarmController test suite", () => {
       publisher,
       usersRepository,
       allUsersClientsStorage,
+      planRepository,
     })
 
     await usersRepository.dropAll()

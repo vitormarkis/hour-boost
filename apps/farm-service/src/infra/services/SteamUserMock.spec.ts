@@ -22,7 +22,7 @@ describe("SteamUserMock test suite", () => {
     })
     await sleep(0.01)
     expect(emitSpy).toHaveBeenCalledTimes(1)
-    expect(emitSpy).toBeCalledWith("loggedOn")
+    expect(emitSpy).toBeCalledWith("loggedOn", {}, {})
     expect(emitSpy).not.toBeCalledWith("error", { eresult: 18 })
   })
 
@@ -37,7 +37,7 @@ describe("SteamUserMock test suite", () => {
     })
     await sleep(0.01)
     expect(emitSpy).toHaveBeenCalledTimes(1)
-    expect(emitSpy).not.toBeCalledWith("loggedOn")
+    expect(emitSpy).not.toBeCalledWith("loggedOn", {}, {})
     expect(emitSpy).toBeCalledWith("error", { eresult: 18 })
   })
 })

@@ -14,6 +14,7 @@ import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import {
   allUsersClientsStorage,
   idGenerator,
+  planRepository,
   publisher,
   sacStateCacheRepository,
   steamAccountsRepository,
@@ -86,6 +87,7 @@ command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: 
     sacStateCacheRepository,
     usersClusterStorage,
     usersRepository,
+    planRepository,
   })
   const { json, status } = await promiseHandler(
     startFarmController.handle({

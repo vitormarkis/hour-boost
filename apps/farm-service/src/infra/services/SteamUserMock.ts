@@ -1,6 +1,7 @@
 import { ApplicationError } from "core"
 import SteamUser, { EResult } from "steam-user"
 import { connection } from "~/__tests__/connection"
+import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
 import { sleep } from "~/utils"
 
@@ -12,14 +13,13 @@ export type EventParameters = {
   webSession: [sessionID: string, cookies: string[]]
 }
 
-type EventName = keyof EventParameters
+export type EventName = keyof EventParameters
 export type SteamAccountCredentials = {
   accountName: string
   password: string
 }
 
-export class SteamUserMock {
-  events: Map<EventName, Function[]> = new Map()
+export class SteamUserMock extends EventEmitter<EventParameters> {
   steamGuardCode: string | undefined
   logged = false
   isSame = (Math.random() * 1e4).toFixed(0)
@@ -28,6 +28,7 @@ export class SteamUserMock {
     private readonly validSteamAccounts: SteamAccountCredentials[],
     private readonly mobile?: boolean
   ) {
+    super()
     console.log({
       validSteamAccounts,
     })
@@ -42,27 +43,14 @@ export class SteamUserMock {
     this.on("steamGuard", (...args) => {
       this.logged = false
     })
-    connection.on("break", () => {
-      console.log("Connection break")
-      this.emit("disconnected", EResult.NoConnection)
-    })
-  }
+    // connection.on("break", () => {
+    //   console.log("Connection break")
+    //   this.emit("disconnected", EResult.NoConnection)
 
-  on<T extends keyof EventParameters, A extends EventParameters[T]>(
-    eventName: T,
-    callback: (...args: A) => void
-  ) {
-    const eventHandlers = this.events.get(eventName)
-    if (!eventHandlers) return this.events.set(eventName, [callback])
-    eventHandlers.push(callback)
-  }
-
-  emit<T extends keyof EventParameters, A extends EventParameters[T]>(eventName: T, ...payload: A) {
-    const eventHandlers = this.events.get(eventName)
-    if (!eventHandlers) {
-      throw new ApplicationError("Event never registered.", 404, eventName)
-    }
-    eventHandlers.forEach(cb => cb(...payload))
+    //   setTimeout(() => {
+    //     this.emit("webSession", "", [])
+    //   }, 500)
+    // })
   }
 
   setSteamGuardCode(code: string) {
@@ -98,18 +86,18 @@ export class SteamUserMock {
             console.log("Dentro do SteamUserMock, settando code.")
             this.setSteamGuardCode(code)
             await sleep(0.01)
-            this.emit("loggedOn", ...([] as any))
+            this.emit("loggedOn", {}, {})
           },
           false
         )
       } else {
         console.log("is valid: loggin")
         // await sleep(0.01)
-        this.emit("loggedOn", ...([] as any))
+        this.emit("loggedOn", {}, {})
       }
     }).unref()
   }
 
-  setPersona(persona: string) { }
-  gamesPlayed(gamesID: number[]) { }
+  setPersona(persona: string) {}
+  gamesPlayed(gamesID: number[]) {}
 }

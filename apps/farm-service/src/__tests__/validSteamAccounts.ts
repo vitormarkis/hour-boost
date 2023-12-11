@@ -1,5 +1,3 @@
 const password = "123"
 
-export const validSteamAccounts = [
-  { accountName: "paco", password },
-]
+export const validSteamAccounts = [{ accountName: "paco", password }]

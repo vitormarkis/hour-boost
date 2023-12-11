@@ -1,5 +1,6 @@
 import {
   IDGenerator,
+  PlanRepository,
   SteamAccount,
   SteamAccountClientStateCacheRepository,
   SteamAccountCredentials,
@@ -13,12 +14,13 @@ import { SteamUserMock } from "~/infra/services/SteamUserMock"
 import { FarmGamesController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { makeUser } from "~/utils/makeUser"
+import { sleep } from "~/utils"
 import {
+  PlanRepositoryInMemory,
   SteamAccountClientStateCacheInMemory,
   UsersInMemory,
   UsersRepositoryInMemory,
-} from "../infra/repository"
-import { sleep } from "~/utils"
+} from "~/infra/repository"
 
 const USER_ID = "123"
 const USER_STEAM_ACCOUNT = "steam_account"
@@ -37,6 +39,7 @@ const validSteamAccounts = [
   },
 ]
 
+let usersMemory: UsersInMemory
 let publisher: Publisher
 let usersRepository: UsersRepositoryInMemory
 let startFarmController: FarmGamesController
@@ -45,6 +48,7 @@ let me: User
 let friend: User
 let me_steamAcount: SteamAccount
 let sacStateCacheRepository: SteamAccountClientStateCacheRepository
+let planRepository: PlanRepository
 let usersClusterStorage: UsersSACsFarmingClusterStorage
 const idGenerator: IDGenerator = {
   makeID: () => "ID",
@@ -53,11 +57,13 @@ const idGenerator: IDGenerator = {
 const log = console.log
 
 beforeEach(async () => {
+  usersMemory = new UsersInMemory()
   publisher = new Publisher()
-  usersRepository = new UsersRepositoryInMemory(new UsersInMemory())
+  usersRepository = new UsersRepositoryInMemory(usersMemory)
   allUsersClientsStorage = new AllUsersClientsStorage(publisher, {
     create: () => new SteamUserMock(validSteamAccounts, true) as unknown as SteamUser,
   })
+  planRepository = new PlanRepositoryInMemory(usersMemory)
   sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
   usersClusterStorage = new UsersSACsFarmingClusterStorage()
   startFarmController = new FarmGamesController({
@@ -66,6 +72,7 @@ beforeEach(async () => {
     allUsersClientsStorage,
     sacStateCacheRepository,
     usersClusterStorage,
+    planRepository,
   })
   me = makeUser(USER_ID, USERNAME)
   me_steamAcount = SteamAccount.create({

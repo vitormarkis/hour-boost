@@ -1,5 +1,5 @@
-import { TsJestCompiler } from "ts-jest";
-import { SteamAccountClient } from "~/application/services/steam";
+import { TsJestCompiler } from "ts-jest"
+import { SteamAccountClient } from "~/application/services/steam"
 
 export class SACList {
   list: Map<string, SteamAccountClient> = new Map()

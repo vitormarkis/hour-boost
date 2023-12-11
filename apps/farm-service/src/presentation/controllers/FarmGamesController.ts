@@ -1,4 +1,9 @@
-import { ApplicationError, SteamAccountClientStateCacheRepository, UsersRepository } from "core"
+import {
+  ApplicationError,
+  PlanRepository,
+  SteamAccountClientStateCacheRepository,
+  UsersRepository,
+} from "core"
 import { FarmServiceFactory } from "~/application/factories"
 
 import {
@@ -18,6 +23,7 @@ export class FarmGamesController {
   private readonly allUsersClientsStorage: AllUsersClientsStorage
   private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
   private readonly usersClusterStorage: UsersSACsFarmingClusterStorage
+  private readonly planRepository: PlanRepository
 
   constructor(props: FarmGamesControllerProps) {
     this.publisher = props.publisher
@@ -25,6 +31,7 @@ export class FarmGamesController {
     this.allUsersClientsStorage = props.allUsersClientsStorage
     this.sacStateCacheRepository = props.sacStateCacheRepository
     this.usersClusterStorage = props.usersClusterStorage
+    this.planRepository = props.planRepository
   }
 
   async handle(
@@ -121,20 +128,19 @@ export class FarmGamesController {
           farmService: farmServiceFactory.createNewFarmService(user.plan),
           username: user.username,
           sacStateCacheRepository: this.sacStateCacheRepository,
+          farmServiceFactory,
+          planId: user.plan.id_plan,
+          planRepository: this.planRepository,
         })
       )
 
     // possui service farmando
     // possui service sem ninguem farmando
     // nao possui service, precisa criar
-    if (!userCluster.farmService.hasAccountsFarming()) {
-      const farmService = farmServiceFactory.createNewFarmService(user.plan)
-      userCluster.setFarmService(farmService)
-    }
     if (!userCluster.hasSteamAccountClient(accountName)) {
       userCluster.addSAC(sac)
     }
-    userCluster.farmWithAccount(accountName, gamesID, user.plan)
+    await userCluster.farmWithAccount(accountName, gamesID, user.plan.id_plan)
 
     return makeRes(200, "Iniciando farm.")
 
@@ -178,4 +184,5 @@ type FarmGamesControllerProps = {
   allUsersClientsStorage: AllUsersClientsStorage
   sacStateCacheRepository: SteamAccountClientStateCacheRepository
   usersClusterStorage: UsersSACsFarmingClusterStorage
+  planRepository: PlanRepository
 }
