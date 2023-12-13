@@ -14,10 +14,10 @@ import { makeRes } from "~/utils"
 
 export type Resolved = {
   json:
-    | ({
-        message: string
-      } & Record<string, any>)
-    | null
+  | ({
+    message: string
+  } & Record<string, any>)
+  | null
   status: number
 }
 export class AddSteamAccountController {
@@ -27,7 +27,7 @@ export class AddSteamAccountController {
     private readonly usersDAO: UsersDAO,
     private readonly steamBuilder: SteamBuilder,
     private readonly publisher: Publisher
-  ) {}
+  ) { }
 
   async handle(req: HttpClient.Request<IAddSteamAccount>): Promise<HttpClient.Response> {
     const perform = async () => {
@@ -36,23 +36,32 @@ export class AddSteamAccountController {
       if (!username) throw new ApplicationError("No user found with this ID.")
 
       const sacEmitter = new EventEmitter<SteamApplicationEvents>()
-      const sac = new SteamAccountClient({
-        props: {
-          client: this.steamBuilder.create(),
-          userId,
-          username,
-          accountName,
-        },
-        instances: {
-          publisher: this.publisher,
-          emitter: sacEmitter,
-        },
+      const sac = this.allUsersClientsStorage.getOrAddSteamAccount({
+        accountName,
+        userId,
+        username
       })
 
-      // sac.setLastHandler("loggedOn", () => {
-      // 	console.log("sem handler")
-      // })
+      console.log({
+        THIS_SAC_IS_LOGGED: sac.logged
+      })
+      if (sac.logged) {
+        const { steamAccountID } = await this.addSteamAccount.execute({
+          accountName,
+          password,
+          userId,
+        })
+
+        return {
+          status: 201,
+          json: {
+            message: `${accountName} adicionada com sucesso!`,
+            steamAccountID,
+          },
+        } as HttpClient.Response
+      }
       sac.login(accountName, password)
+
 
       const steamClientEventsRequired = new SteamClientEventsRequired(sac, EVENT_PROMISES_TIMEOUT_IN_SECONDS)
 
@@ -121,7 +130,7 @@ export class SteamClientEventsRequired {
   constructor(
     private readonly sac: SteamAccountClient,
     private readonly timeoutLimitInSeconds: number
-  ) {}
+  ) { }
 
   createEventPromiseResolver<K extends keyof EventParameters>(eventName: K) {
     return new Promise<SingleEventResolver<EventParameters, K>>(res => {

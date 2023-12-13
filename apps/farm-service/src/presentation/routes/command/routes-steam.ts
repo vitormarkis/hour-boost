@@ -107,7 +107,7 @@ command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: 
 command_routerSteam.post("/farm/stop", async (req: WithAuthProp<Request>, res: Response) => {
   const perform = async () => {
     const { userId, accountName } = req.body
-    const { userSteamClients } = allUsersClientsStorage.get(userId)
+    const { userSteamClients } = allUsersClientsStorage.getOrThrow(userId)
     const { steamAccountClient: sac } = userSteamClients.getAccountClient(accountName)
     sac.farmGames([])
 

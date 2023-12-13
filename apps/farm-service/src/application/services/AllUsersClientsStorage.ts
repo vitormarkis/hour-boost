@@ -1,76 +1,80 @@
 import { ApplicationError } from "core"
-import { EventEmitter, UserClientsStorage } from "~/application/services"
+import { UserClientsStorage } from "~/application/services"
 import { SteamAccountClient, SteamApplicationEvents } from "~/application/services/steam"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
-import { Publisher } from "~/infra/queue"
+import { SteamAccountClientBuilder } from "~/utils/builders"
 
 type UserID = string
 export class AllUsersClientsStorage {
   users: Map<UserID, UserClientsStorage> = new Map()
 
   constructor(
-    private readonly publisher: Publisher,
-    private readonly steamBuilder: SteamBuilder
-  ) {}
+    private readonly sacBuilder: SteamAccountClientBuilder,
+  ) { }
 
-  getOrAddSteamAccount({ accountName, userId, username }: AddUserProps) {
-    const userSteamClient = this.users.get(userId)?.hasAccountName(accountName)
-    if (!userSteamClient) {
-      const sacEmitter = new EventEmitter<SteamApplicationEvents>()
-      const steamAccountClient = new SteamAccountClient({
-        instances: {
-          publisher: this.publisher,
-          emitter: sacEmitter,
-        },
-        props: {
-          accountName,
-          client: this.steamBuilder.create(),
-          userId,
-          username,
-        },
-      })
-      this.addSteamAccount(userId, steamAccountClient)
-      return { steamAccountClient }
-    }
-    return {
-      steamAccountClient: this.users.get(userId)?.getAccountClient(accountName).steamAccountClient,
-    }
+  private generateSAC({ accountName, userId, username }: AddUserProps) {
+    return this.sacBuilder.create({
+      accountName,
+      userId,
+      username
+    })
   }
 
-  createSteamAccountClient({ accountName, userId, username }: AddUserProps) {}
+  private generateUserClients(): UserClientsStorage {
+    return new UserClientsStorage()
+  }
+
+  getOrAddSteamAccount({ accountName, userId, username }: AddUserProps): SteamAccountClient {
+    const userClients = this.get(userId)
+    const userRegistered = !!userClients
+    const foundSac = userClients?.getAccountClient(accountName)
+    const userHasAccount = !!foundSac
+    if (!userRegistered) {
+      this.registerUser(userId, this.generateUserClients())
+      return this.addSteamAccount(userId, this.generateSAC({ accountName, userId, username }))
+    }
+    if (!userHasAccount) {
+      return this.addSteamAccount(userId, this.generateSAC({ accountName, userId, username }))
+    }
+    return foundSac
+  }
 
   removeSteamAccount(userId: string, accountName: string) {
-    const { userSteamClients } = this.get(userId)
+    const userSteamClients = this.getOrThrow(userId)
     userSteamClients.removeAccountClient(accountName)
   }
 
   addSteamAccount(
     userId: string,
     steamAccountClient: SteamAccountClient
-  ): {
-    steamAccountClient: SteamAccountClient
-  } {
+  ): SteamAccountClient {
     const userClientsStorage = this.users.get(userId)
     if (!userClientsStorage) {
       const userClientsStorage = new UserClientsStorage()
       userClientsStorage.addAccountClient(steamAccountClient)
-      this.addUser(userId, userClientsStorage)
-      return { steamAccountClient }
+      this.registerUser(userId, userClientsStorage)
+      return steamAccountClient
     }
     userClientsStorage.addAccountClient(steamAccountClient)
-    return { steamAccountClient }
+    return steamAccountClient
   }
 
-  addUser(userID: string, userClientsStorage: UserClientsStorage) {
+  registerUser(userID: string, userClientsStorage: UserClientsStorage) {
     this.users.set(userID, userClientsStorage)
+    return userClientsStorage
   }
+
 
   get(userId: string) {
+    return this.users.get(userId) ?? null
+  }
+
+  getOrThrow(userId: string) {
     const userSteamClients = this.users.get(userId)
     if (!userSteamClients) {
       throw new ApplicationError("Esse usuário não possui contas da Steam ativas na plataforma.", 406)
     }
-    return { userSteamClients }
+    return userSteamClients
   }
 
   getOrNull(userId: string) {
@@ -79,16 +83,15 @@ export class AllUsersClientsStorage {
   }
 
   getAccountClient(userID: string, accountName: string) {
-    const { userSteamClients } = this.get(userID)
-    const { steamAccountClient } = userSteamClients.getAccountClient(accountName)
-    return { steamAccountClient }
-    // return {
-    //   const userSteamClient = userSteamAccounts.get(accountName)
-    //   if (!userSteamClient) {
-    //     throw new ApplicationError("Essa Steam Accuont não possui contas da Steam ativas na plataforma.", 406)
-    //   }
-    //   return { userSteamClient }
-    // }
+    const userClientsStorage = this.users.get(userID)
+    const steamAccountClient = userClientsStorage?.getAccountClient(accountName) ?? {}
+    return steamAccountClient ?? null
+  }
+
+  getAccountClientOrThrow(userID: string, accountName: string) {
+    const userSteamClients = this.getOrThrow(userID)
+    const steamAccountClient = userSteamClients.getAccountClient(accountName)
+    return steamAccountClient
   }
 
   listUsers() {

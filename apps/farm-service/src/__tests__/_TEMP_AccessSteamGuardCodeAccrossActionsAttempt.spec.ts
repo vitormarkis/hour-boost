@@ -8,7 +8,7 @@ import {
 } from "core"
 
 import SteamUser from "steam-user"
-import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { AllUsersClientsStorage, EventEmitter, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 import { SteamUserMock } from "~/infra/services/SteamUserMock"
 import { FarmGamesController } from "~/presentation/controllers"
@@ -21,6 +21,10 @@ import {
   UsersInMemory,
   UsersRepositoryInMemory,
 } from "~/infra/repository"
+import { SteamUserMockBuilder } from "~/utils/builders/SteamMockBuilder"
+import { SteamBuilder } from "~/contracts"
+import { Builder, EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
+import { SteamAccountClient } from "~/application/services/steam"
 
 const USER_ID = "123"
 const USER_STEAM_ACCOUNT = "steam_account"
@@ -49,7 +53,10 @@ let friend: User
 let me_steamAcount: SteamAccount
 let sacStateCacheRepository: SteamAccountClientStateCacheRepository
 let planRepository: PlanRepository
+let steamBuilder: SteamBuilder
 let usersClusterStorage: UsersSACsFarmingClusterStorage
+let sacBuilder: SteamAccountClientBuilder
+let emitterBuilder: Builder<EventEmitter>
 const idGenerator: IDGenerator = {
   makeID: () => "ID",
 }
@@ -59,10 +66,11 @@ const log = console.log
 beforeEach(async () => {
   usersMemory = new UsersInMemory()
   publisher = new Publisher()
+  emitterBuilder = new EventEmitterBuilder()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
-  allUsersClientsStorage = new AllUsersClientsStorage(publisher, {
-    create: () => new SteamUserMock(validSteamAccounts, true) as unknown as SteamUser,
-  })
+  sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher)
+  steamBuilder = new SteamUserMockBuilder(validSteamAccounts)
+  allUsersClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder, sacBuilder)
   planRepository = new PlanRepositoryInMemory(usersMemory)
   sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
   usersClusterStorage = new UsersSACsFarmingClusterStorage()
@@ -87,7 +95,7 @@ beforeEach(async () => {
   friend = makeUser(FRIEND_ID, FRIEND)
   await usersRepository.create(me)
   await usersRepository.create(friend)
-  console.log = () => {}
+  console.log = () => { }
 })
 
 test.only("should ask for the steam guard code", async () => {
@@ -101,8 +109,8 @@ test.only("should ask for the steam guard code", async () => {
     })
   )
 
-  const SACs1 = allUsersClientsStorage.get(USER_ID)
-  const { steamAccountClient: sac1 } = SACs1.userSteamClients.getAccountClient(USER_STEAM_ACCOUNT)
+  const userClients = allUsersClientsStorage.getOrThrow(USER_ID)
+  const sac1 = userClients.getAccountClient(USER_STEAM_ACCOUNT)
   expect(sac1.getLastArguments("steamGuard")).toHaveLength(3)
   expect((sac1.client as unknown as SteamUserMock).steamGuardCode).toBeUndefined()
 
@@ -112,8 +120,8 @@ test.only("should ask for the steam guard code", async () => {
   })
 
   // should call function that sets the steam guard code to the client instance
-  const SACs2 = allUsersClientsStorage.get(USER_ID)
-  const { steamAccountClient: sac2 } = SACs2.userSteamClients.getAccountClient(USER_STEAM_ACCOUNT)
+  const userClients2 = allUsersClientsStorage.getOrThrow(USER_ID)
+  const sac2 = userClients2.getAccountClient(USER_STEAM_ACCOUNT)
 
   expect((sac2.client as unknown as SteamUserMock).steamGuardCode).toBeUndefined()
   const [_, setCode] = sac2.getLastArguments("steamGuard")
@@ -132,8 +140,8 @@ test.only("should ask for the steam guard code", async () => {
       },
     })
   )
-  const { userSteamClients } = allUsersClientsStorage.get(USER_ID)
-  const { steamAccountClient: sac } = userSteamClients.getAccountClient(USER_STEAM_ACCOUNT)
+  const userSteamClients = allUsersClientsStorage.getOrThrow(USER_ID)
+  const sac = userSteamClients.getAccountClient(USER_STEAM_ACCOUNT)
   expect((sac.client as unknown as SteamUserMock).isMobile()).toBeTruthy()
 
   expect(response2).toStrictEqual({

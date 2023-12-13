@@ -53,7 +53,7 @@ const validSteamAccounts = [
 const log = console.log
 
 beforeEach(async () => {
-  console.log = () => {}
+  console.log = () => { }
   publisher = new Publisher()
   steamBuilder = {
     create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
@@ -133,7 +133,7 @@ describe("should register a new steam account in the storage after addition of a
     console.log(allUsersClientsStorage.listUsers())
     // console.log = () => {}
     const getUserSAC = () =>
-      allUsersClientsStorage.get(USER_ID).userSteamClients.getAccountClient(USER_STEAM_ACCOUNT_NAME)
+      allUsersClientsStorage.getOrThrow(USER_ID).userSteamClients.getAccountClient(USER_STEAM_ACCOUNT_NAME)
         .steamAccountClient
     addSteamAccountController = new AddSteamAccountController(
       addSteamAccount,

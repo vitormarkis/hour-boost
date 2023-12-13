@@ -18,7 +18,7 @@ export class UserClientsStorage {
     const steamAccountClient = this.steamAccountClients.get(accountName)
     if (!steamAccountClient)
       throw new ApplicationError("Essa Steam Account nunca foi logada no nosso servidor.")
-    return { steamAccountClient }
+    return steamAccountClient
   }
 
   hasAccountName(accountName: string) {

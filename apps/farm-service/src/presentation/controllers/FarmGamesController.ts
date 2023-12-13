@@ -48,12 +48,15 @@ export class FarmGamesController {
     if (!steamAccountDomain)
       throw new ApplicationError("Steam Account nunca foi registrada ou ela não pertence à você.", 400)
 
-    const { steamAccountClient: sac } = this.allUsersClientsStorage.getOrAddSteamAccount({
+    const sac = this.allUsersClientsStorage.getOrAddSteamAccount({
       accountName,
       userId,
       username: user.username,
     })
     if (!sac) throw new ApplicationError("Essa conta nunca se conectou à Steam.")
+    console.log({
+      isLogged: sac.logged
+    })
     if (!sac.logged) {
       sac.login(steamAccountDomain.credentials.accountName, steamAccountDomain.credentials.password)
 

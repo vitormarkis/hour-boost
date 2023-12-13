@@ -1,122 +1,83 @@
-import {
-  GuestPlan,
-  IDGenerator,
-  PlanRepository,
-  PlanUsage,
-  SilverPlan,
-  SteamAccount,
-  SteamAccountClientStateCacheRepository,
-  SteamAccountCredentials,
-  Usage,
-  User,
-} from "core"
-
-import SteamUser from "steam-user"
-import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
-import { Publisher } from "~/infra/queue"
-import { FarmGamesController } from "~/presentation/controllers"
-import { promiseHandler } from "~/presentation/controllers/promiseHandler"
+import { CustomInstances, MakeTestInstancesProps, PrefixKeys, makeTestInstances, makeUserInstances, password } from "~/__tests__/instances"
+import { FarmGamesController } from "~/presentation/controllers/FarmGamesController"
+import { testUsers as s } from "~/__tests__/instances"
+import { promiseHandler } from "~/presentation/controllers"
+import { GuestPlan, PlanUsage, Usage } from "core"
+import { SteamUserMockBuilder } from "~/utils/builders"
 import { makeUser } from "~/utils/makeUser"
-import {
-  PlanRepositoryInMemory,
-  SteamAccountClientStateCacheInMemory,
-  UsersInMemory,
-  UsersRepositoryInMemory,
-} from "~/infra/repository"
-import { SteamUserMock } from "~/infra/services"
-
-const USER_ID = "123"
-const USER_STEAM_ACCOUNT = "steam_account"
-const USERNAME = "vitormarkis"
-const FRIEND_ID = "ABC"
-const FRIEND = "matheus"
 
 const validSteamAccounts = [
-  {
-    accountName: "steam_account",
-    password: "steam_account_admin_pass",
-  },
-  {
-    accountName: "REACHED",
-    password: "REACHED_admin_pass",
-  },
+  { accountName: "paco", password, },
+  { accountName: "REACHED", password, },
 ]
 
-let usersMemory: UsersInMemory
-let usersClusterStorage: UsersSACsFarmingClusterStorage
-let publisher: Publisher
-let usersRepository: UsersRepositoryInMemory
-let sacStateCacheRepository: SteamAccountClientStateCacheRepository
-let startFarmController: FarmGamesController
-let allUsersClientsStorage: AllUsersClientsStorage
-let me: User
-let friend: User
-let me_steamAcount: SteamAccount
-let maxGuestPlanUsage: Usage
-let planRepository: PlanRepository
-const idGenerator: IDGenerator = {
-  makeID: () => "ID",
+const now = new Date("2023-06-10T10:00:00Z")
+const log = console.log
+console.log = () => { }
+
+let i = makeTestInstances({
+  validSteamAccounts,
+})
+let meInstances = makeUserInstances("me", s.me, i.sacFactory)
+let farmGamesController: FarmGamesController
+
+async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
+  i = makeTestInstances(props, customInstances)
+  meInstances = await i.createUser("me")
+  farmGamesController = new FarmGamesController({
+    allUsersClientsStorage: i.allUsersClientsStorage,
+    planRepository: i.planRepository,
+    publisher: i.publisher,
+    sacStateCacheRepository: i.sacStateCacheRepository,
+    usersClusterStorage: i.usersClusterStorage,
+    usersRepository: i.usersRepository,
+  })
 }
 
-const log = console.log
-console.log = () => {}
+describe("mobile", () => {
+  beforeEach(async () => {
+    await setupInstances({
+      validSteamAccounts,
+    }, {
+      steamUserBuilder: new SteamUserMockBuilder(validSteamAccounts, true)
+    })
+  })
 
-beforeEach(async () => {
-  console.log = () => {}
-  usersMemory = new UsersInMemory()
-  usersClusterStorage = new UsersSACsFarmingClusterStorage()
-  publisher = new Publisher()
-  usersRepository = new UsersRepositoryInMemory(usersMemory)
-  sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
-  planRepository = new PlanRepositoryInMemory(usersMemory)
-  allUsersClientsStorage = new AllUsersClientsStorage(publisher, {
-    create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
-  })
-  startFarmController = new FarmGamesController({
-    publisher,
-    usersRepository,
-    allUsersClientsStorage,
-    sacStateCacheRepository,
-    usersClusterStorage,
-    planRepository,
-  })
-  me = makeUser(USER_ID, USERNAME)
-  me_steamAcount = SteamAccount.create({
-    credentials: SteamAccountCredentials.create({
-      accountName: USER_STEAM_ACCOUNT,
-      password: "steam_account_admin_pass",
-    }),
-    ownerId: me.id_user,
-    idGenerator,
-  })
-  me.addSteamAccount(me_steamAcount)
-  friend = makeUser(FRIEND_ID, FRIEND)
-  maxGuestPlanUsage = Usage.restore({
-    id_usage: "max_guest_plan_usage",
-    accountName: USER_STEAM_ACCOUNT,
-    amountTime: 21600,
-    createdAt: new Date(),
-    plan_id: me.plan.id_plan,
-  })
-  await usersRepository.create(me)
-  await usersRepository.create(friend)
-})
-
-describe("StartFarmController test suite", () => {
-  test("should start the farm", async () => {
-    console.log = log
+  test("should ask for steam guard if the account has mobile steam guard", async () => {
     const response = await promiseHandler(
-      startFarmController.handle({
+      farmGamesController.handle({
         payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
+          userId: s.me.userId,
+          accountName: s.me.accountName,
           gamesID: [10892],
         },
       })
     )
 
-    const user = await usersRepository.getByID(USER_ID)
-    console.log({ planID: user?.plan.id_plan })
+    expect(response).toStrictEqual({
+      status: 202,
+      json: { message: "Steam Guard requerido. Enviando para seu celular." },
+    })
+  })
+})
+
+describe("not mobile", () => {
+  beforeEach(async () => {
+    await setupInstances({
+      validSteamAccounts,
+    })
+  })
+
+  test("should start the farm", async () => {
+    const response = await promiseHandler(
+      farmGamesController.handle({
+        payload: {
+          userId: s.me.userId,
+          accountName: s.me.accountName,
+          gamesID: [10892],
+        },
+      })
+    )
 
     expect(response).toStrictEqual({
       status: 200,
@@ -126,10 +87,10 @@ describe("StartFarmController test suite", () => {
 
   test("should return 404 when not registered user is provided", async () => {
     const response = await promiseHandler(
-      startFarmController.handle({
+      farmGamesController.handle({
         payload: {
           userId: "RANDOM_ID_SDFIWI",
-          accountName: USER_STEAM_ACCOUNT,
+          accountName: s.me.accountName,
           gamesID: [10892],
         },
       })
@@ -145,9 +106,9 @@ describe("StartFarmController test suite", () => {
 
   test("should reject if steam account don't exists", async () => {
     const response = await promiseHandler(
-      startFarmController.handle({
+      farmGamesController.handle({
         payload: {
-          userId: USER_ID,
+          userId: s.me.userId,
           accountName: "RANDOM_STEAM_ACCOUNT_ID",
           gamesID: [10892],
         },
@@ -163,40 +124,30 @@ describe("StartFarmController test suite", () => {
   })
 
   test("should reject if the provided plan is type usage and don't have more usage left", async () => {
-    const reachedUserID = "user_ID"
-    const reachedUserSteamAccountName = "REACHED"
     const reachedPlan = GuestPlan.create({
-      ownerId: reachedUserID,
+      ownerId: s.me.userId,
     })
     const allUsage = Usage.create({
       amountTime: 21600,
       createdAt: new Date("2023-06-10T10:00:00Z"),
       plan_id: reachedPlan.id_plan,
-      accountName: "acc1",
+      accountName: s.me.accountName,
     })
     reachedPlan.use(allUsage)
-    const user = makeUser(reachedUserID, "used_user", reachedPlan)
-    user.addSteamAccount(
-      SteamAccount.create({
-        credentials: SteamAccountCredentials.create({
-          accountName: reachedUserSteamAccountName,
-          password: "REACHED_admin_pass",
-        }),
-        ownerId: user.id_user,
-        idGenerator,
-      })
-    )
-    await usersRepository.create(user)
-    const dbUser = await usersRepository.getByID(reachedUserID)
+    const me = await i.usersRepository.getByID(s.me.userId)
+    if (!me || !(me.plan instanceof PlanUsage)) throw new Error()
+    me.plan.use(allUsage)
+    await i.usersRepository.update(me)
+    const dbUser = await i.usersRepository.getByID(s.me.userId)
     expect(dbUser?.steamAccounts.data).toHaveLength(1)
     expect(dbUser?.plan).toBeInstanceOf(GuestPlan)
     expect((dbUser?.plan as PlanUsage).getUsageLeft()).toBe(0)
     expect((dbUser?.plan as PlanUsage).getUsageTotal()).toBe(21600)
     const response = await promiseHandler(
-      startFarmController.handle({
+      farmGamesController.handle({
         payload: {
-          userId: reachedUserID,
-          accountName: reachedUserSteamAccountName,
+          userId: s.me.userId,
+          accountName: s.me.accountName,
           gamesID: [10892],
         },
       })
@@ -218,12 +169,12 @@ describe("StartFarmController test suite", () => {
   //       ownerId: me.id_user,
   //     })
   //   )
-  //   await usersRepository.update(me)
+  //   await i.usersRepository.update(me)
   //   const response = await promiseHandler(
   //     startFarmController.handle({
   //       payload: {
-  //         userId: USER_ID,
-  //         accountName: USER_STEAM_ACCOUNT,
+  //         userId: s.me.userId,
+  //         accountName: s.me.accountName,
   //         gamesID: [10892],
   //       },
   //     })
@@ -237,10 +188,10 @@ describe("StartFarmController test suite", () => {
 
   test("should return message informing if no new games were added", async () => {
     const response1 = await promiseHandler(
-      startFarmController.handle({
+      farmGamesController.handle({
         payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
+          userId: s.me.userId,
+          accountName: s.me.accountName,
           gamesID: [10892],
         },
       })
@@ -252,10 +203,10 @@ describe("StartFarmController test suite", () => {
     })
 
     const response = await promiseHandler(
-      startFarmController.handle({
+      farmGamesController.handle({
         payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
+          userId: s.me.userId,
+          accountName: s.me.accountName,
           gamesID: [10892],
         },
       })
@@ -271,10 +222,10 @@ describe("StartFarmController test suite", () => {
 
   test("should REJECT if user attempts for farm more games than his plan allows", async () => {
     const response = await promiseHandler(
-      startFarmController.handle({
+      farmGamesController.handle({
         payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
+          userId: s.me.userId,
+          accountName: s.me.accountName,
           gamesID: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         },
       })
@@ -290,10 +241,10 @@ describe("StartFarmController test suite", () => {
 
   test("should retrieve the credentials info from database, login and start farm", async () => {
     const response = await promiseHandler(
-      startFarmController.handle({
+      farmGamesController.handle({
         payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
+          userId: s.me.userId,
+          accountName: s.me.accountName,
           gamesID: [10892],
         },
       })
@@ -305,53 +256,157 @@ describe("StartFarmController test suite", () => {
     })
   })
 
-  test("should ask for steam guard if the account has mobile steam guard", async () => {
-    const startFarmController = new FarmGamesController({
-      publisher,
-      allUsersClientsStorage: new AllUsersClientsStorage(publisher, {
-        create: () => new SteamUserMock(validSteamAccounts, true) as unknown as SteamUser,
-      }),
-      sacStateCacheRepository,
-      usersClusterStorage,
-      usersRepository,
-      planRepository,
+  test("should NOT call the farm on client when plan has no usage left", async () => {
+    // SteamAccount.create({
+    //   credentials: SteamAccountCredentials.create({
+    //     accountName: s.me.accountName,
+    //     password: "steam_account_admin_pass",
+    //   }),
+    //   ownerId: user.id_user,
+    //   idGenerator,
+    // })
+
+    const reachedUserID = "user_ID"
+    const reachedPlan = GuestPlan.create({
+      ownerId: reachedUserID,
     })
+    const allUsage = Usage.create({
+      amountTime: 21600,
+      createdAt: new Date("2023-06-10T10:00:00Z"),
+      plan_id: reachedPlan.id_plan,
+      accountName: s.me.accountName,
+    })
+    reachedPlan.use(allUsage)
+    const user = makeUser(reachedUserID, "used_user", reachedPlan)
+    user.addSteamAccount(meInstances.meSteamAccount)
+    await i.usersRepository.create(user)
 
     const response = await promiseHandler(
-      startFarmController.handle({
+      farmGamesController.handle({
         payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
+          userId: user.id_user,
+          accountName: s.me.accountName,
           gamesID: [10892],
         },
       })
     )
 
+    const userClients = i.allUsersClientsStorage.getOrThrow(user.id_user)
+    const sac = userClients.getAccountClient(s.me.accountName)
+    const spyFarmGames = jest.spyOn(sac, "farmGames")
+
+    expect(spyFarmGames).not.toHaveBeenCalledWith([10892])
+
     expect(response).toStrictEqual({
-      status: 202,
-      json: { message: "Steam Guard requerido. Enviando para seu celular." },
+      status: 403,
+      json: { message: "Seu plano não possui mais uso disponível." },
     })
   })
 
-  test("should set the steam guard code across farm attempts", async () => {})
-
-  test("should reject when account that don't exists on steam database is somehow", async () => {
-    startFarmController = new FarmGamesController({
-      publisher,
-      sacStateCacheRepository,
-      usersClusterStorage,
-      usersRepository,
-      planRepository,
-      allUsersClientsStorage: new AllUsersClientsStorage(publisher, {
-        create: () => new SteamUserMock([]) as unknown as SteamUser,
-      }),
+  test("should return message saying user has run out of his plan max usage before steam guard is required", async () => {
+    const reachedUserID = "user_ID"
+    const reachedPlan = GuestPlan.create({
+      ownerId: reachedUserID,
     })
+    const user = makeUser(reachedUserID, "used_user", reachedPlan)
+    // SteamAccount.create({
+    //   credentials: SteamAccountCredentials.create({
+    //     accountName: s.me.accountName,
+    //     password: "steam_account_admin_pass",
+    //   }),
+    //   ownerId: user.id_user,
+    //   idGenerator,
+    // })
+
+    const allUsage = Usage.create({
+      amountTime: 21600,
+      createdAt: new Date("2023-06-10T10:00:00Z"),
+      plan_id: reachedPlan.id_plan,
+      accountName: s.me.accountName,
+    })
+    reachedPlan.use(allUsage)
+    user.addSteamAccount(meInstances.meSteamAccount)
+    await i.usersRepository.create(user)
 
     const response = await promiseHandler(
-      startFarmController.handle({
+      farmGamesController.handle({
         payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
+          userId: user.id_user,
+          accountName: s.me.accountName,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    const userClients = i.allUsersClientsStorage.getOrThrow(user.id_user)
+    const sac = userClients.getAccountClient(s.me.accountName)
+    const spyFarmGames = jest.spyOn(sac, "farmGames")
+
+    expect(spyFarmGames).not.toHaveBeenCalledWith([10892])
+
+    expect(response).toStrictEqual({
+      status: 403,
+      json: { message: "Seu plano não possui mais uso disponível." },
+    })
+  })
+
+  test("should ALWAYS have the latest usage left value when user attempts to farm", async () => {
+    const maxGuestPlanUsage = Usage.restore({
+      id_usage: "max_guest_plan_usage",
+      accountName: s.me.accountName,
+      amountTime: 21600,
+      createdAt: now,
+      plan_id: meInstances.me.plan.id_plan,
+    })
+    await appendUsageToUser(s.me.userId, maxGuestPlanUsage)
+    expect((meInstances.me.plan as PlanUsage).getUsageLeft()).toBe(0)
+    expect((meInstances.me.plan as PlanUsage).getUsageTotal()).toBe(21600)
+
+    await promiseHandler(
+      farmGamesController.handle({
+        payload: {
+          userId: s.me.userId,
+          accountName: s.me.accountName,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    const me2 = await i.usersRepository.getByID(s.me.userId)
+    if (!me2) throw new Error("User not found.")
+      ; (me2?.plan as PlanUsage).removeUsage("max_guest_plan_usage")
+    await i.usersRepository.update(me2)
+
+    const response = await promiseHandler(
+      farmGamesController.handle({
+        payload: {
+          userId: s.me.userId,
+          accountName: s.me.accountName,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    const me3 = (await i.usersRepository.getByID(s.me.userId))!
+    expect((me3.plan as PlanUsage).getUsageLeft()).toBe(21600)
+    expect((me3.plan as PlanUsage).getUsageTotal()).toBe(0)
+    expect(response.json?.message).toBe("Iniciando farm.")
+  })
+})
+
+describe("no users on steam database", () => {
+  beforeEach(async () => {
+    await setupInstances({
+      validSteamAccounts: []
+    })
+  })
+
+  test("should reject when account that don't exists on steam database is somehow", async () => {
+    const response = await promiseHandler(
+      farmGamesController.handle({
+        payload: {
+          userId: s.me.userId,
+          accountName: s.me.accountName,
           gamesID: [10892],
         },
       })
@@ -366,158 +421,11 @@ describe("StartFarmController test suite", () => {
     })
   })
 
-  test("should NOT call the farm on client when plan has no usage left", async () => {
-    console.log = () => {}
-    await usersRepository.dropAll()
-
-    // SteamAccount.create({
-    //   credentials: SteamAccountCredentials.create({
-    //     accountName: USER_STEAM_ACCOUNT,
-    //     password: "steam_account_admin_pass",
-    //   }),
-    //   ownerId: user.id_user,
-    //   idGenerator,
-    // })
-
-    const reachedUserID = "user_ID"
-    const reachedPlan = GuestPlan.create({
-      ownerId: reachedUserID,
-    })
-    const allUsage = Usage.create({
-      amountTime: 21600,
-      createdAt: new Date("2023-06-10T10:00:00Z"),
-      plan_id: reachedPlan.id_plan,
-      accountName: USER_STEAM_ACCOUNT,
-    })
-    reachedPlan.use(allUsage)
-    const user = makeUser(reachedUserID, "used_user", reachedPlan)
-    user.addSteamAccount(me_steamAcount)
-    await usersRepository.create(user)
-
-    const response = await promiseHandler(
-      startFarmController.handle({
-        payload: {
-          userId: user.id_user,
-          accountName: USER_STEAM_ACCOUNT,
-          gamesID: [10892],
-        },
-      })
-    )
-
-    const { userSteamClients } = allUsersClientsStorage.get(user.id_user)
-    const { steamAccountClient: sac } = userSteamClients.getAccountClient(USER_STEAM_ACCOUNT)
-    const spyFarmGames = jest.spyOn(sac, "farmGames")
-
-    expect(spyFarmGames).not.toHaveBeenCalledWith([10892])
-
-    expect(response).toStrictEqual({
-      status: 403,
-      json: { message: "Seu plano não possui mais uso disponível." },
-    })
-  })
-
-  test("should return message saying user has run out of his plan max usage before steam guard is required", async () => {
-    allUsersClientsStorage = new AllUsersClientsStorage(publisher, {
-      create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
-    })
-    startFarmController = new FarmGamesController({
-      sacStateCacheRepository,
-      usersClusterStorage,
-      publisher,
-      usersRepository,
-      allUsersClientsStorage,
-      planRepository,
-    })
-
-    await usersRepository.dropAll()
-
-    const reachedUserID = "user_ID"
-    const reachedPlan = GuestPlan.create({
-      ownerId: reachedUserID,
-    })
-    const user = makeUser(reachedUserID, "used_user", reachedPlan)
-    // SteamAccount.create({
-    //   credentials: SteamAccountCredentials.create({
-    //     accountName: USER_STEAM_ACCOUNT,
-    //     password: "steam_account_admin_pass",
-    //   }),
-    //   ownerId: user.id_user,
-    //   idGenerator,
-    // })
-
-    const allUsage = Usage.create({
-      amountTime: 21600,
-      createdAt: new Date("2023-06-10T10:00:00Z"),
-      plan_id: reachedPlan.id_plan,
-      accountName: USER_STEAM_ACCOUNT,
-    })
-    reachedPlan.use(allUsage)
-    user.addSteamAccount(me_steamAcount)
-    await usersRepository.create(user)
-
-    const response = await promiseHandler(
-      startFarmController.handle({
-        payload: {
-          userId: user.id_user,
-          accountName: USER_STEAM_ACCOUNT,
-          gamesID: [10892],
-        },
-      })
-    )
-
-    const { userSteamClients } = allUsersClientsStorage.get(user.id_user)
-    const { steamAccountClient: sac } = userSteamClients.getAccountClient(USER_STEAM_ACCOUNT)
-    const spyFarmGames = jest.spyOn(sac, "farmGames")
-
-    expect(spyFarmGames).not.toHaveBeenCalledWith([10892])
-
-    expect(response).toStrictEqual({
-      status: 403,
-      json: { message: "Seu plano não possui mais uso disponível." },
-    })
-  })
-
-  test("should ALWAYS have the latest usage left value when user attempts to farm", async () => {
-    await appendUsageToUser(USER_ID, maxGuestPlanUsage)
-    expect((me.plan as PlanUsage).getUsageLeft()).toBe(0)
-    expect((me.plan as PlanUsage).getUsageTotal()).toBe(21600)
-
-    await promiseHandler(
-      startFarmController.handle({
-        payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
-          gamesID: [10892],
-        },
-      })
-    )
-
-    const me2 = await usersRepository.getByID(USER_ID)
-    if (!me2) throw new Error("User not found.")
-    ;(me2?.plan as PlanUsage).removeUsage("max_guest_plan_usage")
-    await usersRepository.update(me2)
-
-    console.log = log
-    const response = await promiseHandler(
-      startFarmController.handle({
-        payload: {
-          userId: USER_ID,
-          accountName: USER_STEAM_ACCOUNT,
-          gamesID: [10892],
-        },
-      })
-    )
-
-    const me3 = (await usersRepository.getByID(USER_ID))!
-    expect((me3.plan as PlanUsage).getUsageLeft()).toBe(21600)
-    expect((me3.plan as PlanUsage).getUsageTotal()).toBe(0)
-    expect(response.json?.message).toBe("Iniciando farm.")
-  })
 })
 
 async function appendUsageToUser(userId: string, usage: Usage) {
-  const user = await usersRepository.getByID(userId)
+  const user = await i.usersRepository.getByID(userId)
   if (!user) throw new Error("user not found")
-  ;(user.plan as PlanUsage).use(usage)
-  await usersRepository.update(user)
+    ; (user.plan as PlanUsage).use(usage)
+  await i.usersRepository.update(user)
 }
