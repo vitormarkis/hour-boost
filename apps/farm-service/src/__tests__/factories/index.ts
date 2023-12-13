@@ -3,18 +3,18 @@ import { FarmServiceFactory } from "~/application/factories"
 import { UserSACsFarmingCluster } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
-import { makeEventEmitter, makeSteamBuilder } from "~/utils/builders"
+import { EventEmitterBuilder, SteamUserMockBuilder } from "~/utils/builders"
 
 export function makeSACFactory(validSteamAccounts: SteamAccountCredentials[], publisher: Publisher) {
   return (user: User, accountName: string) =>
     new SteamAccountClient({
       instances: {
-        emitter: makeEventEmitter().create(),
+        emitter: new EventEmitterBuilder().create(),
         publisher,
       },
       props: {
         accountName,
-        client: makeSteamBuilder(validSteamAccounts).create(),
+        client: new SteamUserMockBuilder(validSteamAccounts).create(),
         userId: user.id_user,
         username: user.username,
       },
