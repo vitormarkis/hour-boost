@@ -6,7 +6,7 @@ type HandlersMapping<Events extends EventsTuple> = {
   [K in keyof Events]: EventHandlers<Events[K]>
 }
 
-export class EventEmitter<EventArgs extends EventsTuple> {
+export class EventEmitter<EventArgs extends EventsTuple = EventsTuple> {
   private handlers: Partial<HandlersMapping<EventArgs>> = {}
 
   on<TEventName extends keyof EventArgs>(event: TEventName, handler: EventHandler<EventArgs[TEventName]>) {
