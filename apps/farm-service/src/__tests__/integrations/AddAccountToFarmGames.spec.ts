@@ -53,7 +53,7 @@ const validSteamAccounts = [
 const log = console.log
 
 beforeEach(async () => {
-  console.log = () => { }
+  console.log = () => {}
   publisher = new Publisher()
   steamBuilder = {
     create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,

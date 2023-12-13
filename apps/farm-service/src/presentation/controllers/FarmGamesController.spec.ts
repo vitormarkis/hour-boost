@@ -1,4 +1,11 @@
-import { CustomInstances, MakeTestInstancesProps, PrefixKeys, makeTestInstances, makeUserInstances, password } from "~/__tests__/instances"
+import {
+  CustomInstances,
+  MakeTestInstancesProps,
+  PrefixKeys,
+  makeTestInstances,
+  makeUserInstances,
+  password,
+} from "~/__tests__/instances"
 import { FarmGamesController } from "~/presentation/controllers/FarmGamesController"
 import { testUsers as s } from "~/__tests__/instances"
 import { promiseHandler } from "~/presentation/controllers"
@@ -7,13 +14,13 @@ import { SteamUserMockBuilder } from "~/utils/builders"
 import { makeUser } from "~/utils/makeUser"
 
 const validSteamAccounts = [
-  { accountName: "paco", password, },
-  { accountName: "REACHED", password, },
+  { accountName: "paco", password },
+  { accountName: "REACHED", password },
 ]
 
 const now = new Date("2023-06-10T10:00:00Z")
 const log = console.log
-console.log = () => { }
+console.log = () => {}
 
 let i = makeTestInstances({
   validSteamAccounts,
@@ -36,11 +43,14 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 
 describe("mobile", () => {
   beforeEach(async () => {
-    await setupInstances({
-      validSteamAccounts,
-    }, {
-      steamUserBuilder: new SteamUserMockBuilder(validSteamAccounts, true)
-    })
+    await setupInstances(
+      {
+        validSteamAccounts,
+      },
+      {
+        steamUserBuilder: new SteamUserMockBuilder(validSteamAccounts, true),
+      }
+    )
   })
 
   test("should ask for steam guard if the account has mobile steam guard", async () => {
@@ -374,7 +384,7 @@ describe("not mobile", () => {
 
     const me2 = await i.usersRepository.getByID(s.me.userId)
     if (!me2) throw new Error("User not found.")
-      ; (me2?.plan as PlanUsage).removeUsage("max_guest_plan_usage")
+    ;(me2?.plan as PlanUsage).removeUsage("max_guest_plan_usage")
     await i.usersRepository.update(me2)
 
     const response = await promiseHandler(
@@ -397,7 +407,7 @@ describe("not mobile", () => {
 describe("no users on steam database", () => {
   beforeEach(async () => {
     await setupInstances({
-      validSteamAccounts: []
+      validSteamAccounts: [],
     })
   })
 
@@ -420,12 +430,11 @@ describe("no users on steam database", () => {
       },
     })
   })
-
 })
 
 async function appendUsageToUser(userId: string, usage: Usage) {
   const user = await i.usersRepository.getByID(userId)
   if (!user) throw new Error("user not found")
-    ; (user.plan as PlanUsage).use(usage)
+  ;(user.plan as PlanUsage).use(usage)
   await i.usersRepository.update(user)
 }

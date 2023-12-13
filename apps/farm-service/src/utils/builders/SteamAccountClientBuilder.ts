@@ -1,20 +1,16 @@
-import { SteamAccountClient } from "~/application/services/steam";
-import { Publisher } from "~/infra/queue";
-import { EventEmitterBuilder } from "~/utils/builders";
-import { Builder, SteamClientBuilder } from "~/utils/builders/builder.interface";
+import { SteamAccountClient } from "~/application/services/steam"
+import { Publisher } from "~/infra/queue"
+import { EventEmitterBuilder } from "~/utils/builders"
+import { Builder, SteamClientBuilder } from "~/utils/builders/builder.interface"
 
 export class SteamAccountClientBuilder implements Builder<SteamAccountClient> {
   constructor(
     private readonly emitterBuilder: EventEmitterBuilder,
     private readonly publisher: Publisher,
-    private readonly steamUserBuilder: SteamClientBuilder,
-  ) { }
+    private readonly steamUserBuilder: SteamClientBuilder
+  ) {}
 
-  create({
-    accountName,
-    userId,
-    username,
-  }: CreateSteamAccountClient): SteamAccountClient {
+  create({ accountName, userId, username }: CreateSteamAccountClient): SteamAccountClient {
     return new SteamAccountClient({
       instances: {
         emitter: this.emitterBuilder.create(),
@@ -25,7 +21,7 @@ export class SteamAccountClientBuilder implements Builder<SteamAccountClient> {
         client: this.steamUserBuilder.create(),
         userId,
         username,
-      }
+      },
     })
   }
 }

@@ -8,15 +8,13 @@ type UserID = string
 export class AllUsersClientsStorage {
   users: Map<UserID, UserClientsStorage> = new Map()
 
-  constructor(
-    private readonly sacBuilder: SteamAccountClientBuilder,
-  ) { }
+  constructor(private readonly sacBuilder: SteamAccountClientBuilder) {}
 
   private generateSAC({ accountName, userId, username }: AddUserProps) {
     return this.sacBuilder.create({
       accountName,
       userId,
-      username
+      username,
     })
   }
 
@@ -44,10 +42,7 @@ export class AllUsersClientsStorage {
     userSteamClients.removeAccountClient(accountName)
   }
 
-  addSteamAccount(
-    userId: string,
-    steamAccountClient: SteamAccountClient
-  ): SteamAccountClient {
+  addSteamAccount(userId: string, steamAccountClient: SteamAccountClient): SteamAccountClient {
     const userClientsStorage = this.users.get(userId)
     if (!userClientsStorage) {
       const userClientsStorage = new UserClientsStorage()
@@ -63,7 +58,6 @@ export class AllUsersClientsStorage {
     this.users.set(userID, userClientsStorage)
     return userClientsStorage
   }
-
 
   get(userId: string) {
     return this.users.get(userId) ?? null

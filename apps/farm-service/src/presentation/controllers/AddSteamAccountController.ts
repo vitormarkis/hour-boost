@@ -14,10 +14,10 @@ import { makeRes } from "~/utils"
 
 export type Resolved = {
   json:
-  | ({
-    message: string
-  } & Record<string, any>)
-  | null
+    | ({
+        message: string
+      } & Record<string, any>)
+    | null
   status: number
 }
 export class AddSteamAccountController {
@@ -27,7 +27,7 @@ export class AddSteamAccountController {
     private readonly usersDAO: UsersDAO,
     private readonly steamBuilder: SteamBuilder,
     private readonly publisher: Publisher
-  ) { }
+  ) {}
 
   async handle(req: HttpClient.Request<IAddSteamAccount>): Promise<HttpClient.Response> {
     const perform = async () => {
@@ -39,11 +39,11 @@ export class AddSteamAccountController {
       const sac = this.allUsersClientsStorage.getOrAddSteamAccount({
         accountName,
         userId,
-        username
+        username,
       })
 
       console.log({
-        THIS_SAC_IS_LOGGED: sac.logged
+        THIS_SAC_IS_LOGGED: sac.logged,
       })
       if (sac.logged) {
         const { steamAccountID } = await this.addSteamAccount.execute({
@@ -61,7 +61,6 @@ export class AddSteamAccountController {
         } as HttpClient.Response
       }
       sac.login(accountName, password)
-
 
       const steamClientEventsRequired = new SteamClientEventsRequired(sac, EVENT_PROMISES_TIMEOUT_IN_SECONDS)
 
@@ -130,7 +129,7 @@ export class SteamClientEventsRequired {
   constructor(
     private readonly sac: SteamAccountClient,
     private readonly timeoutLimitInSeconds: number
-  ) { }
+  ) {}
 
   createEventPromiseResolver<K extends keyof EventParameters>(eventName: K) {
     return new Promise<SingleEventResolver<EventParameters, K>>(res => {

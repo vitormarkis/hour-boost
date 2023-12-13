@@ -95,7 +95,7 @@ beforeEach(async () => {
   friend = makeUser(FRIEND_ID, FRIEND)
   await usersRepository.create(me)
   await usersRepository.create(friend)
-  console.log = () => { }
+  console.log = () => {}
 })
 
 test.only("should ask for the steam guard code", async () => {

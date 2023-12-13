@@ -19,7 +19,7 @@ test("should create NOT mobile steam user mock ", async () => {
   const sac = i.allUsersClientsStorage.getOrAddSteamAccount({
     accountName: "accountname",
     userId: "userid",
-    username: "username"
+    username: "username",
   })
   const sacClientEmitterSPY = jest.spyOn(sac.client, "emit")
   sac.login("accountname", "pass")
@@ -28,19 +28,22 @@ test("should create NOT mobile steam user mock ", async () => {
 })
 
 test("should create MOBILE steam user mock ", async () => {
-  const i = makeTestInstances({
-    validSteamAccounts,
-  }, {
-    steamUserBuilder: new SteamUserMockBuilder(validSteamAccounts, true)
-  })
+  const i = makeTestInstances(
+    {
+      validSteamAccounts,
+    },
+    {
+      steamUserBuilder: new SteamUserMockBuilder(validSteamAccounts, true),
+    }
+  )
   const sac = i.allUsersClientsStorage.getOrAddSteamAccount({
     accountName: "accountname",
     userId: "userid",
-    username: "username"
+    username: "username",
   })
   const sacClientEmitterSPY = jest.spyOn(sac.client, "emit")
   sac.login("accountname", "pass")
   jest.advanceTimersByTime(1)
-  console.log(sacClientEmitterSPY.mock.calls);
+  console.log(sacClientEmitterSPY.mock.calls)
   expect(sacClientEmitterSPY.mock.calls[0][0]).toBe("steamGuard")
 })

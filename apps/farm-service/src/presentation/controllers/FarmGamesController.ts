@@ -55,7 +55,7 @@ export class FarmGamesController {
     })
     if (!sac) throw new ApplicationError("Essa conta nunca se conectou à Steam.")
     console.log({
-      isLogged: sac.logged
+      isLogged: sac.logged,
     })
     if (!sac.logged) {
       sac.login(steamAccountDomain.credentials.accountName, steamAccountDomain.credentials.password)

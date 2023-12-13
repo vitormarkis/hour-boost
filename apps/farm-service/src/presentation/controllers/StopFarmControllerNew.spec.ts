@@ -1,10 +1,17 @@
-import { CustomInstances, MakeTestInstancesProps, makeTestInstances, makeUserInstances, password, testUsers as s } from "~/__tests__/instances"
+import {
+  CustomInstances,
+  MakeTestInstancesProps,
+  makeTestInstances,
+  makeUserInstances,
+  password,
+  testUsers as s,
+} from "~/__tests__/instances"
 import { FarmGamesController, StopFarmController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { SteamUserMockBuilder } from "~/utils/builders"
 
 const log = console.log
-console.log = () => { }
+console.log = () => {}
 
 const validSteamAccounts = [{ accountName: "paco", password }]
 let farmGamesController: FarmGamesController
@@ -57,7 +64,7 @@ test("should reject is not registered user is provided", async () => {
 
 test("should reject if user is not farming", async () => {
   console.log({
-    users: i.usersMemory.users
+    users: i.usersMemory.users,
   })
   const stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository)
   const { status, json } = await promiseHandler(
@@ -78,11 +85,14 @@ test("should reject if user is not farming", async () => {
 
 describe("Account Name farming test suite", () => {
   beforeEach(async () => {
-    await setupInstances({
-      validSteamAccounts,
-    }, {
-      steamUserBuilder: new SteamUserMockBuilder(validSteamAccounts, true)
-    })
+    await setupInstances(
+      {
+        validSteamAccounts,
+      },
+      {
+        steamUserBuilder: new SteamUserMockBuilder(validSteamAccounts, true),
+      }
+    )
 
     const { status } = await promiseHandler(
       farmGamesController.handle({
