@@ -1,15 +1,14 @@
+import { GuestPlan, PlanUsage, Usage } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
-  PrefixKeys,
   makeTestInstances,
   makeUserInstances,
   password,
+  testUsers as s,
 } from "~/__tests__/instances"
+import { StopFarmController, promiseHandler } from "~/presentation/controllers"
 import { FarmGamesController } from "~/presentation/controllers/FarmGamesController"
-import { testUsers as s } from "~/__tests__/instances"
-import { promiseHandler } from "~/presentation/controllers"
-import { GuestPlan, PlanUsage, Usage } from "core"
 import { SteamUserMockBuilder } from "~/utils/builders"
 import { makeUser } from "~/utils/makeUser"
 
@@ -27,6 +26,7 @@ let i = makeTestInstances({
 })
 let meInstances = makeUserInstances("me", s.me, i.sacFactory)
 let farmGamesController: FarmGamesController
+let stopFarmController: StopFarmController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
@@ -39,6 +39,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     usersClusterStorage: i.usersClusterStorage,
     usersRepository: i.usersRepository,
   })
+  stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository)
 }
 
 describe("mobile", () => {
@@ -302,7 +303,7 @@ describe("not mobile", () => {
     )
 
     const userClients = i.allUsersClientsStorage.getOrThrow(user.id_user)
-    const sac = userClients.getAccountClient(s.me.accountName)
+    const sac = userClients.getAccountClientOrThrow(s.me.accountName)
     const spyFarmGames = jest.spyOn(sac, "farmGames")
 
     expect(spyFarmGames).not.toHaveBeenCalledWith([10892])
@@ -349,7 +350,7 @@ describe("not mobile", () => {
     )
 
     const userClients = i.allUsersClientsStorage.getOrThrow(user.id_user)
-    const sac = userClients.getAccountClient(s.me.accountName)
+    const sac = userClients.getAccountClientOrThrow(s.me.accountName)
     const spyFarmGames = jest.spyOn(sac, "farmGames")
 
     expect(spyFarmGames).not.toHaveBeenCalledWith([10892])
@@ -368,7 +369,7 @@ describe("not mobile", () => {
       createdAt: now,
       plan_id: meInstances.me.plan.id_plan,
     })
-    await appendUsageToUser(s.me.userId, maxGuestPlanUsage)
+    await i.usePlan(s.me.userId, maxGuestPlanUsage)
     expect((meInstances.me.plan as PlanUsage).getUsageLeft()).toBe(0)
     expect((meInstances.me.plan as PlanUsage).getUsageTotal()).toBe(21600)
 
@@ -384,7 +385,7 @@ describe("not mobile", () => {
 
     const me2 = await i.usersRepository.getByID(s.me.userId)
     if (!me2) throw new Error("User not found.")
-    ;(me2?.plan as PlanUsage).removeUsage("max_guest_plan_usage")
+    ;(me2.plan as PlanUsage).removeUsage("max_guest_plan_usage")
     await i.usersRepository.update(me2)
 
     const response = await promiseHandler(
@@ -401,6 +402,48 @@ describe("not mobile", () => {
     expect((me3.plan as PlanUsage).getUsageLeft()).toBe(21600)
     expect((me3.plan as PlanUsage).getUsageTotal()).toBe(0)
     expect(response.json?.message).toBe("Iniciando farm.")
+  })
+
+  test("should NOT ADD new SAC if the account already exists on storage and is not farming", async () => {
+    const responseFarm1 = await promiseHandler(
+      farmGamesController.handle({
+        payload: {
+          userId: s.me.userId,
+          accountName: s.me.accountName,
+          gamesID: [10892],
+        },
+      })
+    )
+    expect(responseFarm1.status).toBe(200)
+
+    const userCluster = i.usersClusterStorage.getOrThrow(s.me.username)
+    const addSacSPY = jest.spyOn(userCluster, "addSAC")
+    expect(addSacSPY).toBeTruthy()
+
+    const responseStopFarm1 = await promiseHandler(
+      stopFarmController.handle({
+        payload: {
+          userId: s.me.userId,
+          accountName: s.me.accountName,
+        },
+      })
+    )
+    expect(responseStopFarm1.status).toBe(200)
+
+    const responseFarm2 = await promiseHandler(
+      farmGamesController.handle({
+        payload: {
+          userId: s.me.userId,
+          accountName: s.me.accountName,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    console.log({
+      calls: addSacSPY.mock.calls,
+    })
+    expect(responseFarm2.status).toBe(200)
   })
 })
 
@@ -431,10 +474,3 @@ describe("no users on steam database", () => {
     })
   })
 })
-
-async function appendUsageToUser(userId: string, usage: Usage) {
-  const user = await i.usersRepository.getByID(userId)
-  if (!user) throw new Error("user not found")
-  ;(user.plan as PlanUsage).use(usage)
-  await i.usersRepository.update(user)
-}

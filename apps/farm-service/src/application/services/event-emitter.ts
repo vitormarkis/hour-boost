@@ -22,4 +22,20 @@ export class EventEmitter<EventArgs extends EventsTuple = EventsTuple> {
     const eventHandlers = this.handlers[event]
     eventHandlers?.forEach(handler => handler(...args))
   }
+
+  listAllListeners() {
+    return this.handlers
+  }
+
+  listAllEventsWithListeners() {
+    return Object.keys(this.handlers).length
+  }
+
+  listEventListeners<TEventName extends keyof EventArgs>(eventName: TEventName) {
+    return this.handlers[eventName]
+  }
+
+  listEventListenersAmount<TEventName extends keyof EventArgs>(eventName: TEventName) {
+    return this.handlers[eventName]?.length
+  }
 }

@@ -4,13 +4,9 @@ import {
   SteamAccountClientStateCacheRepository,
   UsersRepository,
 } from "core"
-import { FarmServiceFactory } from "~/application/factories"
+import { FarmServiceBuilder } from "~/application/factories"
 
-import {
-  AllUsersClientsStorage,
-  UserSACsFarmingCluster,
-  UsersSACsFarmingClusterStorage,
-} from "~/application/services"
+import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { HttpClient } from "~/contracts"
 import { Publisher } from "~/infra/queue"
@@ -21,17 +17,13 @@ export class FarmGamesController {
   private readonly publisher: Publisher
   private readonly usersRepository: UsersRepository
   private readonly allUsersClientsStorage: AllUsersClientsStorage
-  private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
   private readonly usersClusterStorage: UsersSACsFarmingClusterStorage
-  private readonly planRepository: PlanRepository
 
   constructor(props: FarmGamesControllerProps) {
     this.publisher = props.publisher
     this.usersRepository = props.usersRepository
     this.allUsersClientsStorage = props.allUsersClientsStorage
-    this.sacStateCacheRepository = props.sacStateCacheRepository
     this.usersClusterStorage = props.usersClusterStorage
-    this.planRepository = props.planRepository
   }
 
   async handle(
@@ -106,41 +98,21 @@ export class FarmGamesController {
     const noNewGameAddToFarm = areTwoArraysEqual(gamesID, sac.getGamesPlaying())
     if (noNewGameAddToFarm) return makeRes(200, "Nenhum novo game adicionado ao farm.")
 
-    // const KEY_USER_ACCOUNTNAME = `${user.username}:${accountName}`
-
-    // const managementSteamAccountFarmingClusterStorage = new ManagementSteamAccountFarmingClusterStorage(
-    //   this.steamAccountFarmingClusterStorage,
-    //   sac,
-    //   this.sacStateCacheRepository
-    // )
-    // const userCluster = managementSteamAccountFarmingClusterStorage.getOrAddUserCluster(
-    //   KEY_USER_ACCOUNTNAME,
-    //   farmServiceFactory.getFarmService(user.plan)
-    // )
-
-    const farmServiceFactory = new FarmServiceFactory({
+    const farmServiceFactory = new FarmServiceBuilder({
       publisher: this.publisher,
-      username: user.username,
     })
 
-    const userCluster =
-      this.usersClusterStorage.get(user.username) ??
-      this.usersClusterStorage.add(
-        user.username,
-        new UserSACsFarmingCluster({
-          farmService: farmServiceFactory.createNewFarmService(user.plan),
-          username: user.username,
-          sacStateCacheRepository: this.sacStateCacheRepository,
-          farmServiceFactory,
-          planId: user.plan.id_plan,
-          planRepository: this.planRepository,
-        })
-      )
+    const userCluster = this.usersClusterStorage.getOrAdd(user.username, user.plan)
 
     // possui service farmando
     // possui service sem ninguem farmando
     // nao possui service, precisa criar
-    if (!userCluster.hasSteamAccountClient(accountName)) {
+    console.log({
+      accountName,
+      hasSteamAccountClien: !userCluster.hasSteamAccountClient(accountName),
+      isAccountFarming: !userCluster.isAccountFarming(accountName),
+    })
+    if (!userCluster.hasSteamAccountClient(accountName) && !userCluster.isAccountFarming(accountName)) {
       userCluster.addSAC(sac)
     }
     await userCluster.farmWithAccount(accountName, gamesID, user.plan.id_plan)

@@ -1,13 +1,29 @@
+import { ApplicationError, PlanInfinity, PlanUsage } from "core"
 import { UserSACsFarmingCluster } from "~/application/services"
+import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
+
+type Username = string
 
 export class UsersSACsFarmingClusterStorage {
-  usersCluster: Map<string, UserSACsFarmingCluster> = new Map()
+  usersCluster: Map<Username, UserSACsFarmingCluster> = new Map()
+
+  constructor(private readonly userClusterBuilder: UserClusterBuilder) {}
 
   get(username: string) {
     return this.usersCluster.get(username) ?? null
   }
 
-  add(username: string, userCluster: UserSACsFarmingCluster) {
+  getOrThrow(username: string) {
+    const foundUserCluster = this.usersCluster.get(username)
+    if (!foundUserCluster)
+      throw new ApplicationError(`Nenhum user cluster encontrado para o usuário: ${username}.`)
+    return foundUserCluster
+  }
+
+  // add(username: string, userCluster: UserSACsFarmingCluster) {
+  add(username: string, plan: PlanUsage | PlanInfinity): UserSACsFarmingCluster {
+    // this.usersCluster.set(username, userCluster)
+    const userCluster = this.userClusterBuilder.create(username, plan)
     this.usersCluster.set(username, userCluster)
     return userCluster
   }
@@ -18,5 +34,15 @@ export class UsersSACsFarmingClusterStorage {
       accountStatus[username] = userCluster.getAccountsStatus()
     }
     return accountStatus
+  }
+
+  getOrAdd(username: string, plan: PlanUsage | PlanInfinity): UserSACsFarmingCluster {
+    const userCluster = this.get(username)
+    if (!userCluster) {
+      const newUserCluster = this.userClusterBuilder.create(username, plan)
+      this.usersCluster.set(username, newUserCluster)
+      return newUserCluster
+    }
+    return userCluster
   }
 }

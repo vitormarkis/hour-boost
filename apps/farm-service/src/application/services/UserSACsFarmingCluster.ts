@@ -1,23 +1,21 @@
-import {
-  ApplicationError,
-  PlanInfinity,
-  PlanRepository,
-  PlanUsage,
-  SACStateCache,
-  SteamAccountClientStateCacheRepository,
-} from "core"
-import { FarmServiceFactory } from "~/application/factories"
-import { FarmService, SACList } from "~/application/services"
+import { ApplicationError, PlanRepository, SACStateCache, SteamAccountClientStateCacheRepository } from "core"
+import { FarmServiceBuilder } from "~/application/factories"
+import { EventEmitter, FarmService, SACList } from "~/application/services"
 import { SACStateCacheFactory, SteamAccountClient } from "~/application/services/steam"
+import { Publisher } from "~/infra/queue"
+import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 
 export class UserSACsFarmingCluster {
+  private readonly publisher: Publisher
   private farmService: FarmService
   private readonly sacList: SACList = new SACList()
   private readonly username: string
   private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
   private readonly planRepository: PlanRepository
-  private readonly farmServiceFactory: FarmServiceFactory
+  private readonly farmServiceFactory: FarmServiceBuilder
   private readonly planId: string
+  private readonly usageBuilder: UsageBuilder
+  readonly emitter: EventEmitter<UserClusterEvents>
 
   constructor(props: UserSACsFarmingClusterProps) {
     this.farmService = props.farmService
@@ -26,6 +24,9 @@ export class UserSACsFarmingCluster {
     this.planRepository = props.planRepository
     this.farmServiceFactory = props.farmServiceFactory
     this.planId = props.planId
+    this.emitter = props.emitter
+    this.publisher = props.publisher
+    this.usageBuilder = props.usageBuilder
   }
 
   getAccountsStatus() {
@@ -36,7 +37,8 @@ export class UserSACsFarmingCluster {
     return `${this.username}:${accountName}`
   }
 
-  stopFarmAllAccounts() {
+  stopFarmAllAccounts(when?: Date) {
+    console.log("2. rodando stopFarmAllAccounts")
     this.sacList.stopFarmAllAccounts()
     this.farmService.stopFarmAllAccounts()
   }
@@ -127,12 +129,12 @@ export class UserSACsFarmingCluster {
 
     if (!this.farmService.hasAccountsFarming()) {
       const plan = await this.planRepository.getById(planId)
-      if (!plan)
+      if (!plan) {
         throw new ApplicationError(`NSTH: ID do plano não existe, contate o desenvolvedor. ${planId}`)
-      const newFarmService = this.farmServiceFactory.createNewFarmService(plan)
+      }
+      const newFarmService = this.farmServiceFactory.create(this.username, plan)
       this.setFarmService(newFarmService)
     }
-    console.log({ farmWithAccountImpl_gamesID: gamesID })
     this.farmWithAccountImpl(sac, accountName, gamesID)
   }
 
@@ -156,6 +158,11 @@ export class UserSACsFarmingCluster {
   setFarmService(newFarmService: FarmService) {
     this.farmService = newFarmService
   }
+
+  isAccountFarming(accountName: string) {
+    const accountDetails = this.farmService.getAccountDetails(accountName)
+    return accountDetails?.status === "FARMING"
+  }
 }
 
 export type UserSACsFarmingClusterProps = {
@@ -163,6 +170,13 @@ export type UserSACsFarmingClusterProps = {
   username: string
   sacStateCacheRepository: SteamAccountClientStateCacheRepository
   planRepository: PlanRepository
-  farmServiceFactory: FarmServiceFactory
+  farmServiceFactory: FarmServiceBuilder
   planId: string
+  publisher: Publisher
+  emitter: EventEmitter<UserClusterEvents>
+  usageBuilder: UsageBuilder
+}
+
+export type UserClusterEvents = {
+  "service:max-usage-exceeded": []
 }

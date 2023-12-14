@@ -37,6 +37,11 @@ export class SteamAccountList {
   getIDs() {
     return this.data.map(sa => sa.id_steamAccount)
   }
+
+  deleteAll() {
+    this.data.splice(0, this.data.length)
+    this.trash.splice(0, this.trash.length)
+  }
 }
 
 export interface SteamAccountListProps {

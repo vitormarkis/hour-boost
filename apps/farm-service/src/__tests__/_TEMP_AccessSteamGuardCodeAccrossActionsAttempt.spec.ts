@@ -1,116 +1,61 @@
 import {
-  IDGenerator,
-  PlanRepository,
-  SteamAccount,
-  SteamAccountClientStateCacheRepository,
-  SteamAccountCredentials,
-  User,
-} from "core"
-
-import SteamUser from "steam-user"
-import { AllUsersClientsStorage, EventEmitter, UsersSACsFarmingClusterStorage } from "~/application/services"
-import { Publisher } from "~/infra/queue"
-import { SteamUserMock } from "~/infra/services/SteamUserMock"
-import { FarmGamesController } from "~/presentation/controllers"
-import { promiseHandler } from "~/presentation/controllers/promiseHandler"
-import { makeUser } from "~/utils/makeUser"
+  CustomInstances,
+  MakeTestInstancesProps,
+  makeTestInstances,
+  makeUserInstances,
+  password,
+  testUsers as s,
+} from "~/__tests__/instances"
+import { SteamUserMock } from "~/infra/services"
+import { FarmGamesController, promiseHandler } from "~/presentation/controllers"
 import { sleep } from "~/utils"
-import {
-  PlanRepositoryInMemory,
-  SteamAccountClientStateCacheInMemory,
-  UsersInMemory,
-  UsersRepositoryInMemory,
-} from "~/infra/repository"
-import { SteamUserMockBuilder } from "~/utils/builders/SteamMockBuilder"
-import { SteamBuilder } from "~/contracts"
-import { Builder, EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
-import { SteamAccountClient } from "~/application/services/steam"
+import { SteamUserMockBuilder } from "~/utils/builders"
 
-const USER_ID = "123"
-const USER_STEAM_ACCOUNT = "steam_account"
-const USERNAME = "vitormarkis"
-const FRIEND_ID = "ABC"
-const FRIEND = "matheus"
-
-const validSteamAccounts = [
-  {
-    accountName: "steam_account",
-    password: "steam_account_admin_pass",
-  },
-  {
-    accountName: "REACHED",
-    password: "REACHED_admin_pass",
-  },
-]
-
-let usersMemory: UsersInMemory
-let publisher: Publisher
-let usersRepository: UsersRepositoryInMemory
-let startFarmController: FarmGamesController
-let allUsersClientsStorage: AllUsersClientsStorage
-let me: User
-let friend: User
-let me_steamAcount: SteamAccount
-let sacStateCacheRepository: SteamAccountClientStateCacheRepository
-let planRepository: PlanRepository
-let steamBuilder: SteamBuilder
-let usersClusterStorage: UsersSACsFarmingClusterStorage
-let sacBuilder: SteamAccountClientBuilder
-let emitterBuilder: Builder<EventEmitter>
-const idGenerator: IDGenerator = {
-  makeID: () => "ID",
-}
+const validSteamAccounts = [{ accountName: "paco", password }]
 
 const log = console.log
+console.log = () => {}
+
+let i = makeTestInstances({
+  validSteamAccounts,
+})
+let meInstances = makeUserInstances("me", s.me, i.sacFactory)
+let farmGamesController: FarmGamesController
+
+async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
+  i = makeTestInstances(props, customInstances)
+  meInstances = await i.createUser("me")
+  farmGamesController = new FarmGamesController({
+    allUsersClientsStorage: i.allUsersClientsStorage,
+    planRepository: i.planRepository,
+    publisher: i.publisher,
+    sacStateCacheRepository: i.sacStateCacheRepository,
+    usersClusterStorage: i.usersClusterStorage,
+    usersRepository: i.usersRepository,
+  })
+}
 
 beforeEach(async () => {
-  usersMemory = new UsersInMemory()
-  publisher = new Publisher()
-  emitterBuilder = new EventEmitterBuilder()
-  usersRepository = new UsersRepositoryInMemory(usersMemory)
-  sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher)
-  steamBuilder = new SteamUserMockBuilder(validSteamAccounts)
-  allUsersClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder, sacBuilder)
-  planRepository = new PlanRepositoryInMemory(usersMemory)
-  sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
-  usersClusterStorage = new UsersSACsFarmingClusterStorage()
-  startFarmController = new FarmGamesController({
-    publisher,
-    usersRepository,
-    allUsersClientsStorage,
-    sacStateCacheRepository,
-    usersClusterStorage,
-    planRepository,
-  })
-  me = makeUser(USER_ID, USERNAME)
-  me_steamAcount = SteamAccount.create({
-    credentials: SteamAccountCredentials.create({
-      accountName: USER_STEAM_ACCOUNT,
-      password: "steam_account_admin_pass",
-    }),
-    idGenerator,
-    ownerId: me.id_user,
-  })
-  me.addSteamAccount(me_steamAcount)
-  friend = makeUser(FRIEND_ID, FRIEND)
-  await usersRepository.create(me)
-  await usersRepository.create(friend)
-  console.log = () => {}
+  await setupInstances(
+    { validSteamAccounts },
+    { steamUserBuilder: new SteamUserMockBuilder(validSteamAccounts, true) }
+  )
 })
 
 test.only("should ask for the steam guard code", async () => {
   const response = await promiseHandler(
-    startFarmController.handle({
+    farmGamesController.handle({
       payload: {
-        userId: USER_ID,
-        accountName: USER_STEAM_ACCOUNT,
+        userId: s.me.userId,
+        accountName: s.me.accountName,
         gamesID: [10892],
       },
     })
   )
 
-  const userClients = allUsersClientsStorage.getOrThrow(USER_ID)
-  const sac1 = userClients.getAccountClient(USER_STEAM_ACCOUNT)
+  expect(response.status).toBe(202)
+
+  const sac1 = i.allUsersClientsStorage.getAccountClientOrThrow(s.me.userId, s.me.accountName)
   expect(sac1.getLastArguments("steamGuard")).toHaveLength(3)
   expect((sac1.client as unknown as SteamUserMock).steamGuardCode).toBeUndefined()
 
@@ -120,8 +65,8 @@ test.only("should ask for the steam guard code", async () => {
   })
 
   // should call function that sets the steam guard code to the client instance
-  const userClients2 = allUsersClientsStorage.getOrThrow(USER_ID)
-  const sac2 = userClients2.getAccountClient(USER_STEAM_ACCOUNT)
+  const userClients2 = i.allUsersClientsStorage.getOrThrow(s.me.userId)
+  const sac2 = userClients2.getAccountClientOrThrow(s.me.accountName)
 
   expect((sac2.client as unknown as SteamUserMock).steamGuardCode).toBeUndefined()
   const [_, setCode] = sac2.getLastArguments("steamGuard")
@@ -130,18 +75,17 @@ test.only("should ask for the steam guard code", async () => {
   expect((sac2.client as unknown as SteamUserMock).steamGuardCode).toBe("998776")
 
   // NOW should not ask for the steamGuard, even being on mobile, since last action saved the steam guard
-  console.log = log
-  let response2 = await promiseHandler(
-    startFarmController.handle({
+  const response2 = await promiseHandler(
+    farmGamesController.handle({
       payload: {
-        userId: USER_ID,
-        accountName: USER_STEAM_ACCOUNT,
+        userId: s.me.userId,
+        accountName: s.me.accountName,
         gamesID: [10892],
       },
     })
   )
-  const userSteamClients = allUsersClientsStorage.getOrThrow(USER_ID)
-  const sac = userSteamClients.getAccountClient(USER_STEAM_ACCOUNT)
+  const userSteamClients = i.allUsersClientsStorage.getOrThrow(s.me.userId)
+  const sac = userSteamClients.getAccountClientOrThrow(s.me.accountName)
   expect((sac.client as unknown as SteamUserMock).isMobile()).toBeTruthy()
 
   expect(response2).toStrictEqual({

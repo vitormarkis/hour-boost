@@ -1,163 +1,71 @@
 import {
-  DiamondPlan,
-  IDGenerator,
-  PlanRepository,
-  SteamAccount,
-  SteamAccountClientStateCacheRepository,
-  SteamAccountCredentials,
-  User,
-  UsersDAO,
-} from "core"
-import SteamUser from "steam-user"
-import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
-import { UsersDAOInMemory } from "~/infra/dao"
-import { Publisher } from "~/infra/queue"
-import {
-  PlanRepositoryInMemory,
-  SteamAccountClientStateCacheInMemory,
-  UsersInMemory,
-  UsersRepositoryInMemory,
-} from "~/infra/repository"
-import { SteamUserMock } from "~/infra/services/SteamUserMock"
-import { FarmGamesController } from "~/presentation/controllers"
-import { makeUser } from "~/utils/makeUser"
+  CustomInstances,
+  MakeTestInstancesProps,
+  makeTestInstances,
+  makeUserInstances,
+  password,
+  testUsers as s,
+} from "~/__tests__/instances"
+import { PlanBuilder } from "~/application/factories/PlanFactory"
 
-const USER_ID = "vitor_id"
-const USERNAME = "vitormarkis"
-const ACCOUNT_NAME = "steam_account"
-const ACCOUNT_NAME_2 = "steam_account_2"
-const FRIEND_ID = "matheus_id"
-const FRIEND_USERNAME = "matheus"
-const FRIEND_ACCOUNT_NAME = "matheus_sa"
+import { FarmGamesController } from "~/presentation/controllers"
 
 const validSteamAccounts = [
-  {
-    accountName: "steam_account",
-    password: "steam_account_admin_pass",
-  },
-  {
-    accountName: "matheus_sa",
-    password: "matheus_admin_pass",
-  },
-  {
-    accountName: "steam_account_2",
-    password: "steam_account_2_admin_pass",
-  },
+  { accountName: "paco", password },
+  { accountName: "fred", password },
+  { accountName: "bane", password },
 ]
 
-let publisher: Publisher
-let usersRepository: UsersRepositoryInMemory
-let farmGamesController: FarmGamesController
-let allUsersClientsStorage: AllUsersClientsStorage
-let usersMemory: UsersInMemory
-let usersDAO: UsersDAO
-let me: User
-let friend: User
-let me_steamAcount: SteamAccount
-let me_steamAcount2: SteamAccount
-let friend_steamAcount: SteamAccount
-let sacStateCacheRepository: SteamAccountClientStateCacheRepository
-let planRepository: PlanRepository
-let usersClusterStorage: UsersSACsFarmingClusterStorage
+const log = console.log
+console.log = () => {}
 
-const idGenerator: IDGenerator = {
-  makeID: () => "ID",
+let i = makeTestInstances({ validSteamAccounts })
+let meInstances = makeUserInstances("me", s.me, i.sacFactory)
+let friendInstances = makeUserInstances("friend", s.friend, i.sacFactory)
+let farmGamesController: FarmGamesController
+
+async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
+  i = makeTestInstances(props, customInstances)
+  meInstances = await i.createUser("me")
+  friendInstances = await i.createUser("friend")
+  const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
+  await i.changeUserPlan(diamondPlan)
+  await i.addSteamAccount(s.me.userId, s.me.accountName2, password)
+  farmGamesController = new FarmGamesController({
+    allUsersClientsStorage: i.allUsersClientsStorage,
+    planRepository: i.planRepository,
+    publisher: i.publisher,
+    sacStateCacheRepository: i.sacStateCacheRepository,
+    usersClusterStorage: i.usersClusterStorage,
+    usersRepository: i.usersRepository,
+  })
 }
 
-const log = console.log
-// console.log = () => {}
-
 beforeEach(async () => {
-  publisher = new Publisher()
-  usersMemory = new UsersInMemory()
-  usersRepository = new UsersRepositoryInMemory(usersMemory)
-  usersDAO = new UsersDAOInMemory(usersMemory)
-  allUsersClientsStorage = new AllUsersClientsStorage(publisher, {
-    create: () => new SteamUserMock(validSteamAccounts) as unknown as SteamUser,
-  })
-  sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
-
-  usersClusterStorage = new UsersSACsFarmingClusterStorage()
-
-  planRepository = new PlanRepositoryInMemory(usersMemory)
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage,
-    publisher,
-    sacStateCacheRepository,
-    usersClusterStorage,
-    usersRepository,
-    planRepository,
-  })
-  me = makeUser(USER_ID, USERNAME)
-  me.assignPlan(
-    DiamondPlan.create({
-      ownerId: me.id_user,
-    })
-  )
-  me_steamAcount = SteamAccount.create({
-    credentials: SteamAccountCredentials.create({
-      accountName: ACCOUNT_NAME,
-      password: "steam_account_admin_pass",
-    }),
-    ownerId: me.id_user,
-    idGenerator,
-  })
-  me_steamAcount2 = SteamAccount.create({
-    credentials: SteamAccountCredentials.create({
-      accountName: ACCOUNT_NAME_2,
-      password: "steam_account_2_admin_pass",
-    }),
-    ownerId: me.id_user,
-    idGenerator,
-  })
-  me.addSteamAccount(me_steamAcount)
-  me.addSteamAccount(me_steamAcount2)
-  friend = makeUser(FRIEND_ID, FRIEND_USERNAME)
-  friend_steamAcount = SteamAccount.create({
-    credentials: SteamAccountCredentials.create({
-      accountName: FRIEND_ACCOUNT_NAME,
-      password: "matheus_admin_pass",
-    }),
-    ownerId: friend.id_user,
-    idGenerator,
-  })
-  friend.addSteamAccount(friend_steamAcount)
-  await usersRepository.create(me)
-  await usersRepository.create(friend)
+  await setupInstances({ validSteamAccounts })
 })
-
-test("should stop all farms", async () => {
-  // console.log = () => {}
-  // console.log = log
+test.only("should stop all farms", async () => {
+  console.log = log
   await farmGamesController.handle({
-    payload: { accountName: ACCOUNT_NAME, gamesID: [109230], userId: USER_ID },
+    payload: { accountName: s.me.accountName, gamesID: [109230], userId: s.me.userId },
   })
   await farmGamesController.handle({
-    payload: {
-      accountName: ACCOUNT_NAME_2,
-      gamesID: [109230],
-      userId: USER_ID,
-    },
+    payload: { accountName: s.me.accountName2, gamesID: [109230], userId: s.me.userId },
   })
   await farmGamesController.handle({
-    payload: {
-      accountName: FRIEND_ACCOUNT_NAME,
-      gamesID: [109230],
-      userId: FRIEND_ID,
-    },
+    payload: { accountName: s.friend.accountName, gamesID: [109230], userId: s.friend.userId },
   })
-
-  expect(allUsersClientsStorage.listUsers()).toStrictEqual({
-    vitor_id: {
-      steam_account: {
+  expect(i.allUsersClientsStorage.listUsers()).toStrictEqual({
+    [s.me.userId]: {
+      [s.me.accountName]: {
         farming: true,
       },
-      steam_account_2: {
+      [s.me.accountName2]: {
         farming: true,
       },
     },
-    matheus_id: {
-      matheus_sa: {
+    [s.friend.userId]: {
+      [s.friend.accountName]: {
         farming: true,
       },
     },

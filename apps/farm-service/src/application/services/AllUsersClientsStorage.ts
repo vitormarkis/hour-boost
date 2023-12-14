@@ -78,13 +78,13 @@ export class AllUsersClientsStorage {
 
   getAccountClient(userID: string, accountName: string) {
     const userClientsStorage = this.users.get(userID)
-    const steamAccountClient = userClientsStorage?.getAccountClient(accountName) ?? {}
+    const steamAccountClient = userClientsStorage?.getAccountClientOrThrow(accountName) ?? {}
     return steamAccountClient ?? null
   }
 
   getAccountClientOrThrow(userID: string, accountName: string) {
     const userSteamClients = this.getOrThrow(userID)
-    const steamAccountClient = userSteamClients.getAccountClient(accountName)
+    const steamAccountClient = userSteamClients.getAccountClientOrThrow(accountName)
     return steamAccountClient
   }
 

@@ -1,6 +1,7 @@
 import clerkClient from "@clerk/clerk-sdk-node"
 import { IDGeneratorUUID } from "core"
 import SteamUser from "steam-user"
+import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import { UsersDAODatabase } from "~/infra/dao"
@@ -9,10 +10,12 @@ import { Publisher } from "~/infra/queue"
 import {
   PlanRepositoryDatabase,
   SteamAccountClientStateCacheInMemory,
+  SteamAccountsRepositoryDatabase,
   UsersRepositoryDatabase,
 } from "~/infra/repository"
-import { SteamAccountsRepositoryDatabase } from "~/infra/repository"
 import { ClerkAuthentication } from "~/infra/services"
+import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
+import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
 
 const httpProxy = process.env.PROXY_URL
 
@@ -34,12 +37,23 @@ export const steamBuilder: SteamBuilder = {
 export const publisher = new Publisher()
 
 // export const farmingUsersStorage = new FarmingUsersStorage()
-export const allUsersClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder)
+export const emitterBuilder = new EventEmitterBuilder()
+export const steamUserBuilder = steamBuilder
+export const planRepository = new PlanRepositoryDatabase(prisma)
+export const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
+export const allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder)
 export const sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
-export const usersClusterStorage = new UsersSACsFarmingClusterStorage()
+export const farmServiceBuilder = new FarmServiceBuilder({
+  publisher,
+})
+export const userClusterBuilder = new UserClusterBuilder(
+  farmServiceBuilder,
+  sacStateCacheRepository,
+  planRepository
+)
+export const usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
 export const usersDAO = new UsersDAODatabase(prisma)
 export const userAuthentication = new ClerkAuthentication(clerkClient)
-export const planRepository = new PlanRepositoryDatabase(prisma)
 export const usersRepository = new UsersRepositoryDatabase(prisma)
 export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)
 export const idGenerator = new IDGeneratorUUID()

@@ -14,11 +14,15 @@ export class UserClientsStorage {
     this.steamAccountClients.delete(accountName)
   }
 
-  getAccountClient(accountName: string) {
+  getAccountClientOrThrow(accountName: string) {
     const steamAccountClient = this.steamAccountClients.get(accountName)
     if (!steamAccountClient)
       throw new ApplicationError("Essa Steam Account nunca foi logada no nosso servidor.")
     return steamAccountClient
+  }
+
+  getAccountClient(accountName: string) {
+    return this.steamAccountClients.get(accountName) ?? null
   }
 
   hasAccountName(accountName: string) {

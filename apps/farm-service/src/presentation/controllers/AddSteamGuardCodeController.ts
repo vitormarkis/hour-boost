@@ -16,7 +16,7 @@ export class AddSteamGuardCodeController {
       throw new ApplicationError(
         "Falha ao adicionar código Steam Guard. Usuário nunca tentou fazer login com essa conta."
       )
-    const { steamAccountClient: sac } = userSteamClients.getAccountClient(accountName)
+    const sac = userSteamClients.getAccountClientOrThrow(accountName)
     if (!sac) throw new ApplicationError("User never tried to log in.")
 
     // console.log({

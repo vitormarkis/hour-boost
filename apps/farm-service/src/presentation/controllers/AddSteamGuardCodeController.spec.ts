@@ -1,104 +1,98 @@
-import { AddSteamAccount, IDGenerator, SteamAccountsRepository, User, UsersDAO, UsersRepository } from "core"
-import SteamUser from "steam-user"
-import { AllUsersClientsStorage } from "~/application/services"
-import { SteamBuilder } from "~/contracts"
-import { UsersDAOInMemory } from "~/infra/dao"
-import { Publisher } from "~/infra/queue"
-import { SteamAccountsRepositoryInMemory, UsersInMemory, UsersRepositoryInMemory } from "~/infra/repository"
-import { SteamUserMock } from "~/infra/services"
-import { AddSteamAccountController } from "~/presentation/controllers/AddSteamAccountController"
-import { AddSteamGuardCodeController } from "~/presentation/controllers/AddSteamGuardCodeController"
+import { AddSteamAccount, IDGeneratorUUID } from "core"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { makeUser } from "~/utils/makeUser"
 
-const USER_ACCOUNT_NAME = "user1"
-const USER_USERNAME = "vitor"
-const USER_ID = "123"
-
-const validSteamAccounts = [
-  { accountName: "user1", password: "user1_PASS" },
-  { accountName: "user2", password: "xx" },
-  { accountName: "user3", password: "xx" },
-]
-
-let allUsersClientsStorage: AllUsersClientsStorage
-let publisher: Publisher
-let steamBuilder: SteamBuilder
-let addSteamGuardCodeController: AddSteamGuardCodeController
-let addSteamAccountController: AddSteamAccountController
-let addSteamAccount: AddSteamAccount
-let usersMemory: UsersInMemory
-let usersRepository: UsersRepository
-let steamAccountsRepository: SteamAccountsRepository
-let idGenerator: IDGenerator
-let usersDAO: UsersDAO
-let user: User
+import {
+  CustomInstances,
+  MakeTestInstancesProps,
+  makeTestInstances,
+  password,
+  testUsers as s,
+} from "~/__tests__/instances"
+import { AddSteamAccountController, AddSteamGuardCodeController } from "~/presentation/controllers"
 
 const log = console.log
+console.log = () => {}
 
-beforeEach(async () => {
-  publisher = new Publisher()
-  usersMemory = new UsersInMemory()
-  usersRepository = new UsersRepositoryInMemory(usersMemory)
-  usersDAO = new UsersDAOInMemory(usersMemory)
-  steamBuilder = {
-    create: () => new SteamUserMock(validSteamAccounts, true) as unknown as SteamUser,
-  }
-  allUsersClientsStorage = new AllUsersClientsStorage(publisher, steamBuilder)
-  addSteamGuardCodeController = new AddSteamGuardCodeController(allUsersClientsStorage)
-  steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)
-  idGenerator = { makeID: () => "998" }
-  addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
-  user = makeUser(USER_ID, USER_USERNAME)
-  await usersRepository.create(user)
+const validSteamAccounts = [
+  { accountName: "paco", password },
+  { accountName: "user2", password },
+  { accountName: "user3", password },
+]
+
+let i = makeTestInstances({
+  validSteamAccounts,
+})
+let addSteamAccount: AddSteamAccount
+let addSteamGuardCodeController: AddSteamGuardCodeController
+let addSteamAccountController: AddSteamAccountController
+
+async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
+  i = makeTestInstances(props, customInstances)
+  addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, new IDGeneratorUUID())
+  addSteamGuardCodeController = new AddSteamGuardCodeController(i.allUsersClientsStorage)
   addSteamAccountController = new AddSteamAccountController(
     addSteamAccount,
-    allUsersClientsStorage,
-    usersDAO,
-    steamBuilder,
-    publisher
+    i.allUsersClientsStorage,
+    i.usersDAO
   )
-  console.log = () => {}
-})
+}
 
 describe("AddSteamGuardCodeController test suite", () => {
-  test("should reject when providing code for a sac that never tried to log", async () => {
-    const { status, json } = await promiseHandler(
-      addSteamGuardCodeController.handle({
-        payload: {
-          accountName: USER_ACCOUNT_NAME,
-          code: "998776",
-          userId: USER_ID,
-        },
-      })
-    )
-
-    expect(json).toStrictEqual({
-      message: "Falha ao adicionar código Steam Guard. Usuário nunca tentou fazer login com essa conta.",
-    })
-    expect(status).toBe(400)
-  })
-
-  describe("user has attempted to log", () => {
+  describe("user has NOT attempted to log yet", () => {
     beforeEach(async () => {
-      await userAddSteamAccount(addSteamAccountController)
+      await setupInstances({
+        validSteamAccounts,
+      })
     })
-
-    test("should set the steam guard code and log in", async () => {
-      console.log = log
+    test("should reject when providing code for a sac that never tried to log", async () => {
       const { status, json } = await promiseHandler(
         addSteamGuardCodeController.handle({
           payload: {
-            accountName: USER_ACCOUNT_NAME,
+            accountName: s.me.accountName,
             code: "998776",
-            userId: USER_ID,
+            userId: s.me.userId,
           },
         })
       )
-      console.log({
-        json,
+
+      expect(json).toStrictEqual({
+        message: "Falha ao adicionar código Steam Guard. Usuário nunca tentou fazer login com essa conta.",
       })
+      expect(status).toBe(400)
+    })
+  })
+  describe("user has attempted to log", () => {
+    beforeEach(async () => {})
+
+    test("should set the steam guard code and log in", async () => {
+      await setupInstances({
+        validSteamAccounts,
+      })
+      const me = makeUser(s.me.userId, s.me.username)
+      await i.usersRepository.create(me)
+      addSteamAccountController.handle({
+        payload: {
+          password: "pass",
+          userId: s.me.userId,
+          accountName: s.me.accountName,
+        },
+      })
+      await new Promise(process.nextTick)
+      const sac = i.allUsersClientsStorage.getAccountClientOrThrow(s.me.userId, s.me.accountName)
+      const sacClientEmitterSPY = jest.spyOn(sac.client, "emit")
+
+      const { status } = await promiseHandler(
+        addSteamGuardCodeController.handle({
+          payload: {
+            accountName: s.me.accountName,
+            code: "998776",
+            userId: s.me.userId,
+          },
+        })
+      )
       expect(status).toBe(200)
+      expect(sacClientEmitterSPY.mock.calls[0][0]).toStrictEqual("loggedOn")
     })
 
     test.skip("should rejects an error is thrown", async () => {
@@ -106,15 +100,3 @@ describe("AddSteamGuardCodeController test suite", () => {
     })
   })
 })
-
-function userAddSteamAccount(controller: AddSteamAccountController) {
-  return promiseHandler(
-    controller.handle({
-      payload: {
-        accountName: USER_ACCOUNT_NAME,
-        password: "user1_PASS",
-        userId: USER_ID,
-      },
-    })
-  )
-}

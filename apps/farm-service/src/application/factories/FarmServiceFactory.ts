@@ -1,22 +1,29 @@
 import { PlanInfinity, PlanUsage } from "core"
-import { FarmInfinityService, FarmUsageService } from "~/application/services"
-import { FarmService } from "~/application/services"
+import { FarmInfinityService, FarmService, FarmUsageService } from "~/application/services"
 import { Publisher } from "~/infra/queue"
+import { Builder, EventEmitterBuilder } from "~/utils/builders"
 
-export class FarmServiceFactory {
+export class FarmServiceBuilder implements Builder<FarmService> {
   private readonly publisher: Publisher
-  private readonly username: string
+  private readonly emitterBuilder: EventEmitterBuilder
 
   constructor(props: FarmServiceFactoryProps) {
     this.publisher = props.publisher
-    this.username = props.username
+    this.emitterBuilder = props.emitterBuilder
   }
 
-  createNewFarmService(plan: PlanUsage | PlanInfinity): FarmService {
+  create(username: string, plan: PlanUsage | PlanInfinity): FarmService {
+    const now = new Date()
     if (plan.type === "INFINITY")
-      return new FarmInfinityService(this.publisher, plan as PlanInfinity, this.username, new Date())
+      return new FarmInfinityService(this.publisher, plan as PlanInfinity, username, new Date())
     if (plan.type === "USAGE")
-      return new FarmUsageService(this.publisher, plan as PlanUsage, this.username, new Date())
+      return new FarmUsageService({
+        emitter: this.emitterBuilder.create(),
+        now,
+        plan: plan as PlanUsage,
+        publisher: this.publisher,
+        username,
+      })
     console.log(plan.type)
     throw new Error("Invalid planType provided.")
   }
@@ -24,5 +31,5 @@ export class FarmServiceFactory {
 
 export type FarmServiceFactoryProps = {
   publisher: Publisher
-  username: string
+  emitterBuilder: EventEmitterBuilder
 }

@@ -1,7 +1,9 @@
 const log = console.log
 
 import { ApplicationError, PlanType } from "core"
+import { UserHasStartFarmingCommand } from "~/application/commands"
 import { FarmServiceStatus } from "~/application/services"
+import { Publisher } from "~/infra/queue"
 
 type AccountFarmingStatus = "FARMING" | "IDDLE"
 
@@ -10,15 +12,21 @@ export type FarmingAccountDetails = {
   status: AccountFarmingStatus
 }
 
+export type FarmingAccountDetailsWithAccountName = FarmingAccountDetails & {
+  accountName: string
+}
+
 export type FarmServiceProps = {
   startedAt: Date
   planId: string
   userId: string
   username: string
+  publisher: Publisher
 }
 
 export abstract class FarmService {
   protected readonly accountsFarming = new Map<string, FarmingAccountDetails>()
+  protected readonly publisher: Publisher
   abstract readonly type: PlanType
   protected status: FarmServiceStatus
   protected readonly startedAt: Date
@@ -32,6 +40,7 @@ export abstract class FarmService {
     this.planId = props.planId
     this.userId = props.userId
     this.username = props.username
+    this.publisher = props.publisher
   }
 
   getAccountDetails(accountName: string) {
@@ -72,6 +81,13 @@ export abstract class FarmService {
 
   farmWithAccount(accountName: string): void {
     if (this.getActiveFarmingAccountsAmount() === 0) {
+      this.publisher.publish(
+        new UserHasStartFarmingCommand({
+          planId: this.planId,
+          userId: this.userId,
+          when: new Date(),
+        })
+      )
       this.startFarm()
     }
 
@@ -83,14 +99,9 @@ export abstract class FarmService {
   }
 
   pauseFarmOnAccount(accountName: string): void {
-    console.log(
-      `pauseFarmOnAccount counter; activeFarmingAccountsAmount: `,
-      this.getActiveFarmingAccountsAmount()
-    )
     if (this.getActiveFarmingAccountsAmount() === 1) {
       this.stopFarm()
     }
-    console.log({ settingStatusToIDDLE: accountName })
     this.setAccountStatus(accountName, "IDDLE")
   }
 
@@ -105,15 +116,18 @@ export abstract class FarmService {
 
   private stopFarm(): void {
     this.status = "IDDLE"
+    this.publishCompleteFarmSession()
     return this.stopFarmImpl()
   }
 
   stopFarmAllAccounts() {
+    this.accountsFarming.forEach(acc => (acc.status = "IDDLE"))
     this.stopFarm()
   }
 
   protected abstract startFarmImpl(): void
   protected abstract stopFarmImpl(): void
+  abstract publishCompleteFarmSession(): void
 
   private getActiveFarmingAccounts() {
     return Array.from(this.accountsFarming).filter(([_, details]) => details.status === "FARMING")

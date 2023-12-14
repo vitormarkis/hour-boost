@@ -20,4 +20,8 @@ export class PlanRepositoryInMemory implements PlanRepository {
       return u
     })
   }
+
+  async list(): Promise<(PlanUsage | PlanInfinity)[]> {
+    return this.usersMemory.users.map(u => u.plan)
+  }
 }

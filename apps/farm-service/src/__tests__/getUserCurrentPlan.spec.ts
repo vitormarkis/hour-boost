@@ -1,6 +1,8 @@
 import { GuestPlan } from "core"
 import { getCurrentPlanOrCreateOne } from "~/utils"
 
+console.log = () => {}
+
 describe("getUserCurrentPlan util function test suite", () => {
   test("should assign guest plan", async () => {
     const userPlan = getCurrentPlanOrCreateOne(

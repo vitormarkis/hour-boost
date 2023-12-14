@@ -24,9 +24,7 @@ export class AddSteamAccountController {
   constructor(
     private readonly addSteamAccount: AddSteamAccount,
     private readonly allUsersClientsStorage: AllUsersClientsStorage,
-    private readonly usersDAO: UsersDAO,
-    private readonly steamBuilder: SteamBuilder,
-    private readonly publisher: Publisher
+    private readonly usersDAO: UsersDAO
   ) {}
 
   async handle(req: HttpClient.Request<IAddSteamAccount>): Promise<HttpClient.Response> {
@@ -35,7 +33,6 @@ export class AddSteamAccountController {
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
       if (!username) throw new ApplicationError("No user found with this ID.")
 
-      const sacEmitter = new EventEmitter<SteamApplicationEvents>()
       const sac = this.allUsersClientsStorage.getOrAddSteamAccount({
         accountName,
         userId,

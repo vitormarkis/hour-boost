@@ -1,13 +1,13 @@
 import { PlanRepository, SteamAccountClientStateCacheRepository, SteamAccountCredentials, User } from "core"
-import { FarmServiceFactory } from "~/application/factories"
+import { FarmServiceBuilder } from "~/application/factories"
 import { UserSACsFarmingCluster } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
 import { EventEmitterBuilder, SteamUserMockBuilder } from "~/utils/builders"
 
 export function makeSACFactory(validSteamAccounts: SteamAccountCredentials[], publisher: Publisher) {
-  return (user: User, accountName: string) =>
-    new SteamAccountClient({
+  function sacFactory(user: User, accountName: string) {
+    return new SteamAccountClient({
       instances: {
         emitter: new EventEmitterBuilder().create(),
         publisher,
@@ -19,13 +19,14 @@ export function makeSACFactory(validSteamAccounts: SteamAccountCredentials[], pu
         username: user.username,
       },
     })
+  }
+  return sacFactory
 }
 
 export function makeFarmService(user: User, publisher: Publisher) {
-  return new FarmServiceFactory({
+  return new FarmServiceBuilder({
     publisher,
-    username: user.username,
-  }).createNewFarmService(user.plan)
+  }).create(user.username, user.plan)
 }
 
 export function makeUserClusterFactory(
@@ -38,9 +39,8 @@ export function makeUserClusterFactory(
       farmService: makeFarmService(user, publisher),
       sacStateCacheRepository,
       username: user.username,
-      farmServiceFactory: new FarmServiceFactory({
+      farmServiceFactory: new FarmServiceBuilder({
         publisher,
-        username: user.username,
       }),
       planId: user.plan.id_plan,
       planRepository,

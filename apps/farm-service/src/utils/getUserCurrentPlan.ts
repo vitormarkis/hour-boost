@@ -4,7 +4,6 @@ import {
   DiamondPlan,
   GoldPlan,
   GuestPlan,
-  Plan,
   PlanInfinity,
   PlanInfinityName,
   PlanInfinityRestoreProps,

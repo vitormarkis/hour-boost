@@ -1,4 +1,4 @@
-import { ApplicationError, SACStateCache, SACStateCacheDTO } from "core"
+import { ApplicationError, SACStateCacheDTO } from "core"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import {
@@ -10,7 +10,6 @@ import {
 import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
-import { EventName } from "~/infra/services"
 import { areTwoArraysEqual } from "~/utils"
 
 export class SteamAccountClient extends LastHandler {

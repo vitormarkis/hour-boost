@@ -5,6 +5,10 @@ import { getCurrentPlan } from "~/utils"
 export class PlanRepositoryDatabase implements PlanRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
+  list(): Promise<(PlanUsage | PlanInfinity)[]> {
+    throw new Error("PlanRepository.list() = Method not implemented.")
+  }
+
   async update(plan: PlanUsage | PlanInfinity): Promise<void> {
     await this.prisma.plan.update({
       where: { id_plan: plan.id_plan },
