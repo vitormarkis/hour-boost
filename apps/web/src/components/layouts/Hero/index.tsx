@@ -51,7 +51,7 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
           >
             <motion.img
               {...solderAnimation}
-              src="https://hourboost.com.br/images/home/background.png"
+              src="https://files.tecnoblog.net/wp-content/uploads/2021/04/csgo-1060x596.jpg"
               alt=""
               className="fillimg object-cover"
             />
