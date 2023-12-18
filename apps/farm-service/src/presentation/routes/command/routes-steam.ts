@@ -1,12 +1,14 @@
 import { ClerkExpressRequireAuth, LooseAuthProp, WithAuthProp } from "@clerk/clerk-sdk-node"
 import { AddSteamAccount, ApplicationError, ListSteamAccounts } from "core"
 import { Request, Response, Router } from "express"
+import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
 import { prisma } from "~/infra/libs"
 import { UsersRepositoryDatabase } from "~/infra/repository"
 
 import {
   AddSteamAccountController,
   FarmGamesController,
+  StopAllFarmsController,
   StopFarmController,
 } from "~/presentation/controllers"
 import { AddSteamGuardCodeController } from "~/presentation/controllers/AddSteamGuardCodeController"
@@ -27,6 +29,7 @@ import { makeRes } from "~/utils"
 
 export const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
 export const listSteamAccounts = new ListSteamAccounts(usersDAO)
+const stopAllFarmsUseCase = new StopAllFarms(usersClusterStorage)
 
 export const command_routerSteam: Router = Router()
 
@@ -128,6 +131,20 @@ command_routerSteam.post("/code", async (req, res) => {
         accountName: req.body.accountName,
         code: req.body.code,
         userId: req.body.userId,
+      },
+    })
+  )
+
+  return json ? res.status(status).json(json) : res.status(status).end()
+})
+
+command_routerSteam.post("/farm/stop/all", async (req, res) => {
+  const { secret } = req.body
+  const stopAllFarmsController = new StopAllFarmsController(stopAllFarmsUseCase)
+  const { json, status } = await promiseHandler(
+    stopAllFarmsController.handle({
+      payload: {
+        secret,
       },
     })
   )

@@ -62,14 +62,14 @@ export class FarmInfinityService extends FarmService {
     }
   }
 
-  private getAccountOrThrow(accountName: string): FarmInfinityAccountStatus {
+  private getAccount(accountName: string): FarmInfinityAccountStatus | null {
     const foundAccount = this.farmingAccounts.get(accountName)
-    if (!foundAccount) throw new ApplicationError("Você tentou pausar uma conta que não está farmando.")
-    return foundAccount
+    return foundAccount ?? null
   }
 
   pauseFarmOnAccount(accountName: string): void {
-    const account = this.getAccountOrThrow(accountName)
+    const account = this.getAccount(accountName)
+    if (!account) return
     this.publisher.publish(
       new UserCompletedFarmSessionInfinityCommand({
         accountName,
