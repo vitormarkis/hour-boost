@@ -16,7 +16,7 @@ export class PersistUsageHandler implements Observer {
       })
       actualPlan.use(command.usage)
       actualPlan.stopFarm()
-      void this.planRepository.update(actualPlan)
+      await this.planRepository.update(actualPlan)
     }
   }
 }

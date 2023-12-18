@@ -1,4 +1,6 @@
+import { Usage } from "core/entity/plan/Usage"
 import { Plan, PlanInfinityName } from "../../entity/plan/Plan"
+import { UsageList } from "core/entity/plan/UsageList"
 
 export class PlanInfinity extends Plan {
   readonly name: PlanInfinityName
@@ -11,6 +13,10 @@ export class PlanInfinity extends Plan {
     })
     this.name = props.name
   }
+
+  use(usage: Usage): void {
+    this.usages.add(usage)
+  }
 }
 
 export type PlanInfinityAllProps = {
@@ -21,9 +27,11 @@ export type PlanInfinityAllProps = {
   maxSteamAccounts: number
   maxGamesAllowed: number
   autoRestarter: boolean
+  usages: UsageList
 }
 
 export type PlanInfinityRestoreProps = {
   id_plan: string
   ownerId: string
+  usages: UsageList
 }

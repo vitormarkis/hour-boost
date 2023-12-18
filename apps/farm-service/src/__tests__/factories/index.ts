@@ -22,27 +22,3 @@ export function makeSACFactory(validSteamAccounts: SteamAccountCredentials[], pu
   }
   return sacFactory
 }
-
-export function makeFarmService(user: User, publisher: Publisher) {
-  return new FarmServiceBuilder({
-    publisher,
-  }).create(user.username, user.plan)
-}
-
-export function makeUserClusterFactory(
-  publisher: Publisher,
-  sacStateCacheRepository: SteamAccountClientStateCacheRepository,
-  planRepository: PlanRepository
-) {
-  return (user: User) =>
-    new UserSACsFarmingCluster({
-      farmService: makeFarmService(user, publisher),
-      sacStateCacheRepository,
-      username: user.username,
-      farmServiceFactory: new FarmServiceBuilder({
-        publisher,
-      }),
-      planId: user.plan.id_plan,
-      planRepository,
-    })
-}

@@ -45,10 +45,6 @@ export class FarmGamesController {
       userId,
       username: user.username,
     })
-    if (!sac) throw new ApplicationError("Essa conta nunca se conectou à Steam.")
-    console.log({
-      isLogged: sac.logged,
-    })
     if (!sac.logged) {
       sac.login(steamAccountDomain.credentials.accountName, steamAccountDomain.credentials.password)
 
@@ -97,10 +93,6 @@ export class FarmGamesController {
     }
     const noNewGameAddToFarm = areTwoArraysEqual(gamesID, sac.getGamesPlaying())
     if (noNewGameAddToFarm) return makeRes(200, "Nenhum novo game adicionado ao farm.")
-
-    const farmServiceFactory = new FarmServiceBuilder({
-      publisher: this.publisher,
-    })
 
     const userCluster = this.usersClusterStorage.getOrAdd(user.username, user.plan)
 

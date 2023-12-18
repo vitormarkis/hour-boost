@@ -47,21 +47,23 @@ export abstract class FarmService {
     return this.accountsFarming.get(accountName) ?? null
   }
 
-  getAccountsStatus() {
-    let accountStatus: any = {}
-    for (const [accountName, details] of this.accountsFarming) {
-      accountStatus[accountName] = details.status
-    }
-    return accountStatus
-  }
+  abstract getAccountsStatus(): AccountStatusList
 
-  private setAccountStatus(accountName: string, status: "FARMING" | "IDDLE") {
+  protected setAccountStatus(accountName: string, status: "FARMING" | "IDDLE") {
     const account = this.getAccountDetails(accountName)
     if (!account) {
       const msg = `NSTH: Tried to resume farming on account that don't exists. ${accountName}`
       throw new ApplicationError(msg, 500)
     }
-    account.status = status
+    this.accountsFarming.set(accountName, {
+      ...account,
+      status,
+    })
+
+    // account = {
+    //   ...account,
+    //   status,
+    // }
   }
 
   private appendAccount(accountName: string) {
@@ -80,54 +82,27 @@ export abstract class FarmService {
   }
 
   farmWithAccount(accountName: string): void {
-    if (this.getActiveFarmingAccountsAmount() === 0) {
-      this.publisher.publish(
-        new UserHasStartFarmingCommand({
-          planId: this.planId,
-          userId: this.userId,
-          when: new Date(),
-        })
-      )
-      this.startFarm()
-    }
+    this.farmWithAccountImpl(accountName)
 
-    if (this.isAccountAdded(accountName)) {
-      this.resumeFarming(accountName)
-    } else {
-      this.appendAccount(accountName)
-    }
+    if (this.isAccountAdded(accountName)) this.resumeFarming(accountName)
+    else this.appendAccount(accountName)
   }
 
-  pauseFarmOnAccount(accountName: string): void {
-    if (this.getActiveFarmingAccountsAmount() === 1) {
-      this.stopFarm()
-    }
-    this.setAccountStatus(accountName, "IDDLE")
-  }
+  abstract farmWithAccountImpl(accountName: string): void
 
   getServiceStatus() {
     return this.status
   }
 
-  private startFarm(): void {
-    this.status = "FARMING"
-    return this.startFarmImpl()
-  }
-
-  private stopFarm(): void {
-    this.status = "IDDLE"
-    this.publishCompleteFarmSession()
-    return this.stopFarmImpl()
-  }
-
   stopFarmAllAccounts() {
-    this.accountsFarming.forEach(acc => (acc.status = "IDDLE"))
     this.stopFarm()
   }
 
-  protected abstract startFarmImpl(): void
-  protected abstract stopFarmImpl(): void
-  abstract publishCompleteFarmSession(): void
+  protected abstract publishCompleteFarmSession(): void
+
+  protected abstract startFarm(): void
+  protected abstract stopFarm(): void
+  abstract pauseFarmOnAccount(accountName: string): void
 
   private getActiveFarmingAccounts() {
     return Array.from(this.accountsFarming).filter(([_, details]) => details.status === "FARMING")
@@ -161,3 +136,5 @@ export abstract class FarmService {
     return this.username
   }
 }
+
+export type AccountStatusList = Record<string, "IDDLE" | "FARMING">

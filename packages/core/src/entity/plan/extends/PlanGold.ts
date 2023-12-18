@@ -1,6 +1,7 @@
 import { PlanCreateProps, PlanProps } from "../Plan"
 import { makeID } from "../../generateID"
 import { PlanInfinity, PlanInfinityRestoreProps } from "../../../entity/plan/PlanInfinity"
+import { UsageList } from "core/entity/plan/UsageList"
 
 export class GoldPlan extends PlanInfinity {
   private constructor(props: PlanProps) {
@@ -18,6 +19,7 @@ export class GoldPlan extends PlanInfinity {
     return new GoldPlan({
       ownerId: props.ownerId,
       id_plan: makeID(),
+      usages: new UsageList(),
     })
   }
 

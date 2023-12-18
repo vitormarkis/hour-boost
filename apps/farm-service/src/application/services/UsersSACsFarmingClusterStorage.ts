@@ -9,6 +9,12 @@ export class UsersSACsFarmingClusterStorage {
 
   constructor(private readonly userClusterBuilder: UserClusterBuilder) {}
 
+  stopAll() {
+    for (const [_, userCluster] of this.usersCluster) {
+      userCluster.stopFarmAllAccounts()
+    }
+  }
+
   get(username: string) {
     return this.usersCluster.get(username) ?? null
   }

@@ -42,6 +42,7 @@ export function getCurrentPlan(dbUserPlan: SessionPlan) {
       id_plan: dbUserPlan.id_plan,
       name: dbUserPlan.name as PlanInfinityName,
       ownerId: dbUserPlan.ownerId,
+      usages: new UsageList(),
     })
 
   if (dbUserPlan.type === "USAGE")

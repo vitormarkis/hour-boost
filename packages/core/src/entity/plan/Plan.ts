@@ -1,4 +1,5 @@
 import { Usage } from "../../entity/plan/Usage"
+import { UsageList } from "core/entity/plan"
 
 export abstract class Plan {
   id_plan: string
@@ -9,6 +10,7 @@ export abstract class Plan {
   ownerId: string
   type: PlanType
   private _status: PlanStatus
+  usages: UsageList
 
   constructor(props: PlanAllProps) {
     this.maxSteamAccounts = props.maxSteamAccounts
@@ -19,7 +21,10 @@ export abstract class Plan {
     this.type = props.type
     this.name = props.name
     this._status = props.status
+    this.usages = props.usages
   }
+
+  abstract use(usage: Usage): void
 
   startFarm() {
     this._status = "FARMING"
@@ -37,6 +42,7 @@ export abstract class Plan {
 export interface PlanProps {
   id_plan: string
   ownerId: string
+  usages: UsageList
 }
 
 export interface PlanCreateProps {
@@ -53,6 +59,7 @@ export type PlanAllProps = {
   autoRestarter: boolean
   type: PlanType
   status: PlanStatus
+  usages: UsageList
 }
 
 export type PlanInfinityName = "SILVER" | "GOLD" | "DIAMOND"

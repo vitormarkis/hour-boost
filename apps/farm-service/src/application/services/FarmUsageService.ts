@@ -1,9 +1,12 @@
-import { ApplicationError, PlanType, PlanUsage, Usage } from "core"
+import { ApplicationError, PlanType, PlanUsage } from "core"
 
-import { UserHasStartFarmingCommand } from "~/application/commands"
-import { UserCompletedFarmSessionUsageCommand } from "~/application/commands/UserCompletedFarmSessionUsageCommand"
+import { UserCompletedFarmSessionUsageCommand, UserHasStartFarmingCommand } from "~/application/commands"
 import { EventEmitter, UserClusterEvents } from "~/application/services"
-import { FarmService, FarmingAccountDetailsWithAccountName } from "~/application/services/FarmService"
+import {
+  AccountStatusList,
+  FarmService,
+  FarmingAccountDetailsWithAccountName,
+} from "~/application/services/FarmService"
 import { Publisher } from "~/infra/queue"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
@@ -56,7 +59,8 @@ export class FarmUsageService extends FarmService {
     )
   }
 
-  protected startFarmImpl(): void {
+  startFarm(): void {
+    this.status = "FARMING"
     if (this.usageLeft <= 0) throw new ApplicationError("Seu plano não possui mais uso disponível.", 403)
     this.farmingInterval = setInterval(() => {
       const allAccountsFarmedTotalAmount = this.FARMING_GAP * this.getActiveFarmingAccountsAmount()
@@ -64,28 +68,12 @@ export class FarmUsageService extends FarmService {
 
       if (this.usageLeft - allAccountsFarmedTotalAmount < 0) {
         this.emitter.emit("service:max-usage-exceeded")
-        // this.publisher.publish(
-        //   new PlanUsageExpiredMidFarmCommand({
-        //     planId: this.planId,
-        //     usages: this.getAccountsUsages().map(acc => acc.usage),
-        //     userId: this.userId,
-        //     when: new Date(),
-        //     username: this.username,
-        //   })
-        // )
-        return this.stopFarmSetInternals()
+        clearInterval(this.farmingInterval)
+        return
       }
       // this.sharedUsageLeft.farm(this.FARMING_GAP)
       this.usageLeft -= allAccountsFarmedTotalAmount
       this.addUsageToAccount(individualAccountFarmedAmount)
-      // this.publisher.publish(
-      //   new UserFarmedCommand({
-      //     amount: this.FARMING_GAP,
-      //     username: this.username,
-      //     when: new Date(),
-      //   })
-      // )
-      // no front, subtrair o valor farmedValue do usageLeft
     }, this.FARMING_GAP * 1000).unref()
 
     this.publisher.publish(
@@ -97,66 +85,52 @@ export class FarmUsageService extends FarmService {
     )
   }
 
-  protected stopFarmImpl(): void {
-    this.stopFarmSetInternals()
+  stopFarm() {
+    this.status = "IDDLE"
+    this.accountsFarming.forEach(acc => {
+      acc.status = "IDDLE"
+    })
+    this.publishCompleteFarmSession()
+    clearInterval(this.farmingInterval)
+  }
 
-    for (const acc of this.getAccountsUsages()) {
-      // this.publisher.publish(
-      //   new UserCompleteFarmSessionCommand({
-      //     planId: this.planId,
-      //     usage: acc.usage,
-      //     userId: this.userId,
-      //     username: acc.accountName,
-      //     when: new Date(),
-      //     farmStartedAt: this.startedAt,
-      //   })
-      // )
+  pauseFarmOnAccount(accountName: string): void {
+    if (this.getActiveFarmingAccountsAmount() === 1) {
+      this.stopFarm()
     }
+    this.setAccountStatus(accountName, "IDDLE")
   }
 
   getUsageLeft() {
     return this.usageLeft
   }
 
+  getAccountsStatus(): AccountStatusList {
+    let accountStatus: AccountStatusList = {}
+    for (const [accountName, details] of this.accountsFarming) {
+      accountStatus[accountName] = details.status
+    }
+    return accountStatus
+  }
+
+  farmWithAccountImpl(accountName: string): void {
+    if (this.getActiveFarmingAccountsAmount() === 0) {
+      this.publisher.publish(
+        new UserHasStartFarmingCommand({
+          planId: this.planId,
+          userId: this.userId,
+          when: new Date(),
+        })
+      )
+      this.startFarm()
+    }
+  }
+
   private addUsageToAccount(usageAmount: number) {
-    for (const [_, acc] of this.accountsFarming.entries()) {
+    for (const [_, acc] of this.accountsFarming) {
       if (acc.status === "FARMING") acc.usageAmountInSeconds += usageAmount
     }
   }
-
-  private stopFarmSetInternals() {
-    clearInterval(this.farmingInterval)
-  }
-
-  private getAccountsUsageAmount() {
-    const accountNameAndTheirUsage: AccountNameAndTheirUsage[] = []
-    for (const [accountName, { usageAmountInSeconds: usageAmount }] of this.accountsFarming.entries()) {
-      accountNameAndTheirUsage.push({
-        accountName,
-        usageAmount,
-      })
-    }
-    return accountNameAndTheirUsage
-  }
-
-  getAccountsUsages() {
-    return this.getAccountsUsageAmount().map(acc => {
-      return {
-        accountName: acc.accountName,
-        usage: Usage.create({
-          amountTime: acc.usageAmount,
-          createdAt: this.startedAt,
-          plan_id: this.planId,
-          accountName: acc.accountName,
-        }),
-      }
-    })
-  }
-}
-
-type AccountNameAndTheirUsage = {
-  accountName: string
-  usageAmount: number
 }
 
 type FarmUsageServiceProps = {

@@ -7,6 +7,7 @@ import {
   testUsers as s,
 } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
+import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
 
 import { FarmGamesController } from "~/presentation/controllers"
 
@@ -23,6 +24,7 @@ let i = makeTestInstances({ validSteamAccounts })
 let meInstances = makeUserInstances("me", s.me, i.sacFactory)
 let friendInstances = makeUserInstances("friend", s.friend, i.sacFactory)
 let farmGamesController: FarmGamesController
+let stopAllFarms: StopAllFarms
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
@@ -39,35 +41,87 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     usersClusterStorage: i.usersClusterStorage,
     usersRepository: i.usersRepository,
   })
+  stopAllFarms = new StopAllFarms(i.usersClusterStorage)
 }
 
 beforeEach(async () => {
   await setupInstances({ validSteamAccounts })
 })
-test.only("should stop all farms", async () => {
-  console.log = log
-  await farmGamesController.handle({
-    payload: { accountName: s.me.accountName, gamesID: [109230], userId: s.me.userId },
+
+describe("2 infinity plan and 1 usage plan farming ", () => {
+  beforeEach(async () => {
+    await farmGamesController.handle({
+      payload: { accountName: s.me.accountName, gamesID: [109230], userId: s.me.userId },
+    })
+    await farmGamesController.handle({
+      payload: { accountName: s.me.accountName2, gamesID: [109230], userId: s.me.userId },
+    })
+    await farmGamesController.handle({
+      payload: { accountName: s.friend.accountName, gamesID: [109230], userId: s.friend.userId },
+    })
   })
-  await farmGamesController.handle({
-    payload: { accountName: s.me.accountName2, gamesID: [109230], userId: s.me.userId },
+
+  test("should list all users SACs as farming", async () => {
+    expect(i.allUsersClientsStorage.listUsers()).toStrictEqual({
+      [s.me.userId]: {
+        [s.me.accountName]: {
+          farming: true,
+        },
+        [s.me.accountName2]: {
+          farming: true,
+        },
+      },
+      [s.friend.userId]: {
+        [s.friend.accountName]: {
+          farming: true,
+        },
+      },
+    })
   })
-  await farmGamesController.handle({
-    payload: { accountName: s.friend.accountName, gamesID: [109230], userId: s.friend.userId },
+
+  test("should list all users services as farming", async () => {
+    expect(i.usersClusterStorage.getAccountsStatus()).toStrictEqual({
+      [s.me.username]: {
+        [s.me.accountName]: "FARMING",
+        [s.me.accountName2]: "FARMING",
+      },
+      [s.friend.username]: {
+        [s.friend.accountName]: "FARMING",
+      },
+    })
   })
-  expect(i.allUsersClientsStorage.listUsers()).toStrictEqual({
-    [s.me.userId]: {
-      [s.me.accountName]: {
-        farming: true,
-      },
-      [s.me.accountName2]: {
-        farming: true,
-      },
-    },
-    [s.friend.userId]: {
-      [s.friend.accountName]: {
-        farming: true,
-      },
-    },
+
+  describe("Stopped all farms test suite", () => {
+    beforeEach(async () => {
+      stopAllFarms.execute()
+      await new Promise(setImmediate)
+    })
+
+    test("should list all users SACs as not farming", async () => {
+      expect(i.allUsersClientsStorage.listUsers()).toStrictEqual({
+        [s.me.userId]: {
+          [s.me.accountName]: {
+            farming: false,
+          },
+          [s.me.accountName2]: {
+            farming: false,
+          },
+        },
+        [s.friend.userId]: {
+          [s.friend.accountName]: {
+            farming: false,
+          },
+        },
+      })
+    })
+
+    test("should list all users services as not farming", async () => {
+      expect(i.usersClusterStorage.getAccountsStatus()).toStrictEqual({
+        [s.me.username]: {},
+        [s.friend.username]: {
+          [s.friend.accountName]: "IDDLE",
+        },
+      })
+    })
   })
 })

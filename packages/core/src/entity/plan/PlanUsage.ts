@@ -6,7 +6,6 @@ import { UsageList } from "core/entity/plan/UsageList"
 export abstract class PlanUsage extends Plan {
   readonly name: PlanUsageName
   readonly maxUsageTime: number
-  usages: UsageList
 
   constructor(props: PlanUsageAllProps) {
     super({

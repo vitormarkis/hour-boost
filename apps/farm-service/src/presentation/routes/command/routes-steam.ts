@@ -41,9 +41,7 @@ command_routerSteam.post(
     const createSteamAccountController = new AddSteamAccountController(
       addSteamAccount,
       allUsersClientsStorage,
-      usersDAO,
-      steamBuilder,
-      publisher
+      usersDAO
     )
     const { json, status } = await promiseHandler(
       createSteamAccountController.handle({
@@ -107,9 +105,6 @@ command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: 
 command_routerSteam.post("/farm/stop", async (req: WithAuthProp<Request>, res: Response) => {
   const perform = async () => {
     const { userId, accountName } = req.body
-    const { userSteamClients } = allUsersClientsStorage.getOrThrow(userId)
-    const { steamAccountClient: sac } = userSteamClients.getAccountClient(accountName)
-    sac.farmGames([])
 
     const stopFarmController = new StopFarmController(usersClusterStorage, usersRepository)
     return await stopFarmController.handle({

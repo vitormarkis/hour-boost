@@ -6,16 +6,13 @@ import {
   makeUserInstances,
   password,
   testUsers as s,
+  validSteamAccounts,
 } from "~/__tests__/instances"
+import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { StopFarmController, promiseHandler } from "~/presentation/controllers"
 import { FarmGamesController } from "~/presentation/controllers/FarmGamesController"
 import { SteamUserMockBuilder } from "~/utils/builders"
 import { makeUser } from "~/utils/makeUser"
-
-const validSteamAccounts = [
-  { accountName: "paco", password },
-  { accountName: "REACHED", password },
-]
 
 const now = new Date("2023-06-10T10:00:00Z")
 const log = console.log

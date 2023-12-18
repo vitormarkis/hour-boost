@@ -14,7 +14,8 @@ import {
   UsersRepositoryDatabase,
 } from "~/infra/repository"
 import { ClerkAuthentication } from "~/infra/services"
-import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
+import { EventEmitterBuilder, SteamAccountClientBuilder, SteamUserMockBuilder } from "~/utils/builders"
+import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
 
 const httpProxy = process.env.PROXY_URL
@@ -34,6 +35,8 @@ export const steamBuilder: SteamBuilder = {
   },
 }
 
+const usageBuilder = new UsageBuilder()
+
 export const publisher = new Publisher()
 
 // export const farmingUsersStorage = new FarmingUsersStorage()
@@ -45,11 +48,15 @@ export const allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder)
 export const sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
 export const farmServiceBuilder = new FarmServiceBuilder({
   publisher,
+  emitterBuilder,
 })
 export const userClusterBuilder = new UserClusterBuilder(
   farmServiceBuilder,
   sacStateCacheRepository,
-  planRepository
+  planRepository,
+  emitterBuilder,
+  publisher,
+  usageBuilder
 )
 export const usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
 export const usersDAO = new UsersDAODatabase(prisma)

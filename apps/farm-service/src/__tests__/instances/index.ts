@@ -51,15 +51,15 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const idGenerator = new IDGeneratorUUID()
   const publisher = new Publisher()
   const usersMemory = new UsersInMemory()
-  const usageBuilder = new UsageBuilder()
-  const emitterBuilder = new EventEmitterBuilder()
   const sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
   const usersRepository = new UsersRepositoryInMemory(usersMemory)
   const planRepository = new PlanRepositoryInMemory(usersMemory)
+  const steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)
   const usersDAO = new UsersDAOInMemory(usersMemory)
+  const usageBuilder = new UsageBuilder()
+  const emitterBuilder = new EventEmitterBuilder()
   const steamUserBuilder = ci?.steamUserBuilder ?? new SteamUserMockBuilder(validSteamAccounts)
   const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
-  const allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder)
   const farmServiceBuilder = new FarmServiceBuilder({
     publisher,
     emitterBuilder,
@@ -72,8 +72,8 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     publisher,
     usageBuilder
   )
+  const allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder)
   const usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
-  const steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)
   const sacFactory = makeSACFactory(validSteamAccounts, publisher)
 
   async function createUser<P extends TestUsers>(userPrefix: P) {
