@@ -2,7 +2,7 @@ import { Usage } from "core"
 import { Command } from "~/application/commands"
 import { EventNames } from "~/infra/queue"
 
-export class PlanUsageExpiredMidFarmCommand implements Command {
+export class FarmSessionExpiredMidFarmCommand implements Command {
   operation: EventNames = "plan-usage-expired-mid-farm"
   when: Date
   usages: Usage[]
@@ -10,7 +10,7 @@ export class PlanUsageExpiredMidFarmCommand implements Command {
   userId: string
   username: string
 
-  constructor(props: PlanUsageExpiredMidFarmCommandProps) {
+  constructor(props: FarmSessionExpiredMidFarmCommandProps) {
     this.when = props.when
     this.usages = props.usages
     this.planId = props.planId
@@ -19,7 +19,7 @@ export class PlanUsageExpiredMidFarmCommand implements Command {
   }
 }
 
-interface PlanUsageExpiredMidFarmCommandProps {
+interface FarmSessionExpiredMidFarmCommandProps {
   when: Date
   usages: Usage[]
   planId: string

@@ -9,11 +9,7 @@ import {
 } from "~/__tests__/instances"
 import { UserCompletedFarmSessionUsageCommand } from "~/application/commands"
 import { FarmUsageService } from "~/application/services"
-import {
-  ChangePlanStatusHandler,
-  PersistUsageHandler,
-  PersistFarmSessionUsageHandler,
-} from "~/domain/handler"
+import { ChangePlanStatusHandler, PersistFarmSessionUsageHandler } from "~/domain/handler"
 
 const log = console.log
 console.log = () => {}
@@ -34,7 +30,6 @@ beforeEach(async () => {
   await setupInstances({
     validSteamAccounts,
   })
-  i.publisher.register(new PersistUsageHandler(i.planRepository))
   i.publisher.register(new PersistFarmSessionUsageHandler(i.planRepository, i.usageBuilder))
   i.publisher.register(new ChangePlanStatusHandler(i.planRepository))
 })
@@ -114,7 +109,6 @@ describe("FarmUsageService test suite", () => {
     test("should farm with 2 accounts, exceed plan max usage, and persit correct usages", async () => {
       const plan = await getPlanByOwnerId(meInstances.me.plan.id_plan)
       expect(plan.usages.data).toHaveLength(2)
-      console.log = log
       console.log(plan.usages.data)
       expect(plan.usages.data[0]).toStrictEqual(
         expect.objectContaining({
@@ -308,12 +302,10 @@ describe("FarmUsageService test suite", () => {
     // 1800 * 2
     meFarmService.pauseFarmOnAccount(s.me.accountName2)
     jest.advanceTimersByTime(1000 * 60 * 60 * 2) // 2 horas
-    console.log = log
     console.log({
       acc1: meFarmService.getAccountDetails(s.me.accountName),
       acc2: meFarmService.getAccountDetails(s.me.accountName2),
     })
-    console.log = () => {}
     // 1800 * 2 + 7200
     meFarmService.pauseFarmOnAccount(s.me.accountName) // persistiu
     await new Promise(setImmediate)
@@ -415,7 +407,6 @@ describe("FarmUsageService test suite", () => {
   })
 
   test("should call event when user end farm session", async () => {
-    console.log = log
     const spyPublish = jest.spyOn(i.publisher, "publish")
     jest.setSystemTime(new Date("2023-06-10T10:00:00Z"))
     const me = await getMe()

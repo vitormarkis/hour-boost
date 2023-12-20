@@ -24,6 +24,7 @@ export class PersistFarmSessionUsageHandler implements Observer {
     if (plan && plan instanceof PlanUsage) {
       for (const usage of usages) {
         plan.use(usage)
+        console.log(`[BROKER]: [${usage.accountName}] farmou durante ${usage.amountTime} segundos.`)
       }
       await this.planRepository.update(plan)
     }

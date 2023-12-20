@@ -13,29 +13,24 @@ export class PlanRepositoryDatabase implements PlanRepository {
     await this.prisma.plan.update({
       where: { id_plan: plan.id_plan },
       data: {
-        usages:
-          plan instanceof PlanUsage
-            ? {
-                deleteMany: {
-                  id_usage: {
-                    in: plan.usages.getTrashIDs(),
-                  },
-                },
-                connectOrCreate: plan.usages.data.map(u => {
-                  return {
-                    where: { id_usage: u.id_usage },
-                    create: {
-                      amountTime: u.amountTime,
-                      createdAt: u.createdAt,
-                      id_usage: u.id_usage,
-                      accountName: u.accountName,
-                    },
-                  }
-                }),
-              }
-            : {
-                set: [],
+        usages: {
+          deleteMany: {
+            id_usage: {
+              in: plan.usages.getTrashIDs(),
+            },
+          },
+          connectOrCreate: plan.usages.data.map(u => {
+            return {
+              where: { id_usage: u.id_usage },
+              create: {
+                amountTime: u.amountTime,
+                createdAt: u.createdAt,
+                id_usage: u.id_usage,
+                accountName: u.accountName,
               },
+            }
+          }),
+        },
       },
     })
   }

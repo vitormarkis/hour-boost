@@ -7,10 +7,10 @@ import {
   testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
+import { ensureExpectation } from "~/__tests__/utils"
 import { UserCompletedFarmSessionUsageCommand } from "~/application/commands"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { StopAllFarms } from "~/application/use-cases"
-import { HttpClient } from "~/contracts"
 import { PersistFarmSessionUsageHandler } from "~/domain/handler"
 import { PersistFarmSessionInfinityHandler } from "~/domain/handler/PersistFarmSessionInfinityHandler"
 import { FarmGamesController } from "~/presentation/controllers"
@@ -28,11 +28,6 @@ let friendInstances = makeUserInstances("friend", s.friend, i.sacFactory)
 let stopAllFarmsUseCase: StopAllFarms
 let stopAllFarmsController: StopAllFarmsController
 let farmGamesController: FarmGamesController
-
-function ensureExpectation(status: number, response: HttpClient.Response) {
-  expect(response.status).toBe(status)
-  if (status !== response.status) console.log(response.json)
-}
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)

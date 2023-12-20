@@ -29,6 +29,7 @@ export class PersistFarmSessionInfinityHandler implements Observer {
     if (plan && plan instanceof PlanInfinity) {
       plan.use(usage)
       await this.planRepository.update(plan)
+      console.log(`[BROKER]: [${accountName}] farmou durante ${amountTime} segundos.`)
     }
   }
 }

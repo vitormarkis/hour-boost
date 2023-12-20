@@ -4,6 +4,15 @@ import SteamUser from "steam-user"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
+import {
+  StartFarmPlanHandler,
+  PersistFarmSessionExpiredMidFarmHandler,
+  LogSteamStopFarmHandler,
+  LogSteamStartFarmHandler,
+  PersistFarmSessionUsageHandler,
+} from "~/domain/handler"
+import { LogPlanExpiredMidFarm } from "~/domain/handler/LogPlanExpiredMidFarm"
+import { PersistFarmSessionInfinityHandler } from "~/domain/handler/PersistFarmSessionInfinityHandler"
 import { UsersDAODatabase } from "~/infra/dao"
 import { prisma } from "~/infra/libs"
 import { Publisher } from "~/infra/queue"
@@ -38,7 +47,6 @@ export const steamBuilder: SteamBuilder = {
 const usageBuilder = new UsageBuilder()
 
 export const publisher = new Publisher()
-
 // export const farmingUsersStorage = new FarmingUsersStorage()
 export const emitterBuilder = new EventEmitterBuilder()
 export const steamUserBuilder = steamBuilder
@@ -64,3 +72,15 @@ export const userAuthentication = new ClerkAuthentication(clerkClient)
 export const usersRepository = new UsersRepositoryDatabase(prisma)
 export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)
 export const idGenerator = new IDGeneratorUUID()
+
+publisher.register(new PersistFarmSessionUsageHandler(planRepository, usageBuilder))
+publisher.register(new PersistFarmSessionInfinityHandler(planRepository, usageBuilder))
+publisher.register(new PersistFarmSessionExpiredMidFarmHandler(planRepository))
+publisher.register(new StartFarmPlanHandler())
+publisher.register(new LogPlanExpiredMidFarm())
+
+// publisher.register(new LogUserFarmedHandler())
+
+publisher.register(new LogSteamStopFarmHandler())
+publisher.register(new LogSteamStartFarmHandler())
+// publisher.register(new LogUserCompleteFarmSessionHandler())

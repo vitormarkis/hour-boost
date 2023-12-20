@@ -9,18 +9,6 @@ declare global {
   }
 }
 
-import {
-  LogCompleteInfinityFarmSessionHandler,
-  LogSteamStartFarmHandler,
-  LogSteamStopFarmHandler,
-  LogUserCompleteFarmSessionHandler,
-  PersistUsageHandler,
-  PlanExpiredMidFarmPersistPlanHandler,
-  StartFarmPlanHandler,
-} from "~/domain/handler"
-import { LogPlanExpiredMidFarm } from "~/domain/handler/LogPlanExpiredMidFarm"
-import { planRepository, publisher } from "~/presentation/instances"
-
 import { command_routerSteam } from "~/presentation/routes/command"
 import { command_routerPlan } from "~/presentation/routes/command/routes-plan"
 import {
@@ -52,18 +40,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     err,
   })
 })
-
-publisher.register(new PersistUsageHandler(planRepository))
-publisher.register(new StartFarmPlanHandler())
-publisher.register(new LogCompleteInfinityFarmSessionHandler())
-publisher.register(new PlanExpiredMidFarmPersistPlanHandler(planRepository))
-publisher.register(new LogPlanExpiredMidFarm())
-
-// publisher.register(new LogUserFarmedHandler())
-
-publisher.register(new LogSteamStopFarmHandler())
-publisher.register(new LogSteamStartFarmHandler())
-publisher.register(new LogUserCompleteFarmSessionHandler())
 
 app.listen(process.env.PORT ?? 4000, () => {
   console.log(`Server is running on port ${process.env.PORT ?? 4000}`)
