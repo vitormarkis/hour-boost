@@ -44,8 +44,8 @@ export class FarmInfinityService extends FarmService {
     throw new Error("Method not implemented.")
   }
   protected stopFarm(): void {
-    this.farmingAccounts.clear()
     this.publishCompleteFarmSession()
+    this.farmingAccounts.clear()
   }
 
   protected publishCompleteFarmSession(): void {

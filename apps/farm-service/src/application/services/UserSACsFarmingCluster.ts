@@ -37,8 +37,7 @@ export class UserSACsFarmingCluster {
     return `${this.username}:${accountName}`
   }
 
-  stopFarmAllAccounts(when?: Date) {
-    console.log("2. rodando stopFarmAllAccounts")
+  stopFarmAllAccounts() {
     this.sacList.stopFarmAllAccounts()
     this.farmService.stopFarmAllAccounts()
   }

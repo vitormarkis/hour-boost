@@ -8,6 +8,7 @@ import {
   testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
+import { UserCompletedFarmSessionUsageCommand } from "~/application/commands"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { StopFarmController, promiseHandler } from "~/presentation/controllers"
 import { FarmGamesController } from "~/presentation/controllers/FarmGamesController"
@@ -441,6 +442,47 @@ describe("not mobile", () => {
       calls: addSacSPY.mock.calls,
     })
     expect(responseFarm2.status).toBe(200)
+  })
+
+  test("should start farm", async () => {
+    jest.useFakeTimers({ doNotFake: ["setTimeout"] })
+    const spyPublish = jest.spyOn(i.publisher, "publish")
+    console.log = log
+    const promise = farmGamesController.handle({
+      payload: {
+        userId: s.me.userId,
+        accountName: s.me.accountName,
+        gamesID: [10892],
+      },
+    })
+
+    await promiseHandler(promise)
+    // jest.useFakeTimers()
+
+    jest.advanceTimersByTime(2 * 60 * 60 * 1000)
+
+    await promiseHandler(
+      stopFarmController.handle({
+        payload: {
+          accountName: s.me.accountName,
+          userId: s.me.userId,
+        },
+      })
+    )
+
+    const calls = spyPublish.mock.calls
+      .filter(c => c[0].operation === "user-complete-farm-session-usage")
+      .map(c =>
+        (c[0] as UserCompletedFarmSessionUsageCommand).farmingAccountDetails.map(c => ({
+          usageAmountInSeconds: c.usageAmountInSeconds,
+          accountName: c.accountName,
+        }))
+      )
+      .flat(Infinity)
+
+    console.log({
+      calls,
+    })
   })
 })
 

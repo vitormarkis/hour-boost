@@ -8,7 +8,7 @@ export class UserCompletedFarmSessionInfinityCommand implements Command {
   accountName: string
   startedAt: Date
 
-  constructor(props: UserCompletedFarmSessionUsageCommandProps) {
+  constructor(props: UserCompletedFarmSessionInfinityCommandProps) {
     this.when = props.when
     this.planId = props.planId
     this.accountName = props.accountName
@@ -16,7 +16,7 @@ export class UserCompletedFarmSessionInfinityCommand implements Command {
   }
 }
 
-interface UserCompletedFarmSessionUsageCommandProps {
+interface UserCompletedFarmSessionInfinityCommandProps {
   when: Date
   planId: string
   accountName: string
