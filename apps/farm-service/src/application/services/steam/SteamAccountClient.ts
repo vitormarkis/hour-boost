@@ -133,16 +133,6 @@ export class SteamAccountClient extends LastHandler {
 
     const userIntention = getUserFarmIntention(gamesID, this.gamesPlaying)
     if (userIntention === "DIDNT-ADD-GAMES") return
-    else if (userIntention === "ADD-GAMES") {
-      const newGames = gamesID.filter(gid => !this.gamesPlaying.includes(gid))
-      this.publisher.publish(new AddMoreGamesCommand({ newGames, when }))
-    } else if (userIntention === "REMOVE-GAMES") {
-      this.publisher.publish(new PausedSomeGamesCommand({ when }))
-    } else if (userIntention === "START-FARMING") {
-      this.publisher.publish(new StartFarmingCommand({ when, gamesID }))
-    } else if (userIntention === "STOP-FARMING") {
-      this.publisher.publish(new StopFarmingCommand({ when }))
-    }
 
     this.setGamesPlaying(gamesID)
     console.log(`STEAM_CLIENT: Calling the client with `, gamesID)
