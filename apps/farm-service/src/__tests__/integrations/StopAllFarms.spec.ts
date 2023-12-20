@@ -1,3 +1,4 @@
+import { PlanInfinity, PlanUsage } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
@@ -6,8 +7,11 @@ import {
   password,
   testUsers as s,
 } from "~/__tests__/instances"
+import { UserCompletedFarmSessionInfinityCommand } from "~/application/commands/UserCompletedFarmSessionInfinityCommand"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
+import { PersistFarmSessionUsageHandler } from "~/domain/handler"
+import { PersistFarmSessionInfinityHandler } from "~/domain/handler/PersistFarmSessionInfinityHandler"
 
 import { FarmGamesController } from "~/presentation/controllers"
 
@@ -59,6 +63,9 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
     await farmGamesController.handle({
       payload: { accountName: s.friend.accountName, gamesID: [109230], userId: s.friend.userId },
     })
+
+    i.publisher.register(new PersistFarmSessionInfinityHandler(i.planRepository, i.usageBuilder))
+    i.publisher.register(new PersistFarmSessionUsageHandler(i.planRepository, i.usageBuilder))
   })
 
   test("should list all users SACs as farming", async () => {
@@ -92,7 +99,9 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
   })
 
   describe("Stopped all farms test suite", () => {
+    let spyPublish: jest.SpyInstance
     beforeEach(async () => {
+      spyPublish = jest.spyOn(i.publisher, "publish")
       stopAllFarms.execute()
       await new Promise(setImmediate)
     })
@@ -122,6 +131,14 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
           [s.friend.accountName]: "IDDLE",
         },
       })
+    })
+
+    test("should persist usages on plan", async () => {
+      // console.log = log
+      const mePlan = (await i.planRepository.getById(meInstances.me.plan.id_plan)) as PlanInfinity
+      const friendPlan = (await i.planRepository.getById(friendInstances.friend.plan.id_plan)) as PlanUsage
+      expect(mePlan.usages.data).toHaveLength(2)
+      expect(friendPlan.usages.data).toHaveLength(1)
     })
   })
 })
