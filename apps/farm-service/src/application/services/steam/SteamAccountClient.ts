@@ -10,6 +10,7 @@ import {
 import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
+import { UserGames, UserSteamGame, UserSteamGamesList } from "~/presentation/presenters"
 import { areTwoArraysEqual } from "~/utils"
 
 export class SteamAccountClient extends LastHandler {
@@ -21,6 +22,7 @@ export class SteamAccountClient extends LastHandler {
   logged = false
   gamesPlaying: number[] = []
   accountName: string
+  ownershipCached = false
 
   constructor({ instances, props }: SteamAccountClientProps) {
     super()
@@ -32,18 +34,26 @@ export class SteamAccountClient extends LastHandler {
     this.accountName = props.accountName
 
     this.client.on("loggedOn", (...args) => {
-      console.log("Rodou loggedOn")
+      console.log("[SAC-CLIENT]: Rodou loggedOn")
+      this.emitter.emit("hasSession")
       this.getLastHandler("loggedOn")(...args)
       this.setLastArguments("loggedOn", args)
       this.logged = true
-      console.log(`${this.username} logged in.`)
+      console.log(`${this.accountName} logged in.`)
       this.client.setPersona(SteamUser.EPersonaState.Online)
       this.client.gamesPlayed([])
     })
 
+    this.client.on("ownershipCached", (...args) => {
+      console.log(`ownershipCached - ${this.accountName}`)
+      this.ownershipCached = true
+      this.getLastHandler("ownershipCached")(...args)
+      this.setLastArguments("ownershipCached", args)
+    })
+
     this.client.on("steamGuard", async (...args) => {
       const [domain, callback] = args
-      console.log("Rodou steamGuard")
+      console.log("[SAC-CLIENT]: Rodou steamGuard")
       this.getLastHandler("steamGuard")(...args)
       this.setLastArguments("steamGuard", args)
       this.logoff()
@@ -58,7 +68,8 @@ export class SteamAccountClient extends LastHandler {
     })
 
     this.client.on("error", (...args) => {
-      console.log("Rodou error")
+      console.log("[SAC-CLIENT]: Rodou error")
+      // console.log("==============EMITTING INTERRUPT, SHOULD RUN PROMISE.ALL")
       this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
@@ -68,36 +79,26 @@ export class SteamAccountClient extends LastHandler {
     this.client.on("disconnected", (...args) => {
       this.logoff()
       this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
-      console.log("Rodou disconnected", ...args)
+      console.log("[SAC-CLIENT]: Rodou disconnected", ...args)
       this.getLastHandler("disconnected")(...args)
       this.setLastArguments("disconnected", args)
     })
 
     if (process.env.NODE_ENV === "development") {
-      console.log("CRIOU HANDLER DO BREAK")
       connection.on("break", () => {
-        console.log("break cb: Erro no SAC Client NoConnection")
+        console.log(`[SAC Instance] Emitting noConnection error of user ${this.accountName} for the cluster.`)
         this.client.emit("error", { eresult: SteamUser.EResult.NoConnection })
         setTimeout(() => {
           this.client.emit("webSession")
-        }, 500)
+        }, 500).unref()
       })
     }
 
     this.client.on("webSession", async (...args) => {
       this.emitter.emit("hasSession")
-      console.log(`Got a web session for account ${this.accountName}`, ...args)
-      console.log("Rodou webSession")
+      console.log(`[SAC-CLIENT]: Rodou webSession for ${this.accountName}`)
       this.getLastHandler("webSession")(...args)
       this.setLastArguments("webSession", args)
-    })
-
-    this.publisher.register({
-      operation: "plan-usage-expired-mid-farm",
-      notify: async () => {
-        console.log("STEAM_CLIENT: Triggering the event.")
-        this.farmGames([])
-      },
     })
   }
 
@@ -141,6 +142,14 @@ export class SteamAccountClient extends LastHandler {
 
   isFarming(): boolean {
     return this.gamesPlaying.length > 0
+  }
+
+  async getUserGames(): Promise<[error: Error, data: null] | [error: null, data: UserSteamGamesList]> {
+    if (!this.client.steamID) return [new Error("No steam id set."), null]
+    const { apps } = (await this.client.getUserOwnedApps(this.client.steamID)) as unknown as UserGames
+    const games = apps.map(game => new UserSteamGame(game.appid, game.img_icon_url))
+    const userSteamGames = new UserSteamGamesList(games)
+    return [null, userSteamGames]
   }
 }
 

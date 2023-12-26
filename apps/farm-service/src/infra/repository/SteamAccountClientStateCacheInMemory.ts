@@ -7,8 +7,16 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
     return this.cache.get(keyUserAccountName) ?? null
   }
 
+  async delete(keyUserAccountName: string): Promise<void> {
+    this.cache.delete(keyUserAccountName)
+  }
+
   async set(keyUserAccountName: string, sacStateCache: SACStateCacheDTO): Promise<SACStateCacheDTO> {
     this.cache.set(keyUserAccountName, sacStateCache)
     return sacStateCache
+  }
+
+  async flushAll(): Promise<void> {
+    this.cache.clear()
   }
 }

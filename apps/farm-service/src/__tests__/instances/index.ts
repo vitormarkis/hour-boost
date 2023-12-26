@@ -8,11 +8,13 @@ import {
   Usage,
   User,
 } from "core"
+import Redis from "ioredis"
 import { makeSACFactory } from "~/__tests__/factories"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { UsersDAOInMemory } from "~/infra/dao"
+import { redis } from "~/infra/libs/redis"
 import { Publisher } from "~/infra/queue"
 import {
   PlanRepositoryInMemory,
@@ -21,6 +23,7 @@ import {
   UsersInMemory,
   UsersRepositoryInMemory,
 } from "~/infra/repository"
+import { SteamAccountClientStateCacheRedis } from "~/infra/repository/SteamAccountClientStateCacheRedis"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
 import { SteamUserMockBuilder } from "~/utils/builders/SteamMockBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
@@ -47,11 +50,17 @@ export type CustomInstances = {
 
 export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomInstances) {
   const { validSteamAccounts = [] } = props ?? {}
+  const redis = new Redis({
+    commandTimeout: 1000 * 3,
+    connectTimeout: 1000 * 3,
+    sentinelCommandTimeout: 1000 * 3,
+  })
 
   const idGenerator = new IDGeneratorUUID()
   const publisher = new Publisher()
   const usersMemory = new UsersInMemory()
   const sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
+  // const sacStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
   const usersRepository = new UsersRepositoryInMemory(usersMemory)
   const planRepository = new PlanRepositoryInMemory(usersMemory)
   const steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)

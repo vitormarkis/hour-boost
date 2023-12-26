@@ -6,24 +6,23 @@ import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/applic
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import {
   StartFarmPlanHandler,
-  PersistFarmSessionExpiredMidFarmHandler,
   LogSteamStopFarmHandler,
   LogSteamStartFarmHandler,
   PersistFarmSessionUsageHandler,
 } from "~/domain/handler"
-import { LogPlanExpiredMidFarm } from "~/domain/handler/LogPlanExpiredMidFarm"
 import { PersistFarmSessionInfinityHandler } from "~/domain/handler/PersistFarmSessionInfinityHandler"
 import { UsersDAODatabase } from "~/infra/dao"
 import { prisma } from "~/infra/libs"
+import { redis } from "~/infra/libs/redis"
 import { Publisher } from "~/infra/queue"
 import {
   PlanRepositoryDatabase,
-  SteamAccountClientStateCacheInMemory,
   SteamAccountsRepositoryDatabase,
   UsersRepositoryDatabase,
 } from "~/infra/repository"
+import { SteamAccountClientStateCacheRedis } from "~/infra/repository/SteamAccountClientStateCacheRedis"
 import { ClerkAuthentication } from "~/infra/services"
-import { EventEmitterBuilder, SteamAccountClientBuilder, SteamUserMockBuilder } from "~/utils/builders"
+import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
 
@@ -34,14 +33,7 @@ if (httpProxy) {
 }
 
 export const steamBuilder: SteamBuilder = {
-  create: () => {
-    try {
-      return new SteamUser(httpProxy ? { httpProxy } : undefined)
-    } catch (error) {
-      console.log(`[PROXY ERROR CAUGHT] `, error)
-      return new SteamUser()
-    }
-  },
+  create: () => new SteamUser(httpProxy ? { httpProxy, enablePicsCache: true } : { enablePicsCache: true }),
 }
 
 const usageBuilder = new UsageBuilder()
@@ -53,7 +45,7 @@ export const steamUserBuilder = steamBuilder
 export const planRepository = new PlanRepositoryDatabase(prisma)
 export const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
 export const allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder)
-export const sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
+export const sacStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
 export const farmServiceBuilder = new FarmServiceBuilder({
   publisher,
   emitterBuilder,
@@ -75,9 +67,7 @@ export const idGenerator = new IDGeneratorUUID()
 
 publisher.register(new PersistFarmSessionUsageHandler(planRepository, usageBuilder))
 publisher.register(new PersistFarmSessionInfinityHandler(planRepository, usageBuilder))
-publisher.register(new PersistFarmSessionExpiredMidFarmHandler(planRepository))
 publisher.register(new StartFarmPlanHandler())
-publisher.register(new LogPlanExpiredMidFarm())
 
 // publisher.register(new LogUserFarmedHandler())
 

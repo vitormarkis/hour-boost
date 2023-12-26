@@ -11,5 +11,16 @@ services:
       - 3307:3306
     volumes:
       - ./.docker/database:/var/lib/mysql
+  cache:
+    image: redis/redis-stack
+    restart: always
+    environment:
+      - UPSTASH_REDIS_REST_TOKEN=dev-mode
+    ports:
+      - 6379:6379
+      - 8001:8001
+    volumes:
+      - ./.docker/cache:/data
 volumes:
   db:
+  cache:

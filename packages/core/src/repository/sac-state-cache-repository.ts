@@ -1,6 +1,8 @@
 export interface SteamAccountClientStateCacheRepository {
   get(keyUserAccountName: string): Promise<SACStateCacheDTO | null>
   set(keyUserAccountName: string, sacStateCache: SACStateCacheDTO): Promise<SACStateCacheDTO>
+  delete(keyUserAccountName: string): Promise<void>
+  flushAll(): Promise<void>
 }
 
 export class SACStateCache {

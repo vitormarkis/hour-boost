@@ -51,10 +51,11 @@ export abstract class FarmService {
 
   protected setAccountStatus(accountName: string, status: "FARMING" | "IDDLE") {
     const account = this.getAccountDetails(accountName)
-    if (!account) {
-      const msg = `NSTH: Tried to resume farming on account that don't exists. ${accountName}`
-      throw new ApplicationError(msg, 500)
-    }
+    if (!account) return
+    // if (!account) {
+    //   const msg = `NSTH: Tried to resume farming on account that don't exists. ${accountName}`
+    //   throw new ApplicationError(msg, 500)
+    // }
     this.accountsFarming.set(accountName, {
       ...account,
       status,

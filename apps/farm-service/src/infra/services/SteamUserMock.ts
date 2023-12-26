@@ -1,8 +1,5 @@
-import { ApplicationError } from "core"
 import SteamUser, { EResult } from "steam-user"
-import { connection } from "~/__tests__/connection"
 import { EventEmitter } from "~/application/services"
-import { LastHandler } from "~/application/services/steam"
 import { sleep } from "~/utils"
 
 export type EventParameters = {
@@ -11,6 +8,7 @@ export type EventParameters = {
   error: [err: Error & { eresult: SteamUser.EResult }]
   disconnected: [eresult: SteamUser.EResult, msg?: string]
   webSession: [sessionID: string, cookies: string[]]
+  ownershipCached: []
 }
 
 export type EventName = keyof EventParameters
@@ -29,9 +27,6 @@ export class SteamUserMock extends EventEmitter<EventParameters> {
     private readonly mobile?: boolean
   ) {
     super()
-    console.log({
-      validSteamAccounts,
-    })
     this.mobile = !!mobile
     this.on("loggedOn", (...args) => {
       console.log("Running event loggedOn")

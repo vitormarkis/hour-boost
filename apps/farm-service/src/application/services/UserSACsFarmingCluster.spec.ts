@@ -8,6 +8,7 @@ import {
   testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
+import { SteamAccountClient } from "~/application/services/steam"
 
 const log = console.log
 console.log = () => {}
@@ -23,7 +24,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 }
 
 beforeEach(async () => {
-  jest.useFakeTimers({ doNotFake: ["setImmediate"] })
+  jest.useFakeTimers({ doNotFake: ["setImmediate", "nextTick"] })
   await setupInstances({
     validSteamAccounts,
   })
@@ -46,19 +47,40 @@ test("should store StateCache DTO with as farming with one game", async () => {
 })
 
 test("should stop farming once interrupt occurs", async () => {
+  jest.useFakeTimers({ doNotFake: ["setImmediate"] })
+  console.log = log
   const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
-  meCluster.addSAC(meInstances.meSAC)
+  let xs = 0
+  const sac = meInstances.meSAC
+  sac.emitter.setEventResolver("interrupt", () => {
+    console.log("TEST resolving")
+    // res(true)
+  })
+  meCluster.addSAC(sac)
   const pauseFarmOnAccountSPY = jest.spyOn(meCluster, "pauseFarmOnAccount")
-  const sacClientSPY = jest.spyOn(meInstances.meSAC.client, "emit")
-  const sacEmitterSPY = jest.spyOn(meInstances.meSAC.emitter, "emit")
+  const sacClientSPY = jest.spyOn(sac.client, "emit")
+  const sacEmitterSPY = jest.spyOn(sac.emitter, "emit")
 
   await meCluster.farmWithAccount(s.me.accountName, [100], meInstances.me.plan.id_plan)
+  jest.advanceTimersByTime(0)
   expect(meCluster.getAccountsStatus()).toStrictEqual({
     [s.me.accountName]: "FARMING",
   })
-  jest.advanceTimersByTime(1000 * 3600 * 2) // 2 hours
+  // jest.advanceTimersByTime(1000 * 3600 * 2) // 2 hours
+  // const resolver = () => {
+  //   return new Promise(res => {
+  //     meInstances.meSAC.emitter.setEventResolver("interrupt", res)
+  //   })
+  // }
   connection.emit("break")
-  await new Promise(setImmediate)
+  // await new Promise(setImmediate)
+  await new Promise(res => {
+    sac.emitter.setEventResolver("interrupt", () => {
+      xs = 1
+      res(true)
+    })
+  })
+  expect(xs).toBe(1)
 
   const sacClientCalls = sacClientSPY.mock.calls
   expect(sacClientCalls[0]).toStrictEqual(["error", { eresult: SteamUser.EResult.NoConnection }])
@@ -71,14 +93,16 @@ test("should stop farming once interrupt occurs", async () => {
   expect(meCluster.getAccountsStatus()).toStrictEqual({
     [s.me.accountName]: "IDDLE",
   })
+  console.log = () => {}
 })
 
 test("should start farm again when relog with state happens", async () => {
   const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
-  meCluster.addSAC(meInstances.meSAC)
+  const sac = meInstances.meSAC
+  meCluster.addSAC(sac)
   const pauseFarmOnAccountSPY = jest.spyOn(meCluster, "pauseFarmOnAccount")
-  const sacClientSPY = jest.spyOn(meInstances.meSAC.client, "emit")
-  const sacEmitterSPY = jest.spyOn(meInstances.meSAC.emitter, "emit")
+  const sacClientSPY = jest.spyOn(sac.client, "emit")
+  const sacEmitterSPY = jest.spyOn(sac.emitter, "emit")
 
   await meCluster.farmWithAccount(s.me.accountName, [100], meInstances.me.plan.id_plan)
   expect(meCluster.getAccountsStatus()).toStrictEqual({
@@ -87,7 +111,12 @@ test("should start farm again when relog with state happens", async () => {
   jest.advanceTimersByTime(1000 * 3600 * 2) // 2 hours
   connection.emit("break")
   jest.advanceTimersByTime(500) // 2 hours
-  await new Promise(setImmediate)
+  // await new Promise(setImmediate)
+  await new Promise(res => {
+    sac.emitter.setEventResolver("relog-with-state", () => {
+      res(true)
+    })
+  })
 
   const sacClientCalls = sacClientSPY.mock.calls
   expect(sacClientCalls[0]).toStrictEqual(["error", { eresult: SteamUser.EResult.NoConnection }])
@@ -105,20 +134,31 @@ test("should start farm again when relog with state happens", async () => {
 })
 
 test("should get back farming once has session again", async () => {
+  console.log = log
   const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
-  meCluster.addSAC(meInstances.meSAC)
+  const sac = meInstances.meSAC
+  const spySACEmitter = jest.spyOn(sac.emitter, "emit")
+  meCluster.addSAC(sac)
   await meCluster.farmWithAccount(s.me.accountName, [100], meInstances.me.plan.id_plan)
   expect(meCluster.getAccountsStatus()).toStrictEqual({
     [s.me.accountName]: "FARMING",
   })
   jest.advanceTimersByTime(1000 * 3600 * 2) // 2 hours
   connection.emit("break")
-  await new Promise(setImmediate)
+  await new Promise(res => {
+    sac.emitter.setEventResolver("interrupt", () => {
+      res(true)
+    })
+  })
   expect(meCluster.getAccountsStatus()).toStrictEqual({
     [s.me.accountName]: "IDDLE",
   })
-  jest.advanceTimersByTime(500)
-  await new Promise(setImmediate)
+  jest.advanceTimersByTime(600)
+  await new Promise(res => {
+    sac.emitter.setEventResolver("relog-with-state", () => {
+      res(true)
+    })
+  })
   expect(meCluster.getAccountsStatus()).toStrictEqual({
     [s.me.accountName]: "FARMING",
   })

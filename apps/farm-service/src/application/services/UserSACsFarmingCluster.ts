@@ -47,48 +47,54 @@ export class UserSACsFarmingCluster {
       throw new ApplicationError("[SAC Cluster]: Attempt to add sac that already exists.")
     this.sacList.set(sac.accountName, sac)
 
+    console.log(`[ACC-CLUSTER]: Appending interrupt async listener on ${sac.accountName}'s sac!`)
+
     sac.emitter.on("interrupt", async sacStateCache => {
+      console.log(
+        `[ACC-CLUSTER]: [1/2] ${sacStateCache.accountName} was interrupt, setting the cache and pausing the farm on SAC.`
+      )
       await this.sacStateCacheRepository.set(
         this.getKeyUserAccountName(sac.accountName),
         SACStateCacheFactory.createDTO(sac)
       )
+      console.log(`[ACC-CLUSTER]: [2/2] ${sacStateCache.accountName} has set the cache successfully.`)
       this.pauseFarmOnAccount(sacStateCache.accountName)
     })
 
     sac.emitter.on("hasSession", async () => {
+      console.log("[ACC-CLUSTER 1/2] Starting to fetch SAC State Cache.")
       const sacStateCache = await this.sacStateCacheRepository.get(
         this.getKeyUserAccountName(sac.accountName)
       )
+      console.log(`[ACC-CLUSTER 2/2] Found SAC State Cache for [${sac.accountName}]`, sacStateCache)
       if (sacStateCache) {
-        console.log("`relog-with-state`", sacStateCache)
+        console.log(`[ACC-CLUSTER -> sac.emitter]: ${sac.accountName} relog with state! [...]`, sacStateCache)
         sac.emitter.emit("relog-with-state", sacStateCache)
       } else {
-        console.log("`relog`")
+        console.log(
+          `[ACC-CLUSTER -> sac.emitter]: ${sac.accountName} relog without any state.`,
+          sacStateCache
+        )
         sac.emitter.emit("relog")
       }
-      // sac.farmGames(gamesPlaying)
-      // const farmUsageService = new FarmUsageService(this.publisher, user.plan as PlanUsage, user.username)
-      // farmUsageService.farmWithAccount(accountName)
-      // this.farmingUsersStorage.add(farmUsageService).startFarm()
     })
 
     sac.emitter.on("relog-with-state", async sacStateCache => {
-      console.log(`[SAC-EMITTER]: Usuário relogou com state. `, sacStateCache)
+      console.log(`[ACC-CLUSTER]: ${sacStateCache.accountName} relogou com state. `, sacStateCache)
       const { accountName, gamesPlaying, isFarming } = sacStateCache
       const sac = this.sacList.get(accountName)
       if (!sac)
         return console.log(
-          `[SAC Cluster]: Tried to update state, but no SAC was found with name: ${accountName}`
+          `[ACC-CLUSTER]: Tried to update state, but no SAC was found with name: ${accountName}`
         )
       if (isFarming) {
-        console.log("callback farmWithAccount")
+        console.log(`[ACC-CLUSTER]: ${accountName} relogou farmando os jogos ${gamesPlaying}`)
         await this.farmWithAccount(accountName, gamesPlaying, this.planId)
       }
-      // this.farmService.farmWithAccount(sac.accountName)
     })
 
     sac.emitter.on("relog", () => {
-      console.log(`[SAC-EMITTER]: Usuário relogou sem state.`)
+      console.log(`[ACC-CLUSTER]: Usuário relogou sem state.`)
     })
 
     return this
