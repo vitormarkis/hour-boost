@@ -1,5 +1,7 @@
+import { AccountGames } from "core"
 import SteamUser, { EResult } from "steam-user"
 import { EventEmitter } from "~/application/services"
+import { allAccountGames } from "~/consts"
 import { sleep } from "~/utils"
 
 export type EventParameters = {
@@ -21,6 +23,7 @@ export class SteamUserMock extends EventEmitter<EventParameters> {
   steamGuardCode: string | undefined
   logged = false
   isSame = (Math.random() * 1e4).toFixed(0)
+  accountName: string | undefined
 
   constructor(
     private readonly validSteamAccounts: SteamAccountCredentials[],
@@ -88,6 +91,7 @@ export class SteamUserMock extends EventEmitter<EventParameters> {
       } else {
         console.log("is valid: loggin")
         // await sleep(0.01)
+        this.accountName = details.accountName
         this.emit("loggedOn", {}, {})
       }
     }).unref()
@@ -95,4 +99,12 @@ export class SteamUserMock extends EventEmitter<EventParameters> {
 
   setPersona(persona: string) {}
   gamesPlayed(gamesID: number[]) {}
+
+  async getUserOwnedApps(): Promise<AccountGames> {
+    return Promise.resolve(allAccountGames[this.accountName!])
+  }
+
+  get steamID() {
+    return this.accountName
+  }
 }

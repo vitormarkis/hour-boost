@@ -1,8 +1,14 @@
-import { SACStateCacheDTO, SteamAccountClientStateCacheRepository } from "core"
+import { AccountSteamGamesList, SACStateCacheDTO, SteamAccountClientStateCacheRepository } from "core"
 import { Redis } from "ioredis"
 
 export class SteamAccountClientStateCacheRedis implements SteamAccountClientStateCacheRepository {
   constructor(private readonly redis: Redis) {}
+  getAccountGames(accountName: string): Promise<AccountSteamGamesList | null> {
+    throw new Error("Method not implemented.")
+  }
+  setAccountGames(accountName: string, games: AccountSteamGamesList): Promise<void> {
+    throw new Error("Method not implemented.")
+  }
 
   async get(keyUserAccountName: string): Promise<SACStateCacheDTO | null> {
     try {

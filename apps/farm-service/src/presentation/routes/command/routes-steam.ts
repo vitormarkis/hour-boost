@@ -18,7 +18,7 @@ import {
   idGenerator,
   planRepository,
   publisher,
-  sacStateCacheRepository,
+  steamAccountClientStateCacheRepository,
   steamAccountsRepository,
   steamBuilder,
   usersClusterStorage,
@@ -85,7 +85,7 @@ command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: 
   const startFarmController = new FarmGamesController({
     allUsersClientsStorage,
     publisher,
-    sacStateCacheRepository,
+    sacStateCacheRepository: steamAccountClientStateCacheRepository,
     usersClusterStorage,
     usersRepository,
     planRepository,

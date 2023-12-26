@@ -1,4 +1,4 @@
-import { ApplicationError, SACStateCacheDTO } from "core"
+import { AccountGames, AccountSteamGamesList, ApplicationError, DataOrError, SACStateCacheDTO } from "core"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import {
@@ -10,7 +10,7 @@ import {
 import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
-import { UserGames, UserSteamGame, UserSteamGamesList } from "~/presentation/presenters"
+import { UserSteamGame, UserSteamGamesList } from "~/presentation/presenters"
 import { areTwoArraysEqual } from "~/utils"
 
 export class SteamAccountClient extends LastHandler {
@@ -144,11 +144,11 @@ export class SteamAccountClient extends LastHandler {
     return this.gamesPlaying.length > 0
   }
 
-  async getUserGames(): Promise<[error: Error, data: null] | [error: null, data: UserSteamGamesList]> {
-    if (!this.client.steamID) return [new Error("No steam id set."), null]
-    const { apps } = (await this.client.getUserOwnedApps(this.client.steamID)) as unknown as UserGames
+  async getAccountGamesList(): Promise<DataOrError<AccountSteamGamesList>> {
+    if (!this.client.steamID) return [new ApplicationError("No steam id set."), null]
+    const { apps } = (await this.client.getUserOwnedApps(this.client.steamID)) as unknown as AccountGames
     const games = apps.map(game => new UserSteamGame(game.appid, game.img_icon_url))
-    const userSteamGames = new UserSteamGamesList(games)
+    const userSteamGames = new AccountSteamGamesList(games)
     return [null, userSteamGames]
   }
 }

@@ -1,3 +1,6 @@
 export * from "./UsersDAO"
 export * from "./UserAuthentication"
 export * from "./IDGenerator"
+export * from "./DataOrError"
+export * from "./HttpClient"
+export * from "./Controller"

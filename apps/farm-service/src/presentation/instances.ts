@@ -45,14 +45,14 @@ export const steamUserBuilder = steamBuilder
 export const planRepository = new PlanRepositoryDatabase(prisma)
 export const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
 export const allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder)
-export const sacStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
+export const steamAccountClientStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
 export const farmServiceBuilder = new FarmServiceBuilder({
   publisher,
   emitterBuilder,
 })
 export const userClusterBuilder = new UserClusterBuilder(
   farmServiceBuilder,
-  sacStateCacheRepository,
+  steamAccountClientStateCacheRepository,
   planRepository,
   emitterBuilder,
   publisher,
