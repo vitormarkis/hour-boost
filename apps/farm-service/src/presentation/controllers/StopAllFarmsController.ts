@@ -1,16 +1,20 @@
-import { ApplicationError } from "core"
-import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
-import { HttpClient } from "~/contracts"
+import { ApplicationError, Controller, HttpClient } from "core"
+import { StopAllFarms } from "~/application/use-cases"
 
-export class StopAllFarmsController {
+export namespace StopAllFarmsHandle {
+  export type Payload = {
+    secret: string
+  }
+
+  export type Response = {}
+}
+
+export class StopAllFarmsController
+  implements Controller<StopAllFarmsHandle.Payload, StopAllFarmsHandle.Response>
+{
   constructor(private readonly stopAllFarmsUseCase: StopAllFarms) {}
-
-  async handle(
-    req: HttpClient.Request<{
-      secret: string
-    }>
-  ): Promise<HttpClient.Response> {
-    const { secret } = req.payload
+  async handle({ payload }: APayload): AResponse {
+    const { secret } = payload
     if (secret !== process.env.ACTIONS_SECRET) {
       throw new ApplicationError("Secret incorreta.")
     }
@@ -24,3 +28,6 @@ export class StopAllFarmsController {
     }
   }
 }
+
+type APayload = HttpClient.Request<StopAllFarmsHandle.Payload>
+type AResponse = Promise<HttpClient.Response<StopAllFarmsHandle.Response>>

@@ -1,22 +1,24 @@
-import { CreateUser, GetUser, UserSession, UsersRepository } from "core"
-
-import { HttpClient } from "~/contracts/HttpClient"
+import { Controller, CreateUser, GetUser, HttpClient, UserSession, UsersRepository } from "core"
 import { makeRes, makeResError } from "~/utils"
 
-export class GetMeController {
+export namespace GetMeHandle {
+  export type Payload = {
+    userId: string | null
+  }
+
+  export type Response = null | { message: string } | UserSession
+}
+
+export class GetMeController implements Controller<GetMeHandle.Payload, GetMeHandle.Response> {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly createUser: CreateUser,
     private readonly getUser: GetUser
   ) {}
 
-  async handle(
-    req: HttpClient.Request<{
-      userId: string | null
-    }>
-  ): Promise<HttpClient.Response> {
+  async handle({ payload }: APayload): AResponse {
     try {
-      const { userId } = req.payload
+      const { userId } = payload
       if (!userId) return { json: null, status: 200 }
       const user = await this.usersRepository.getByID(userId)
       if (!user) await this.createUser.execute(userId)
@@ -34,3 +36,6 @@ export class GetMeController {
     }
   }
 }
+
+type APayload = HttpClient.Request<GetMeHandle.Payload>
+type AResponse = Promise<HttpClient.Response<GetMeHandle.Response>>

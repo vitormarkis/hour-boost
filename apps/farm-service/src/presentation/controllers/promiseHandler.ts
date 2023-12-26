@@ -1,7 +1,8 @@
-import { ApplicationError } from "core"
-import { HttpClient } from "~/contracts"
+import { ApplicationError, HttpClient } from "core"
 
-export async function promiseHandler(promise: Promise<HttpClient.Response>): Promise<HttpClient.Response> {
+export async function promiseHandler(
+  promise: Promise<HttpClient.Response>
+): Promise<HttpClient.Response<any>> {
   try {
     const response = await promise
     return response

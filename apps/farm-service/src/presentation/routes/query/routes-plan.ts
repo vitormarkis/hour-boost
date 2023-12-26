@@ -1,6 +1,5 @@
-import { ApplicationError, PlanInfinity } from "core"
+import { ApplicationError, HttpClient, PlanInfinity } from "core"
 import { Router } from "express"
-import { HttpClient } from "~/contracts"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { usersRepository } from "~/presentation/instances"
 

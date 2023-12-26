@@ -7,11 +7,22 @@ export class GetUserSteamGamesUseCase {
     private readonly refreshGamesUseCase: RefreshGamesUseCase
   ) {}
 
-  async execute(userId: string, accountName: string): Promise<DataOrError<AccountSteamGamesList>> {
+  async execute({
+    accountName,
+    userId,
+  }: GetUserSteamGamesUseCaseProps): Promise<DataOrError<AccountSteamGamesList>> {
     const foundSteamGamesList = await this.steamAccountClientStateCacheRepository.getAccountGames(accountName)
     if (foundSteamGamesList) return [null, foundSteamGamesList]
-    const [error, steamGamesList] = await this.refreshGamesUseCase.execute(userId, accountName)
+    const [error, steamGamesList] = await this.refreshGamesUseCase.execute({
+      accountName,
+      userId,
+    })
     if (error) return [error, null]
     return [null, steamGamesList]
   }
+}
+
+export type GetUserSteamGamesUseCaseProps = {
+  accountName: string
+  userId: string
 }

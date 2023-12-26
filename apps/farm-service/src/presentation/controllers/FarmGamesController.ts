@@ -1,19 +1,28 @@
 import {
   ApplicationError,
+  Controller,
+  HttpClient,
   PlanRepository,
   SteamAccountClientStateCacheRepository,
   UsersRepository,
 } from "core"
-import { FarmServiceBuilder } from "~/application/factories"
-
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
-import { HttpClient } from "~/contracts"
 import { Publisher } from "~/infra/queue"
 import { SteamClientEventsRequired } from "~/presentation/controllers"
 import { areTwoArraysEqual, makeRes } from "~/utils"
 
-export class FarmGamesController {
+export namespace FarmGamesHandle {
+  export type Payload = {
+    accountName: string
+    gamesID: number[]
+    userId: string
+  }
+
+  export type Response = { message: string }
+}
+
+export class FarmGamesController implements Controller<FarmGamesHandle.Payload, FarmGamesHandle.Response> {
   private readonly publisher: Publisher
   private readonly usersRepository: UsersRepository
   private readonly allUsersClientsStorage: AllUsersClientsStorage
@@ -26,15 +35,9 @@ export class FarmGamesController {
     this.usersClusterStorage = props.usersClusterStorage
   }
 
-  async handle(
-    req: HttpClient.Request<{
-      userId: string
-      gamesID: number[]
-      accountName: string
-    }>
-  ): Promise<HttpClient.Response> {
-    const { accountName, gamesID, userId } = req.payload
-    const user = await this.usersRepository.getByID(req.payload.userId)
+  async handle({ payload }: APayload): AResponse {
+    const { accountName, gamesID, userId } = payload
+    const user = await this.usersRepository.getByID(userId)
     if (!user) throw new ApplicationError("Usuário não encontrado.", 404)
     const steamAccountDomain = user.steamAccounts.data.find(sa => sa.credentials.accountName === accountName)
     if (!steamAccountDomain)
@@ -96,54 +99,17 @@ export class FarmGamesController {
 
     const userCluster = this.usersClusterStorage.getOrAdd(user.username, user.plan)
 
-    // possui service farmando
-    // possui service sem ninguem farmando
-    // nao possui service, precisa criar
-    console.log({
-      accountName,
-      hasSteamAccountClien: !userCluster.hasSteamAccountClient(accountName),
-      isAccountFarming: !userCluster.isAccountFarming(accountName),
-    })
     if (!userCluster.hasSteamAccountClient(accountName) && !userCluster.isAccountFarming(accountName)) {
       userCluster.addSAC(sac)
     }
     await userCluster.farmWithAccount(accountName, gamesID, user.plan.id_plan)
 
     return makeRes(200, "Iniciando farm.")
-
-    // if (user.plan instanceof PlanInfinity) {
-    //   // const farmInfinityService = new FarmInfinityService(
-    //   //   this.publisher,
-    //   //   user.username,
-    //   //   user.plan.id_plan,
-    //   //   user.plan.ownerId
-    //   // )
-
-    //   // essa instanciação pode estar dentro do cluster, com base no user.plan.type
-
-    // }
-
-    // if (user.plan instanceof PlanUsage) {
-    //   // const { safCluster } = this.steamAccountFarmingCluster.getByAccountName(accountName)
-    //   // safCluster.farmGames(gamesID)
-
-    //   const farmUsageService = new FarmUsageService(this.publisher, user.plan, user.username)
-    //   farmUsageService.farmWithAccount(accountName)
-    //   this.farmingUsersStorage.add(farmUsageService).startFarm()
-    //   sac.farmGames(gamesID)
-    //   // sac.emitter.on("interrupt", () => {
-    //   //   console.log("[sac emitter]: interrupt -> parando sac e service")
-    //   //   sac.stopFarm()
-    //   //   farmUsageService.stopFarm()
-    //   //   // this.farmingUsersStorage.get(user.username).getAccount()
-    //   //   // remover o farm que possui o set interval, pra conseguir adicinoar um novo depois
-    //   // })
-    //   return makeRes(200, "Iniciando farm.")
-    // }
-
-    // throw new ApplicationError("Instância do plano do usuário não suportado.")
   }
 }
+
+type APayload = HttpClient.Request<FarmGamesHandle.Payload>
+type AResponse = Promise<HttpClient.Response<FarmGamesHandle.Response>>
 
 type FarmGamesControllerProps = {
   publisher: Publisher

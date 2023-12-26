@@ -1,30 +1,30 @@
-import { API_GET_SteamAccounts, ISteamAccountSession, ListSteamAccounts } from "core"
+import { API_GET_SteamAccounts, Controller, HttpClient, ListSteamAccounts } from "core"
 
-import { HttpClient } from "~/contracts/HttpClient"
-import { promiseHandler } from "~/presentation/controllers/promiseHandler"
-import { makeResError } from "~/utils"
+export namespace ListSteamAccountsHandle {
+  export type Payload = {
+    userId: string
+  }
 
-export class ListSteamAccountsController {
+  export type Response = {}
+}
+
+export class ListSteamAccountsController
+  implements Controller<ListSteamAccountsHandle.Payload, ListSteamAccountsHandle.Response>
+{
   constructor(private readonly listSteamAccounts: ListSteamAccounts) {}
+  async handle({ payload }: APayload): AResponse {
+    const { steamAccounts } = await this.listSteamAccounts.execute({
+      userId: payload.userId,
+    })
 
-  async handle(
-    req: HttpClient.Request<{
-      userId: string
-    }>
-  ): Promise<HttpClient.Response> {
-    const perform = async () => {
-      const { steamAccounts } = await this.listSteamAccounts.execute({
-        userId: req.payload.userId,
-      })
-
-      return {
-        json: {
-          steamAccounts,
-        } as API_GET_SteamAccounts,
-        status: 200,
-      }
+    return {
+      json: {
+        steamAccounts,
+      } as API_GET_SteamAccounts,
+      status: 200,
     }
-
-    return promiseHandler(perform())
   }
 }
+
+type APayload = HttpClient.Request<ListSteamAccountsHandle.Payload>
+type AResponse = Promise<HttpClient.Response<ListSteamAccountsHandle.Response>>

@@ -1,6 +1,4 @@
-import { AccountSteamGamesList, SteamAccountClientStateCacheRepository } from "core"
-import { AllUsersClientsStorage } from "~/application/services"
-import { SteamAccountClientStateCacheInMemory } from "~/infra/repository"
+import { AccountSteamGamesList } from "core"
 import { RefreshGamesUseCase } from "~/presentation/presenters/RefreshGamesUseCase"
 
 import {
@@ -50,7 +48,10 @@ test("should refresh account games", async () => {
   console.log = log
   const gameList = await i.sacStateCacheRepository.getAccountGames(s.me.accountName)
   expect(gameList).toStrictEqual(null)
-  await refreshGamesUseCase.execute(s.me.userId, s.me.accountName)
+  await refreshGamesUseCase.execute({
+    accountName: s.me.accountName,
+    userId: s.me.userId,
+  })
   const gameList2 = await i.sacStateCacheRepository.getAccountGames(s.me.accountName)
   expect(gameList2).toBeInstanceOf(AccountSteamGamesList)
   expect(gameList2?.games).toHaveLength(2)

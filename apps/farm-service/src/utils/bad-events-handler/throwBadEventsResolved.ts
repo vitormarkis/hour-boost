@@ -1,5 +1,4 @@
-import { ApplicationError } from "core"
-import { HttpClient } from "~/contracts"
+import { ApplicationError, HttpClient } from "core"
 import { EventParameters } from "~/infra/services/SteamUserMock"
 import {
   EventMapperGeneric,

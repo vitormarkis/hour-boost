@@ -1,16 +1,25 @@
-import { ApplicationError } from "core"
+import { ApplicationError, Controller, HttpClient } from "core"
 import { AllUsersClientsStorage } from "~/application/services"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
-import { HttpClient } from "~/contracts"
 import { SteamClientEventsRequired } from "~/presentation/controllers"
 import { makeRes } from "~/utils"
 
-export class AddSteamGuardCodeController {
-  constructor(private readonly allUsersClientsStorage: AllUsersClientsStorage) {}
+export namespace AddSteamGuardCodeHandle {
+  export type Payload = {
+    code: string
+    userId: string
+    accountName: string
+  }
 
-  async handle({
-    payload: { accountName, code, userId },
-  }: HttpClient.Request<IAddSteamGuardCode>): Promise<HttpClient.Response> {
+  export type Response = {}
+}
+
+export class AddSteamGuardCodeController
+  implements Controller<AddSteamGuardCodeHandle.Payload, AddSteamGuardCodeHandle.Response>
+{
+  constructor(private readonly allUsersClientsStorage: AllUsersClientsStorage) {}
+  async handle({ payload }: APayload): AResponse {
+    const { userId, accountName, code } = payload
     const { userSteamClients } = this.allUsersClientsStorage.getOrNull(userId) ?? {}
     if (!userSteamClients)
       throw new ApplicationError(
@@ -18,12 +27,6 @@ export class AddSteamGuardCodeController {
       )
     const sac = userSteamClients.getAccountClientOrThrow(accountName)
     if (!sac) throw new ApplicationError("User never tried to log in.")
-
-    // console.log({
-    // 	id: sac.client.isSame,
-    // 	onSteamGuard,
-    // 	code
-    // })
 
     const onSteamGuard = sac.getManualHandler("steamGuard")
     console.log("settando o steam guard")
@@ -56,8 +59,5 @@ export class AddSteamGuardCodeController {
   }
 }
 
-export interface IAddSteamGuardCode {
-  code: string
-  userId: string
-  accountName: string
-}
+type APayload = HttpClient.Request<AddSteamGuardCodeHandle.Payload>
+type AResponse = Promise<HttpClient.Response<AddSteamGuardCodeHandle.Response>>

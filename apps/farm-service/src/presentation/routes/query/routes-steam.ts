@@ -1,28 +1,26 @@
-import { randomUUID } from "crypto"
 import { ClerkExpressRequireAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
-import { AddSteamAccount, ListSteamAccounts } from "core"
+import { ListSteamAccounts } from "core"
 import { Request, Response, Router } from "express"
 
 import { ListSteamAccountsController } from "~/presentation/controllers"
 import {
   allUsersClientsStorage,
-  idGenerator,
   steamAccountClientStateCacheRepository,
-  steamAccountsRepository,
   usersDAO,
-  usersRepository,
 } from "~/presentation/instances"
 import { GetUserSteamGamesController } from "~/presentation/controllers/GetUserSteamGamesController"
-import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 import { RefreshGamesController } from "~/presentation/controllers/RefreshGamesController"
 import { RefreshGamesUseCase } from "~/presentation/presenters/RefreshGamesUseCase"
+import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 
-export const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
-export const listSteamAccounts = new ListSteamAccounts(usersDAO)
-export const getUserSteamGamesUseCase = new GetUserSteamGamesUseCase(allUsersClientsStorage)
-export const refreshGamesUseCase = new RefreshGamesUseCase(
+const listSteamAccounts = new ListSteamAccounts(usersDAO)
+const refreshGamesUseCase = new RefreshGamesUseCase(
   steamAccountClientStateCacheRepository,
   allUsersClientsStorage
+)
+const serSteamGamesUseCase = new GetUserSteamGamesUseCase(
+  steamAccountClientStateCacheRepository,
+  refreshGamesUseCase
 )
 
 export const query_routerSteam: Router = Router()
@@ -46,10 +44,10 @@ query_routerSteam.get(
   "/games",
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
-    const getUserSteamGamesController = new GetUserSteamGamesController(getUserSteamGamesUseCase)
+    const getUserSteamGamesController = new GetUserSteamGamesController(serSteamGamesUseCase)
     const { json, status } = await getUserSteamGamesController.handle({
       payload: {
-        // userId: req.auth.userId!,
+        accountName: req.body.accountName,
         userId: req.body.userId,
       },
     })

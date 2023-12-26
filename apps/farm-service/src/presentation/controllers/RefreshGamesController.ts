@@ -1,4 +1,4 @@
-import { AccountSteamGameDTO, AccountSteamGamesList, Controller, HttpClient } from "core"
+import { AccountSteamGameDTO, Controller, HttpClient } from "core"
 import { RefreshGamesUseCase, RefreshGamesUseCaseProps } from "~/presentation/presenters/RefreshGamesUseCase"
 
 export class RefreshGamesController implements Controller<RefreshGames.Payload, RefreshGames.Response> {

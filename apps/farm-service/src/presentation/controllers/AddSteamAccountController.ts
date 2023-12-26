@@ -1,12 +1,7 @@
-import { AddSteamAccount, ApplicationError, IAddSteamAccount, UsersDAO } from "core"
-import { EResult } from "steam-user"
-import { AllUsersClientsStorage, EventEmitter } from "~/application/services"
-import { SteamAccountClient, SteamApplicationEvents } from "~/application/services/steam"
+import { AddSteamAccount, ApplicationError, Controller, HttpClient, UsersDAO } from "core"
+import { AllUsersClientsStorage } from "~/application/services"
+import { SteamAccountClient } from "~/application/services/steam"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
-import { SteamBuilder } from "~/contracts"
-
-import { HttpClient } from "~/contracts/HttpClient"
-import { Publisher } from "~/infra/queue"
 import { EventParameters } from "~/infra/services"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { EventParametersTimeout, FarmGamesEventsResolve, SingleEventResolver } from "~/types/EventsApp.types"
@@ -20,16 +15,29 @@ export type Resolved = {
     | null
   status: number
 }
-export class AddSteamAccountController {
+
+export namespace AddSteamAccountHandle {
+  export type Payload = {
+    accountName: string
+    password: string
+    userId: string
+  }
+
+  export type Response = {}
+}
+
+export class AddSteamAccountController
+  implements Controller<AddSteamAccountHandle.Payload, AddSteamAccountHandle.Response>
+{
   constructor(
     private readonly addSteamAccount: AddSteamAccount,
     private readonly allUsersClientsStorage: AllUsersClientsStorage,
     private readonly usersDAO: UsersDAO
   ) {}
 
-  async handle(req: HttpClient.Request<IAddSteamAccount>): Promise<HttpClient.Response> {
+  async handle({ payload }: APayload): AResponse {
     const perform = async () => {
-      const { accountName, password, userId } = req.payload
+      const { accountName, password, userId } = payload
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
       if (!username) throw new ApplicationError("No user found with this ID.")
 
@@ -118,6 +126,9 @@ export class AddSteamAccountController {
     return promiseHandler(perform())
   }
 }
+
+type APayload = HttpClient.Request<AddSteamAccountHandle.Payload>
+type AResponse = Promise<HttpClient.Response<AddSteamAccountHandle.Response>>
 
 type RequiredEventTimeoutNames = keyof (EventParameters & EventParametersTimeout)
 type EventPromises = Partial<Record<RequiredEventTimeoutNames, boolean>>

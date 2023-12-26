@@ -1,18 +1,9 @@
-import { CreateUser, GetUser } from "core"
+import { HttpClient } from "core"
 import { Router } from "express"
-import { HttpClient } from "~/contracts"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
-import {
-  allUsersClientsStorage,
-  userAuthentication,
-  usersDAO,
-  usersRepository,
-} from "~/presentation/instances"
+import { allUsersClientsStorage } from "~/presentation/instances"
 
 export const query_routerGeneral: Router = Router()
-
-const createUser = new CreateUser(usersRepository, userAuthentication)
-const getUser = new GetUser(usersDAO)
 
 query_routerGeneral.get("/up", (req, res) => {
   return res.status(200).json({
@@ -38,8 +29,4 @@ query_routerGeneral.get("/farming-users", async (req, res) => {
 
   const { status, json } = await promiseHandler(perform())
   return res.status(status).json(json)
-
-  return res.status(200).json({
-    users: allUsersClientsStorage.listUsers(),
-  })
 })
