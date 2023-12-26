@@ -12,9 +12,11 @@ import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
+import { Logger } from "~/utils/Logger"
 
 export class SteamAccountClient extends LastHandler {
   private readonly publisher: Publisher
+  private readonly logger: Logger
   readonly emitter: EventEmitter<SteamApplicationEvents>
   client: SteamUser
   userId: string
@@ -32,44 +34,40 @@ export class SteamAccountClient extends LastHandler {
     this.publisher = instances.publisher
     this.emitter = instances.emitter
     this.accountName = props.accountName
+    this.logger = new Logger(this.accountName)
 
     this.client.on("loggedOn", (...args) => {
-      console.log("[SAC-CLIENT]: Rodou loggedOn")
       this.emitter.emit("hasSession")
       this.getLastHandler("loggedOn")(...args)
       this.setLastArguments("loggedOn", args)
       this.logged = true
-      console.log(`${this.accountName} logged in.`)
+      this.logger.log("logged in.")
       this.client.setPersona(SteamUser.EPersonaState.Online)
       this.client.gamesPlayed([])
     })
 
     this.client.on("ownershipCached", (...args) => {
-      console.log(`ownershipCached - ${this.accountName}`)
+      this.logger.log(`ownershipCached!`)
       this.ownershipCached = true
       this.getLastHandler("ownershipCached")(...args)
       this.setLastArguments("ownershipCached", args)
     })
 
     this.client.on("steamGuard", async (...args) => {
-      const [domain, callback] = args
-      console.log("[SAC-CLIENT]: Rodou steamGuard")
+      const [domain] = args
+      this.logger.log("steam guard required.")
       this.getLastHandler("steamGuard")(...args)
       this.setLastArguments("steamGuard", args)
       this.logoff()
-      console.log(
+      this.logger.log(
         domain
-          ? `${this.username}: Steam Guard code needed from email ending in ${domain}`
-          : `${this.username}: requesting Steam Guard on your device.`
+          ? `Steam Guard code needed from email ending in ${domain}`
+          : `requesting Steam Guard on your device.`
       )
-      // this.setLastHandler("steamGuard", code => {
-      // 	callback(code as string)
-      // })
     })
 
     this.client.on("error", (...args) => {
-      console.log("[SAC-CLIENT]: Rodou error")
-      // console.log("==============EMITTING INTERRUPT, SHOULD RUN PROMISE.ALL")
+      this.logger.log("error.", ...args)
       this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
@@ -79,14 +77,14 @@ export class SteamAccountClient extends LastHandler {
     this.client.on("disconnected", (...args) => {
       this.logoff()
       this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
-      console.log("[SAC-CLIENT]: Rodou disconnected", ...args)
+      this.logger.log("disconnected.", ...args)
       this.getLastHandler("disconnected")(...args)
       this.setLastArguments("disconnected", args)
     })
 
     if (process.env.NODE_ENV === "development") {
       connection.on("break", () => {
-        console.log(`[SAC Instance] Emitting noConnection error of user ${this.accountName} for the cluster.`)
+        this.logger.log(`Emitting noConnection error of user ${this.accountName} for the cluster.`)
         this.client.emit("error", { eresult: SteamUser.EResult.NoConnection })
         setTimeout(() => {
           this.client.emit("webSession")
@@ -96,7 +94,7 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("webSession", async (...args) => {
       this.emitter.emit("hasSession")
-      console.log(`[SAC-CLIENT]: Rodou webSession for ${this.accountName}`)
+      this.logger.log(`Got webSession.`)
       this.getLastHandler("webSession")(...args)
       this.setLastArguments("webSession", args)
     })
@@ -136,7 +134,7 @@ export class SteamAccountClient extends LastHandler {
     if (userIntention === "DIDNT-ADD-GAMES") return
 
     this.setGamesPlaying(gamesID)
-    console.log(`STEAM_CLIENT: Calling the client with `, gamesID)
+    this.logger.log(`Calling the client with `, gamesID)
     this.client.gamesPlayed(gamesID)
   }
 
@@ -179,10 +177,6 @@ type SteamAccountClientProps = {
     publisher: Publisher
     emitter: EventEmitter<SteamApplicationEvents>
   }
-}
-
-type LoginAttemptsConfig = {
-  setSteamCodeCallback: (code: string) => void
 }
 
 export type OnEventReturn = {

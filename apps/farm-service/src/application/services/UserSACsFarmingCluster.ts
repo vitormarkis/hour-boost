@@ -3,6 +3,7 @@ import { FarmServiceBuilder } from "~/application/factories"
 import { EventEmitter, FarmService, SACList } from "~/application/services"
 import { SACStateCacheFactory, SteamAccountClient } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
+import { Logger } from "~/utils/Logger"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 
 export class UserSACsFarmingCluster {
@@ -15,6 +16,7 @@ export class UserSACsFarmingCluster {
   private readonly farmServiceFactory: FarmServiceBuilder
   private readonly planId: string
   private readonly usageBuilder: UsageBuilder
+  private readonly logger: Logger
   readonly emitter: EventEmitter<UserClusterEvents>
 
   constructor(props: UserSACsFarmingClusterProps) {
@@ -27,6 +29,7 @@ export class UserSACsFarmingCluster {
     this.emitter = props.emitter
     this.publisher = props.publisher
     this.usageBuilder = props.usageBuilder
+    this.logger = new Logger(`Cluster ~ ${this.username}`)
   }
 
   getAccountsStatus() {
@@ -47,54 +50,49 @@ export class UserSACsFarmingCluster {
       throw new ApplicationError("[SAC Cluster]: Attempt to add sac that already exists.")
     this.sacList.set(sac.accountName, sac)
 
-    console.log(`[ACC-CLUSTER]: Appending interrupt async listener on ${sac.accountName}'s sac!`)
+    this.logger.log(`Appending interrupt async listener on ${sac.accountName}'s sac!`)
 
     sac.emitter.on("interrupt", async sacStateCache => {
-      console.log(
-        `[ACC-CLUSTER]: [1/2] ${sacStateCache.accountName} was interrupt, setting the cache and pausing the farm on SAC.`
+      this.logger.log(
+        `${sacStateCache.accountName} was interrupt, setting the cache and pausing the farm on SAC.`
       )
       await this.sacStateCacheRepository.set(
         this.getKeyUserAccountName(sac.accountName),
         SACStateCacheFactory.createDTO(sac)
       )
-      console.log(`[ACC-CLUSTER]: [2/2] ${sacStateCache.accountName} has set the cache successfully.`)
+      this.logger.log(`${sacStateCache.accountName} has set the cache successfully.`)
       this.pauseFarmOnAccount(sacStateCache.accountName)
     })
 
     sac.emitter.on("hasSession", async () => {
-      console.log("[ACC-CLUSTER 1/2] Starting to fetch SAC State Cache.")
+      this.logger.log("Starting to fetch SAC State Cache.")
       const sacStateCache = await this.sacStateCacheRepository.get(
         this.getKeyUserAccountName(sac.accountName)
       )
-      console.log(`[ACC-CLUSTER 2/2] Found SAC State Cache for [${sac.accountName}]`, sacStateCache)
+      this.logger.log(`Found SAC State Cache for [${sac.accountName}]`, sacStateCache)
       if (sacStateCache) {
-        console.log(`[ACC-CLUSTER -> sac.emitter]: ${sac.accountName} relog with state! [...]`, sacStateCache)
+        this.logger.log(`-> sac.emitter: ${sac.accountName} relog with state! [...]`, sacStateCache)
         sac.emitter.emit("relog-with-state", sacStateCache)
       } else {
-        console.log(
-          `[ACC-CLUSTER -> sac.emitter]: ${sac.accountName} relog without any state.`,
-          sacStateCache
-        )
+        this.logger.log(`-> sac.emitter: ${sac.accountName} relog without any state.`, sacStateCache)
         sac.emitter.emit("relog")
       }
     })
 
     sac.emitter.on("relog-with-state", async sacStateCache => {
-      console.log(`[ACC-CLUSTER]: ${sacStateCache.accountName} relogou com state. `, sacStateCache)
+      this.logger.log(`${sacStateCache.accountName} relogou com state. `, sacStateCache)
       const { accountName, gamesPlaying, isFarming } = sacStateCache
       const sac = this.sacList.get(accountName)
       if (!sac)
-        return console.log(
-          `[ACC-CLUSTER]: Tried to update state, but no SAC was found with name: ${accountName}`
-        )
+        return this.logger.log(`Tried to update state, but no SAC was found with name: ${accountName}`)
       if (isFarming) {
-        console.log(`[ACC-CLUSTER]: ${accountName} relogou farmando os jogos ${gamesPlaying}`)
+        this.logger.log(`${accountName} relogou farmando os jogos ${gamesPlaying}`)
         await this.farmWithAccount(accountName, gamesPlaying, this.planId)
       }
     })
 
     sac.emitter.on("relog", () => {
-      console.log(`[ACC-CLUSTER]: Usuário relogou sem state.`)
+      this.logger.log(`Usuário relogou sem state.`)
     })
 
     return this
@@ -119,7 +117,6 @@ export class UserSACsFarmingCluster {
   }
 
   async farmWithAccount(accountName: string, gamesID: number[], planId: string) {
-    console.log({ gamesID })
     const sac = this.sacList.get(accountName)
     if (!sac)
       throw new ApplicationError(
@@ -144,13 +141,12 @@ export class UserSACsFarmingCluster {
   }
 
   private farmWithAccountImpl(sac: SteamAccountClient, accountName: string, gamesID: number[]) {
-    console.log(`Appending account to farm on service: `, accountName)
+    this.logger.log(`Appending account to farm on service: `, accountName)
     this.farmService.farmWithAccount(accountName)
     sac.farmGames(gamesID)
   }
 
   pauseFarmOnAccount(accountName: string) {
-    console.log(`pauseFarmOnAccount FOI CHAMADO!!!!!`)
     const sac = this.sacList.get(accountName)
     if (!sac)
       throw new ApplicationError(
