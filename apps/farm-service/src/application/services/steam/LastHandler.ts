@@ -21,7 +21,7 @@ export class LastHandler {
   getLastHandler = <K extends keyof EventParameters = keyof EventParameters>(eventName: K) => {
     const lastHandler = this.lastHandler.get(eventName)
     if (!lastHandler) {
-      console.log(`[LastHandler]: Warning! Attempt to run ${eventName}, but there is no handler set for it.`)
+      // console.log(`[LastHandler]: Warning! Attempt to run ${eventName}, but there is no handler set for it.`)
       return getGhostFunction()
     }
     return lastHandler as (...args: EventParameters[K]) => void

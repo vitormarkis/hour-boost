@@ -7,6 +7,7 @@ import {
   IRefreshToken,
   SACStateCacheDTO,
 } from "core"
+import { appendFile, fstat } from "fs"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import { EventEmitter } from "~/application/services"
@@ -85,6 +86,11 @@ export class SteamAccountClient extends LastHandler {
     })
 
     this.client.on("error", (...args) => {
+      appendFile(
+        "sac-errors.txt",
+        `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(...args)} \r\n`,
+        () => {}
+      )
       this.logger.log("error.", ...args)
       this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
       this.getLastHandler("error")(...args)
@@ -93,6 +99,11 @@ export class SteamAccountClient extends LastHandler {
     })
 
     this.client.on("disconnected", (...args) => {
+      appendFile(
+        "sac-disconnected.txt",
+        `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(args)} \r\n`,
+        () => {}
+      )
       this.logoff()
       this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
       this.logger.log("disconnected.", ...args)
