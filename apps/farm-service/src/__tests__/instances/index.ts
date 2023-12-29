@@ -13,6 +13,7 @@ import { makeSACFactory } from "~/__tests__/factories"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
+import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
 import {
@@ -56,19 +57,14 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const publisher = new Publisher()
   const usersMemory = new UsersInMemory()
   const sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
-  // const sacStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
-  const usersRepository = new UsersRepositoryInMemory(usersMemory)
-  const planRepository = new PlanRepositoryInMemory(usersMemory)
-  const steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)
-  const usersDAO = new UsersDAOInMemory(usersMemory)
   const usageBuilder = new UsageBuilder()
+  // const sacStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
   const emitterBuilder = new EventEmitterBuilder()
-  const steamUserBuilder = ci?.steamUserBuilder ?? new SteamUserMockBuilder(validSteamAccounts)
-  const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
   const farmServiceBuilder = new FarmServiceBuilder({
     publisher,
     emitterBuilder,
   })
+  const planRepository = new PlanRepositoryInMemory(usersMemory)
   const userClusterBuilder = new UserClusterBuilder(
     farmServiceBuilder,
     sacStateCacheRepository,
@@ -77,8 +73,19 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     publisher,
     usageBuilder
   )
-  const allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder, sacStateCacheRepository)
   const usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
+  const farmGamesUseCase = new FarmGamesUseCase(usersClusterStorage)
+  const usersRepository = new UsersRepositoryInMemory(usersMemory)
+  const steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)
+  const usersDAO = new UsersDAOInMemory(usersMemory)
+  const steamUserBuilder = ci?.steamUserBuilder ?? new SteamUserMockBuilder(validSteamAccounts)
+  const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
+  const allUsersClientsStorage = new AllUsersClientsStorage(
+    sacBuilder,
+    sacStateCacheRepository,
+    farmGamesUseCase,
+    planRepository
+  )
   const sacFactory = makeSACFactory(validSteamAccounts, publisher)
 
   const userInstancesBuilder = new UserInstancesBuilder(allUsersClientsStorage)
@@ -142,6 +149,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     sacStateCacheRepository,
     steamAccountsRepository,
     planRepository,
+    farmGamesUseCase,
     redis,
     makeUserInstances<P extends TestUsers>(prefix: P, props: TestUserProperties) {
       return userInstancesBuilder.create(prefix, props)
@@ -195,11 +203,17 @@ class UserInstancesBuilder implements IUserInstancesBuilder {
   ): PrefixKeys<P> {
     const user = makeUser(userId, username)
     const steamAccount = makeSteamAccount(user.id_user, accountName)
-    const sac = this.allUsersClientsStorage.addSteamAccountFrom0({ accountName, userId, username })
+    const sac = this.allUsersClientsStorage.addSteamAccountFrom0({
+      accountName,
+      userId,
+      username,
+      planId: user.plan.id_plan,
+    })
     const sac2 = this.allUsersClientsStorage.addSteamAccountFrom0({
       accountName: accountName2,
       userId,
       username,
+      planId: user.plan.id_plan,
     })
     user.addSteamAccount(steamAccount)
     return {

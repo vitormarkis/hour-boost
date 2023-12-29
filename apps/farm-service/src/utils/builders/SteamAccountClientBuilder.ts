@@ -10,7 +10,7 @@ export class SteamAccountClientBuilder implements Builder<SteamAccountClient> {
     private readonly steamUserBuilder: SteamClientBuilder
   ) {}
 
-  create({ accountName, userId, username }: CreateSteamAccountClient): SteamAccountClient {
+  create({ accountName, userId, username, planId }: CreateSteamAccountClient): SteamAccountClient {
     return new SteamAccountClient({
       instances: {
         emitter: this.emitterBuilder.create(),
@@ -21,6 +21,7 @@ export class SteamAccountClientBuilder implements Builder<SteamAccountClient> {
         client: this.steamUserBuilder.create(),
         userId,
         username,
+        planId,
       },
     })
   }
@@ -30,4 +31,5 @@ type CreateSteamAccountClient = {
   accountName: string
   userId: string
   username: string
+  planId: string
 }

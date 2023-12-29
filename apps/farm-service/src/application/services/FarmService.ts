@@ -85,6 +85,12 @@ export abstract class FarmService {
   farmWithAccount(accountName: string): void {
     this.farmWithAccountImpl(accountName)
 
+    console.log(`farm-service: is ${accountName} added? `, this.isAccountAdded(accountName))
+    if (!this.isAccountAdded(accountName)) {
+      console.log(
+        `Since the ${accountName} is not added, I'm appending this account again with the status 'FARMING'`
+      )
+    }
     if (this.isAccountAdded(accountName)) this.resumeFarming(accountName)
     else this.appendAccount(accountName)
   }

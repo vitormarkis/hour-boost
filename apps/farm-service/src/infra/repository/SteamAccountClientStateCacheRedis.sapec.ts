@@ -33,6 +33,8 @@ test("should write a ME cache and retrieves it", async () => {
       accountName: "markis",
       gamesPlaying: [],
       isFarming: false,
+      planId: meInstances.me.plan.id_plan,
+      username: s.me.username,
     })
   ).resolves.not.toThrow()
   const cache = await i.sacStateCacheRepository.get("markis")
@@ -46,7 +48,11 @@ test("should write a ME cache and retrieves it", async () => {
 
 test("should init state cache", async () => {
   await i.sacStateCacheRepository.flushAll()
-  await i.sacStateCacheRepository.init(s.me.accountName)
+  await i.sacStateCacheRepository.init({
+    accountName: s.me.accountName,
+    planId: meInstances.me.plan.id_plan,
+    username: s.me.username,
+  })
   const state = await i.sacStateCacheRepository.get(s.me.accountName)
   expect(state?.accountName).toBe(s.me.accountName)
   expect(state?.gamesPlaying).toStrictEqual([])

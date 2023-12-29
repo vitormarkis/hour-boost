@@ -6,17 +6,33 @@ export interface SteamAccountClientStateCacheRepository {
   delete(accountName: string): Promise<void>
   getAccountGames(accountName: string): Promise<AccountSteamGamesList | null>
   setAccountGames(accountName: string, games: AccountSteamGamesList): Promise<void>
-  setRefreshToken(accountName: string, refreshToken: string): Promise<void>
-  getRefreshToken(accountName: string): Promise<string | null>
-  setPlayingGames(accountName: string, gamesId: number[]): Promise<void>
-  init(accountName: string): Promise<void>
+  setRefreshToken(accountName: string, refreshToken: IRefreshToken): Promise<void>
+  getRefreshToken(accountName: string): Promise<IRefreshToken | null>
+  setPlayingGames(accountName: string, gamesId: number[], planId: string, username: string): Promise<void>
+  init(props: InitProps): Promise<void>
+  getUsersRefreshToken(): Promise<string[]>
   flushAll(): Promise<void>
+}
+
+export type InitProps = {
+  accountName: string
+  planId: string
+  username: string
+}
+
+export interface IRefreshToken {
+  refreshToken: string
+  userId: string
+  username: string
+  planId: string
 }
 
 export class SACStateCache {
   constructor(
     readonly gamesPlaying: number[],
-    readonly accountName: string
+    readonly accountName: string,
+    readonly planId: string,
+    readonly username: string
   ) {}
   isFarming() {
     return this.gamesPlaying.length > 0
@@ -27,6 +43,8 @@ export class SACStateCache {
       gamesPlaying: this.gamesPlaying,
       accountName: this.accountName,
       isFarming: this.isFarming(),
+      planId: this.planId,
+      username: this.username,
     }
   }
 }
@@ -35,4 +53,6 @@ export interface SACStateCacheDTO {
   gamesPlaying: number[]
   accountName: string
   isFarming: boolean
+  username: string
+  planId: string
 }

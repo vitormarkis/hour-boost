@@ -7,6 +7,7 @@ import {
   UsersRepository,
 } from "core"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { Publisher } from "~/infra/queue"
 import { SteamClientEventsRequired } from "~/presentation/controllers"
@@ -28,6 +29,7 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
   private readonly allUsersClientsStorage: AllUsersClientsStorage
   private readonly usersClusterStorage: UsersSACsFarmingClusterStorage
   private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
+  private readonly farmGamesUseCase: FarmGamesUseCase
 
   constructor(props: FarmGamesControllerProps) {
     this.publisher = props.publisher
@@ -35,28 +37,25 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
     this.allUsersClientsStorage = props.allUsersClientsStorage
     this.usersClusterStorage = props.usersClusterStorage
     this.sacStateCacheRepository = props.sacStateCacheRepository
+    this.farmGamesUseCase = props.farmGamesUseCase
   }
 
   async handle({ payload }: APayload): AResponse {
     const { accountName, gamesID, userId } = payload
-    console.log("aaa")
     const user = await this.usersRepository.getByID(userId)
-    console.log("BBB")
     if (!user) throw new ApplicationError("Usuário não encontrado.", 404)
-    console.log("CCC")
     const steamAccountDomain = user.steamAccounts.data.find(sa => sa.credentials.accountName === accountName)
     if (!steamAccountDomain)
       throw new ApplicationError("Steam Account nunca foi registrada ou ela não pertence à você.", 400)
-    console.log("ddd")
 
     const sac = this.allUsersClientsStorage.getOrAddSteamAccount({
       accountName,
       userId,
       username: user.username,
+      planId: user.plan.id_plan,
     })
     if (!sac.logged) {
       sac.login(steamAccountDomain.credentials.accountName, steamAccountDomain.credentials.password)
-      console.log("eee")
 
       const steamClientEventsRequired = new SteamClientEventsRequired(sac, EVENT_PROMISES_TIMEOUT_IN_SECONDS)
 
@@ -68,7 +67,6 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
           timeout: true,
         })
       )
-      console.log("fff")
 
       if (eventsPromisesResolved.type === "error") {
         const [error] = eventsPromisesResolved.args
@@ -109,13 +107,14 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
     const noNewGameAddToFarm = areTwoArraysEqual(gamesID, sac.getGamesPlaying())
     if (noNewGameAddToFarm) return makeRes(200, "Nenhum novo game adicionado ao farm.")
 
-    const userCluster = this.usersClusterStorage.getOrAdd(user.username, user.plan)
-
-    if (!userCluster.hasSteamAccountClient(accountName) && !userCluster.isAccountFarming(accountName)) {
-      userCluster.addSAC(sac)
-    }
-    console.log("ggg")
-    await userCluster.farmWithAccount(accountName, gamesID, user.plan.id_plan)
+    await this.farmGamesUseCase.execute({
+      accountName,
+      gamesId: gamesID,
+      plan: user.plan,
+      planId: user.plan.id_plan,
+      sac,
+      username: user.username,
+    })
 
     return makeRes(200, "Iniciando farm.")
   }
@@ -131,4 +130,5 @@ type FarmGamesControllerProps = {
   sacStateCacheRepository: SteamAccountClientStateCacheRepository
   usersClusterStorage: UsersSACsFarmingClusterStorage
   planRepository: PlanRepository
+  farmGamesUseCase: FarmGamesUseCase
 }

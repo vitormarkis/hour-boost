@@ -17,6 +17,7 @@ export function makeSACFactory(validSteamAccounts: SteamAccountCredentials[], pu
         client: new SteamUserMockBuilder(validSteamAccounts).create(),
         userId: user.id_user,
         username: user.username,
+        planId: user.plan.id_plan,
       },
     })
   }

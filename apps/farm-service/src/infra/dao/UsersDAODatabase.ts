@@ -6,6 +6,21 @@ import { getCurrentPlanOrCreateOne } from "~/utils"
 export class UsersDAODatabase implements UsersDAO {
   constructor(private readonly prisma: PrismaClient) {}
 
+  async getPlanId(userId: string): Promise<string | null> {
+    const foundUser = await this.prisma.user.findUnique({
+      where: { id_user: userId },
+      select: { plan: true },
+    })
+
+    console.log({
+      userId,
+      foundUser,
+      planId: foundUser?.plan?.id_plan ?? "not found",
+    })
+
+    return foundUser?.plan?.id_plan ?? null
+  }
+
   async getUsername(userId: string): Promise<{ username: string } | null> {
     return (
       this.prisma.user.findUnique({

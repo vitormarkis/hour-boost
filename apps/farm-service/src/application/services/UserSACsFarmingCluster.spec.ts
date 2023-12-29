@@ -1,3 +1,4 @@
+import { SACStateCacheDTO } from "core"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import {
@@ -87,7 +88,13 @@ test("should stop farming once interrupt occurs", async () => {
   expect(sacClientCalls[0]).toStrictEqual(["error", { eresult: SteamUser.EResult.NoConnection }])
 
   const sacEmitterCalls = sacEmitterSPY.mock.calls
-  const sacState = { accountName: "paco", gamesPlaying: [100], isFarming: true }
+  const sacState: SACStateCacheDTO = {
+    accountName: "paco",
+    gamesPlaying: [100],
+    isFarming: true,
+    planId: meInstances.me.plan.id_plan,
+    username: s.me.username,
+  }
   expect(sacEmitterCalls[0]).toStrictEqual(["interrupt", sacState])
 
   expect(pauseFarmOnAccountSPY).toHaveBeenCalledTimes(1) // 1
@@ -99,7 +106,7 @@ test("should stop farming once interrupt occurs", async () => {
 
 test("should start farm again when relog with state happens", async () => {
   console.log = log
-  const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
+  const meCluster = i.usersClusterStorage.getOrAdd(s.me.username, meInstances.me.plan)
   const sac = meInstances.meSAC
   meCluster.addSAC(sac)
   const pauseFarmOnAccountSPY = jest.spyOn(meCluster, "pauseFarmOnAccount")
@@ -121,7 +128,13 @@ test("should start farm again when relog with state happens", async () => {
   expect(sacClientCalls[1]).toStrictEqual(["webSession"])
 
   const sacEmitterCalls = sacEmitterSPY.mock.calls
-  const sacState = { accountName: "paco", gamesPlaying: [100], isFarming: true }
+  const sacState: SACStateCacheDTO = {
+    accountName: "paco",
+    gamesPlaying: [100],
+    isFarming: true,
+    planId: meInstances.me.plan.id_plan,
+    username: s.me.username,
+  }
   expect(sacEmitterCalls[0]).toStrictEqual(["interrupt", sacState])
   expect(sacEmitterCalls[1]).toStrictEqual(["hasSession"])
   expect(sacEmitterCalls[2]).toStrictEqual(["relog-with-state", sacState])
@@ -132,7 +145,8 @@ test("should start farm again when relog with state happens", async () => {
 })
 
 test("should get back farming once has session again", async () => {
-  const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
+  console.log = log
+  const meCluster = i.usersClusterStorage.getOrAdd(s.me.username, meInstances.me.plan)
   const sac = meInstances.meSAC
   const spySACEmitter = jest.spyOn(sac.emitter, "emit")
   meCluster.addSAC(sac)

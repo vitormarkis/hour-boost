@@ -4,6 +4,11 @@ import { UsersInMemory } from "~/infra/repository"
 export class UsersDAOInMemory implements UsersDAO {
   constructor(private readonly users: UsersInMemory) {}
 
+  async getPlanId(userId: string): Promise<string | null> {
+    const dbUser = this.users.users.find(u => u.id_user === userId)
+    return !dbUser ? null : dbUser.plan.id_plan
+  }
+
   async getUsername(userId: string): Promise<{ username: string } | null> {
     const dbUser = this.users.users.find(u => u.id_user === userId)
     return dbUser

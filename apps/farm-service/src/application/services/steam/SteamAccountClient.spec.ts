@@ -51,6 +51,7 @@ test("should ", async () => {
       userId: "",
       username: "vitor",
       accountName: "account",
+      planId: "",
     },
   })
   sac.farmGames([322, 123])

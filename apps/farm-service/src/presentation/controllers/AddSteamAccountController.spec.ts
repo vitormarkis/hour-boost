@@ -2,14 +2,18 @@ import {
   AddSteamAccount,
   DiamondPlan,
   IDGenerator,
+  PlanRepository,
   SteamAccountClientStateCacheRepository,
   SteamAccountsRepository,
   User,
 } from "core"
-import { AllUsersClientsStorage } from "~/application/services"
+import { FarmServiceBuilder } from "~/application/factories"
+import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
 import {
+  PlanRepositoryInMemory,
   SteamAccountClientStateCacheInMemory,
   SteamAccountsRepositoryInMemory,
   UsersInMemory,
@@ -22,6 +26,8 @@ import {
   SteamClientBuilder,
   SteamUserMockBuilder,
 } from "~/utils/builders"
+import { UsageBuilder } from "~/utils/builders/UsageBuilder"
+import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
 import { makeUser } from "~/utils/makeUser"
 
 const TIMEOUT = 300
@@ -49,9 +55,16 @@ let allUsersClientsStorage: AllUsersClientsStorage
 let sut: AddSteamAccountController
 let me, friend: User
 let emitterBuilder: EventEmitterBuilder
+let usersClusterStorage: UsersSACsFarmingClusterStorage
 let publisher: Publisher
+let userClusterBuilder: UserClusterBuilder
 let steamUserBuilder: SteamClientBuilder
 let sacStateCacheRepository: SteamAccountClientStateCacheRepository
+let farmGamesUseCase: FarmGamesUseCase
+let farmServiceBuilder: FarmServiceBuilder
+let planRepository: PlanRepository
+let usageBuilder: UsageBuilder
+
 const idGenerator: IDGenerator = {
   makeID: () => "random",
 }
@@ -62,8 +75,29 @@ beforeEach(async () => {
   publisher = new Publisher()
   sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
   steamUserBuilder = new SteamUserMockBuilder(validSteamAccounts)
+  usageBuilder = new UsageBuilder()
+  farmServiceBuilder = new FarmServiceBuilder({
+    publisher,
+    emitterBuilder,
+  })
+  userClusterBuilder = new UserClusterBuilder(
+    farmServiceBuilder,
+    sacStateCacheRepository,
+    planRepository,
+    emitterBuilder,
+    publisher,
+    usageBuilder
+  )
+  usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
+  farmGamesUseCase = new FarmGamesUseCase(usersClusterStorage)
+  planRepository = new PlanRepositoryInMemory(usersMemory)
   sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
-  allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder, sacStateCacheRepository)
+  allUsersClientsStorage = new AllUsersClientsStorage(
+    sacBuilder,
+    sacStateCacheRepository,
+    farmGamesUseCase,
+    planRepository
+  )
   usersMemory = new UsersInMemory()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
   steamAccountRepository = new SteamAccountsRepositoryInMemory(usersMemory)
@@ -218,7 +252,12 @@ describe("AddSteamAccountController test suite", () => {
     test("should asks user for the steam guard", async () => {
       steamUserBuilder = new SteamUserMockBuilder(validSteamAccounts, true)
       sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
-      allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder, sacStateCacheRepository)
+      allUsersClientsStorage = new AllUsersClientsStorage(
+        sacBuilder,
+        sacStateCacheRepository,
+        farmGamesUseCase,
+        planRepository
+      )
       sut = new AddSteamAccountController(addSteamAccount, allUsersClientsStorage, usersDAO)
       const { status, json } = await promiseHandler(
         sut.handle({

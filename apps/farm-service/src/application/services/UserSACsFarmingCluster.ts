@@ -48,11 +48,15 @@ export class UserSACsFarmingCluster {
 
     this.logger.log(`Appending interrupt async listener on ${sac.accountName}'s sac!`)
 
-    // @ts-ignore
-    sac.client.on("refreshToken", async (refreshToken: string) => {
-      await this.sacStateCacheRepository.setRefreshToken(sac.accountName, refreshToken)
-      sac.logger.log("got refresh token and set in cache.")
-    })
+    // sac.emitter.on("gotRefreshToken", async ({ refreshToken, userId, username, accountName }) => {
+    //   sac.logger.log("1/2 - app got refresh token.")
+    //   await this.sacStateCacheRepository.setRefreshToken(accountName, {
+    //     refreshToken,
+    //     userId,
+    //     username,
+    //   })
+    //   sac.logger.log("2/2 - refreshtoken set in cache.")
+    // })
 
     sac.emitter.on("interrupt", async sacStateCache => {
       this.logger.log(
@@ -61,35 +65,6 @@ export class UserSACsFarmingCluster {
       await this.sacStateCacheRepository.set(sac.accountName, SACStateCacheFactory.createDTO(sac))
       this.logger.log(`${sacStateCache.accountName} has set the cache successfully.`)
       this.pauseFarmOnAccount(sacStateCache.accountName)
-    })
-
-    sac.emitter.on("hasSession", async () => {
-      this.logger.log("Starting to fetch SAC State Cache.")
-      const sacStateCache = await this.sacStateCacheRepository.get(sac.accountName)
-      this.logger.log(`Found SAC State Cache for [${sac.accountName}]`, sacStateCache)
-      if (sacStateCache) {
-        this.logger.log(`-> sac.emitter: ${sac.accountName} relog with state! [...]`, sacStateCache)
-        sac.emitter.emit("relog-with-state", sacStateCache)
-      } else {
-        this.logger.log(`-> sac.emitter: ${sac.accountName} relog without any state.`, sacStateCache)
-        sac.emitter.emit("relog")
-      }
-    })
-
-    sac.emitter.on("relog-with-state", async sacStateCache => {
-      this.logger.log(`${sacStateCache.accountName} relogou com state. `, sacStateCache)
-      const { accountName, gamesPlaying, isFarming } = sacStateCache
-      const sac = this.sacList.get(accountName)
-      if (!sac)
-        return this.logger.log(`Tried to update state, but no SAC was found with name: ${accountName}`)
-      if (isFarming) {
-        this.logger.log(`${accountName} relogou farmando os jogos ${gamesPlaying}`)
-        await this.farmWithAccount(accountName, gamesPlaying, this.planId)
-      }
-    })
-
-    sac.emitter.on("relog", () => {
-      this.logger.log(`Usuário relogou sem state.`)
     })
 
     return this
@@ -128,7 +103,7 @@ export class UserSACsFarmingCluster {
       const newFarmService = this.farmServiceFactory.create(this.username, plan)
       this.setFarmService(newFarmService)
     }
-    await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId)
+    await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId, planId, sac.username)
     this.farmWithAccountImpl(sac, accountName, gamesId)
   }
 

@@ -5,4 +5,5 @@ export interface UsersDAO {
   getUsersSteamAccounts(userId: string): Promise<ISteamAccountSession[]>
   getByID(userId: string): Promise<UserSession | null>
   getUsername(userId: string): Promise<{ username: string } | null>
+  getPlanId(userId: string): Promise<string | null>
 }

@@ -4,6 +4,7 @@ import {
   AccountSteamGamesList,
   ApplicationError,
   DataOrError,
+  IRefreshToken,
   SACStateCacheDTO,
 } from "core"
 import SteamUser from "steam-user"
@@ -21,6 +22,7 @@ export class SteamAccountClient extends LastHandler {
   client: SteamUser
   userId: string
   username: string
+  planId: string
   logged = false
   gamesPlaying: number[] = []
   accountName: string
@@ -32,6 +34,7 @@ export class SteamAccountClient extends LastHandler {
     this.username = props.username
     this.client = props.client
     this.publisher = instances.publisher
+    this.planId = props.planId
     this.emitter = instances.emitter
     this.accountName = props.accountName
     this.logger = new Logger(this.accountName)
@@ -55,6 +58,14 @@ export class SteamAccountClient extends LastHandler {
 
     // @ts-ignore
     this.client.on("refreshToken", async (...args: [refreshToken: string]) => {
+      const [refreshToken] = args
+      this.emitter.emit("gotRefreshToken", {
+        refreshToken,
+        userId: this.userId,
+        username: this.username,
+        accountName: this.accountName,
+        planId: this.planId,
+      })
       this.logger.log(`got refreshToken.`)
       this.getLastHandler("refreshToken")(...args)
       this.setLastArguments("refreshToken", args)
@@ -159,6 +170,12 @@ export class SteamAccountClient extends LastHandler {
     const userSteamGames = new AccountSteamGamesList(games)
     return [null, userSteamGames]
   }
+
+  loginWithToken(refreshToken: string) {
+    this.client.logOn({
+      refreshToken,
+    })
+  }
 }
 
 function getUserFarmIntention(gamesID: number[], currentFarmingGames: number[]) {
@@ -179,6 +196,7 @@ type SteamAccountClientProps = {
     username: string
     client: SteamUser
     accountName: string
+    planId: string
   }
   instances: {
     publisher: Publisher
@@ -196,6 +214,7 @@ export type SteamApplicationEvents = {
   hasSession: []
   "relog-with-state": [sacStateCache: SACStateCacheDTO]
   relog: []
+  gotRefreshToken: [refreshTokenInterface: IRefreshToken & { accountName: string }]
 }
 
 export class SACStateCacheFactory {
@@ -204,6 +223,8 @@ export class SACStateCacheFactory {
       accountName: sac.accountName,
       gamesPlaying: sac.gamesPlaying,
       isFarming: sac.isFarming(),
+      planId: sac.planId,
+      username: sac.username,
     }
   }
 }

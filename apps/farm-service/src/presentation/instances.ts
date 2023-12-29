@@ -3,6 +3,7 @@ import { IDGeneratorUUID } from "core"
 import SteamUser from "steam-user"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import {
   StartFarmPlanHandler,
@@ -22,6 +23,7 @@ import {
 } from "~/infra/repository"
 import { SteamAccountClientStateCacheRedis } from "~/infra/repository/SteamAccountClientStateCacheRedis"
 import { ClerkAuthentication } from "~/infra/services"
+import { FarmGamesController } from "~/presentation/controllers"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
@@ -45,10 +47,6 @@ export const steamUserBuilder = steamBuilder
 export const planRepository = new PlanRepositoryDatabase(prisma)
 export const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
 export const steamAccountClientStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
-export const allUsersClientsStorage = new AllUsersClientsStorage(
-  sacBuilder,
-  steamAccountClientStateCacheRepository
-)
 export const farmServiceBuilder = new FarmServiceBuilder({
   publisher,
   emitterBuilder,
@@ -62,6 +60,14 @@ export const userClusterBuilder = new UserClusterBuilder(
   usageBuilder
 )
 export const usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
+export const farmGamesUseCase = new FarmGamesUseCase(usersClusterStorage)
+export const allUsersClientsStorage = new AllUsersClientsStorage(
+  sacBuilder,
+  steamAccountClientStateCacheRepository,
+  farmGamesUseCase,
+  planRepository
+)
+
 export const usersDAO = new UsersDAODatabase(prisma)
 export const userAuthentication = new ClerkAuthentication(clerkClient)
 export const usersRepository = new UsersRepositoryDatabase(prisma)

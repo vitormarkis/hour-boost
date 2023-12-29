@@ -1,11 +1,28 @@
-import { AccountSteamGamesList, SACStateCacheDTO, SteamAccountClientStateCacheRepository } from "core"
+import {
+  AccountSteamGamesList,
+  IRefreshToken,
+  InitProps,
+  SACStateCacheDTO,
+  SteamAccountClientStateCacheRepository,
+} from "core"
 
 export class SteamAccountClientStateCacheInMemory implements SteamAccountClientStateCacheRepository {
   private readonly state: Map<string, SACStateCacheDTO> = new Map()
   private readonly games: Map<string, AccountSteamGamesList> = new Map()
-  private readonly refreshTokens: Map<string, string> = new Map()
+  private readonly refreshTokens: Map<string, IRefreshToken> = new Map()
 
-  async init(accountName: string): Promise<void> {
+  async setRefreshToken(accountName: string, refreshToken: IRefreshToken): Promise<void> {
+    this.refreshTokens.set(accountName, refreshToken)
+  }
+  async getRefreshToken(accountName: string): Promise<IRefreshToken | null> {
+    return this.refreshTokens.get(accountName) ?? null
+  }
+  async getUsersRefreshToken(): Promise<string[]> {
+    const keys = Array.from(this.refreshTokens.keys())
+    return keys.map(key => `${key}:refreshToken`)
+  }
+
+  async init({ accountName, planId, username }: InitProps): Promise<void> {
     const foundState = await this.get(accountName)
     if (!foundState) {
       console.log(`No cache found for ${accountName}, setting initial state.`)
@@ -13,6 +30,8 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
         accountName,
         gamesPlaying: [],
         isFarming: false,
+        planId,
+        username,
       })
     }
   }
@@ -24,14 +43,6 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
       ...prev,
       gamesPlaying: gamesId,
     })
-  }
-
-  async setRefreshToken(accountName: string, refreshToken: string): Promise<void> {
-    this.refreshTokens.set(accountName, refreshToken)
-  }
-  async getRefreshToken(accountName: string): Promise<string | null> {
-    const foundRefreshToken = this.refreshTokens.get(accountName)
-    return foundRefreshToken ?? null
   }
 
   async setAccountGames(accountName: string, games: AccountSteamGamesList): Promise<void> {

@@ -15,6 +15,7 @@ import { AddSteamGuardCodeController } from "~/presentation/controllers/AddSteam
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import {
   allUsersClientsStorage,
+  farmGamesUseCase,
   idGenerator,
   planRepository,
   publisher,
@@ -89,6 +90,7 @@ command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: 
     usersClusterStorage,
     usersRepository,
     planRepository,
+    farmGamesUseCase,
   })
   const { json, status } = await promiseHandler(
     startFarmController.handle({

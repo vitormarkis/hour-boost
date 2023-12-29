@@ -39,12 +39,15 @@ export class AddSteamAccountController
     const perform = async () => {
       const { accountName, password, userId } = payload
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
+      const planId = await this.usersDAO.getPlanId(userId)
+      if (!planId) throw new ApplicationError(`No planId found with userid ${userId} and planId ${planId}`)
       if (!username) throw new ApplicationError("No user found with this ID.")
 
       const sac = this.allUsersClientsStorage.getOrAddSteamAccount({
         accountName,
         userId,
         username,
+        planId,
       })
 
       console.log({

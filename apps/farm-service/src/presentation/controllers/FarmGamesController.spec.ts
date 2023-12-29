@@ -40,6 +40,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     sacStateCacheRepository: i.sacStateCacheRepository,
     usersClusterStorage: i.usersClusterStorage,
     usersRepository: i.usersRepository,
+    farmGamesUseCase: i.farmGamesUseCase,
   })
   stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository)
   // console.log("ccc promise race")

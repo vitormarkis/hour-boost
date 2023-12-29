@@ -1,6 +1,7 @@
-import { ApplicationError, SteamAccountClientStateCacheRepository } from "core"
+import { ApplicationError, PlanRepository, SteamAccountClientStateCacheRepository } from "core"
 import { UserClientsStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
+import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { SteamAccountClientBuilder } from "~/utils/builders"
 
 type UserID = string
@@ -9,32 +10,35 @@ export class AllUsersClientsStorage {
 
   constructor(
     private readonly sacBuilder: SteamAccountClientBuilder,
-    private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
+    private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository,
+    private readonly farmGamesUseCase: FarmGamesUseCase,
+    private readonly planRepository: PlanRepository
   ) {}
 
-  private generateSAC({ accountName, userId, username }: AddUserProps) {
+  private generateSAC({ accountName, userId, username, planId }: AddUserProps) {
     return this.sacBuilder.create({
       accountName,
       userId,
       username,
+      planId,
     })
   }
 
   private generateUserClients(): UserClientsStorage {
-    return new UserClientsStorage(this.sacStateCacheRepository)
+    return new UserClientsStorage(this.sacStateCacheRepository, this.farmGamesUseCase, this.planRepository)
   }
 
-  getOrAddSteamAccount({ accountName, userId, username }: AddUserProps): SteamAccountClient {
+  getOrAddSteamAccount({ accountName, userId, username, planId }: AddUserProps): SteamAccountClient {
     const userClients = this.get(userId)
     const userRegistered = !!userClients
     const foundSac = userClients?.getAccountClient(accountName)
     const userHasAccount = !!foundSac
     if (!userRegistered) {
       this.registerUser(userId, this.generateUserClients())
-      return this.addSteamAccount(userId, this.generateSAC({ accountName, userId, username }))
+      return this.addSteamAccount(userId, this.generateSAC({ accountName, userId, username, planId }))
     }
     if (!userHasAccount) {
-      return this.addSteamAccount(userId, this.generateSAC({ accountName, userId, username }))
+      return this.addSteamAccount(userId, this.generateSAC({ accountName, userId, username, planId }))
     }
     return foundSac
   }
@@ -47,7 +51,11 @@ export class AllUsersClientsStorage {
   addSteamAccount(userId: string, steamAccountClient: SteamAccountClient): SteamAccountClient {
     const userClientsStorage = this.users.get(userId)
     if (!userClientsStorage) {
-      const userClientsStorage = new UserClientsStorage(this.sacStateCacheRepository)
+      const userClientsStorage = new UserClientsStorage(
+        this.sacStateCacheRepository,
+        this.farmGamesUseCase,
+        this.planRepository
+      )
       userClientsStorage.addAccountClient(steamAccountClient)
       this.registerUser(userId, userClientsStorage)
       return steamAccountClient
@@ -56,8 +64,8 @@ export class AllUsersClientsStorage {
     return steamAccountClient
   }
 
-  addSteamAccountFrom0({ accountName, userId, username }: AddUserProps): SteamAccountClient {
-    const sac = this.sacBuilder.create({ accountName, userId, username })
+  addSteamAccountFrom0({ accountName, userId, username, planId }: AddUserProps): SteamAccountClient {
+    const sac = this.sacBuilder.create({ accountName, userId, username, planId })
     this.addSteamAccount(userId, sac)
     return sac
   }
@@ -109,4 +117,5 @@ export type AddUserProps = {
   userId: string
   username: string
   accountName: string
+  planId: string
 }

@@ -12,7 +12,8 @@
     "lint": "turbo run lint",
     "start": "turbo run start",
     "format": "prettier --write .",
-    "ci": "turbo run ci"
+    "ci": "turbo run ci",
+    "api": "bun run build:api && bun run start:api"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.0.2",

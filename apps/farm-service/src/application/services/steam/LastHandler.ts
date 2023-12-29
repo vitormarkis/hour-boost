@@ -10,9 +10,9 @@ export class LastHandler {
   getManualHandler = <K extends keyof HandlersEventMapping = keyof HandlersEventMapping>(eventName: K) => {
     const manualHandler = this.manualHandlers.get(eventName)
     if (!manualHandler) {
-      console.log(
-        `[ManualHandler]: Warning! Attempt to run ${eventName}, but there is no handler set for it.`
-      )
+      // console.log(
+      //   `[ManualHandler]: Warning! Attempt to run ${eventName}, but there is no handler set for it.`
+      // )
       return getGhostFunction()
     }
     return manualHandler as (...args: HandlersEventMapping[K]) => void
