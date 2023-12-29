@@ -1,5 +1,5 @@
 import { AccountGames } from "core"
-import SteamUser, { EResult } from "steam-user"
+import SteamUser from "steam-user"
 import { EventEmitter } from "~/application/services"
 import { allAccountGames } from "~/consts"
 import { sleep } from "~/utils"
@@ -11,6 +11,7 @@ export type EventParameters = {
   disconnected: [eresult: SteamUser.EResult, msg?: string]
   webSession: [sessionID: string, cookies: string[]]
   ownershipCached: []
+  refreshToken: [refreshToken: string]
 }
 
 export type EventName = keyof EventParameters

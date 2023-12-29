@@ -3,7 +3,6 @@ import {
   CustomInstances,
   MakeTestInstancesProps,
   makeTestInstances,
-  makeUserInstances,
   testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
@@ -18,7 +17,7 @@ const now = new Date("2023-06-10T10:00:00Z")
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = makeUserInstances("me", s.me, i.sacFactory)
+let meInstances = i.makeUserInstances("me", s.me)
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)

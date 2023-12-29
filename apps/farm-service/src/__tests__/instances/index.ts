@@ -14,7 +14,6 @@ import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { UsersDAOInMemory } from "~/infra/dao"
-import { redis } from "~/infra/libs/redis"
 import { Publisher } from "~/infra/queue"
 import {
   PlanRepositoryInMemory,
@@ -50,11 +49,8 @@ export type CustomInstances = {
 
 export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomInstances) {
   const { validSteamAccounts = [] } = props ?? {}
-  const redis = new Redis({
-    commandTimeout: 1000 * 3,
-    connectTimeout: 1000 * 3,
-    sentinelCommandTimeout: 1000 * 3,
-  })
+  let redis: Redis = {} as Redis
+  // redis = new Redis()
 
   const idGenerator = new IDGeneratorUUID()
   const publisher = new Publisher()
@@ -81,13 +77,15 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     publisher,
     usageBuilder
   )
-  const allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder)
+  const allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder, sacStateCacheRepository)
   const usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
   const sacFactory = makeSACFactory(validSteamAccounts, publisher)
 
+  const userInstancesBuilder = new UserInstancesBuilder(allUsersClientsStorage)
+
   async function createUser<P extends TestUsers>(userPrefix: P) {
     console.log("test instances index > creating user and storing on repo")
-    const userInstances = makeUserInstances(userPrefix, testUsers[userPrefix], sacFactory)
+    const userInstances = userInstancesBuilder.create(userPrefix, testUsers[userPrefix])
     const user = userInstances[userPrefix as any]
     await usersRepository.create(user)
     return userInstances as PrefixKeys<P>
@@ -144,6 +142,10 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     sacStateCacheRepository,
     steamAccountsRepository,
     planRepository,
+    redis,
+    makeUserInstances<P extends TestUsers>(prefix: P, props: TestUserProperties) {
+      return userInstancesBuilder.create(prefix, props)
+    },
     sacFactory,
     createUser,
     addSteamAccount,
@@ -180,24 +182,33 @@ export type UserRelatedInstances = {
   SAC2: SteamAccountClient
 }
 
-type SACFactory = ReturnType<typeof makeSACFactory>
+interface IUserInstancesBuilder {
+  create<P extends TestUsers>(prefix: P, testUsersProps: TestUserProperties): PrefixKeys<P>
+}
 
-export function makeUserInstances<P extends TestUsers>(
-  prefix: P,
-  { accountName, userId, username, accountName2 }: TestUserProperties,
-  sacFactory: SACFactory
-): PrefixKeys<P> {
-  const user = makeUser(userId, username)
-  const steamAccount = makeSteamAccount(user.id_user, accountName)
-  const sac = sacFactory(user, accountName)
-  const sac2 = sacFactory(user, accountName2)
-  user.addSteamAccount(steamAccount)
-  return {
-    [`${prefix}`]: user,
-    [`${prefix}SteamAccount`]: steamAccount,
-    [`${prefix}SAC`]: sac,
-    [`${prefix}SAC2`]: sac2,
-  } as PrefixKeys<P>
+class UserInstancesBuilder implements IUserInstancesBuilder {
+  constructor(private readonly allUsersClientsStorage: AllUsersClientsStorage) {}
+
+  create<P extends TestUsers>(
+    prefix: P,
+    { accountName, userId, username, accountName2 }: TestUserProperties
+  ): PrefixKeys<P> {
+    const user = makeUser(userId, username)
+    const steamAccount = makeSteamAccount(user.id_user, accountName)
+    const sac = this.allUsersClientsStorage.addSteamAccountFrom0({ accountName, userId, username })
+    const sac2 = this.allUsersClientsStorage.addSteamAccountFrom0({
+      accountName: accountName2,
+      userId,
+      username,
+    })
+    user.addSteamAccount(steamAccount)
+    return {
+      [`${prefix}`]: user,
+      [`${prefix}SteamAccount`]: steamAccount,
+      [`${prefix}SAC`]: sac,
+      [`${prefix}SAC2`]: sac2,
+    } as PrefixKeys<P>
+  }
 }
 
 export function makeSteamAccount(ownerId: string, accountName: string) {

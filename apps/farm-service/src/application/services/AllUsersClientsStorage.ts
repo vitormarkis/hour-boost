@@ -1,14 +1,16 @@
-import { ApplicationError } from "core"
+import { ApplicationError, SteamAccountClientStateCacheRepository } from "core"
 import { UserClientsStorage } from "~/application/services"
-import { SteamAccountClient, SteamApplicationEvents } from "~/application/services/steam"
-import { SteamBuilder } from "~/contracts/SteamBuilder"
+import { SteamAccountClient } from "~/application/services/steam"
 import { SteamAccountClientBuilder } from "~/utils/builders"
 
 type UserID = string
 export class AllUsersClientsStorage {
   users: Map<UserID, UserClientsStorage> = new Map()
 
-  constructor(private readonly sacBuilder: SteamAccountClientBuilder) {}
+  constructor(
+    private readonly sacBuilder: SteamAccountClientBuilder,
+    private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
+  ) {}
 
   private generateSAC({ accountName, userId, username }: AddUserProps) {
     return this.sacBuilder.create({
@@ -19,7 +21,7 @@ export class AllUsersClientsStorage {
   }
 
   private generateUserClients(): UserClientsStorage {
-    return new UserClientsStorage()
+    return new UserClientsStorage(this.sacStateCacheRepository)
   }
 
   getOrAddSteamAccount({ accountName, userId, username }: AddUserProps): SteamAccountClient {
@@ -45,13 +47,19 @@ export class AllUsersClientsStorage {
   addSteamAccount(userId: string, steamAccountClient: SteamAccountClient): SteamAccountClient {
     const userClientsStorage = this.users.get(userId)
     if (!userClientsStorage) {
-      const userClientsStorage = new UserClientsStorage()
+      const userClientsStorage = new UserClientsStorage(this.sacStateCacheRepository)
       userClientsStorage.addAccountClient(steamAccountClient)
       this.registerUser(userId, userClientsStorage)
       return steamAccountClient
     }
     userClientsStorage.addAccountClient(steamAccountClient)
     return steamAccountClient
+  }
+
+  addSteamAccountFrom0({ accountName, userId, username }: AddUserProps): SteamAccountClient {
+    const sac = this.sacBuilder.create({ accountName, userId, username })
+    this.addSteamAccount(userId, sac)
+    return sac
   }
 
   registerUser(userID: string, userClientsStorage: UserClientsStorage) {

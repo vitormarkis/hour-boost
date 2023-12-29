@@ -14,7 +14,7 @@
     "start:inspect": "node --inspect dist/src/server.js",
     "build:s": "npm run build && npm start",
     "seed": "tsx seed.ts",
-    "test": "jest --silent --verbose",
+    "test": "jest --silent",
     "ci": "npm run check && npm run test",
     "st": "prisma studio",
     "t": "jest",

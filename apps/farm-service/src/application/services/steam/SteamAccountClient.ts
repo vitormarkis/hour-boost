@@ -16,7 +16,7 @@ import { Logger } from "~/utils/Logger"
 
 export class SteamAccountClient extends LastHandler {
   private readonly publisher: Publisher
-  private readonly logger: Logger
+  readonly logger: Logger
   readonly emitter: EventEmitter<SteamApplicationEvents>
   client: SteamUser
   userId: string
@@ -51,6 +51,13 @@ export class SteamAccountClient extends LastHandler {
       this.ownershipCached = true
       this.getLastHandler("ownershipCached")(...args)
       this.setLastArguments("ownershipCached", args)
+    })
+
+    // @ts-ignore
+    this.client.on("refreshToken", async (...args: [refreshToken: string]) => {
+      this.logger.log(`got refreshToken.`)
+      this.getLastHandler("refreshToken")(...args)
+      this.setLastArguments("refreshToken", args)
     })
 
     this.client.on("steamGuard", async (...args) => {

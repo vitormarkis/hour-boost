@@ -2,7 +2,6 @@ import {
   CustomInstances,
   MakeTestInstancesProps,
   makeTestInstances,
-  makeUserInstances,
   password,
   testUsers as s,
   validSteamAccounts,
@@ -23,8 +22,8 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = makeUserInstances("me", s.me, i.sacFactory)
-let friendInstances = makeUserInstances("friend", s.friend, i.sacFactory)
+let meInstances = i.makeUserInstances("me", s.me)
+let friendInstances = i.makeUserInstances("friend", s.friend)
 let stopAllFarmsUseCase: StopAllFarms
 let stopAllFarmsController: StopAllFarmsController
 let farmGamesController: FarmGamesController

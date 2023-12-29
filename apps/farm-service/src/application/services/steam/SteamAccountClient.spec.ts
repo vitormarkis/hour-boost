@@ -8,7 +8,6 @@ import {
   CustomInstances,
   MakeTestInstancesProps,
   makeTestInstances,
-  makeUserInstances,
   password,
   testUsers as s,
   validSteamAccounts,
@@ -20,7 +19,7 @@ const log = console.log
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = makeUserInstances("me", s.me, i.sacFactory)
+let meInstances = i.makeUserInstances("me", s.me)
 let logSpy: jest.SpyInstance
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {

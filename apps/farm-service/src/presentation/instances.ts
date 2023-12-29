@@ -44,8 +44,11 @@ export const emitterBuilder = new EventEmitterBuilder()
 export const steamUserBuilder = steamBuilder
 export const planRepository = new PlanRepositoryDatabase(prisma)
 export const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
-export const allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder)
 export const steamAccountClientStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
+export const allUsersClientsStorage = new AllUsersClientsStorage(
+  sacBuilder,
+  steamAccountClientStateCacheRepository
+)
 export const farmServiceBuilder = new FarmServiceBuilder({
   publisher,
   emitterBuilder,

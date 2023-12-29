@@ -2,7 +2,6 @@ import {
   CustomInstances,
   MakeTestInstancesProps,
   makeTestInstances,
-  makeUserInstances,
   testUsers as s,
 } from "~/__tests__/instances"
 import { UsersSACsFarmingClusterStorage } from "~/application/services/UsersSACsFarmingClusterStorage"
@@ -19,8 +18,8 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = makeUserInstances("me", s.me, i.sacFactory)
-let friendInstances = makeUserInstances("friend", s.friend, i.sacFactory)
+let meInstances = i.makeUserInstances("me", s.me)
+let friendInstances = i.makeUserInstances("friend", s.friend)
 let usersClusterStorage: UsersSACsFarmingClusterStorage
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {

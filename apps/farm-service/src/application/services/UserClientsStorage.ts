@@ -1,13 +1,25 @@
-import { ApplicationError } from "core"
+import { ApplicationError, SteamAccountClientStateCacheRepository } from "core"
 import { SteamAccountClient } from "~/application/services/steam"
+import { Logger } from "~/utils/Logger"
 
 type AccountName = string
 
 export class UserClientsStorage {
   steamAccountClients: Map<AccountName, SteamAccountClient> = new Map()
+  readonly logger: Logger
 
-  addAccountClient(client: SteamAccountClient) {
-    this.steamAccountClients.set(client.accountName, client)
+  constructor(private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository) {
+    this.logger = new Logger(`User SAC Storage`)
+  }
+
+  addAccountClient(sac: SteamAccountClient) {
+    // 998
+    this.logger.log("Appending init cache listener on LoggedOn event.")
+    sac.emitter.on("hasSession", async () => {
+      await this.sacStateCacheRepository.init(sac.accountName)
+      this.logger.log(`Finish initing ${sac.accountName}`)
+    })
+    this.steamAccountClients.set(sac.accountName, sac)
   }
 
   removeAccountClient(accountName: string) {

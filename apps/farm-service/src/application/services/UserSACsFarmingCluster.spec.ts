@@ -4,11 +4,9 @@ import {
   CustomInstances,
   MakeTestInstancesProps,
   makeTestInstances,
-  makeUserInstances,
   testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
-import { SteamAccountClient } from "~/application/services/steam"
 
 const log = console.log
 console.log = () => {}
@@ -16,7 +14,7 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = makeUserInstances("me", s.me, i.sacFactory)
+let meInstances = i.makeUserInstances("me", s.me)
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
@@ -28,6 +26,7 @@ beforeEach(async () => {
   await setupInstances({
     validSteamAccounts,
   })
+  await i.sacStateCacheRepository.flushAll()
 })
 
 afterAll(() => {
@@ -35,12 +34,14 @@ afterAll(() => {
 })
 
 test("should store StateCache DTO with as farming with one game", async () => {
+  i.allUsersClientsStorage.addSteamAccount(s.me.userId, meInstances.meSAC)
   const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
   meCluster.addSAC(meInstances.meSAC)
   await meCluster.farmWithAccount(s.me.accountName, [100], meInstances.me.plan.id_plan)
+  // await new Promise(res => meInstances.meSAC.emitter.setEventResolver("hasSession", res))
   jest.advanceTimersByTime(1000 * 3600 * 2) // 2 hours
   connection.emit("break")
-  const stateCacheDTO = await i.sacStateCacheRepository.get(`${s.me.username}:${s.me.accountName}`)
+  const stateCacheDTO = await i.sacStateCacheRepository.get(s.me.accountName)
   expect(stateCacheDTO?.accountName).toBe(s.me.accountName)
   expect(stateCacheDTO?.gamesPlaying).toStrictEqual([100])
   expect(stateCacheDTO?.isFarming).toBeTruthy()
@@ -48,7 +49,7 @@ test("should store StateCache DTO with as farming with one game", async () => {
 
 test("should stop farming once interrupt occurs", async () => {
   jest.useFakeTimers({ doNotFake: ["setImmediate"] })
-  console.log = log
+
   const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
   let xs = 0
   const sac = meInstances.meSAC
@@ -97,6 +98,7 @@ test("should stop farming once interrupt occurs", async () => {
 })
 
 test("should start farm again when relog with state happens", async () => {
+  console.log = log
   const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
   const sac = meInstances.meSAC
   meCluster.addSAC(sac)
@@ -111,14 +113,10 @@ test("should start farm again when relog with state happens", async () => {
   jest.advanceTimersByTime(1000 * 3600 * 2) // 2 hours
   connection.emit("break")
   jest.advanceTimersByTime(500) // 2 hours
-  // await new Promise(setImmediate)
-  await new Promise(res => {
-    sac.emitter.setEventResolver("relog-with-state", () => {
-      res(true)
-    })
-  })
+  await new Promise(res => sac.emitter.setEventResolver("relog-with-state", res))
 
   const sacClientCalls = sacClientSPY.mock.calls
+  console.log({ sacClientCalls })
   expect(sacClientCalls[0]).toStrictEqual(["error", { eresult: SteamUser.EResult.NoConnection }])
   expect(sacClientCalls[1]).toStrictEqual(["webSession"])
 
@@ -134,7 +132,6 @@ test("should start farm again when relog with state happens", async () => {
 })
 
 test("should get back farming once has session again", async () => {
-  console.log = log
   const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
   const sac = meInstances.meSAC
   const spySACEmitter = jest.spyOn(sac.emitter, "emit")

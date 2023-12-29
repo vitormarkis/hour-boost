@@ -5,7 +5,6 @@ import {
   CustomInstances,
   MakeTestInstancesProps,
   makeTestInstances,
-  makeUserInstances,
   testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
@@ -17,7 +16,7 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = makeUserInstances("me", s.me, i.sacFactory)
+let meInstances = i.makeUserInstances("me", s.me)
 let refreshGamesUseCase: RefreshGamesUseCase
 let farmGamesController: FarmGamesController
 

@@ -1,8 +1,20 @@
-import { AddSteamAccount, DiamondPlan, IDGenerator, SteamAccountsRepository, User } from "core"
+import {
+  AddSteamAccount,
+  DiamondPlan,
+  IDGenerator,
+  SteamAccountClientStateCacheRepository,
+  SteamAccountsRepository,
+  User,
+} from "core"
 import { AllUsersClientsStorage } from "~/application/services"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
-import { SteamAccountsRepositoryInMemory, UsersInMemory, UsersRepositoryInMemory } from "~/infra/repository"
+import {
+  SteamAccountClientStateCacheInMemory,
+  SteamAccountsRepositoryInMemory,
+  UsersInMemory,
+  UsersRepositoryInMemory,
+} from "~/infra/repository"
 import { AddSteamAccountController, promiseHandler } from "~/presentation/controllers"
 import {
   EventEmitterBuilder,
@@ -39,6 +51,7 @@ let me, friend: User
 let emitterBuilder: EventEmitterBuilder
 let publisher: Publisher
 let steamUserBuilder: SteamClientBuilder
+let sacStateCacheRepository: SteamAccountClientStateCacheRepository
 const idGenerator: IDGenerator = {
   makeID: () => "random",
 }
@@ -47,9 +60,10 @@ beforeEach(async () => {
   console.log = () => {}
   emitterBuilder = new EventEmitterBuilder()
   publisher = new Publisher()
+  sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
   steamUserBuilder = new SteamUserMockBuilder(validSteamAccounts)
   sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
-  allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder)
+  allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder, sacStateCacheRepository)
   usersMemory = new UsersInMemory()
   usersRepository = new UsersRepositoryInMemory(usersMemory)
   steamAccountRepository = new SteamAccountsRepositoryInMemory(usersMemory)
@@ -204,7 +218,7 @@ describe("AddSteamAccountController test suite", () => {
     test("should asks user for the steam guard", async () => {
       steamUserBuilder = new SteamUserMockBuilder(validSteamAccounts, true)
       sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
-      allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder)
+      allUsersClientsStorage = new AllUsersClientsStorage(sacBuilder, sacStateCacheRepository)
       sut = new AddSteamAccountController(addSteamAccount, allUsersClientsStorage, usersDAO)
       const { status, json } = await promiseHandler(
         sut.handle({

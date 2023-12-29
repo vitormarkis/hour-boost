@@ -36,10 +36,6 @@ export class UserSACsFarmingCluster {
     return this.farmService.getAccountsStatus()
   }
 
-  private getKeyUserAccountName(accountName: string) {
-    return `${this.username}:${accountName}`
-  }
-
   stopFarmAllAccounts() {
     this.sacList.stopFarmAllAccounts()
     this.farmService.stopFarmAllAccounts()
@@ -52,23 +48,24 @@ export class UserSACsFarmingCluster {
 
     this.logger.log(`Appending interrupt async listener on ${sac.accountName}'s sac!`)
 
+    // @ts-ignore
+    sac.client.on("refreshToken", async (refreshToken: string) => {
+      await this.sacStateCacheRepository.setRefreshToken(sac.accountName, refreshToken)
+      sac.logger.log("got refresh token and set in cache.")
+    })
+
     sac.emitter.on("interrupt", async sacStateCache => {
       this.logger.log(
         `${sacStateCache.accountName} was interrupt, setting the cache and pausing the farm on SAC.`
       )
-      await this.sacStateCacheRepository.set(
-        this.getKeyUserAccountName(sac.accountName),
-        SACStateCacheFactory.createDTO(sac)
-      )
+      await this.sacStateCacheRepository.set(sac.accountName, SACStateCacheFactory.createDTO(sac))
       this.logger.log(`${sacStateCache.accountName} has set the cache successfully.`)
       this.pauseFarmOnAccount(sacStateCache.accountName)
     })
 
     sac.emitter.on("hasSession", async () => {
       this.logger.log("Starting to fetch SAC State Cache.")
-      const sacStateCache = await this.sacStateCacheRepository.get(
-        this.getKeyUserAccountName(sac.accountName)
-      )
+      const sacStateCache = await this.sacStateCacheRepository.get(sac.accountName)
       this.logger.log(`Found SAC State Cache for [${sac.accountName}]`, sacStateCache)
       if (sacStateCache) {
         this.logger.log(`-> sac.emitter: ${sac.accountName} relog with state! [...]`, sacStateCache)
@@ -116,18 +113,12 @@ export class UserSACsFarmingCluster {
     return !!this.sacList.has(accountName)
   }
 
-  async farmWithAccount(accountName: string, gamesID: number[], planId: string) {
+  async farmWithAccount(accountName: string, gamesId: number[], planId: string) {
     const sac = this.sacList.get(accountName)
     if (!sac)
       throw new ApplicationError(
         `[SAC Cluster.startFarm()]: Tried to start farm, but no SAC was found with name: ${accountName}. This account never logged on the application, or don't belong to the user ${this.username}.`
       )
-
-    // esse método precisa cobrir esses 3 cenarios
-
-    // possui service sem ninguem farmando
-    // possui service farmando
-    // se não tiver SAC, nem deveria tentar rodar farm
 
     if (!this.farmService.hasAccountsFarming()) {
       const plan = await this.planRepository.getById(planId)
@@ -137,13 +128,14 @@ export class UserSACsFarmingCluster {
       const newFarmService = this.farmServiceFactory.create(this.username, plan)
       this.setFarmService(newFarmService)
     }
-    this.farmWithAccountImpl(sac, accountName, gamesID)
+    await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId)
+    this.farmWithAccountImpl(sac, accountName, gamesId)
   }
 
-  private farmWithAccountImpl(sac: SteamAccountClient, accountName: string, gamesID: number[]) {
+  private farmWithAccountImpl(sac: SteamAccountClient, accountName: string, gamesId: number[]) {
     this.logger.log(`Appending account to farm on service: `, accountName)
     this.farmService.farmWithAccount(accountName)
-    sac.farmGames(gamesID)
+    sac.farmGames(gamesId)
   }
 
   pauseFarmOnAccount(accountName: string) {

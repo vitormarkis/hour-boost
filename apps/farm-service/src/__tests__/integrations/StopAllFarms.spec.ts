@@ -3,7 +3,6 @@ import {
   CustomInstances,
   MakeTestInstancesProps,
   makeTestInstances,
-  makeUserInstances,
   password,
   testUsers as s,
 } from "~/__tests__/instances"
@@ -25,8 +24,8 @@ const log = console.log
 console.log = () => {}
 
 let i = makeTestInstances({ validSteamAccounts })
-let meInstances = makeUserInstances("me", s.me, i.sacFactory)
-let friendInstances = makeUserInstances("friend", s.friend, i.sacFactory)
+let meInstances = i.makeUserInstances("me", s.me)
+let friendInstances = i.makeUserInstances("friend", s.friend)
 let farmGamesController: FarmGamesController
 let stopAllFarms: StopAllFarms
 
@@ -82,6 +81,9 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
         [s.friend.accountName]: {
           farming: true,
         },
+        [s.friend.accountName2]: {
+          farming: false,
+        },
       },
     })
   })
@@ -118,6 +120,9 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
         },
         [s.friend.userId]: {
           [s.friend.accountName]: {
+            farming: false,
+          },
+          [s.friend.accountName2]: {
             farming: false,
           },
         },
