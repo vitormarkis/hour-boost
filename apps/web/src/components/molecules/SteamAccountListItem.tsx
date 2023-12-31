@@ -1,9 +1,12 @@
 import React from "react"
 import { cn } from "@/lib/utils"
-import { PlanSession } from "core"
 import { Button } from "@/components/ui/button"
 import { ModalAddSteamAccount } from "@/components/molecules/modal-add-steam-account"
 import { Switch } from "@/components/ui/switch"
+import { DrawerSheetChooseFarmingGames } from "@/components/molecules/drawer-sheet-choose-farming-games"
+import { api } from "@/lib/axios"
+import { useQuery } from "@tanstack/react-query"
+import { API_GET_AccountGames } from "core"
 
 type SteamAccountStatusProps = {
   userId: string
@@ -25,10 +28,10 @@ type SteamAccountStatusLiveProps = {
 export function SteamAccountList(steamAccountStatusProps: SteamAccountStatusProps) {
   return (
     <SteamAccountListItemView
-    {...steamAccountStatusProps}
-    status="offline"
-    hoursFarmedInSeconds={0}
-    farmingTime={0}
+      {...steamAccountStatusProps}
+      status="offline"
+      hoursFarmedInSeconds={0}
+      farmingTime={0}
     />
   )
 }
@@ -126,20 +129,22 @@ export const SteamAccountListItemView = React.forwardRef<
           <span className="leading-none text-[0.75rem]/[0.75rem] text-slate-500">nessa conta</span>
         </div>
       </div>
-      <button className="relative flex items-center px-6 group hover:bg-slate-700 transition-all duration-300">
-        {s.header && (
-          <div className="absolute bottom-full px-6 left-0 right-0 py-2">
-            <span>jogos</span>
+      <DrawerSheetChooseFarmingGames userId={s.userId}>
+        <button className="relative flex items-center px-6 group hover:bg-slate-700 transition-all duration-300">
+          {s.header && (
+            <div className="absolute bottom-full px-6 left-0 right-0 py-2">
+              <span>jogos</span>
+            </div>
+          )}
+          <div className="flex flex-col items-center">
+            <span className="uppercase text-sm pb-1">1/{s.maxGamesAllowed}</span>
+            <div className="flex items-center gap-1 h-6 ">
+              <SVGJoystick className="transition-all duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />
+              <span className="transition-all duration-300 text-slate-500 group-hover:text-white">+</span>
+            </div>
           </div>
-        )}
-        <div className="flex flex-col items-center">
-          <span className="uppercase text-sm pb-1">1/{s.maxGamesAllowed}</span>
-          <div className="flex items-center gap-1 h-6 ">
-            <SVGJoystick className="transition-all duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />
-            <span className="transition-all duration-300 text-slate-500 group-hover:text-white">+</span>
-          </div>
-        </div>
-      </button>
+        </button>
+      </DrawerSheetChooseFarmingGames>
       <div className="flex items-center ml-auto">
         <div className="relative flex items-center h-full px-4">
           {s.header && (

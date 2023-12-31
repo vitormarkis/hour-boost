@@ -1,4 +1,4 @@
-import { AccountSteamGameDTO, Controller, HttpClient } from "core"
+import { API_GET_AccountGames, Controller, HttpClient } from "core"
 import {
   GetUserSteamGamesUseCase,
   GetUserSteamGamesUseCaseProps,
@@ -22,7 +22,9 @@ export class GetUserSteamGamesController
     if (error) throw error
     return Promise.resolve({
       status: 200,
-      json: accountSteamGamesList.toJSON(),
+      json: {
+        games: accountSteamGamesList.toJSON(),
+      },
     })
   }
 }
@@ -33,5 +35,5 @@ export namespace GetUserSteamGames {
     accountName: string
   }
 
-  export type Response = AccountSteamGameDTO[]
+  export type Response = API_GET_AccountGames
 }

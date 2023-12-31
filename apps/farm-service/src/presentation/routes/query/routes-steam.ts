@@ -14,6 +14,7 @@ import {
   usersDAO,
 } from "~/presentation/instances"
 import { RefreshGamesUseCase } from "~/presentation/presenters/RefreshGamesUseCase"
+import z from "zod"
 
 const refreshPersonaState = new RefreshPersonaStateUseCase(
   steamAccountClientStateCacheRepository,
@@ -57,11 +58,15 @@ query_routerSteam.get(
   "/games",
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
+    const query = z.object({ accountName: z.string() }).safeParse(req.query)
+    if (!query.success) return res.status(400).json({ message: query.error })
+    const { accountName } = query.data
+
     const getUserSteamGamesController = new GetUserSteamGamesController(serSteamGamesUseCase)
     const { json, status } = await promiseHandler(
       getUserSteamGamesController.handle({
         payload: {
-          accountName: req.body.accountName,
+          accountName,
           userId: req.auth.userId!,
         },
       })

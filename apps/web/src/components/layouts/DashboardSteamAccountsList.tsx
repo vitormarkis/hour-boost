@@ -1,7 +1,7 @@
 import React from "react"
 import { cn } from "@/lib/utils"
 import { SteamAccountList, SteamAccountListItemView } from "@/components/molecules/SteamAccountListItem"
-import { API_GET_SteamAccounts, UserSession } from "core"
+import { API_GET_AccountGames, API_GET_SteamAccounts, AccountSteamGameDTO, UserSession } from "core"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/axios"
 import { useAuth } from "@clerk/clerk-react"
@@ -11,11 +11,36 @@ export type DashboardSteamAccountsListProps = React.ComponentPropsWithoutRef<"se
   user: UserSession
 }
 
+export type AccountNameGames = {
+  accountName: string
+  games: AccountSteamGameDTO[]
+}
+
 export const DashboardSteamAccountsList = React.forwardRef<
   React.ElementRef<"section">,
   DashboardSteamAccountsListProps
 >(function DashboardSteamAccountsListComponent({ user, className, ...props }, ref) {
   const { getToken } = useAuth()
+
+  useQuery<AccountNameGames[]>({
+    queryKey: ["games", user.id_user],
+    async queryFn() {
+      const gamesPromises = user.steamAccounts.map(async accountName => {
+        const { data } = await api.get<API_GET_AccountGames>(`/games?accountName=${accountName}`, {
+          headers: {
+            Authorization: `Bearer ${await getToken()}`,
+          },
+        })
+
+        return {
+          accountName,
+          games: data.games,
+        } satisfies AccountNameGames
+      })
+
+      return Promise.all(gamesPromises)
+    },
+  })
 
   const {
     data,
