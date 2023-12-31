@@ -88,7 +88,14 @@ export const DashboardSteamAccountsList = React.forwardRef<
       ref={ref}
     >
       {steamAccounts.map(({ id_steamAccount, accountName, profilePictureUrl }, index) => (
-        <SteamAccountList key={id_steamAccount} />
+        <SteamAccountList
+          header={index === 0}
+          accountName={accountName}
+          maxGamesAllowed={user.plan.maxGamesAllowed}
+          profilePictureUrl={profilePictureUrl}
+          userId={user.id_user}
+          key={id_steamAccount}
+        />
       ))}
     </section>
   )

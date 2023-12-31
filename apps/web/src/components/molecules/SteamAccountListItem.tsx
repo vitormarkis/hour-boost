@@ -22,16 +22,13 @@ type SteamAccountStatusLiveProps = {
   farmingTime: number
 }
 
-export function SteamAccountList() {
+export function SteamAccountList(steamAccountStatusProps: SteamAccountStatusProps) {
   return (
     <SteamAccountListItemView
-      accountName="vitormarkis"
-      farmingTime={0}
-      hoursFarmedInSeconds={0}
-      maxGamesAllowed={2}
-      profilePictureUrl="https://avatars.cloudflare.steamstatic.com/2ec38f7a0953fe2585abdda0757324dbbb519749_full.jpg"
-      status="offline"
-      userId="123"
+    {...steamAccountStatusProps}
+    status="offline"
+    hoursFarmedInSeconds={0}
+    farmingTime={0}
     />
   )
 }
