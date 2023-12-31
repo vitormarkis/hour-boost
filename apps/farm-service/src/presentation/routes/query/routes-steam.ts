@@ -1,8 +1,10 @@
 import { ClerkExpressRequireAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
-import { ListSteamAccounts } from "core"
 import { Request, Response, Router } from "express"
+import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 
 import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
+import { ListUserSteamAccountsUseCase } from "~/application/use-cases/ListUserSteamAccountsUseCase"
+import { RefreshPersonaStateUseCase } from "~/application/use-cases/RefreshPersonaStateUseCase"
 import { ListSteamAccountsController, promiseHandler } from "~/presentation/controllers"
 import { GetUserSteamGamesController } from "~/presentation/controllers/GetUserSteamGamesController"
 import { RefreshGamesController } from "~/presentation/controllers/RefreshGamesController"
@@ -13,7 +15,16 @@ import {
 } from "~/presentation/instances"
 import { RefreshGamesUseCase } from "~/presentation/presenters/RefreshGamesUseCase"
 
-const listSteamAccounts = new ListSteamAccounts(usersDAO)
+const refreshPersonaState = new RefreshPersonaStateUseCase(
+  steamAccountClientStateCacheRepository,
+  allUsersClientsStorage
+)
+const getPersonaState = new GetPersonaStateUseCase(
+  steamAccountClientStateCacheRepository,
+  refreshPersonaState
+)
+
+const listUserSteamAccounts = new ListUserSteamAccountsUseCase(usersDAO, getPersonaState)
 const refreshGamesUseCase = new RefreshGamesUseCase(
   steamAccountClientStateCacheRepository,
   allUsersClientsStorage
@@ -29,12 +40,14 @@ query_routerSteam.get(
   "/steam-accounts",
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
-    const listSteamAccountsController = new ListSteamAccountsController(listSteamAccounts)
-    const { json, status } = await listSteamAccountsController.handle({
-      payload: {
-        userId: req.auth.userId!,
-      },
-    })
+    const listSteamAccountsController = new ListSteamAccountsController(listUserSteamAccounts)
+    const { json, status } = await promiseHandler(
+      listSteamAccountsController.handle({
+        payload: {
+          userId: req.auth.userId!,
+        },
+      })
+    )
 
     return res.status(status).json(json)
   }
@@ -42,14 +55,14 @@ query_routerSteam.get(
 
 query_routerSteam.get(
   "/games",
-  // ClerkExpressRequireAuth(),
+  ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
     const getUserSteamGamesController = new GetUserSteamGamesController(serSteamGamesUseCase)
     const { json, status } = await promiseHandler(
       getUserSteamGamesController.handle({
         payload: {
           accountName: req.body.accountName,
-          userId: req.body.userId,
+          userId: req.auth.userId!,
         },
       })
     )

@@ -1,4 +1,4 @@
-import { ISteamAccountSession, PlanUsage, UserSession, UsersDAO } from "core"
+import { DatabaseSteamAccount, ISteamAccountSession, PlanUsage, UserSession, UsersDAO } from "core"
 import { UsersInMemory } from "~/infra/repository"
 
 export class UsersDAOInMemory implements UsersDAO {
@@ -52,12 +52,13 @@ export class UsersDAOInMemory implements UsersDAO {
     }
   }
 
-  async getUsersSteamAccounts(userId: string): Promise<ISteamAccountSession[]> {
+  async getUsersSteamAccounts(userId: string): Promise<DatabaseSteamAccount[]> {
     const user = this.users.users.find(u => u.id_user === userId) ?? null
     if (!user) return []
     return user.steamAccounts.data.map(sa => ({
       accountName: sa.credentials.accountName,
       id_steamAccount: sa.id_steamAccount,
+      userId,
     }))
   }
 }

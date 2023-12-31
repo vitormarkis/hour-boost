@@ -94,8 +94,9 @@ export class AllUsersClientsStorage {
 
   getAccountClient(userID: string, accountName: string) {
     const userClientsStorage = this.users.get(userID)
-    const steamAccountClient = userClientsStorage?.getAccountClientOrThrow(accountName) ?? {}
-    return steamAccountClient ?? null
+    if (!userClientsStorage) return null
+    const steamAccountClient = userClientsStorage.getAccountClient(accountName)
+    return steamAccountClient
   }
 
   getAccountClientOrThrow(userID: string, accountName: string) {

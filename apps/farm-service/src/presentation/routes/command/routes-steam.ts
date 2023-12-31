@@ -1,6 +1,7 @@
 import { ClerkExpressRequireAuth, LooseAuthProp, WithAuthProp } from "@clerk/clerk-sdk-node"
-import { AddSteamAccount, ApplicationError, ListSteamAccounts } from "core"
+import { AddSteamAccount, ApplicationError } from "core"
 import { Request, Response, Router } from "express"
+import { ListUserSteamAccountsUseCase } from "~/application/use-cases/ListUserSteamAccountsUseCase"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
 import { prisma } from "~/infra/libs"
 import { UsersRepositoryDatabase } from "~/infra/repository"
@@ -29,7 +30,6 @@ import {
 import { makeRes } from "~/utils"
 
 export const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
-export const listSteamAccounts = new ListSteamAccounts(usersDAO)
 const stopAllFarmsUseCase = new StopAllFarms(usersClusterStorage)
 
 export const command_routerSteam: Router = Router()

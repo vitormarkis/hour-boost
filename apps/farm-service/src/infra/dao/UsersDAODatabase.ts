@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { ISteamAccountSession, PlanUsage, UserSession, UsersDAO } from "core"
+import { DatabaseSteamAccount, ISteamAccountSession, PlanUsage, UserSession, UsersDAO } from "core"
 
 import { getCurrentPlanOrCreateOne } from "~/utils"
 
@@ -73,7 +73,7 @@ export class UsersDAODatabase implements UsersDAO {
     }
   }
 
-  async getUsersSteamAccounts(userId: string): Promise<ISteamAccountSession[]> {
+  async getUsersSteamAccounts(userId: string): Promise<DatabaseSteamAccount[]> {
     const userSteamAccountsDatabase = await this.prisma.steamAccount.findMany({
       where: { owner_id: userId },
       select: {
@@ -81,9 +81,10 @@ export class UsersDAODatabase implements UsersDAO {
         id_steamAccount: true,
       },
     })
-    const userSteamAccounts: ISteamAccountSession[] = userSteamAccountsDatabase.map(sa => ({
+    const userSteamAccounts: DatabaseSteamAccount[] = userSteamAccountsDatabase.map(sa => ({
       accountName: sa.accountName,
       id_steamAccount: sa.id_steamAccount,
+      userId,
     }))
 
     return userSteamAccounts

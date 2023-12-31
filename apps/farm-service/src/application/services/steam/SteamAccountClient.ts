@@ -6,6 +6,7 @@ import {
   DataOrError,
   IRefreshToken,
   SACStateCacheDTO,
+  SteamAccountPersonaState,
 } from "core"
 import { appendFile, fstat } from "fs"
 import SteamUser from "steam-user"
@@ -180,6 +181,25 @@ export class SteamAccountClient extends LastHandler {
     }))
     const userSteamGames = new AccountSteamGamesList(games)
     return [null, userSteamGames]
+  }
+
+  async getAccountPersona(): Promise<DataOrError<SteamAccountPersonaState>> {
+    const steamId = this.client.steamID?.toString()
+    if (!steamId)
+      return Promise.reject([new ApplicationError(`${this.accountName}: No steam id found.`), null])
+    const persona: Record<string, any> = await new Promise((resolve, reject) => {
+      this.client.getPersonas([steamId], (error, personas) => {
+        if (error) reject(error)
+        resolve(personas[steamId])
+      })
+    })
+
+    const personaState: SteamAccountPersonaState = {
+      accountName: this.accountName,
+      profilePictureUrl: persona["avatar_url_medium"],
+    }
+
+    return Promise.resolve([null, personaState])
   }
 
   loginWithToken(refreshToken: string) {

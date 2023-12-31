@@ -1,26 +1,27 @@
-import { API_GET_SteamAccounts, Controller, HttpClient, ListSteamAccounts } from "core"
+import { Controller, API_GET_SteamAccounts, HttpClient } from "core"
+import { ListUserSteamAccountsUseCase } from "~/application/use-cases/ListUserSteamAccountsUseCase"
 
 export namespace ListSteamAccountsHandle {
   export type Payload = {
     userId: string
   }
 
-  export type Response = {}
+  export type Response = API_GET_SteamAccounts
 }
 
 export class ListSteamAccountsController
   implements Controller<ListSteamAccountsHandle.Payload, ListSteamAccountsHandle.Response>
 {
-  constructor(private readonly listSteamAccounts: ListSteamAccounts) {}
+  constructor(private readonly listUserSteamAccounts: ListUserSteamAccountsUseCase) {}
   async handle({ payload }: APayload): AResponse {
-    const { steamAccounts } = await this.listSteamAccounts.execute({
+    const { steamAccounts } = await this.listUserSteamAccounts.execute({
       userId: payload.userId,
     })
 
     return {
       json: {
         steamAccounts,
-      } as API_GET_SteamAccounts,
+      },
       status: 200,
     }
   }

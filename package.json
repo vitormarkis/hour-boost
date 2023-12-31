@@ -13,7 +13,8 @@
     "start": "turbo run start",
     "format": "prettier --write .",
     "ci": "turbo run ci",
-    "api": "bun run build:api && bun run start:api"
+    "api": "bun run build:api && bun run start:api",
+    "spinup": "bun run build && bun run start"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.0.2",

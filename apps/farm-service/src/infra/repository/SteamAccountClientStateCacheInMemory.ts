@@ -4,12 +4,22 @@ import {
   InitProps,
   SACStateCacheDTO,
   SteamAccountClientStateCacheRepository,
+  SteamAccountPersonaState,
 } from "core"
 
 export class SteamAccountClientStateCacheInMemory implements SteamAccountClientStateCacheRepository {
   private readonly state: Map<string, SACStateCacheDTO> = new Map()
   private readonly games: Map<string, AccountSteamGamesList> = new Map()
   private readonly refreshTokens: Map<string, IRefreshToken> = new Map()
+  private readonly personas: Map<string, SteamAccountPersonaState> = new Map()
+
+  async getPersona(accountName: string): Promise<SteamAccountPersonaState | null> {
+    const persona = this.personas.get(accountName)
+    return Promise.resolve(persona ?? null)
+  }
+  async setPersona(accountName: string, persona: SteamAccountPersonaState): Promise<void> {
+    this.personas.set(accountName, persona)
+  }
 
   async setRefreshToken(accountName: string, refreshToken: IRefreshToken): Promise<void> {
     this.refreshTokens.set(accountName, refreshToken)

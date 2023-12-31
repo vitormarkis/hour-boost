@@ -5,23 +5,40 @@ import {
   InitProps,
   SACStateCacheDTO,
   SteamAccountClientStateCacheRepository,
+  SteamAccountPersonaState,
 } from "core"
 import { Redis } from "ioredis"
 import { Logger } from "~/utils/Logger"
 
 export class SteamAccountClientStateCacheRedis implements SteamAccountClientStateCacheRepository {
   readonly logger: Logger
-  readonly STATE_KEY = (accountName: string) => accountName + ":state"
-  readonly REFRESH_TOKENS_KEY = "*:refreshToken"
-  readonly REFRESH_TOKEN_KEY = (accountName: string) => accountName + ":refreshToken"
+  readonly KEY_STATE = (accountName: string) => accountName + ":state"
+  readonly KEY_REFRESH_TOKEN_LIST = "*:refreshToken"
+  readonly KEY_REFRESH_TOKEN = (accountName: string) => accountName + ":refreshToken"
+  readonly KEY_ACCOUNT_GAMES = (accountName: string) => accountName + ":sac:games"
+  readonly KEY_ACCOUNT_PERSONA = (accountName: string) => accountName + ":sac:persona"
 
   constructor(private readonly redis: Redis) {
     this.logger = new Logger(`State Redis`)
   }
 
+  async getPersona(accountName: string): Promise<SteamAccountPersonaState | null> {
+    const key = this.KEY_ACCOUNT_PERSONA(accountName)
+    const foundState = (await this.redis.call("JSON.GET", key, "$")) as string | null
+    if (!foundState) return null
+    const [persona] = JSON.parse(foundState) as [persona: SteamAccountPersonaState]
+    return persona
+  }
+
+  async setPersona(accountName: string, persona: SteamAccountPersonaState): Promise<void> {
+    const value = JSON.stringify(persona)
+    const key = this.KEY_ACCOUNT_PERSONA(accountName)
+    await this.redis.call("JSON.SET", key, "$", value)
+  }
+
   async init({ accountName, planId, username }: InitProps): Promise<void> {
     this.logger.log(`init() called! for ${accountName}`)
-    const key = this.STATE_KEY(accountName)
+    const key = this.KEY_STATE(accountName)
     const hasState = await this.redis.call("JSON.TYPE", key)
     if (!hasState) {
       this.logger.log(`account don't have state, initting ${accountName}`)
@@ -38,18 +55,18 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
   }
   async setRefreshToken(accountName: string, refreshToken: IRefreshToken): Promise<void> {
     this.logger.log(`set refresh token for ${accountName}`)
-    await this.redis.set(this.REFRESH_TOKEN_KEY(accountName), JSON.stringify(refreshToken))
+    await this.redis.set(this.KEY_REFRESH_TOKEN(accountName), JSON.stringify(refreshToken))
   }
   async getRefreshToken(accountName: string): Promise<IRefreshToken | null> {
     this.logger.log(`getting refresh token for ${accountName}`)
-    const foundRefreshToken = await this.redis.get(this.REFRESH_TOKEN_KEY(accountName))
+    const foundRefreshToken = await this.redis.get(this.KEY_REFRESH_TOKEN(accountName))
     if (!foundRefreshToken) return null
     const refreshToken = JSON.parse(foundRefreshToken) as IRefreshToken
     return refreshToken ?? null
   }
 
   getUsersRefreshToken(): Promise<string[]> {
-    return this.redis.keys(this.REFRESH_TOKENS_KEY)
+    return this.redis.keys(this.KEY_REFRESH_TOKEN_LIST)
   }
 
   async setPlayingGames(
@@ -58,7 +75,7 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
     planId: string,
     username: string
   ): Promise<void> {
-    const key = this.STATE_KEY(accountName)
+    const key = this.KEY_STATE(accountName)
     const hasState = await this.redis.call("JSON.TYPE", key)
     if (!hasState)
       await this.init({
@@ -76,7 +93,8 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
   }
 
   async getAccountGames(accountName: string): Promise<AccountSteamGamesList | null> {
-    const foundGames = await this.redis.get(`${accountName}:games`)
+    const key = this.KEY_ACCOUNT_GAMES(accountName)
+    const foundGames = await this.redis.get(key)
     if (!foundGames) {
       this.logger.log(`no games found for ${accountName}`)
       return null
@@ -88,34 +106,27 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
   }
 
   async setAccountGames(accountName: string, games: AccountSteamGamesList): Promise<void> {
+    const key = this.KEY_ACCOUNT_GAMES(accountName)
     this.logger.log(`setting games for ${accountName}`)
-    await this.redis.set(`${accountName}:games`, JSON.stringify(games.toJSON()))
+    await this.redis.set(key, JSON.stringify(games.toJSON()))
   }
 
   async get(accountName: string): Promise<SACStateCacheDTO | null> {
-    const key = this.STATE_KEY(accountName)
+    const key = this.KEY_STATE(accountName)
     const foundState = (await this.redis.call("JSON.GET", key, "$")) as string | null
-    this.logger.log(`State found for ${key}, `, foundState)
     if (!foundState) {
-      this.logger.log(`state found for user ${accountName}`)
+      this.logger.log(`state NOT found for user ${accountName}`)
       return null
     }
+    this.logger.log(`state found for user ${accountName}`)
     const [state] = JSON.parse(foundState) as [state: SACStateCacheDTO]
-    const { gamesPlaying, isFarming, planId, username } = state
     this.logger.log(`no state found for user ${accountName}`)
-    return Promise.resolve({
-      accountName,
-      gamesPlaying,
-      isFarming,
-      planId,
-      username,
-    })
-    // if (error.message.includes("new objects must be created at the root")) {
+    return Promise.resolve(state)
   }
 
   async set(accountName: string, sacStateCache: SACStateCacheDTO): Promise<SACStateCacheDTO> {
     const value = JSON.stringify(sacStateCache)
-    const key = this.STATE_KEY(accountName)
+    const key = this.KEY_STATE(accountName)
     this.logger.log(`setting state for ${accountName}`)
     await this.redis.call("JSON.SET", key, "$", value)
     return sacStateCache

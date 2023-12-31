@@ -12,6 +12,13 @@ export interface SteamAccountClientStateCacheRepository {
   init(props: InitProps): Promise<void>
   getUsersRefreshToken(): Promise<string[]>
   flushAll(): Promise<void>
+  getPersona(accountName: string): Promise<SteamAccountPersonaState | null>
+  setPersona(accountName: string, persona: SteamAccountPersonaState): Promise<void>
+}
+
+export interface SteamAccountPersonaState {
+  accountName: string
+  profilePictureUrl: string
 }
 
 export type InitProps = {
