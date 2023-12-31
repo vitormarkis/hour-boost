@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { DatabaseSteamAccount, ISteamAccountSession, PlanUsage, UserSession, UsersDAO } from "core"
+import { DatabaseSteamAccount, PlanUsage, UserSession, UsersDAO } from "core"
 
 import { getCurrentPlanOrCreateOne } from "~/utils"
 
@@ -36,7 +36,12 @@ export class UsersDAODatabase implements UsersDAO {
       include: {
         plan: { include: { usages: true } },
         purchases: { select: { id_Purchase: true } },
-        steamAccounts: { select: { id_steamAccount: true } },
+        steamAccounts: {
+          select: {
+            id_steamAccount: true,
+            accountName: true,
+          },
+        },
       },
     })
 
@@ -68,7 +73,7 @@ export class UsersDAODatabase implements UsersDAO {
       purchases: dbUser.purchases.map(p => p.id_Purchase),
       role: dbUser.role,
       status: dbUser.status,
-      steamAccounts: dbUser.steamAccounts.map(sa => sa.id_steamAccount),
+      steamAccounts: dbUser.steamAccounts,
       username: dbUser.username,
     }
   }

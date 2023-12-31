@@ -1,5 +1,4 @@
-import React, { ComponentPropsWithoutRef, PropsWithChildren, useState } from "react"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Sheet,
   SheetContent,
@@ -9,37 +8,21 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useAuth } from "@clerk/clerk-react"
-import { api } from "@/lib/axios"
-import { API_GET_AccountGames } from "core"
-import { AccountNameGames } from "@/components/layouts/DashboardSteamAccountsList"
+import { cn } from "@/lib/utils"
+import { AccountSteamGameDTO } from "core"
+import React, { ComponentPropsWithoutRef, useState } from "react"
 
 export type DrawerSheetChooseFarmingGamesProps = React.ComponentPropsWithoutRef<"div"> & {
   children: React.ReactNode
-  accountGames: AccountNameGames[]
+  accountGames: AccountSteamGameDTO[]
 }
 
 export const DrawerSheetChooseFarmingGames = ({
-  userId,
+  accountGames,
   ...props
 }: ComponentPropsWithoutRef<typeof SheetContent> & {
-  userId: string
+  accountGames: AccountSteamGameDTO[]
 }) => {
-  const queryClient = useQueryClient()
-  const accountGames = queryClient.getQueryData<AccountNameGames[]>(["games", userId]) ?? [
-    {
-      accountName: "not found",
-      games: [
-        {
-          id: 10,
-          imageUrl: "",
-        },
-      ],
-    },
-  ]
-
   return (
     <DrawerSheetChooseFarmingGamesView
       accountGames={accountGames}
@@ -53,7 +36,7 @@ export const DrawerSheetChooseFarmingGames = ({
 export const DrawerSheetChooseFarmingGamesView = React.forwardRef<
   React.ElementRef<"div">,
   DrawerSheetChooseFarmingGamesProps
->(function DrawerSheetChooseFarmingGamesComponent({ children, className, ...props }, ref) {
+>(function DrawerSheetChooseFarmingGamesComponent({ children, accountGames, className, ...props }, ref) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -75,7 +58,21 @@ export const DrawerSheetChooseFarmingGamesView = React.forwardRef<
             our servers.
           </SheetDescription>
         </SheetHeader>
-        <main className="flex-1">{}</main>
+        <main>
+          <div className="flex flex-col gap-2">
+            {accountGames.map(game => (
+              <div
+                key={game.id}
+                className="h-11 relative"
+              >
+                <img
+                  src={game.imageUrl}
+                  className="h-full w-full absolute inset-0 object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </main>
         <SheetFooter className="">
           <Button className="flex-1">Salvar</Button>
           <Button className="flex-1">Cancelar</Button>

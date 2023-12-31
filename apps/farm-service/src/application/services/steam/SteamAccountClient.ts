@@ -8,11 +8,12 @@ import {
   SACStateCacheDTO,
   SteamAccountPersonaState,
 } from "core"
-import { appendFile, fstat } from "fs"
+import { appendFile } from "fs"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
+import { getHeaderImageByGameId } from "~/consts"
 import { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
 import { Logger } from "~/utils/Logger"
@@ -177,7 +178,7 @@ export class SteamAccountClient extends LastHandler {
     const { apps } = (await this.client.getUserOwnedApps(this.client.steamID)) as unknown as AccountGames
     const games: AccountSteamGameDTO[] = apps.map(game => ({
       id: game.appid,
-      imageUrl: game.img_icon_url,
+      imageUrl: getHeaderImageByGameId(game.appid),
     }))
     const userSteamGames = new AccountSteamGamesList(games)
     return [null, userSteamGames]

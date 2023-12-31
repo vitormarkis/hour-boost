@@ -1,11 +1,11 @@
-import React from "react"
-import { cn } from "@/lib/utils"
-import { SteamAccountList, SteamAccountListItemView } from "@/components/molecules/SteamAccountListItem"
-import { API_GET_AccountGames, API_GET_SteamAccounts, AccountSteamGameDTO, UserSession } from "core"
-import { useQuery } from "@tanstack/react-query"
+import { SteamAccountList } from "@/components/molecules/SteamAccountListItem"
 import { api } from "@/lib/axios"
+import { cn } from "@/lib/utils"
 import { useAuth } from "@clerk/clerk-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { AxiosError } from "axios"
+import { API_GET_AccountGames, API_GET_SteamAccounts, AccountSteamGameDTO, UserSession } from "core"
+import React from "react"
 
 export type DashboardSteamAccountsListProps = React.ComponentPropsWithoutRef<"section"> & {
   user: UserSession
@@ -22,18 +22,32 @@ export const DashboardSteamAccountsList = React.forwardRef<
 >(function DashboardSteamAccountsListComponent({ user, className, ...props }, ref) {
   const { getToken } = useAuth()
 
+  console.log({
+    steamAccounts: user.steamAccounts,
+  })
+
+  const queryClient = useQueryClient()
+
+  function getAccountGames(accountName: string): AccountSteamGameDTO[] {
+    const foundAllAccountGames = queryClient.getQueryData<AccountNameGames[]>(["games", user.id_user])
+    if (!foundAllAccountGames) throw new Error("Account Games: Query Data not found")
+    const accountGames = foundAllAccountGames.find(cache => cache.accountName === accountName)
+    if (!accountGames) throw new Error(`Account Games not found for ${accountName}`)
+    return accountGames.games
+  }
+
   useQuery<AccountNameGames[]>({
     queryKey: ["games", user.id_user],
     async queryFn() {
-      const gamesPromises = user.steamAccounts.map(async accountName => {
-        const { data } = await api.get<API_GET_AccountGames>(`/games?accountName=${accountName}`, {
+      const gamesPromises = user.steamAccounts.map(async sa => {
+        const { data } = await api.get<API_GET_AccountGames>(`/games?accountName=${sa.accountName}`, {
           headers: {
             Authorization: `Bearer ${await getToken()}`,
           },
         })
 
         return {
-          accountName,
+          accountName: sa.accountName,
           games: data.games,
         } satisfies AccountNameGames
       })
@@ -114,6 +128,7 @@ export const DashboardSteamAccountsList = React.forwardRef<
     >
       {steamAccounts.map(({ id_steamAccount, accountName, profilePictureUrl }, index) => (
         <SteamAccountList
+          accountGames={getAccountGames(accountName)}
           header={index === 0}
           accountName={accountName}
           maxGamesAllowed={user.plan.maxGamesAllowed}

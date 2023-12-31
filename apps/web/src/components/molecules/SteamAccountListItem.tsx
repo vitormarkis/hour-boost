@@ -1,12 +1,10 @@
-import React from "react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { ModalAddSteamAccount } from "@/components/molecules/modal-add-steam-account"
-import { Switch } from "@/components/ui/switch"
 import { DrawerSheetChooseFarmingGames } from "@/components/molecules/drawer-sheet-choose-farming-games"
-import { api } from "@/lib/axios"
-import { useQuery } from "@tanstack/react-query"
-import { API_GET_AccountGames } from "core"
+import { ModalAddSteamAccount } from "@/components/molecules/modal-add-steam-account"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { cn } from "@/lib/utils"
+import { AccountSteamGameDTO } from "core"
+import React from "react"
 
 type SteamAccountStatusProps = {
   userId: string
@@ -14,6 +12,7 @@ type SteamAccountStatusProps = {
   accountName: string
   maxGamesAllowed: number
   profilePictureUrl: string
+  accountGames: AccountSteamGameDTO[]
 }
 
 type SteamAccountStatusLiveProps = {
@@ -129,7 +128,7 @@ export const SteamAccountListItemView = React.forwardRef<
           <span className="leading-none text-[0.75rem]/[0.75rem] text-slate-500">nessa conta</span>
         </div>
       </div>
-      <DrawerSheetChooseFarmingGames userId={s.userId}>
+      <DrawerSheetChooseFarmingGames accountGames={s.accountGames}>
         <button className="relative flex items-center px-6 group hover:bg-slate-700 transition-all duration-300">
           {s.header && (
             <div className="absolute bottom-full px-6 left-0 right-0 py-2">

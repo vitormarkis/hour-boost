@@ -1,4 +1,4 @@
-import { DatabaseSteamAccount, ISteamAccountSession, PlanUsage, UserSession, UsersDAO } from "core"
+import { DatabaseSteamAccount, PlanUsage, UserSession, UsersDAO } from "core"
 import { UsersInMemory } from "~/infra/repository"
 
 export class UsersDAOInMemory implements UsersDAO {
@@ -47,7 +47,10 @@ export class UsersDAOInMemory implements UsersDAO {
       purchases: foundUser.purchases.map(p => p.id_Purchase),
       role: foundUser.role.name,
       status: foundUser.status.name,
-      steamAccounts: foundUser.steamAccounts.data.map(sa => sa.id_steamAccount),
+      steamAccounts: foundUser.steamAccounts.data.map(sa => ({
+        accountName: sa.credentials.accountName,
+        id_steamAccount: sa.id_steamAccount,
+      })),
       username: foundUser.username,
     }
   }

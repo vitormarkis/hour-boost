@@ -2,6 +2,7 @@ import { ClerkExpressRequireAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
 import { Request, Response, Router } from "express"
 import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 
+import z from "zod"
 import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 import { ListUserSteamAccountsUseCase } from "~/application/use-cases/ListUserSteamAccountsUseCase"
 import { RefreshPersonaStateUseCase } from "~/application/use-cases/RefreshPersonaStateUseCase"
@@ -14,7 +15,6 @@ import {
   usersDAO,
 } from "~/presentation/instances"
 import { RefreshGamesUseCase } from "~/presentation/presenters/RefreshGamesUseCase"
-import z from "zod"
 
 const refreshPersonaState = new RefreshPersonaStateUseCase(
   steamAccountClientStateCacheRepository,
@@ -58,8 +58,10 @@ query_routerSteam.get(
   "/games",
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
+    console.log({ query: req.query })
     const query = z.object({ accountName: z.string() }).safeParse(req.query)
     if (!query.success) return res.status(400).json({ message: query.error })
+    console.log({ query })
     const { accountName } = query.data
 
     const getUserSteamGamesController = new GetUserSteamGamesController(serSteamGamesUseCase)

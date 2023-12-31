@@ -7,11 +7,16 @@ export interface UserSession {
   email: string
   username: string
   profilePic: string
-  steamAccounts: string[]
+  steamAccounts: SteamAccountSession[]
   plan: PlanUsageSession | PlanInfinitySession
   role: RoleName
   status: StatusName
   purchases: string[]
+}
+
+export interface SteamAccountSession {
+  id_steamAccount: string
+  accountName: string
 }
 
 export interface PlanSession {
