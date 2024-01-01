@@ -12,10 +12,6 @@ export interface UserMethods {
   updatePersona(accountName: string, persona: Persona): void
   hasGames(): boolean
   updateFarmingGames(props: IUserMethods.UpdateFarmingGames): void
-  getStageFarmingGames(accountName: string): {
-    stageFarmingGames: number[]
-    toggleFarmGame(gameId: number, onError: IUserMethods.OnError): void
-  }
 }
 
 export interface IUserProviderProps {
@@ -27,12 +23,6 @@ export const UserContext = createContext<IUserContext>({} as IUserContext)
 
 export function UserProvider({ serverUser, children }: IUserProviderProps) {
   const [user, setUser] = useState(serverUser)
-  const [allStageFarmingGames, setAllStageFarmingGames] = useState<NSUserContext.StageFarmingGames[]>(
-    user.steamAccounts.map(sa => ({
-      accountName: sa.accountName,
-      stageFarmingGames: sa.farmingGames,
-    }))
-  )
 
   return (
     <UserContext.Provider
@@ -45,30 +35,8 @@ export function UserProvider({ serverUser, children }: IUserProviderProps) {
           setUser(user => new Helper(user).updatePersona(accountName, persona))
         },
         hasGames: () => new Helper(user).hasGames(),
-        updateFarmingGames() {},
-        getStageFarmingGames(accountName: string) {
-          const { stageFarmingGames } = allStageFarmingGames.find(stage => stage.accountName === accountName)!
-          function toggleFarmGame(gameId: number, onError: IUserMethods.OnError) {
-            setAllStageFarmingGames(allStageFarmingGames => {
-              const isAdding = !stageFarmingGames.includes(gameId)
-              if (isAdding) {
-                if (stageFarmingGames.length >= user.plan.maxGamesAllowed) {
-                  onError({
-                    message: `Você só pode farmar ${user.plan.maxGamesAllowed} jogos por vez.`,
-                  })
-                  return allStageFarmingGames
-                }
-                return addGameToStageFarmingGames(allStageFarmingGames, accountName, gameId)
-              }
-
-              return removeGameToStageFarmingGames(allStageFarmingGames, accountName, gameId)
-            })
-          }
-
-          return {
-            stageFarmingGames,
-            toggleFarmGame,
-          }
+        updateFarmingGames() {
+          alert("updateFarmingGames impl!")
         },
       }}
     >

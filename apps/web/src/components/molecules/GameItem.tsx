@@ -6,27 +6,14 @@ import React, { useContext } from "react"
 
 export type GameItemProps = React.ComponentPropsWithoutRef<"div"> & {
   game: GameSession
+  isSelected?: boolean
+  handleFarmGame(): void
 }
 
 export const GameItem = React.forwardRef<React.ElementRef<"div">, GameItemProps>(function GameItemComponent(
-  { game, className, ...props },
+  { game, className, isSelected, handleFarmGame, ...props },
   ref
 ) {
-  const user = useUser()
-  const { farmingGames, accountName } = useContext(SteamAccountListItemContext)
-
-  function handleFarmGame() {
-    user.farmGame(
-      {
-        accountName,
-        gameId: game.id,
-      },
-      ({ message }) => {
-        alert(message)
-      }
-    )
-  }
-
   return (
     <div
       {...props}
@@ -36,7 +23,7 @@ export const GameItem = React.forwardRef<React.ElementRef<"div">, GameItemProps>
       <div
         className={cn(
           "w-4 shrink-0 border-r border-zinc-500",
-          farmingGames.includes(game.id) ? "bg-green-500" : "bg-neutral-500"
+          isSelected ? "bg-green-500" : "bg-neutral-500"
         )}
       />
       <button

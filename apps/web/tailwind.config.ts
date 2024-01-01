@@ -74,6 +74,14 @@ const config: Config = {
             transform: "rotate(-360deg)",
           },
         },
+        spin: {
+          from: {
+            transform: "rotate(0deg)",
+          },
+          to: {
+            transform: "rotate(360deg)",
+          },
+        },
       },
       "ping-sm": {
         "75%, 100%": {
@@ -86,7 +94,8 @@ const config: Config = {
       "accordion-down": "accordion-down 0.2s ease-out",
       "accordion-up": "accordion-up 0.2s ease-out",
       "ping-sm": "ping-sm 1s cubic-bezier(0, 0, 0.2, 1) infinite",
-      "spin-r": "spin-r 1s linear infinite;",
+      "spin-r": "spin-r 1s linear infinite",
+      spin: "spin 1s linear infinite",
     },
   },
   plugins: [require("tailwindcss-animate")],

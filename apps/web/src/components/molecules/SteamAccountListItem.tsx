@@ -7,6 +7,7 @@ import { ModalAddSteamAccount } from "@/components/molecules/modal-add-steam-acc
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
+import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
 import { SteamAccountSession } from "core"
 import React from "react"
@@ -70,6 +71,7 @@ export const SteamAccountListItemView = React.forwardRef<
     isFarming,
     steamGuard,
   } = props
+  const user = useUser()
 
   return (
     <SteamAccountListItemContext.Provider value={props}>
