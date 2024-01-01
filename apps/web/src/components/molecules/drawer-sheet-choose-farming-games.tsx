@@ -1,3 +1,4 @@
+import { GameItem } from "@/components/molecules/GameItem"
 import { SteamAccountListItemContext } from "@/components/molecules/SteamAccountListItem"
 import { Button } from "@/components/ui/button"
 import {
@@ -77,18 +78,14 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
           <Button onClick={handleRefreshGames}>Atualizar jogos</Button>
         </SheetHeader>
         <main className="flex-1">
+          <pre>{JSON.stringify({ maxGamesAllowed: user.plan.maxGamesAllowed }, null, 2)}</pre>
           <div className="flex flex-col gap-2">
             {games ? (
               games.map(game => (
-                <div
+                <GameItem
                   key={game.id}
-                  className="h-11 relative"
-                >
-                  <img
-                    src={game.imageUrl}
-                    className="h-full w-full absolute inset-0 object-cover"
-                  />
-                </div>
+                  game={game}
+                />
               ))
             ) : (
               <span>user games in nullish</span>

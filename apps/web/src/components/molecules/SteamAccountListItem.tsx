@@ -73,6 +73,7 @@ export const SteamAccountListItemView = React.forwardRef<
 
   return (
     <SteamAccountListItemContext.Provider value={props}>
+      <pre>{JSON.stringify({ farmingGames: props.farmingGames ?? "undefined" }, null, 2)}</pre>
       <div
         className={cn("relative h-[4.5rem] border border-slate-800 flex", header && "mt-[4.5rem]")}
         ref={ref}

@@ -30,6 +30,7 @@ type UserSessionParams = {
 }
 
 export default function DashboardPage({ user }: UserSessionParams) {
+  console.log("user got from server, should have farming games as []", user)
   return (
     <UserProvider serverUser={user}>
       <HeaderDashboard user={user} />

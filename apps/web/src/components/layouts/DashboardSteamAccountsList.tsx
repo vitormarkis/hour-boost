@@ -11,21 +11,18 @@ export const DashboardSteamAccountsList = React.forwardRef<
 >(function DashboardSteamAccountsListComponent({ className, ...props }, ref) {
   const user = useUser()
 
+  console.log(user.steamAccounts)
+
   return (
     <section
       {...props}
       className={cn("flex flex-col gap-2 p-2", className)}
       ref={ref}
     >
-      {user.steamAccounts.map(({ id_steamAccount, accountName, profilePictureUrl, games }, index) => (
+      {user.steamAccounts.map((app, index) => (
         <SteamAccountList
-          key={id_steamAccount}
-          app={{
-            accountName,
-            games,
-            id_steamAccount,
-            profilePictureUrl,
-          }}
+          key={app.id_steamAccount}
+          app={app}
           status={{
             maxGamesAllowed: user.plan.maxGamesAllowed,
             header: index === 0,
