@@ -28,6 +28,7 @@ export interface SteamAccountSession extends Persona {
   id_steamAccount: string
   accountName: string
   games: GameSession[] | null
+  farmingGames: number[]
 }
 
 export interface PersonaWithAccountName extends Persona {

@@ -7,6 +7,7 @@ export interface UserMethods {
   setGames(accountName: string, games: GameSession[]): void
   updatePersona(accountName: string, persona: Persona): void
   hasGames(): boolean
+  farmGames(props: IUserMethods.FarmGames, onError: IUserMethods.OnError): void
 }
 
 export interface IUserProviderProps {
@@ -30,6 +31,16 @@ export function UserProvider({ serverUser, children }: IUserProviderProps) {
           setUser(user => new Helper(user).updatePersona(accountName, persona))
         },
         hasGames: () => new Helper(user).hasGames(),
+        farmGames: ({ accountName, gamesIdList }, onError) => {
+          setUser(user => {
+            const [error, updatedUser] = new Helper(user).farmGames(accountName, gamesIdList)
+            if (error) {
+              onError(error)
+              return user
+            }
+            return updatedUser
+          })
+        },
       }}
     >
       {children}
@@ -38,3 +49,18 @@ export function UserProvider({ serverUser, children }: IUserProviderProps) {
 }
 
 export const useUser = () => useContext(UserContext)
+
+export namespace IUserMethods {
+  export interface FarmGames {
+    accountName: string
+    gamesIdList: number[]
+  }
+
+  type Error = {
+    message: string
+  }
+
+  export type DataOrError = [error: Error, data: null] | [error: null, data: UserSession]
+
+  export type OnError = (error: Error) => void
+}

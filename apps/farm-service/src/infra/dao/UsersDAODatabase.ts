@@ -78,6 +78,7 @@ export class UsersDAODatabase implements UsersDAO {
         games: null,
         profilePictureUrl: null,
         id_steamAccount: sa.id_steamAccount,
+        farmingGames: [],
       })),
       username: dbUser.username,
     }

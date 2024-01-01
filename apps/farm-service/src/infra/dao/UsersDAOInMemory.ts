@@ -52,6 +52,7 @@ export class UsersDAOInMemory implements UsersDAO {
         id_steamAccount: sa.id_steamAccount,
         games: null,
         profilePictureUrl: null,
+        farmingGames: [],
       })),
       username: foundUser.username,
     }
