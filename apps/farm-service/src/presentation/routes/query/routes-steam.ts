@@ -58,7 +58,6 @@ query_routerSteam.get(
   "/games",
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
-    console.log({ query: req.query })
     const query = z.object({ accountName: z.string() }).safeParse(req.query)
     if (!query.success) return res.status(400).json({ message: query.error })
     console.log({ query })
@@ -80,14 +79,19 @@ query_routerSteam.get(
 
 query_routerSteam.get(
   "/refresh-games",
-  // ClerkExpressRequireAuth(),
+  ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
+    const query = z.object({ accountName: z.string() }).safeParse(req.query)
+    if (!query.success) return res.status(400).json({ message: query.error })
+    console.log({ query })
+    const { accountName } = query.data
+
     const refreshGamesController = new RefreshGamesController(refreshGamesUseCase)
     const { json, status } = await promiseHandler(
       refreshGamesController.handle({
         payload: {
-          accountName: req.body.accountName,
-          userId: req.body.userId,
+          accountName,
+          userId: req.auth.userId!,
         },
       })
     )

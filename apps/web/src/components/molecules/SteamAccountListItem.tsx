@@ -3,7 +3,7 @@ import { ModalAddSteamAccount } from "@/components/molecules/modal-add-steam-acc
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
-import { AccountSteamGameDTO } from "core"
+import { GameSession } from "core"
 import React from "react"
 
 type SteamAccountStatusProps = {
@@ -12,7 +12,7 @@ type SteamAccountStatusProps = {
   accountName: string
   maxGamesAllowed: number
   profilePictureUrl: string
-  accountGames: AccountSteamGameDTO[]
+  accountGames: GameSession[]
 }
 
 type SteamAccountStatusLiveProps = {
@@ -41,6 +41,8 @@ export const SteamAccountListItemView = React.forwardRef<
   React.ElementRef<"div">,
   SteamAccountListItemViewProps
 >(function SteamAccountListItemViewComponent(s, ref) {
+  const accountNameList = 
+  
   return (
     <div
       className={cn("relative h-[4.5rem] border border-slate-800 flex", s.header && "mt-[4.5rem]")}
@@ -128,7 +130,7 @@ export const SteamAccountListItemView = React.forwardRef<
           <span className="leading-none text-[0.75rem]/[0.75rem] text-slate-500">nessa conta</span>
         </div>
       </div>
-      <DrawerSheetChooseFarmingGames accountGames={s.accountGames}>
+      <DrawerSheetChooseFarmingGames accountName={s.accountName} accountNameList={accountNameList} accountGames={s.accountGames}>
         <button className="relative flex items-center px-6 group hover:bg-slate-700 transition-all duration-300">
           {s.header && (
             <div className="absolute bottom-full px-6 left-0 right-0 py-2">

@@ -1,4 +1,4 @@
-import { AccountSteamGameDTO } from "core/entity"
+import { GameSession } from "core/presenters"
 import { ISteamAccountSession } from "./common"
 
 export type API_GET_SteamAccounts = {
@@ -6,5 +6,9 @@ export type API_GET_SteamAccounts = {
 }
 
 export type API_GET_AccountGames = {
-  games: AccountSteamGameDTO[]
+  games: GameSession[]
+}
+
+export type API_GET_RefreshAccountGames = {
+  games: GameSession[]
 }

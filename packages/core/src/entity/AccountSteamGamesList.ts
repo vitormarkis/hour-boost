@@ -1,17 +1,15 @@
-export class AccountSteamGamesList {
-  constructor(readonly games: AccountSteamGameDTO[]) {}
+import { GameSession } from "core/presenters"
 
-  toJSON(): AccountSteamGameDTO[] {
+export class AccountSteamGamesList {
+  constructor(readonly games: GameSession[]) {}
+
+  toJSON(): GameSession[] {
     return this.games.map(g => ({
       id: g.id,
       imageUrl: g.imageUrl,
+      name: g.name,
     }))
   }
-}
-
-export interface AccountSteamGameDTO {
-  id: number
-  imageUrl: string
 }
 
 type SteamGames = {}

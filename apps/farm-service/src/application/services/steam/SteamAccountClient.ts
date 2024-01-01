@@ -1,9 +1,9 @@
 import {
   AccountGames,
-  AccountSteamGameDTO,
   AccountSteamGamesList,
   ApplicationError,
   DataOrError,
+  GameSession,
   IRefreshToken,
   SACStateCacheDTO,
   SteamAccountPersonaState,
@@ -176,9 +176,10 @@ export class SteamAccountClient extends LastHandler {
   async getAccountGamesList(): Promise<DataOrError<AccountSteamGamesList>> {
     if (!this.client.steamID) return [new ApplicationError("No steam id set."), null]
     const { apps } = (await this.client.getUserOwnedApps(this.client.steamID)) as unknown as AccountGames
-    const games: AccountSteamGameDTO[] = apps.map(game => ({
+    const games: GameSession[] = apps.map(game => ({
       id: game.appid,
       imageUrl: getHeaderImageByGameId(game.appid),
+      name: game.name ?? "unnamed game"
     }))
     const userSteamGames = new AccountSteamGamesList(games)
     return [null, userSteamGames]

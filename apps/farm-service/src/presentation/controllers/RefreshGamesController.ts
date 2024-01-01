@@ -1,4 +1,4 @@
-import { AccountSteamGameDTO, Controller, HttpClient } from "core"
+import { API_GET_RefreshAccountGames, Controller, HttpClient } from "core"
 import { RefreshGamesUseCase, RefreshGamesUseCaseProps } from "~/presentation/presenters/RefreshGamesUseCase"
 
 export class RefreshGamesController implements Controller<RefreshGames.Payload, RefreshGames.Response> {
@@ -13,10 +13,12 @@ export class RefreshGamesController implements Controller<RefreshGames.Payload, 
     }
     const [error, accountSteamGamesList] = await this.refreshGamesUseCase.execute(input)
     if (error) throw error
-    return Promise.resolve({
+    return {
       status: 200,
-      json: accountSteamGamesList.toJSON(),
-    })
+      json: {
+        games: accountSteamGamesList.toJSON(),
+      } satisfies API_GET_RefreshAccountGames,
+    }
   }
 }
 
@@ -26,5 +28,5 @@ export namespace RefreshGames {
     accountName: string
   }
 
-  export type Response = AccountSteamGameDTO[]
+  export type Response = API_GET_RefreshAccountGames
 }

@@ -1,6 +1,6 @@
 import {
-  AccountSteamGameDTO,
   AccountSteamGamesList,
+  GameSession,
   IRefreshToken,
   InitProps,
   SACStateCacheDTO,
@@ -99,7 +99,7 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
       this.logger.log(`no games found for ${accountName}`)
       return null
     }
-    const games = JSON.parse(foundGames) as AccountSteamGameDTO[]
+    const games = JSON.parse(foundGames) as GameSession[]
     const accountSteamGamesList = new AccountSteamGamesList(games)
     this.logger.log(`found games for ${accountName}: ${games.map(g => g.id).join(", ")}.`)
     return accountSteamGamesList

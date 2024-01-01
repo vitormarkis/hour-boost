@@ -73,7 +73,11 @@ export class UsersDAODatabase implements UsersDAO {
       purchases: dbUser.purchases.map(p => p.id_Purchase),
       role: dbUser.role,
       status: dbUser.status,
-      steamAccounts: dbUser.steamAccounts,
+      steamAccounts: dbUser.steamAccounts.map(sa => ({
+        accountName: sa.accountName,
+        games: null,
+        id_steamAccount: sa.id_steamAccount,
+      })),
       username: dbUser.username,
     }
   }
