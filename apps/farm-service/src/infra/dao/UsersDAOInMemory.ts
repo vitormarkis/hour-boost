@@ -25,7 +25,7 @@ export class UsersDAOInMemory implements UsersDAO {
 
     return {
       email: foundUser.email,
-      id_user: foundUser.id_user,
+      id: foundUser.id_user,
       plan:
         foundUser.plan instanceof PlanUsage
           ? {
@@ -50,6 +50,8 @@ export class UsersDAOInMemory implements UsersDAO {
       steamAccounts: foundUser.steamAccounts.data.map(sa => ({
         accountName: sa.credentials.accountName,
         id_steamAccount: sa.id_steamAccount,
+        games: null,
+        profilePictureUrl: null,
       })),
       username: foundUser.username,
     }

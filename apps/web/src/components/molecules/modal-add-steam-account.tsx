@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -9,31 +8,27 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import {
-  AddSteamAccountInput,
-  AddSteamAccountOutput,
-  IAddSteamAccount,
-  SteamAccount,
-  UserSession,
-} from "core"
-import { useAuth } from "@clerk/clerk-react"
+import { useUser } from "@/contexts/UserContext"
 import { api } from "@/lib/axios"
-import { AxiosError, AxiosInstance, AxiosResponse } from "axios"
+import { cn } from "@/lib/utils"
+import { useAuth } from "@clerk/clerk-react"
 import { DefaultError, useMutation, useQueryClient } from "@tanstack/react-query"
+import { AxiosError, AxiosInstance, AxiosResponse } from "axios"
+import { AddSteamAccountOutput, IAddSteamAccount } from "core"
+import React, { useRef, useState } from "react"
 import FlipMove from "react-flip-move"
 import twc from "tailwindcss/colors"
 
 export type ModalAddSteamAccountProps = React.ComponentPropsWithoutRef<typeof DialogContent> & {
   children: React.ReactNode
-  userId: UserSession["id_user"]
 }
 
 export const ModalAddSteamAccount = React.forwardRef<
   React.ElementRef<typeof DialogContent>,
   ModalAddSteamAccountProps
->(function ModalAddSteamAccountComponent({ userId, children, className, ...props }, ref) {
+>(function ModalAddSteamAccountComponent({ children, className, ...props }, ref) {
+  const user = useUser()
   const { getToken } = useAuth()
   const getAPI = async () => {
     api.defaults.headers["Authorization"] = `Bearer ${await getToken()}`
@@ -51,7 +46,7 @@ export const ModalAddSteamAccount = React.forwardRef<
     onSuccess: () => {
       console.log("Invalidando cache de steam accounts")
       queryClient.invalidateQueries({
-        queryKey: ["steam-accounts", userId],
+        queryKey: ["steam-accounts", user.id],
       })
       s.closeModal()
     },

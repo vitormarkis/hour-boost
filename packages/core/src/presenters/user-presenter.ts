@@ -5,7 +5,7 @@ import { StatusName } from "../entity/status/Status"
 export interface UserSession extends UserSessionApp, UserSessionAuth {}
 
 export interface UserSessionAuth {
-  id_user: string
+  id: string
   email: string
   username: string
   profilePic: string
@@ -24,10 +24,18 @@ export type GameWithAccountName = {
   games: GameSession[]
 }
 
-export interface SteamAccountSession {
+export interface SteamAccountSession extends Persona {
   id_steamAccount: string
   accountName: string
   games: GameSession[] | null
+}
+
+export interface PersonaWithAccountName extends Persona {
+  accountName: string
+}
+
+export interface Persona {
+  profilePictureUrl: string | null
 }
 
 export interface GameSession {

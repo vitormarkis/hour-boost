@@ -51,7 +51,7 @@ export class UsersDAODatabase implements UsersDAO {
 
     return {
       email: dbUser.email,
-      id_user: dbUser.id_user,
+      id: dbUser.id_user,
       plan:
         userPlan instanceof PlanUsage
           ? {
@@ -76,6 +76,7 @@ export class UsersDAODatabase implements UsersDAO {
       steamAccounts: dbUser.steamAccounts.map(sa => ({
         accountName: sa.accountName,
         games: null,
+        profilePictureUrl: null,
         id_steamAccount: sa.id_steamAccount,
       })),
       username: dbUser.username,
