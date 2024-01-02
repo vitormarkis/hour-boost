@@ -35,8 +35,8 @@ export function UserProvider({ serverUser, children }: IUserProviderProps) {
           setUser(user => new Helper(user).updatePersona(accountName, persona))
         },
         hasGames: () => new Helper(user).hasGames(),
-        updateFarmingGames() {
-          alert("updateFarmingGames impl!")
+        updateFarmingGames: ({ accountName, gameIdList }) => {
+          setUser(user => new Helper(user).updateFarmingGames(accountName, gameIdList))
         },
       }}
     >

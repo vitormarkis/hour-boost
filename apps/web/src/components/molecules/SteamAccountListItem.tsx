@@ -69,13 +69,14 @@ export const SteamAccountListItemView = React.forwardRef<
     autoRestarter,
     header,
     isFarming,
+    farmingGames,
     steamGuard,
   } = props
   const user = useUser()
+  console.log(user)
 
   return (
     <SteamAccountListItemContext.Provider value={props}>
-      <pre>{JSON.stringify({ farmingGames: props.farmingGames ?? "undefined" }, null, 2)}</pre>
       <div
         className={cn("relative h-[4.5rem] border border-slate-800 flex", header && "mt-[4.5rem]")}
         ref={ref}
@@ -170,7 +171,9 @@ export const SteamAccountListItemView = React.forwardRef<
               </div>
             )}
             <div className="flex flex-col items-center">
-              <span className="uppercase text-sm pb-1">1/{maxGamesAllowed}</span>
+              <span className="uppercase text-sm pb-1">
+                {farmingGames.length}/{maxGamesAllowed}
+              </span>
               <div className="flex items-center gap-1 h-6 ">
                 <IconJoystick className="transition-all duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />
                 <span className="transition-all duration-300 text-slate-500 group-hover:text-white">+</span>

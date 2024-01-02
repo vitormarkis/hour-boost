@@ -81,58 +81,62 @@ command_routerSteam.delete(
   }
 )
 
-// command_routerSteam.post("/farm/start", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
-command_routerSteam.post("/farm/start", async (req: WithAuthProp<Request>, res: Response) => {
-  const startFarmController = new FarmGamesController({
-    allUsersClientsStorage,
-    publisher,
-    sacStateCacheRepository: steamAccountClientStateCacheRepository,
-    usersClusterStorage,
-    usersRepository,
-    planRepository,
-    farmGamesUseCase,
-  })
-  const { json, status } = await promiseHandler(
-    startFarmController.handle({
-      payload: {
-        accountName: req.body.accountName,
-        gamesID: req.body.gamesID,
-        // userId: req.auth.userId!,
-        userId: req.body.userId,
-      },
+command_routerSteam.post(
+  "/farm/start",
+  ClerkExpressRequireAuth(),
+  async (req: WithAuthProp<Request>, res: Response) => {
+    const startFarmController = new FarmGamesController({
+      allUsersClientsStorage,
+      publisher,
+      sacStateCacheRepository: steamAccountClientStateCacheRepository,
+      usersClusterStorage,
+      usersRepository,
+      planRepository,
+      farmGamesUseCase,
     })
-  )
+    const { json, status } = await promiseHandler(
+      startFarmController.handle({
+        payload: {
+          accountName: req.body.accountName,
+          gamesID: req.body.gamesID,
+          userId: req.auth.userId!,
+        },
+      })
+    )
 
-  return json ? res.status(status).json(json) : res.status(status).end()
-})
-
-// command_routerSteam.post("/farm/stop", ClerkExpressRequireAuth(), async (req: WithAuthProp<Request>, res: Response) => {
-command_routerSteam.post("/farm/stop", async (req: WithAuthProp<Request>, res: Response) => {
-  const perform = async () => {
-    const { userId, accountName } = req.body
-
-    const stopFarmController = new StopFarmController(usersClusterStorage, usersRepository)
-    return await stopFarmController.handle({
-      payload: {
-        // userId: req.auth.userId!,
-        accountName,
-        userId,
-      },
-    })
+    return json ? res.status(status).json(json) : res.status(status).end()
   }
+)
 
-  const { status, json } = await promiseHandler(perform())
-  return json ? res.status(status).json(json) : res.status(status).end()
-})
+command_routerSteam.post(
+  "/farm/stop",
+  ClerkExpressRequireAuth(),
+  async (req: WithAuthProp<Request>, res: Response) => {
+    const perform = async () => {
+      const { accountName } = req.body
 
-command_routerSteam.post("/code", async (req, res) => {
+      const stopFarmController = new StopFarmController(usersClusterStorage, usersRepository)
+      return await stopFarmController.handle({
+        payload: {
+          userId: req.auth.userId!,
+          accountName,
+        },
+      })
+    }
+
+    const { status, json } = await promiseHandler(perform())
+    return json ? res.status(status).json(json) : res.status(status).end()
+  }
+)
+
+command_routerSteam.post("/code", ClerkExpressRequireAuth(), async (req, res) => {
   const addSteamGuardCodeController = new AddSteamGuardCodeController(allUsersClientsStorage)
   const { json, status } = await promiseHandler(
     addSteamGuardCodeController.handle({
       payload: {
         accountName: req.body.accountName,
         code: req.body.code,
-        userId: req.body.userId,
+        userId: req.auth.userId!,
       },
     })
   )

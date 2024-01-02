@@ -7,6 +7,8 @@ import { ThemeProvider } from "next-themes"
 import { ClerkProvider } from "@clerk/nextjs"
 import { ptBR } from "@clerk/localizations"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { Toaster } from "@/components/ui/sonner"
+
 const queryClient = new QueryClient()
 
 const barlow = Barlow({
@@ -29,6 +31,7 @@ export default function App({ Component, pageProps }: AppProps) {
           <main className={cn(barlow.className)}>
             <Component {...pageProps} />
           </main>
+          <Toaster position="bottom-left" />
         </QueryClientProvider>
       </ThemeProvider>
     </ClerkProvider>

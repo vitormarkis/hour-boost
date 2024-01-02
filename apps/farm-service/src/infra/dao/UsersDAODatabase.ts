@@ -1,10 +1,14 @@
 import { PrismaClient } from "@prisma/client"
-import { DatabaseSteamAccount, PlanUsage, UserSession, UsersDAO } from "core"
+import { DatabaseSteamAccount, Persona, PlanUsage, UserSession, UsersDAO } from "core"
+import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 
 import { getCurrentPlanOrCreateOne } from "~/utils"
 
 export class UsersDAODatabase implements UsersDAO {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly getPersonaStateUseCase: GetPersonaStateUseCase
+  ) {}
 
   async getPlanId(userId: string): Promise<string | null> {
     const foundUser = await this.prisma.user.findUnique({
@@ -49,6 +53,24 @@ export class UsersDAODatabase implements UsersDAO {
 
     const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
 
+    const steamAccounts = await Promise.all(
+      dbUser.steamAccounts.map(async sa => {
+        let persona: Persona
+        const [error, foundPersona] = await this.getPersonaStateUseCase.execute({
+          accountName: sa.accountName,
+          userId: dbUser.id_user,
+        })
+        persona = error ? getDefaultPersona() : foundPersona
+        return {
+          accountName: sa.accountName,
+          games: null,
+          id_steamAccount: sa.id_steamAccount,
+          farmingGames: [],
+          ...persona,
+        }
+      })
+    )
+
     return {
       email: dbUser.email,
       id: dbUser.id_user,
@@ -73,13 +95,7 @@ export class UsersDAODatabase implements UsersDAO {
       purchases: dbUser.purchases.map(p => p.id_Purchase),
       role: dbUser.role,
       status: dbUser.status,
-      steamAccounts: dbUser.steamAccounts.map(sa => ({
-        accountName: sa.accountName,
-        games: null,
-        profilePictureUrl: null,
-        id_steamAccount: sa.id_steamAccount,
-        farmingGames: [],
-      })),
+      steamAccounts,
       username: dbUser.username,
     }
   }
@@ -99,5 +115,11 @@ export class UsersDAODatabase implements UsersDAO {
     }))
 
     return userSteamAccounts
+  }
+}
+
+function getDefaultPersona(): Persona {
+  return {
+    profilePictureUrl: null,
   }
 }

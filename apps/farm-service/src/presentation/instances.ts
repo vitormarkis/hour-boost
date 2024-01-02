@@ -4,6 +4,8 @@ import SteamUser from "steam-user"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
+import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
+import { RefreshPersonaStateUseCase } from "~/application/use-cases/RefreshPersonaStateUseCase"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import {
   StartFarmPlanHandler,
@@ -68,7 +70,15 @@ export const allUsersClientsStorage = new AllUsersClientsStorage(
   planRepository
 )
 
-export const usersDAO = new UsersDAODatabase(prisma)
+export const refreshPersonaState = new RefreshPersonaStateUseCase(
+  steamAccountClientStateCacheRepository,
+  allUsersClientsStorage
+)
+export const getPersonaStateUseCase = new GetPersonaStateUseCase(
+  steamAccountClientStateCacheRepository,
+  refreshPersonaState
+)
+export const usersDAO = new UsersDAODatabase(prisma, getPersonaStateUseCase)
 export const userAuthentication = new ClerkAuthentication(clerkClient)
 export const usersRepository = new UsersRepositoryDatabase(prisma)
 export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)
