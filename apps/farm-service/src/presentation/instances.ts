@@ -5,6 +5,7 @@ import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
+import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 import { RefreshPersonaStateUseCase } from "~/application/use-cases/RefreshPersonaStateUseCase"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import {
@@ -26,6 +27,7 @@ import {
 import { SteamAccountClientStateCacheRedis } from "~/infra/repository/SteamAccountClientStateCacheRedis"
 import { ClerkAuthentication } from "~/infra/services"
 import { FarmGamesController } from "~/presentation/controllers"
+import { RefreshGamesUseCase } from "~/presentation/presenters/RefreshGamesUseCase"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
@@ -78,7 +80,15 @@ export const getPersonaStateUseCase = new GetPersonaStateUseCase(
   steamAccountClientStateCacheRepository,
   refreshPersonaState
 )
-export const usersDAO = new UsersDAODatabase(prisma, getPersonaStateUseCase)
+export const refreshGamesUseCase = new RefreshGamesUseCase(
+  steamAccountClientStateCacheRepository,
+  allUsersClientsStorage
+)
+export const getUserSteamGamesUseCase = new GetUserSteamGamesUseCase(
+  steamAccountClientStateCacheRepository,
+  refreshGamesUseCase
+)
+export const usersDAO = new UsersDAODatabase(prisma, getPersonaStateUseCase, getUserSteamGamesUseCase)
 export const userAuthentication = new ClerkAuthentication(clerkClient)
 export const usersRepository = new UsersRepositoryDatabase(prisma)
 export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)

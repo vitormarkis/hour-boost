@@ -1,13 +1,15 @@
 import { PrismaClient } from "@prisma/client"
-import { DatabaseSteamAccount, Persona, PlanUsage, UserSession, UsersDAO } from "core"
+import { DatabaseSteamAccount, GameSession, Persona, PlanUsage, UserSession, UsersDAO } from "core"
 import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
+import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 
 import { getCurrentPlanOrCreateOne } from "~/utils"
 
 export class UsersDAODatabase implements UsersDAO {
   constructor(
     private readonly prisma: PrismaClient,
-    private readonly getPersonaStateUseCase: GetPersonaStateUseCase
+    private readonly getPersonaStateUseCase: GetPersonaStateUseCase,
+    private readonly getUserSteamGamesUseCase: GetUserSteamGamesUseCase
   ) {}
 
   async getPlanId(userId: string): Promise<string | null> {
@@ -55,15 +57,26 @@ export class UsersDAODatabase implements UsersDAO {
 
     const steamAccounts = await Promise.all(
       dbUser.steamAccounts.map(async sa => {
+        let games: GameSession[] | null
         let persona: Persona
-        const [error, foundPersona] = await this.getPersonaStateUseCase.execute({
-          accountName: sa.accountName,
-          userId: dbUser.id_user,
-        })
+        const [personaResponse, gamesResponse] = await Promise.all([
+          this.getPersonaStateUseCase.execute({
+            accountName: sa.accountName,
+            userId: dbUser.id_user,
+          }),
+          this.getUserSteamGamesUseCase.execute({
+            accountName: sa.accountName,
+            userId: dbUser.id_user,
+          }),
+        ])
+        const [gamesError, foundGames] = gamesResponse
+        const [error, foundPersona] = personaResponse
         persona = error ? getDefaultPersona() : foundPersona
+        games = gamesError ? null : foundGames.toJSON()
+
         return {
           accountName: sa.accountName,
-          games: null,
+          games,
           id_steamAccount: sa.id_steamAccount,
           farmingGames: [],
           ...persona,

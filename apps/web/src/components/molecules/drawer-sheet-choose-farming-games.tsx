@@ -120,6 +120,7 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
   })
 
   async function handleUpdateFarmingGames() {
+    if (!games) return
     try {
       console.log("[user context] start set farming games...")
       const isStoppingTheFarm = stageFarmingGames.length === 0
@@ -128,6 +129,8 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
         console.log("[user context] stop the farm")
       } else {
         await updateFarm.mutateAsync({ accountName, gamesID: stageFarmingGames, userId: user.id })
+        const gamesNames: string[] = stageFarmingGames.map(gameId => games.find(g => g.id === gameId)!.name)
+        toast.success(`Farmando os jogos ${gamesNames.join(", ")}.`)
         console.log("[user context] farmed games")
       }
       user.updateFarmingGames({
