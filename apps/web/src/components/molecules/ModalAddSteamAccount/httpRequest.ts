@@ -16,6 +16,6 @@ export async function httpCreateSteamAccount(
     payload
   )
   if (response.status === 202) return [new ApplicationError("Steam Guard needed.", 202), null]
-  if (response.data.steamAccountID) return [null, response.data.steamAccountID]
+  if (response.status === 201) return [null, response.data.steamAccountID]
   return [new ApplicationError("Erro desconhecido.", 500), null]
 }

@@ -143,10 +143,11 @@ export class SteamAccountClient extends LastHandler {
     this.gamesPlaying = gamesID
   }
 
-  login(accountName: string, password: string) {
+  login(accountName: string, password: string, authCode?: string) {
     this.client.logOn({
       accountName,
       password,
+      authCode,
     })
   }
 
@@ -179,7 +180,7 @@ export class SteamAccountClient extends LastHandler {
     const games: GameSession[] = apps.map(game => ({
       id: game.appid,
       imageUrl: getHeaderImageByGameId(game.appid),
-      name: game.name ?? "unnamed game"
+      name: game.name ?? "unnamed game",
     }))
     const userSteamGames = new AccountSteamGamesList(games)
     return [null, userSteamGames]

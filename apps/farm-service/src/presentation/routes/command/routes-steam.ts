@@ -1,7 +1,6 @@
-import { ClerkExpressRequireAuth, LooseAuthProp, WithAuthProp } from "@clerk/clerk-sdk-node"
+import { ClerkExpressRequireAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
 import { AddSteamAccount, ApplicationError } from "core"
 import { Request, Response, Router } from "express"
-import { ListUserSteamAccountsUseCase } from "~/application/use-cases/ListUserSteamAccountsUseCase"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
 import { prisma } from "~/infra/libs"
 import { UsersRepositoryDatabase } from "~/infra/repository"
@@ -22,7 +21,6 @@ import {
   publisher,
   steamAccountClientStateCacheRepository,
   steamAccountsRepository,
-  steamBuilder,
   usersClusterStorage,
   usersDAO,
   usersRepository,
@@ -40,7 +38,7 @@ type Resolved = {
 
 command_routerSteam.post(
   "/steam-accounts",
-  // ClerkExpressRequireAuth(),
+  ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
     const createSteamAccountController = new AddSteamAccountController(
       addSteamAccount,
@@ -52,8 +50,8 @@ command_routerSteam.post(
         payload: {
           accountName: req.body.accountName,
           password: req.body.password,
-          // userId: req.auth.userId!,
-          userId: req.body.userId,
+          userId: req.auth.userId!,
+          authCode: req.body.authCode,
         },
       })
     )

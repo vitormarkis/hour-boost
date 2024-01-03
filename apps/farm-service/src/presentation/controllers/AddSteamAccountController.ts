@@ -21,6 +21,7 @@ export namespace AddSteamAccountHandle {
     accountName: string
     password: string
     userId: string
+    authCode?: string
   }
 
   export type Response = {}
@@ -37,7 +38,7 @@ export class AddSteamAccountController
 
   async handle({ payload }: APayload): AResponse {
     const perform = async () => {
-      const { accountName, password, userId } = payload
+      const { accountName, password, userId, authCode } = payload
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
       const planId = await this.usersDAO.getPlanId(userId)
       if (!planId) throw new ApplicationError(`No planId found with userid ${userId} and planId ${planId}`)
@@ -68,7 +69,7 @@ export class AddSteamAccountController
           },
         } as HttpClient.Response
       }
-      sac.login(accountName, password)
+      sac.login(accountName, password, authCode)
 
       const steamClientEventsRequired = new SteamClientEventsRequired(sac, EVENT_PROMISES_TIMEOUT_IN_SECONDS)
 
