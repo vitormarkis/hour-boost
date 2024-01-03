@@ -1,6 +1,9 @@
+import { DashboardSteamAccountsList } from "@/components/layouts/DashboardSteamAccountsList"
 import { HeaderDashboard } from "@/components/layouts/Header/header-dashboard"
-import { ModalAddSteamAccount } from "@/components/molecules/modal-add-steam-account"
+import { ModalAddSteamAccount } from "@/components/molecules/ModalAddSteamAccount/controller"
 import { Button } from "@/components/ui/button"
+import { UserProvider } from "@/contexts/UserContext"
+import { api } from "@/lib/axios"
 import { UserSession } from "core"
 import { GetServerSideProps } from "next"
 
@@ -43,12 +46,4 @@ export default function DashboardPage({ user }: UserSessionParams) {
       </div>
     </UserProvider>
   )
-}
-
-import { DashboardSteamAccountsList } from "@/components/layouts/DashboardSteamAccountsList"
-import { UserProvider } from "@/contexts/UserContext"
-import { api } from "@/lib/axios"
-
-export function isResponseOK(status: number) {
-  return status >= 200 && status <= 299
 }
