@@ -1,5 +1,5 @@
-import crypto from "node:crypto"
+import { randomUUID } from "crypto"
 
 export function makeID() {
-  return crypto.randomUUID()
+  return randomUUID()
 }
