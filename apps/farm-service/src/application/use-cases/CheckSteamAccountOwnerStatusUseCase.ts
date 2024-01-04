@@ -6,7 +6,9 @@ export namespace CheckSteamAccountOwnerStatusUseCaseHandle {
     accountName: string
   }
 
-  export type Response = DataOrError<"NOT_OWNED" | "OWNED_BY_USER" | "OWNED_BY_OTHER_USER">
+  export type Response = DataOrError<
+    "NOT_OWNED" | "OWNED_BY_USER" | "OWNED_BY_OTHER_USER" | "NEVER_REGISTERED"
+  >
 }
 
 export class CheckSteamAccountOwnerStatusUseCase
@@ -22,9 +24,10 @@ export class CheckSteamAccountOwnerStatusUseCase
     try {
       const foundSteamAccount = await this.steamAccountsRepository.getByAccountName(accountName)
       if (foundSteamAccount instanceof SteamAccount) {
+        if (!foundSteamAccount.ownerId) return [null, "NOT_OWNED"]
         const userIsAccountOwner = foundSteamAccount.ownerId === userId
         return [null, userIsAccountOwner ? "OWNED_BY_USER" : "OWNED_BY_OTHER_USER"]
-      } else if (foundSteamAccount === null) return [null, "NOT_OWNED"]
+      } else if (foundSteamAccount == null) return [null, "NEVER_REGISTERED"]
       return [new ApplicationError("Erro desconhecido da aplicação.", 400), null]
     } catch (error) {
       return [new ApplicationError("Erro desconhecido no servidor.", 500), null]

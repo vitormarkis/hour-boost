@@ -65,9 +65,6 @@ export class AddSteamAccountController
         planId,
       })
 
-      console.log({
-        THIS_SAC_IS_LOGGED: sac.logged,
-      })
       if (sac.logged) {
         const { steamAccountID } = await this.addSteamAccount.execute({
           accountName,
