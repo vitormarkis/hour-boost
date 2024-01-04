@@ -71,16 +71,10 @@ export const ModalAddSteamAccountView = React.forwardRef<
     toast("Erro desconhecido.")
   }
 
-  const submitHandler: SubmitHandler<FormType> = async ({ accountName, password, authCode }) => {
-    console.log({
-      accountName,
-      password,
-      authCode,
-    })
+  const submitHandler: SubmitHandler<FormType> = async ({ accountName, authCode, password }) => {
     if (s.formStep === "CREDENTIALS") await handleCredentials(accountName, password)
     if (s.formStep === "STEAM-GUARD") await handleSteamGuard(accountName, password, authCode!)
     return
-    // createSteamAccount({ accountName, password })
   }
 
   return (

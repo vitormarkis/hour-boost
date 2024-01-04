@@ -7,7 +7,7 @@ export const formSchema = z
     authCode: z.string().length(5, "O código steam guard possui 5 dígitos.").or(z.literal("")),
   })
   .transform(({ authCode, ...rest }) => {
-    if (authCode == "") return rest
+    if (authCode == "") return { ...rest, authCode: undefined }
     return { authCode, ...rest }
   })
 
