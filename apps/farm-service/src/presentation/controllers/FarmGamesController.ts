@@ -76,6 +76,7 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
             "Steam Account não existe no banco de dados da Steam, delete essa conta e crie novamente.",
             error
           )
+        if (error.eresult === 5) return makeRes(403, "Conta ou senha incorretas.", error)
         return makeRes(400, "Aconteceu algum erro no client da Steam.", {
           eresult: error.eresult,
         })
