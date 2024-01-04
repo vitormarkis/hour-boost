@@ -10,10 +10,6 @@ export class AddSteamAccount {
   ) {}
 
   async execute(input: AddSteamAccountInput): Promise<AddSteamAccountOutput> {
-    const steamAccount = await this.steamAccountsRepository.getByAccountName(input.accountName)
-    if (steamAccount && steamAccount.ownerId !== input.userId) {
-      throw new ApplicationError("Essa conta da Steam já foi registrada por outro usuário.", 403)
-    }
     const user = await this.usersRepository.getByID(input.userId)
     if (!user) throw new ApplicationError("No user found!", 404)
     const newSteamAccount = SteamAccount.create({

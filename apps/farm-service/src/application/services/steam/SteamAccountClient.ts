@@ -89,7 +89,7 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("error", (...args) => {
       appendFile(
-        "sac-errors.txt",
+        "logs/sac-errors.txt",
         `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(...args)} \r\n`,
         () => {}
       )
@@ -102,7 +102,7 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("disconnected", (...args) => {
       appendFile(
-        "sac-disconnected.txt",
+        "logs/sac-disconnected.txt",
         `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(args)} \r\n`,
         () => {}
       )
