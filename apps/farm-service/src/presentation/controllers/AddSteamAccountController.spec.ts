@@ -1,163 +1,86 @@
+import { AddSteamAccount } from "core"
 import {
-  AddSteamAccount,
-  DiamondPlan,
-  IDGenerator,
-  PlanRepository,
-  SteamAccountClientStateCacheRepository,
-  SteamAccountsRepository,
-  User,
-} from "core"
-import { FarmServiceBuilder } from "~/application/factories"
-import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
-import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
-import { UsersDAOInMemory } from "~/infra/dao"
-import { Publisher } from "~/infra/queue"
-import {
-  PlanRepositoryInMemory,
-  SteamAccountClientStateCacheInMemory,
-  SteamAccountsRepositoryInMemory,
-  UsersInMemory,
-  UsersRepositoryInMemory,
-} from "~/infra/repository"
-import { AddSteamAccountController, promiseHandler } from "~/presentation/controllers"
-import {
-  EventEmitterBuilder,
-  SteamAccountClientBuilder,
-  SteamClientBuilder,
-  SteamUserMockBuilder,
-} from "~/utils/builders"
-import { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
-import { makeUser } from "~/utils/makeUser"
+  CustomInstances,
+  MakeTestInstancesProps,
+  makeTestInstances,
+  password,
+  testUsers as s,
+  validSteamAccounts,
+} from "~/__tests__/instances"
+import { PlanBuilder } from "~/application/factories/PlanFactory"
+import { AddSteamAccountController } from "~/presentation/controllers/"
+import { promiseHandler } from "~/presentation/controllers/promiseHandler"
+import { SteamUserMockBuilder } from "~/utils/builders"
 
-const TIMEOUT = 300
-
-const ME_ID = "123"
-const ME_USERNAME = "vitormarkis"
-
-const FRIEND_ID = "ABC"
-const FRIEND_USERNAME = "matheus"
 const log = console.log
+console.log = () => {}
 
-const validSteamAccounts = [
-  { accountName: "user1", password: "xx" },
-  { accountName: "user2", password: "xx" },
-  { accountName: "user3", password: "xx" },
-]
-
-let usersMemory: UsersInMemory
-let usersRepository: UsersRepositoryInMemory
-let steamAccountRepository: SteamAccountsRepository
-let addSteamAccount: AddSteamAccount
-let usersDAO: UsersDAOInMemory
-let sacBuilder: SteamAccountClientBuilder
-let allUsersClientsStorage: AllUsersClientsStorage
+let i = makeTestInstances({
+  validSteamAccounts,
+})
 let sut: AddSteamAccountController
-let me, friend: User
-let emitterBuilder: EventEmitterBuilder
-let usersClusterStorage: UsersSACsFarmingClusterStorage
-let publisher: Publisher
-let userClusterBuilder: UserClusterBuilder
-let steamUserBuilder: SteamClientBuilder
-let sacStateCacheRepository: SteamAccountClientStateCacheRepository
-let farmGamesUseCase: FarmGamesUseCase
-let farmServiceBuilder: FarmServiceBuilder
-let planRepository: PlanRepository
-let usageBuilder: UsageBuilder
+let meInstances = i.makeUserInstances("me", s.me)
+let friendInstances = i.makeUserInstances("friend", s.friend)
 
-const idGenerator: IDGenerator = {
-  makeID: () => "random",
+async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
+  i = makeTestInstances(props, customInstances)
+  meInstances = await i.createUser("me")
+  friendInstances = await i.createUser("friend")
+  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+
+  sut = new AddSteamAccountController(
+    addSteamAccount,
+    i.allUsersClientsStorage,
+    i.usersDAO,
+    i.checkSteamAccountOwnerStatusUseCase
+  )
+  i.usersMemory.dropAllSteamAccounts()
 }
 
 beforeEach(async () => {
-  console.log = () => {}
-  emitterBuilder = new EventEmitterBuilder()
-  publisher = new Publisher()
-  sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
-  steamUserBuilder = new SteamUserMockBuilder(validSteamAccounts)
-  usageBuilder = new UsageBuilder()
-  farmServiceBuilder = new FarmServiceBuilder({
-    publisher,
-    emitterBuilder,
+  await setupInstances({
+    validSteamAccounts,
   })
-  userClusterBuilder = new UserClusterBuilder(
-    farmServiceBuilder,
-    sacStateCacheRepository,
-    planRepository,
-    emitterBuilder,
-    publisher,
-    usageBuilder
-  )
-  usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
-  farmGamesUseCase = new FarmGamesUseCase(usersClusterStorage)
-  planRepository = new PlanRepositoryInMemory(usersMemory)
-  sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
-  allUsersClientsStorage = new AllUsersClientsStorage(
-    sacBuilder,
-    sacStateCacheRepository,
-    farmGamesUseCase,
-    planRepository
-  )
-  usersMemory = new UsersInMemory()
-  usersRepository = new UsersRepositoryInMemory(usersMemory)
-  steamAccountRepository = new SteamAccountsRepositoryInMemory(usersMemory)
-  addSteamAccount = new AddSteamAccount(usersRepository, steamAccountRepository, idGenerator)
-  me = makeUser(
-    ME_ID,
-    ME_USERNAME,
-    DiamondPlan.create({
-      ownerId: ME_ID,
-    })
-  )
-  friend = makeUser(
-    FRIEND_ID,
-    FRIEND_USERNAME,
-    DiamondPlan.create({
-      ownerId: FRIEND_ID,
-    })
-  )
-  usersDAO = new UsersDAOInMemory(usersMemory)
-  ;(sut = new AddSteamAccountController(addSteamAccount, allUsersClientsStorage, usersDAO)),
-    await usersRepository.create(me)
-  await usersRepository.create(friend)
 })
 
 describe("AddSteamAccountController test suite", () => {
   describe("not mobile", () => {
     test("should add new account in case it exists on steam database", async () => {
-      const dbMe = await usersRepository.getByID(ME_ID)
+      const dbMe = await i.usersRepository.getByID(s.me.userId)
       expect(dbMe?.steamAccounts.data).toHaveLength(0)
       const { status, json } = await promiseHandler(
         sut.handle({
           payload: {
-            accountName: "user1",
-            password: "xx",
-            userId: ME_ID,
+            accountName: s.me.accountName,
+            password,
+            userId: s.me.userId,
           },
         })
       )
-      const dbMe2 = await usersRepository.getByID(ME_ID)
+      const dbMe2 = await i.usersRepository.getByID(s.me.userId)
       expect(dbMe2?.steamAccounts.data).toHaveLength(1)
-      expect(json).toStrictEqual({
-        message: "user1 adicionada com sucesso!",
-        steamAccountID: "random",
-      })
+      expect(typeof json.steamAccountID).toBe("string")
+      expect(json).toStrictEqual(
+        expect.objectContaining({
+          message: `${s.me.accountName} adicionada com sucesso!`,
+        })
+      )
       expect(status).toBe(201)
     })
 
     test("should reject if provided account don't exist on steam database", async () => {
-      const dbMe = await usersRepository.getByID(ME_ID)
+      const dbMe = await i.usersRepository.getByID(s.me.userId)
       expect(dbMe!.steamAccounts.data).toHaveLength(0)
       const { status, json } = await promiseHandler(
         sut.handle({
           payload: {
             accountName: "random_user",
             password: "xx",
-            userId: ME_ID,
+            userId: s.me.userId,
           },
         })
       )
-      const dbMe2 = await usersRepository.getByID(ME_ID)
+      const dbMe2 = await i.usersRepository.getByID(s.me.userId)
       expect(dbMe2!.steamAccounts.data).toHaveLength(0)
       expect(json).toStrictEqual(
         expect.objectContaining({
@@ -167,44 +90,75 @@ describe("AddSteamAccountController test suite", () => {
       expect(status).toBe(404)
     })
 
-    test("should reject when user attempts to add an account he already has", async () => {
-      await sut.handle({
-        payload: { accountName: "user1", password: "xx", userId: ME_ID },
+    describe("plan diamond test suite", () => {
+      beforeEach(async () => {
+        const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
+        await i.changeUserPlan(diamondPlan)
       })
-      const dbMe = await usersRepository.getByID(ME_ID)
-      expect(dbMe?.steamAccounts.data).toHaveLength(1)
-      expect(dbMe?.plan.maxSteamAccounts).toBe(2)
-      const { status, json } = await sut.handle({
-        payload: {
-          accountName: "user1",
-          password: "xx",
-          userId: ME_ID,
-        },
+
+      test("should reject when user attempts to add more accounts than his plan allows", async () => {
+        await sut.handle({
+          payload: { accountName: s.me.accountName, password, userId: s.me.userId },
+        })
+        await sut.handle({
+          payload: { accountName: s.me.accountName2, password, userId: s.me.userId },
+        })
+        const dbMe = await i.usersRepository.getByID(s.me.userId)
+        expect(dbMe?.steamAccounts.data).toHaveLength(2)
+        const { status, json } = await sut.handle({
+          payload: {
+            accountName: s.me.accountName3,
+            password,
+            userId: s.me.userId,
+          },
+        })
+        const dbMe2 = await i.usersRepository.getByID(s.me.userId)
+        expect(dbMe2?.steamAccounts.data).toHaveLength(2)
+        expect(json).toStrictEqual({
+          message: "Você já adicionou o máximo de contas que seu plano permite!",
+        })
+        expect(status).toBe(400)
       })
-      const dbMe2 = await usersRepository.getByID(ME_ID)
-      expect(dbMe2?.steamAccounts.data).toHaveLength(1)
-      expect(json).toStrictEqual({
-        message: "Você já possui essa conta cadastrada!",
+
+      test("should reject when user attempts to add an account he already has", async () => {
+        await sut.handle({
+          payload: { accountName: s.me.accountName, password, userId: s.me.userId },
+        })
+        const dbMe = await i.usersRepository.getByID(s.me.userId)
+        expect(dbMe?.steamAccounts.data).toHaveLength(1)
+        expect(dbMe?.plan.maxSteamAccounts).toBe(2)
+        const { status, json } = await sut.handle({
+          payload: {
+            accountName: s.me.accountName,
+            password,
+            userId: s.me.userId,
+          },
+        })
+        const dbMe2 = await i.usersRepository.getByID(s.me.userId)
+        expect(dbMe2?.steamAccounts.data).toHaveLength(1)
+        expect(json).toStrictEqual({
+          message: "Você já possui essa conta cadastrada.",
+        })
+        expect(status).toBe(400)
       })
-      expect(status).toBe(400)
     })
 
     test("should reject when user attempts to add an account that is already owned by other user", async () => {
       await promiseHandler(
         sut.handle({
           payload: {
-            accountName: "user1",
-            password: "xx",
-            userId: ME_ID,
+            accountName: s.me.accountName,
+            password,
+            userId: s.me.userId,
           },
         })
       )
       const { status, json } = await promiseHandler(
         sut.handle({
           payload: {
-            accountName: "user1",
-            password: "xx",
-            userId: FRIEND_ID,
+            accountName: s.me.accountName,
+            password,
+            userId: s.friend.userId,
           },
         })
       )
@@ -213,30 +167,6 @@ describe("AddSteamAccountController test suite", () => {
         message: "Essa conta da Steam já foi registrada por outro usuário.",
       })
       expect(status).toBe(403)
-    })
-
-    test("should reject when user attempts to add more accounts than his plan allows", async () => {
-      await sut.handle({
-        payload: { accountName: "user1", password: "xx", userId: ME_ID },
-      })
-      await sut.handle({
-        payload: { accountName: "user2", password: "xx", userId: ME_ID },
-      })
-      const dbMe = await usersRepository.getByID(ME_ID)
-      expect(dbMe?.steamAccounts.data).toHaveLength(2)
-      const { status, json } = await sut.handle({
-        payload: {
-          accountName: "user3",
-          password: "xx",
-          userId: ME_ID,
-        },
-      })
-      const dbMe2 = await usersRepository.getByID(ME_ID)
-      expect(dbMe2?.steamAccounts.data).toHaveLength(2)
-      expect(json).toStrictEqual({
-        message: "Você já adicionou o máximo de contas que seu plano permite!",
-      })
-      expect(status).toBe(400)
     })
 
     test.skip("should ask for steam guard if asked", async () => {
@@ -249,19 +179,21 @@ describe("AddSteamAccountController test suite", () => {
   })
 
   describe("mobile", () => {
-    test("should asks user for the steam guard", async () => {
-      steamUserBuilder = new SteamUserMockBuilder(validSteamAccounts, true)
-      sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
-      allUsersClientsStorage = new AllUsersClientsStorage(
-        sacBuilder,
-        sacStateCacheRepository,
-        farmGamesUseCase,
-        planRepository
+    beforeEach(async () => {
+      await setupInstances(
+        {
+          validSteamAccounts,
+        },
+        {
+          steamUserBuilder: new SteamUserMockBuilder(validSteamAccounts, true),
+        }
       )
-      sut = new AddSteamAccountController(addSteamAccount, allUsersClientsStorage, usersDAO)
+    })
+
+    test("should asks user for the steam guard", async () => {
       const { status, json } = await promiseHandler(
         sut.handle({
-          payload: { accountName: "user1", password: "xx", userId: ME_ID },
+          payload: { accountName: s.me.accountName, password, userId: s.me.userId },
         })
       )
 

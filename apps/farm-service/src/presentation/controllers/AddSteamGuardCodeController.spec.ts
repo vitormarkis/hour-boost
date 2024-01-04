@@ -34,7 +34,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   addSteamAccountController = new AddSteamAccountController(
     addSteamAccount,
     i.allUsersClientsStorage,
-    i.usersDAO
+    i.usersDAO,
+    i.checkSteamAccountOwnerStatusUseCase
   )
 }
 

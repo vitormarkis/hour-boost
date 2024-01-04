@@ -15,6 +15,7 @@ import { AddSteamGuardCodeController } from "~/presentation/controllers/AddSteam
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import {
   allUsersClientsStorage,
+  checkSteamAccountOwnerStatusUseCase,
   farmGamesUseCase,
   idGenerator,
   planRepository,
@@ -43,7 +44,8 @@ command_routerSteam.post(
     const createSteamAccountController = new AddSteamAccountController(
       addSteamAccount,
       allUsersClientsStorage,
-      usersDAO
+      usersDAO,
+      checkSteamAccountOwnerStatusUseCase
     )
     const { json, status } = await promiseHandler(
       createSteamAccountController.handle({

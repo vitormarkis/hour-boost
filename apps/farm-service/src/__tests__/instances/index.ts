@@ -13,6 +13,7 @@ import { makeSACFactory } from "~/__tests__/factories"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
+import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
@@ -23,7 +24,6 @@ import {
   UsersInMemory,
   UsersRepositoryInMemory,
 } from "~/infra/repository"
-import { SteamAccountClientStateCacheRedis } from "~/infra/repository/SteamAccountClientStateCacheRedis"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
 import { SteamUserMockBuilder } from "~/utils/builders/SteamMockBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
@@ -35,6 +35,7 @@ export const validSteamAccounts: SteamAccountCredentials[] = [
   { accountName: "paco", password },
   { accountName: "fred", password },
   { accountName: "bane", password },
+  { accountName: "plan", password },
 ]
 
 const idGenerator = new IDGeneratorUUID()
@@ -74,12 +75,13 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     usageBuilder
   )
   const usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
-  const farmGamesUseCase = new FarmGamesUseCase(usersClusterStorage)
   const usersRepository = new UsersRepositoryInMemory(usersMemory)
   const steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)
   const usersDAO = new UsersDAOInMemory(usersMemory)
   const steamUserBuilder = ci?.steamUserBuilder ?? new SteamUserMockBuilder(validSteamAccounts)
   const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
+  const farmGamesUseCase = new FarmGamesUseCase(usersClusterStorage)
+  const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(steamAccountsRepository)
   const allUsersClientsStorage = new AllUsersClientsStorage(
     sacBuilder,
     sacStateCacheRepository,
@@ -150,7 +152,9 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     steamAccountsRepository,
     planRepository,
     farmGamesUseCase,
+    checkSteamAccountOwnerStatusUseCase,
     redis,
+    idGenerator,
     makeUserInstances<P extends TestUsers>(prefix: P, props: TestUserProperties) {
       return userInstancesBuilder.create(prefix, props)
     },

@@ -3,16 +3,17 @@ import { IDGeneratorUUID } from "core"
 import SteamUser from "steam-user"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 import { RefreshPersonaStateUseCase } from "~/application/use-cases/RefreshPersonaStateUseCase"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import {
-  StartFarmPlanHandler,
-  LogSteamStopFarmHandler,
   LogSteamStartFarmHandler,
+  LogSteamStopFarmHandler,
   PersistFarmSessionUsageHandler,
+  StartFarmPlanHandler,
 } from "~/domain/handler"
 import { PersistFarmSessionInfinityHandler } from "~/domain/handler/PersistFarmSessionInfinityHandler"
 import { UsersDAODatabase } from "~/infra/dao"
@@ -26,7 +27,6 @@ import {
 } from "~/infra/repository"
 import { SteamAccountClientStateCacheRedis } from "~/infra/repository/SteamAccountClientStateCacheRedis"
 import { ClerkAuthentication } from "~/infra/services"
-import { FarmGamesController } from "~/presentation/controllers"
 import { RefreshGamesUseCase } from "~/presentation/presenters/RefreshGamesUseCase"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
@@ -88,11 +88,15 @@ export const getUserSteamGamesUseCase = new GetUserSteamGamesUseCase(
   steamAccountClientStateCacheRepository,
   refreshGamesUseCase
 )
+
 export const usersDAO = new UsersDAODatabase(prisma, getPersonaStateUseCase, getUserSteamGamesUseCase)
 export const userAuthentication = new ClerkAuthentication(clerkClient)
 export const usersRepository = new UsersRepositoryDatabase(prisma)
 export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)
 export const idGenerator = new IDGeneratorUUID()
+export const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(
+  steamAccountsRepository
+)
 
 publisher.register(new PersistFarmSessionUsageHandler(planRepository, usageBuilder))
 publisher.register(new PersistFarmSessionInfinityHandler(planRepository, usageBuilder))

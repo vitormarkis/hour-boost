@@ -1,6 +1,7 @@
 import { AddSteamAccount, ApplicationError, Controller, HttpClient, UsersDAO } from "core"
 import { AllUsersClientsStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
+import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { EventParameters } from "~/infra/services"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
@@ -33,16 +34,29 @@ export class AddSteamAccountController
   constructor(
     private readonly addSteamAccount: AddSteamAccount,
     private readonly allUsersClientsStorage: AllUsersClientsStorage,
-    private readonly usersDAO: UsersDAO
+    private readonly usersDAO: UsersDAO,
+    private readonly checkSteamAccountOwnerStatusUseCase: CheckSteamAccountOwnerStatusUseCase
   ) {}
 
   async handle({ payload }: APayload): AResponse {
     const perform = async () => {
       const { accountName, password, userId, authCode } = payload
       const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
+
       const planId = await this.usersDAO.getPlanId(userId)
-      if (!planId) throw new ApplicationError(`No planId found with userid ${userId} and planId ${planId}`)
-      if (!username) throw new ApplicationError("No user found with this ID.")
+      if (!planId)
+        throw new ApplicationError(`Nenhum plano encontrado para userId: [${userId}] com planId: [${planId}]`)
+      if (!username) throw new ApplicationError("Nenhum usuário encontrado com esse id.")
+
+      const [error, accountOwnerStatus] = await this.checkSteamAccountOwnerStatusUseCase.execute({
+        accountName,
+        userId,
+      })
+      if (error) throw error
+      if (accountOwnerStatus === "OWNED_BY_OTHER_USER")
+        throw new ApplicationError("Essa conta da Steam já foi registrada por outro usuário.", 403)
+      if (accountOwnerStatus === "OWNED_BY_USER")
+        throw new ApplicationError("Você já possui essa conta cadastrada.")
 
       const sac = this.allUsersClientsStorage.getOrAddSteamAccount({
         accountName,
