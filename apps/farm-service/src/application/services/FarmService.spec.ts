@@ -1,6 +1,6 @@
 let farmService: FarmService
 
-import { PlanType } from "core"
+import { DataOrError, PlanType } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
@@ -97,15 +97,17 @@ class FarmServiceImpl extends FarmService {
     return {}
   }
   protected publishCompleteFarmSession(): void {}
-  farmWithAccountImpl(accountName: string): void {
+  farmWithAccountImpl(accountName: string): DataOrError<null> {
     if (this.accountsFarming.size === 0) {
       this.status = "FARMING"
     }
+    return [null, null]
   }
 
   type: PlanType = "USAGE"
-  protected startFarm(): void {
+  protected startFarm(): DataOrError<null> {
     this.status = "FARMING"
+    return [null, null]
   }
   protected stopFarm(): void {
     for (const [_, acc] of this.accountsFarming) {

@@ -1,7 +1,6 @@
 import { ApplicationError, PlanRepository, SteamAccountClientStateCacheRepository } from "core"
 import { SteamAccountClient } from "~/application/services/steam"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
-import { FarmGamesController } from "~/presentation/controllers"
 import { Logger } from "~/utils/Logger"
 
 type AccountName = string
@@ -62,7 +61,7 @@ export class UserClientsStorage {
           this.logger.log("Plan not found! Contact the developer.", { planId, accountName })
           return
         }
-        await this.farmGamesUseCase.execute({
+        const [error] = await this.farmGamesUseCase.execute({
           accountName,
           gamesId: gamesPlaying,
           plan,
@@ -70,6 +69,7 @@ export class UserClientsStorage {
           sac,
           username,
         })
+        console.log("data or error: failed to farm games when restored session. ", error)
       }
     })
 

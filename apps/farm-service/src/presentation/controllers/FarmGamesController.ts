@@ -108,7 +108,7 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
     const noNewGameAddToFarm = areTwoArraysEqual(gamesID, sac.getGamesPlaying())
     if (noNewGameAddToFarm) return makeRes(200, "Nenhum novo game adicionado ao farm.")
 
-    await this.farmGamesUseCase.execute({
+    const [error] = await this.farmGamesUseCase.execute({
       accountName,
       gamesId: gamesID,
       plan: user.plan,
@@ -116,6 +116,8 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
       sac,
       username: user.username,
     })
+
+    if (error) throw error
 
     return makeRes(200, "Iniciando farm.")
   }

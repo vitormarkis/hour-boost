@@ -197,9 +197,8 @@ describe("FarmUsageService test suite", () => {
     expect(plan.getUsageTotal()).toBe(21600)
     const farmService = getFarmService(meInstances.me)
 
-    expect(() => {
-      farmService.farmWithAccount(s.me.accountName)
-    }).toThrow("Seu plano não possui mais uso disponível.")
+    const [error] = farmService.farmWithAccount(s.me.accountName)
+    expect(error?.message).toBe("Seu plano não possui mais uso disponível.")
   })
 
   // test("should throw when plan infinity attemps to use the service", async () => {

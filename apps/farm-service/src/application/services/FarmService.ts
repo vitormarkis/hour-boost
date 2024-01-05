@@ -1,7 +1,6 @@
 const log = console.log
 
-import { ApplicationError, PlanType } from "core"
-import { UserHasStartFarmingCommand } from "~/application/commands"
+import { DataOrError, PlanType } from "core"
 import { FarmServiceStatus } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 
@@ -82,8 +81,9 @@ export abstract class FarmService {
     return !!this.getAccountDetails(accountName)
   }
 
-  farmWithAccount(accountName: string): void {
-    this.farmWithAccountImpl(accountName)
+  farmWithAccount(accountName: string): DataOrError<null> {
+    const [error] = this.farmWithAccountImpl(accountName)
+    if (error) return [error, null]
 
     console.log(`farm-service: is ${accountName} added? `, this.isAccountAdded(accountName))
     if (!this.isAccountAdded(accountName)) {
@@ -93,9 +93,10 @@ export abstract class FarmService {
     }
     if (this.isAccountAdded(accountName)) this.resumeFarming(accountName)
     else this.appendAccount(accountName)
+    return [null, null]
   }
 
-  abstract farmWithAccountImpl(accountName: string): void
+  abstract farmWithAccountImpl(accountName: string): DataOrError<null>
 
   getServiceStatus() {
     return this.status
@@ -107,7 +108,7 @@ export abstract class FarmService {
 
   protected abstract publishCompleteFarmSession(): void
 
-  protected abstract startFarm(): void
+  protected abstract startFarm(): DataOrError<null>
   protected abstract stopFarm(): void
   abstract pauseFarmOnAccount(accountName: string): void
 

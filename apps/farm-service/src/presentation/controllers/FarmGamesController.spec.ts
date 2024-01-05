@@ -1,5 +1,4 @@
 import { GuestPlan, PlanUsage, Usage } from "core"
-jest.setTimeout(1000)
 import {
   CustomInstances,
   MakeTestInstancesProps,
@@ -15,11 +14,11 @@ import { StopFarmController, promiseHandler } from "~/presentation/controllers"
 import { FarmGamesController } from "~/presentation/controllers/FarmGamesController"
 import { SteamUserMockBuilder } from "~/utils/builders"
 import { makeUser } from "~/utils/makeUser"
-import { promiseRace } from "~/utils/promiseRace"
+jest.setTimeout(1000)
 
 const now = new Date("2023-06-10T10:00:00Z")
-// const log = console.log
-// console.log = () => {}
+const log = console.log
+console.log = () => {}
 
 let i = makeTestInstances({
   validSteamAccounts,
@@ -383,7 +382,8 @@ describe("not mobile", () => {
     expect((meInstances.me.plan as PlanUsage).getUsageLeft()).toBe(0)
     expect((meInstances.me.plan as PlanUsage).getUsageTotal()).toBe(21600)
 
-    await promiseHandler(
+    console.log = log
+    const res = await promiseHandler(
       farmGamesController.handle({
         payload: {
           userId: s.me.userId,
@@ -392,6 +392,8 @@ describe("not mobile", () => {
         },
       })
     )
+    console.log(res)
+    console.log = () => {}
 
     const me2 = await i.usersRepository.getByID(s.me.userId)
     if (!me2) throw new Error("User not found.")

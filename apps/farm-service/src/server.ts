@@ -1,17 +1,10 @@
 import { LooseAuthProp } from "@clerk/clerk-sdk-node"
-import { IRefreshToken } from "core"
 import cors from "cors"
 import "dotenv/config"
 import express, { Application, NextFunction, Request, Response } from "express"
-import { SteamAccountClientStateCacheRedis } from "~/infra/repository/SteamAccountClientStateCacheRedis"
-import { FarmGamesController } from "~/presentation/controllers"
 import {
   allUsersClientsStorage,
-  planRepository,
-  publisher,
-  steamAccountClientStateCacheRepository,
-  usersClusterStorage,
-  usersRepository,
+  steamAccountClientStateCacheRepository
 } from "~/presentation/instances"
 
 declare global {
@@ -59,7 +52,8 @@ interface RestoreSessionSchema {
 }
 
 async function main() {
-  const logger = new Logger("MAIN")
+  try {
+    const logger = new Logger("MAIN")
   const loggedUsersKeys = await steamAccountClientStateCacheRepository.getUsersRefreshToken()
   logger.log("got accounts keys ", loggedUsersKeys)
   const sessionsSchema = loggedUsersKeys.reduce((acc, key) => {
@@ -90,6 +84,9 @@ async function main() {
     const sac = allUsersClientsStorage.addSteamAccountFrom0({ accountName, userId, username, planId })
     logger.log(`Restoring session for account [${accountName}].`)
     sac.loginWithToken(refreshToken)
+  }
+  } catch(error) {
+    console.log("main error", error)
   }
 }
 

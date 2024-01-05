@@ -1,7 +1,6 @@
-import { ApplicationError, PlanInfinity, PlanType, Usage } from "core"
+import { ApplicationError, DataOrError, PlanInfinity, PlanType } from "core"
 import { UserCompletedFarmSessionInfinityCommand } from "~/application/commands/UserCompletedFarmSessionInfinityCommand"
 import { AccountStatusList, FarmService } from "~/application/services/FarmService"
-import { getUsageAmountTimeFromDateRange } from "~/domain/utils/getUsageAmountTimeFromDateRange"
 import { Publisher } from "~/infra/queue"
 
 export type FarmInfinityAccountStatus = {
@@ -33,16 +32,14 @@ export class FarmInfinityService extends FarmService {
     return accountStatusList
   }
 
-  farmWithAccountImpl(accountName: string): void {
+  farmWithAccountImpl(accountName: string): DataOrError<null> {
     this.farmingAccounts.set(accountName, {
       accountName,
       startedAt: new Date(),
     })
+    return [null, null]
   }
 
-  protected startFarm(): void {
-    throw new Error("Method not implemented.")
-  }
   protected stopFarm(): void {
     this.publishCompleteFarmSession()
     this.farmingAccounts.clear()
@@ -65,6 +62,10 @@ export class FarmInfinityService extends FarmService {
   private getAccount(accountName: string): FarmInfinityAccountStatus | null {
     const foundAccount = this.farmingAccounts.get(accountName)
     return foundAccount ?? null
+  }
+
+  protected startFarm(): DataOrError<null> {
+    return [new ApplicationError("Method not implemented.", 400), null]
   }
 
   pauseFarmOnAccount(accountName: string): void {

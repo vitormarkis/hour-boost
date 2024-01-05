@@ -1,4 +1,4 @@
-import { ApplicationError, PlanType, PlanUsage } from "core"
+import { ApplicationError, DataOrError, PlanType, PlanUsage } from "core"
 
 import { UserCompletedFarmSessionUsageCommand, UserHasStartFarmingCommand } from "~/application/commands"
 import { EventEmitter, UserClusterEvents } from "~/application/services"
@@ -59,9 +59,10 @@ export class FarmUsageService extends FarmService {
     )
   }
 
-  startFarm(): void {
+  startFarm(): DataOrError<null> {
     this.status = "FARMING"
-    if (this.usageLeft <= 0) throw new ApplicationError("Seu plano não possui mais uso disponível.", 403)
+    if (this.usageLeft <= 0)
+      return [new ApplicationError("Seu plano não possui mais uso disponível.", 403), null]
     this.farmingInterval = setInterval(() => {
       const allAccountsFarmedTotalAmount = this.FARMING_GAP * this.getActiveFarmingAccountsAmount()
       const individualAccountFarmedAmount = this.FARMING_GAP
@@ -83,6 +84,8 @@ export class FarmUsageService extends FarmService {
         userId: this.userId,
       })
     )
+
+    return [null, null]
   }
 
   stopFarm() {
@@ -113,7 +116,7 @@ export class FarmUsageService extends FarmService {
     return accountStatus
   }
 
-  farmWithAccountImpl(accountName: string): void {
+  farmWithAccountImpl(accountName: string): DataOrError<null> {
     if (this.getActiveFarmingAccountsAmount() === 0) {
       this.publisher.publish(
         new UserHasStartFarmingCommand({
@@ -122,8 +125,9 @@ export class FarmUsageService extends FarmService {
           when: new Date(),
         })
       )
-      this.startFarm()
+      return this.startFarm()
     }
+    return [null, null]
   }
 
   private addUsageToAccount(usageAmount: number) {

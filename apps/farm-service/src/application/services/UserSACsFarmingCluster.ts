@@ -1,4 +1,10 @@
-import { ApplicationError, PlanRepository, SACStateCache, SteamAccountClientStateCacheRepository } from "core"
+import {
+  ApplicationError,
+  DataOrError,
+  PlanRepository,
+  SACStateCache,
+  SteamAccountClientStateCacheRepository,
+} from "core"
 import { FarmServiceBuilder } from "~/application/factories"
 import { EventEmitter, FarmService, SACList } from "~/application/services"
 import { SACStateCacheFactory, SteamAccountClient } from "~/application/services/steam"
@@ -88,29 +94,49 @@ export class UserSACsFarmingCluster {
     return !!this.sacList.has(accountName)
   }
 
-  async farmWithAccount(accountName: string, gamesId: number[], planId: string) {
-    const sac = this.sacList.get(accountName)
-    if (!sac)
-      throw new ApplicationError(
-        `[SAC Cluster.startFarm()]: Tried to start farm, but no SAC was found with name: ${accountName}. This account never logged on the application, or don't belong to the user ${this.username}.`
-      )
+  async farmWithAccount(accountName: string, gamesId: number[], planId: string): Promise<DataOrError<null>> {
+    try {
+      const sac = this.sacList.get(accountName)
+      if (!sac)
+        return [
+          new ApplicationError(
+            `[SAC Cluster.startFarm()]: Tried to start farm, but no SAC was found with name: ${accountName}. This account never logged on the application, or don't belong to the user ${this.username}.`
+          ),
+          null,
+        ]
 
-    if (!this.farmService.hasAccountsFarming()) {
-      const plan = await this.planRepository.getById(planId)
-      if (!plan) {
-        throw new ApplicationError(`NSTH: ID do plano não existe, contate o desenvolvedor. ${planId}`)
+      if (!this.farmService.hasAccountsFarming()) {
+        const plan = await this.planRepository.getById(planId)
+        if (!plan) {
+          return [
+            new ApplicationError(`NSTH: ID do plano não existe, contate o desenvolvedor. ${planId}`),
+            null,
+          ]
+        }
+        const newFarmService = this.farmServiceFactory.create(this.username, plan)
+        this.setFarmService(newFarmService)
       }
-      const newFarmService = this.farmServiceFactory.create(this.username, plan)
-      this.setFarmService(newFarmService)
+      await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId, planId, sac.username)
+      return this.farmWithAccountImpl(sac, accountName, gamesId)
+    } catch (error) {
+      console.log({ "usersFarmingCluster.farmWithAccount.error": error })
+      if (error instanceof Error) {
+        return [new ApplicationError(error.message), null]
+      }
+      return [new ApplicationError("Erro desconhecido"), null]
     }
-    await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId, planId, sac.username)
-    this.farmWithAccountImpl(sac, accountName, gamesId)
   }
 
-  private farmWithAccountImpl(sac: SteamAccountClient, accountName: string, gamesId: number[]) {
+  private farmWithAccountImpl(
+    sac: SteamAccountClient,
+    accountName: string,
+    gamesId: number[]
+  ): DataOrError<null> {
     this.logger.log(`Appending account to farm on service: `, accountName)
-    this.farmService.farmWithAccount(accountName)
+    const [error] = this.farmService.farmWithAccount(accountName)
+    if (error) return [error, null]
     sac.farmGames(gamesId)
+    return [null, null]
   }
 
   pauseFarmOnAccount(accountName: string) {
