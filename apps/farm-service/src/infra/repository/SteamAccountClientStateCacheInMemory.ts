@@ -46,6 +46,14 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
     }
   }
 
+  async stopFarm(accountName: string): Promise<void> {
+    let foundState = this.state.get(accountName)
+    if (!foundState) return
+    foundState.gamesPlaying = []
+    foundState.isFarming = false
+    this.state.set(accountName, foundState)
+  }
+
   async setPlayingGames(accountName: string, gamesId: number[]): Promise<void> {
     const prev = this.state.get(accountName)
     if (!prev) return

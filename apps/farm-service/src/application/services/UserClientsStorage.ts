@@ -69,7 +69,10 @@ export class UserClientsStorage {
           sac,
           username,
         })
-        console.log("data or error: failed to farm games when restored session. ", error)
+        if (error?.code === "PLAN_MAX_USAGE_EXCEEDED") {
+          console.log(`Parando farm na conta ${accountName}.`)
+          await this.sacStateCacheRepository.stopFarm(accountName)
+        }
       }
     })
 

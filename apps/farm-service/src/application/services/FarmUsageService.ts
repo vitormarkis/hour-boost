@@ -61,8 +61,17 @@ export class FarmUsageService extends FarmService {
 
   startFarm(): DataOrError<null> {
     this.status = "FARMING"
-    if (this.usageLeft <= 0)
-      return [new ApplicationError("Seu plano não possui mais uso disponível.", 403), null]
+    if (this.usageLeft <= 0) {
+      return [
+        new ApplicationError(
+          "Seu plano não possui mais uso disponível.",
+          403,
+          undefined,
+          "PLAN_MAX_USAGE_EXCEEDED"
+        ),
+        null,
+      ]
+    }
     this.farmingInterval = setInterval(() => {
       const allAccountsFarmedTotalAmount = this.FARMING_GAP * this.getActiveFarmingAccountsAmount()
       const individualAccountFarmedAmount = this.FARMING_GAP

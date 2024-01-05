@@ -22,6 +22,15 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
     this.logger = new Logger(`State Redis`)
   }
 
+  async stopFarm(accountName: string): Promise<void> {
+    const key = this.KEY_STATE(accountName)
+    await this.redis
+      .multi()
+      .call("JSON.SET", key, "$.gamesPlaying", "[]")
+      .call("JSON.SET", key, "$.isFarming", "false")
+      .exec()
+  }
+
   async getPersona(accountName: string): Promise<SteamAccountPersonaState | null> {
     const key = this.KEY_ACCOUNT_PERSONA(accountName)
     const foundState = (await this.redis.call("JSON.GET", key, "$")) as string | null
