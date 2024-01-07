@@ -10,72 +10,73 @@ import {
 } from "@/components/ui/dialog"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { DataOrMessage } from "@/util/DataOrMessage"
 import { UseMutationResult } from "@tanstack/react-query"
-import { DataOrError } from "core"
 import React from "react"
 import type { SubmitHandler, UseFormReturn } from "react-hook-form"
 import { toast } from "sonner"
 import { CreateSteamAccountPayload } from "./controller"
 import { FormType } from "./form"
-import { useStater } from "./stater"
+import { IFormController, IFormSteps, useStater } from "./stater"
+
+export type IntentionCodes = "STEAM_GUARD_REQUIRED" | "SUCCESS"
 
 export type ModalAddSteamAccountViewProps = {
   children: React.ReactNode
-  createSteamAccount: UseMutationResult<DataOrError<string>, Error, CreateSteamAccountPayload, unknown>
+  createSteamAccount: UseMutationResult<
+    DataOrMessage<string, IntentionCodes>,
+    Error,
+    CreateSteamAccountPayload,
+    unknown
+  >
   form: UseFormReturn<FormType>
   resetAllFields(): void
+  clearField: (field: keyof FormType) => void
 }
 
 export const ModalAddSteamAccountView = React.forwardRef<
   React.ElementRef<"form">,
   ModalAddSteamAccountViewProps
->(function ModalAddSteamAccountViewComponent({ form, resetAllFields, createSteamAccount, children }, ref) {
-  const s = useStater(form.watch("accountName"), resetAllFields)
+>(function ModalAddSteamAccountViewComponent(
+  { form, clearField, resetAllFields, createSteamAccount, children },
+  ref
+) {
+  const s = useStater(form.watch("accountName"), resetAllFields, clearField)
 
-  const handleCredentials = async (accountName: string, password: string) => {
-    s.form.steps["CREDENTIALS"].submit()
-    const [error, steamAccountId] = await createSteamAccount.mutateAsync({
-      accountName,
-      password,
-    })
-    s.form.steps["CREDENTIALS"].resolveSubmit()
-    if (typeof steamAccountId === "string") {
-      toast.success("Conta adicionada com sucesso.")
-      s.closeModal()
-      return
-    }
-    if (error.status == 202) {
-      s.requireSteamGuard()
-      return toast("Steam Guard requerido.")
-    }
-    console.log(error, steamAccountId)
-    toast("Erro desconhecido.")
-  }
-
-  const handleSteamGuard = async (accountName: string, password: string, authCode: string) => {
-    s.form.steps["STEAM-GUARD"].submit()
-    const [error, steamAccountId] = await createSteamAccount.mutateAsync({
+  const handleFormSubmit = async (
+    formController: IFormController,
+    accountName: string,
+    password: string,
+    authCode: string | undefined
+  ) => {
+    formController.submit()
+    const [undesired, steamAccountId] = await createSteamAccount.mutateAsync({
       accountName,
       password,
       authCode,
     })
-    s.form.steps["STEAM-GUARD"].resolveSubmit()
+    formController.resolveSubmit()
     if (typeof steamAccountId === "string") {
       toast.success("Conta adicionada com sucesso.")
       return s.completeForm()
     }
-    if (error.status == 202) {
-      return toast("Steam Guard requerido.")
+    if (undesired.code == "STEAM_GUARD_REQUIRED") {
+      return toast[undesired.type](undesired.message)
     }
-    console.log(error, steamAccountId)
-    toast("Erro desconhecido.")
+    console.log(undesired, steamAccountId)
+    return toast[undesired.type](undesired.message)
   }
 
   const submitHandler: SubmitHandler<FormType> = async ({ accountName, authCode, password }) => {
-    if (s.formStep === "CREDENTIALS") await handleCredentials(accountName, password)
-    if (s.formStep === "STEAM-GUARD") await handleSteamGuard(accountName, password, authCode!)
-    return
+    const formControllersMap: IFormSteps = {
+      "STEAM-GUARD": s.form.steps["STEAM-GUARD"],
+      CREDENTIALS: s.form.steps["CREDENTIALS"],
+    }
+    const formController = formControllersMap[s.formStep]
+    await handleFormSubmit(formController, accountName, password, authCode)
   }
+
+  const { textSubmitButton, textSubmittingButton } = s.form.steps[s.formStep]
 
   return (
     <Dialog
@@ -83,14 +84,12 @@ export const ModalAddSteamAccountView = React.forwardRef<
       onOpenChange={isOpen => (isOpen ? s.openModal() : s.closeModal())}
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent>
+      <DialogContent className="border-slate-900">
         <Form {...form}>
           <form
-            className="border-slate-900"
             onSubmit={form.handleSubmit(submitHandler)}
             ref={ref}
           >
-            <pre>{JSON.stringify({ erros: form.formState.errors }, null, 2)}</pre>
             <DialogHeader>
               <DialogTitle>Adicionar conta Steam</DialogTitle>
               <DialogDescription className="pb-4">
@@ -183,23 +182,27 @@ export const ModalAddSteamAccountView = React.forwardRef<
               )}
               {/* </FlipMove> */}
             </div>
-            <Button
-              // disabled={s.isSubmitting}
-              type="submit"
-              className="relative"
-              onClick={() => console.log("enviar clicked")}
-            >
-              <span className="px-8">
-                {s.isSubmitting
-                  ? s.form.steps[s.formStep].textSubmittingButton
-                  : s.form.steps[s.formStep].textSubmitButton}
-              </span>
-              {s.isSubmitting && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <IconSpinner className="h-5 w-5" />
-                </div>
-              )}
-            </Button>
+            <div className="flex justify-between gap-2">
+              <Button
+                disabled={s.isSubmitting}
+                type="submit"
+                className="relative"
+              >
+                <span className="px-8">{s.isSubmitting ? textSubmittingButton : textSubmitButton}</span>
+                {s.isSubmitting && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <IconSpinner className="h-5 w-5" />
+                  </div>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => (s.isRequiringSteamGuard ? s.goBackToCredentials() : s.requireSteamGuard())}
+              >
+                <span>{s.isRequiringSteamGuard ? "Voltar" : "Tenho o código"}</span>
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>

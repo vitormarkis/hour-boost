@@ -1,13 +1,13 @@
 import { api } from "@/lib/axios"
+import { DataOrMessage } from "@/util/DataOrMessage"
 import { useAuth } from "@clerk/clerk-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { DefaultError, useMutation } from "@tanstack/react-query"
-import { DataOrError } from "core"
 import React from "react"
 import { useForm } from "react-hook-form"
 import { FormType, formSchema } from "./form"
 import { httpCreateSteamAccount } from "./httpRequest"
-import { ModalAddSteamAccountView } from "./view"
+import { IntentionCodes, ModalAddSteamAccountView } from "./view"
 
 const defaultValues: FormType = {
   accountName: "",
@@ -36,9 +36,17 @@ export const ModalAddSteamAccount = React.forwardRef<
     return api
   }
 
-  const createSteamAccount = useMutation<DataOrError<string>, DefaultError, CreateSteamAccountPayload>({
+  const createSteamAccount = useMutation<
+    DataOrMessage<string, IntentionCodes>,
+    DefaultError,
+    CreateSteamAccountPayload
+  >({
     mutationFn: async (...args) => httpCreateSteamAccount(...args, getAPI),
   })
+
+  const clearField = (field: keyof FormType) => {
+    form.resetField(field)
+  }
 
   return (
     <ModalAddSteamAccountView
@@ -46,6 +54,7 @@ export const ModalAddSteamAccount = React.forwardRef<
       createSteamAccount={createSteamAccount}
       form={form}
       resetAllFields={resetAllFields}
+      clearField={clearField}
       ref={ref}
     >
       {children}

@@ -1,6 +1,11 @@
 import { useRef, useState } from "react"
+import { FormType } from "./form"
 
-export function useStater(accountName: string, resetAllFields: () => void) {
+export function useStater(
+  accountName: string,
+  resetAllFields: () => void,
+  clearField: (field: keyof FormType) => void
+) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   // const [isRequiringSteamGuard, setIsRequiringSteamGuard] = useState(false)
@@ -73,7 +78,8 @@ export function useStater(accountName: string, resetAllFields: () => void) {
   }
   const goBackToCredentials = () => {
     setFormStep("CREDENTIALS")
-    setTimeout(() => refInputAccountName.current?.focus(), 1)
+    clearField("authCode")
+    setTimeout(() => refInputAccountName.current?.focus(), 0)
   }
 
   return {
@@ -96,12 +102,11 @@ export function useStater(accountName: string, resetAllFields: () => void) {
 
 type FormStep = "CREDENTIALS" | "STEAM-GUARD"
 
-type IFormSteps = Record<
-  FormStep,
-  {
-    submit(): void
-    resolveSubmit(): void
-    textSubmitButton: string
-    textSubmittingButton: string
-  }
->
+export interface IFormController {
+  submit(): void
+  resolveSubmit(): void
+  textSubmitButton: string
+  textSubmittingButton: string
+}
+
+export type IFormSteps = Record<FormStep, IFormController>

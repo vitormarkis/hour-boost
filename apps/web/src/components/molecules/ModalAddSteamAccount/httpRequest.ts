@@ -1,27 +1,26 @@
+import { DataOrMessage, MessageMaker } from "@/util/DataOrMessage"
+import { resolvePromiseToMessage } from "@/util/resolvePromiseToMessage"
 import { AxiosInstance, AxiosResponse } from "axios"
-import { AddSteamAccountOutput, ApplicationError, DataOrError } from "core"
+import { AddSteamAccountOutput } from "core"
 import { CreateSteamAccountPayload } from "./controller"
+import { IntentionCodes } from "./view"
 
 export async function httpCreateSteamAccount(
   payload: CreateSteamAccountPayload,
-  getAPI: () => Promise<AxiosInstance>
-): Promise<DataOrError<string>> {
-  // await new Promise(res => setTimeout(res, 1000))
-  // if (payload.authCode) return [null, "892j38429-93=459"]
-  // return [new ApplicationError("Steam Guard needed.", 202), null]
-
-  try {
-    const api = await getAPI()
-    const response = await api.post<any, AxiosResponse<AddSteamAccountOutput>, CreateSteamAccountPayload>(
-      "/steam-accounts",
-      payload
-    )
-    if (response.status === 202) return [new ApplicationError("Steam Guard needed.", 202), null]
-    if (response.status === 201) return [null, response.data.steamAccountID]
-    console.log({ response })
-    return [new ApplicationError("Erro desconhecido.", 500), null]
-  } catch (error) {
-    console.log({ error })
-    return [new ApplicationError(error.message, 500), null]
+  getAPI: () => Promise<AxiosInstance>,
+  msg = new MessageMaker<IntentionCodes>()
+): Promise<DataOrMessage<string, IntentionCodes>> {
+  const api = await getAPI()
+  const [error, response] = await resolvePromiseToMessage(
+    api.post<any, AxiosResponse<AddSteamAccountOutput>, CreateSteamAccountPayload>("/steam-accounts", payload)
+  )
+  if (error) return [error, null]
+  if (response.status === 201) {
+    return [null, response.data.steamAccountID]
   }
+  if (response.status === 202) {
+    return [msg.new("Código Steam Guard requerido.", "info", "STEAM_GUARD_REQUIRED"), null]
+  }
+  console.log({ response })
+  return [msg.new("Resposta desconhecida.", "info"), null]
 }
