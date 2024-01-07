@@ -1,19 +1,24 @@
-import { Prisma, PrismaClient } from "@prisma/client"
-import { ApplicationError, PlanUsage, SteamAccountList } from "core"
-import { ActiveStatus, BannedStatus, Status, StatusName } from "core"
+import { PrismaClient } from "@prisma/client"
 import {
+  ActiveStatus,
   AdminRole,
+  ApplicationError,
+  BannedStatus,
+  PlanUsage,
   Purchase,
   Role,
   RoleName,
+  Status,
+  StatusName,
   SteamAccount,
   SteamAccountCredentials,
+  SteamAccountList,
   User,
   UserRole,
+  UsersRepository,
 } from "core"
-import { UsersRepository } from "core"
 
-import { getCurrentPlan, getCurrentPlanOrCreateOne } from "~/utils"
+import { getCurrentPlanOrCreateOne } from "~/utils"
 
 export class UsersRepositoryDatabase implements UsersRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -94,7 +99,7 @@ export class UsersRepositoryDatabase implements UsersRepository {
         steamAccounts: {
           disconnect: user.steamAccounts.getTrashIDs().map(id => ({ id_steamAccount: id })),
           connectOrCreate: user.steamAccounts.data.map(sa => ({
-            where: { id_steamAccount: sa.id_steamAccount },
+            where: { accountName: sa.credentials.accountName },
             create: {
               accountName: sa.credentials.accountName,
               createdAt: new Date(),
