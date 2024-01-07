@@ -66,7 +66,7 @@ export class FarmUsageService extends FarmService {
         new ApplicationError(
           "Seu plano não possui mais uso disponível.",
           403,
-          undefined,
+          { accountName: this.username },
           "PLAN_MAX_USAGE_EXCEEDED"
         ),
         null,
