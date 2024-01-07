@@ -1,13 +1,14 @@
+import { Toaster } from "@/components/ui/sonner"
+import { cn } from "@/lib/utils"
 import "@/styles/globals.css"
 import "@/styles/neon-fx.css"
+import { ptBR } from "@clerk/localizations"
+import { ClerkProvider } from "@clerk/nextjs"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
+import { ThemeProvider } from "next-themes"
 import type { AppProps } from "next/app"
 import { Barlow } from "next/font/google"
-import { cn } from "@/lib/utils"
-import { ThemeProvider } from "next-themes"
-import { ClerkProvider } from "@clerk/nextjs"
-import { ptBR } from "@clerk/localizations"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { Toaster } from "@/components/ui/sonner"
 
 const queryClient = new QueryClient()
 
@@ -32,6 +33,7 @@ export default function App({ Component, pageProps }: AppProps) {
             <Component {...pageProps} />
           </main>
           <Toaster position="bottom-left" />
+          <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
       </ThemeProvider>
     </ClerkProvider>

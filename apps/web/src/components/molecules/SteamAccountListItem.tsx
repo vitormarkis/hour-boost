@@ -110,7 +110,7 @@ export const SteamAccountListItemView = React.forwardRef<
           )}
         </div>
         <div className="flex items-center pr-6 gap-4 overflow-hidden">
-          <div className="h-[4.5rem] w-[4.5rem] relative">
+          <div className="h-[4.5rem] w-[4.5rem] relative shrink-0">
             <img
               // src="https://avatarcloudflare.steamstatic.com/2ec38f7a0953fe2585abdda0757324dbbb519749_full.jpg"
               src={profilePictureUrl ?? IMG_USER_PLACEHOLDER}

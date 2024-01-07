@@ -35,7 +35,7 @@ type UserSessionParams = {
 export default function DashboardPage({ user }: UserSessionParams) {
   return (
     <UserProvider serverUser={user}>
-      <HeaderDashboard user={user} />
+      <HeaderDashboard />
       <div className="max-w-[1440px] w-full mx-auto px-8">
         <ModalAddSteamAccount>
           <Button className="h-9">Adicionar conta +</Button>

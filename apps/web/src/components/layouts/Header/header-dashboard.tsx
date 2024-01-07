@@ -1,25 +1,23 @@
-import React from "react"
-import { cn } from "@/lib/utils"
 import { HeaderStructure } from "@/components/layouts/Header/header-structure"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
 import { MenuDropdownUserHeader } from "@/components/molecules/menu-dropdown-user-header"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { UserSession } from "core"
+import { useUser } from "@/contexts/UserContext"
+import { cn } from "@/lib/utils"
 import { getUserInitials } from "@/util/getUserInitials"
 import { RoleName } from "core"
+import React from "react"
 
 export type HeaderDashboardProps = Omit<
   React.ComponentPropsWithoutRef<typeof HeaderStructure>,
   "children"
 > & {
-  user: UserSession
 }
 
 export const HeaderDashboard = React.forwardRef<
   React.ElementRef<typeof HeaderStructure>,
   HeaderDashboardProps
->(function HeaderDashboardComponent({ user, className, ...props }, ref) {
+>(function HeaderDashboardComponent({ className, ...props }, ref) {
+  const user = useUser()
   const userInitials = getUserInitials(user)
 
   return (

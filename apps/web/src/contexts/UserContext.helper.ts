@@ -1,11 +1,12 @@
 import { GameSession, Persona, PersonaWithAccountName, UserSession } from "core"
-import { IUserMethods, NSUserContext } from "./UserContext"
+import { NSUserContext } from "./UserContext"
 
 interface IHelper {
   setGames(accountName: string, games: GameSession[]): UserSession
   updatePersona(accountName: string, persona: PersonaWithAccountName): UserSession
   hasGames(): boolean
   updateFarmingGames(accountName: string, gameIdList: number[]): UserSession
+  udpate(newUser: UserSession): UserSession
 }
 
 export class Helper implements IHelper {
@@ -60,6 +61,13 @@ export class Helper implements IHelper {
 
   hasGames(): boolean {
     return this.user.steamAccounts.some(sa => sa.games?.length !== 0)
+  }
+
+  udpate(newUser: UserSession): UserSession {
+    return {
+      ...this.user,
+      ...newUser,
+    }
   }
 }
 
