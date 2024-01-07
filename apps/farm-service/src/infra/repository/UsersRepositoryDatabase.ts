@@ -4,7 +4,6 @@ import {
   AdminRole,
   ApplicationError,
   BannedStatus,
-  PlanUsage,
   Purchase,
   Role,
   RoleName,
@@ -67,18 +66,15 @@ export class UsersRepositoryDatabase implements UsersRepository {
               name: user.plan.name,
               type: user.plan.type,
               usages: {
-                connectOrCreate:
-                  user.plan instanceof PlanUsage
-                    ? user.plan.usages.data.map(u => ({
-                        where: { id_usage: u.id_usage },
-                        create: {
-                          amountTime: u.amountTime,
-                          createdAt: new Date(),
-                          id_usage: u.id_usage,
-                          accountName: u.accountName,
-                        },
-                      }))
-                    : [],
+                connectOrCreate: user.plan.usages.data.map(u => ({
+                  where: { id_usage: u.id_usage },
+                  create: {
+                    amountTime: u.amountTime,
+                    createdAt: new Date(),
+                    id_usage: u.id_usage,
+                    accountName: u.accountName,
+                  },
+                })),
               },
             },
           },
@@ -151,6 +147,9 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
   })
 
   const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
+  try {
+    const status = statusFactory(dbUser.status)
+  } catch (error) {}
 
   return User.restore({
     email: dbUser.email,
