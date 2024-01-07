@@ -11,24 +11,28 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { IUserMethods, NSUserContext, useUser } from "@/contexts/UserContext"
+import { IUserMethods, useUser } from "@/contexts/UserContext"
 import { api } from "@/lib/axios"
 import { cn } from "@/lib/utils"
-import { AppError, DataOrError } from "@/util/AppError"
+import { AppError } from "@/util/AppError"
+import { DataOrMessage } from "@/util/DataOrMessage"
 import { useAuth } from "@clerk/clerk-react"
-import { useMutation } from "@tanstack/react-query"
+import { UseMutationResult, useMutation } from "@tanstack/react-query"
 import { API_GET_RefreshAccountGames } from "core"
 import React, { useContext, useState } from "react"
 import { toast } from "sonner"
+import { FarmGamesPayload } from "../controller"
+import { IntentionCodes } from "../view"
 
-export type DrawerSheetChooseFarmingGamesProps = React.ComponentPropsWithoutRef<"div"> & {
+export type DrawerSheetChooseFarmingGamesViewProps = React.ComponentPropsWithoutRef<"div"> & {
+  farmGames: UseMutationResult<DataOrMessage<string, IntentionCodes>, Error, FarmGamesPayload, unknown>
   children: React.ReactNode
 }
 
-export const DrawerSheetChooseFarmingGames = React.forwardRef<
+export const DrawerSheetChooseFarmingGamesView = React.forwardRef<
   React.ElementRef<"div">,
-  DrawerSheetChooseFarmingGamesProps
->(function DrawerSheetChooseFarmingGamesComponent({ children, className, ...props }, ref) {
+  DrawerSheetChooseFarmingGamesViewProps
+>(function DrawerSheetChooseFarmingGamesViewComponent({ children, farmGames, className, ...props }, ref) {
   const [open, setOpen] = useState(false)
   const { accountName, games } = useContext(SteamAccountListItemContext)
   const { getToken } = useAuth()
@@ -81,27 +85,6 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
     refreshGames.mutate({ accountName })
   }
 
-  const updateFarm = useMutation<
-    IUserMethods.DataOrError,
-    unknown,
-    { accountName: string; gamesID: number[]; userId: string }
-  >({
-    async mutationFn({ accountName, gamesID, userId }) {
-      const response = await api.post(
-        "/farm/start",
-        {
-          accountName,
-          gamesID,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${await getToken()}`,
-          },
-        }
-      )
-      return response.data
-    },
-  })
   const stopFarm = useMutation<IUserMethods.DataOrError, unknown, { accountName: string }>({
     async mutationFn({ accountName }) {
       const response = await api.post(
@@ -119,7 +102,7 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
     },
   })
 
-  async function handleUpdateFarmingGames() {
+  async function handleFarmGames() {
     if (!games) return
     try {
       console.log("[user context] start set farming games...")
@@ -128,7 +111,7 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
         await stopFarm.mutateAsync({ accountName })
         console.log("[user context] stop the farm")
       } else {
-        await updateFarm.mutateAsync({ accountName, gamesID: stageFarmingGames, userId: user.id })
+        await farmGames.mutateAsync({ accountName, gamesID: stageFarmingGames, userId: user.id })
         const gamesNames: string[] = stageFarmingGames.map(gameId => games.find(g => g.id === gameId)!.name)
         toast.success(`Farmando os jogos ${gamesNames.join(", ")}.`)
         console.log("[user context] farmed games")
@@ -208,11 +191,11 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
         <SheetFooter className="">
           <Button
             className="flex-1 relative disabled:opacity-70"
-            onClick={handleUpdateFarmingGames}
-            disabled={updateFarm.isPending || stopFarm.isPending}
+            onClick={handleFarmGames}
+            disabled={farmGames.isPending || stopFarm.isPending}
           >
-            <span>{updateFarm.isPending || stopFarm.isPending ? "Salvando" : "Salvar"}</span>
-            {(updateFarm.isPending || stopFarm.isPending) && (
+            <span>{farmGames.isPending || stopFarm.isPending ? "Salvando" : "Salvar"}</span>
+            {(farmGames.isPending || stopFarm.isPending) && (
               <div className="absolute top-1/2 -translate-y-1/2 right-4">
                 <IconArrowClockwise className="w-4 h-4 animate-spin" />
               </div>
@@ -231,4 +214,4 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
   )
 })
 
-DrawerSheetChooseFarmingGames.displayName = "DrawerSheetChooseFarmingGames"
+DrawerSheetChooseFarmingGamesView.displayName = "DrawerSheetChooseFarmingGamesView"
