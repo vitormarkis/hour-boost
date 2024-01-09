@@ -1,10 +1,12 @@
 import { SteamAccount, SteamAccountCredentials, User } from "core"
+import { SteamAccountsInMemory } from "~/infra/repository/SteamAccountsInMemory"
 import { UsersInMemory } from "~/infra/repository/UsersInMemory"
 import { UsersRepositoryInMemory } from "~/infra/repository/UsersRepositoryInMemory"
 import { makeUser } from "~/utils/makeUser"
 
 let usersMemory: UsersInMemory
 usersMemory = new UsersInMemory()
+let steamAccountsInMemory = new SteamAccountsInMemory()
 // beforeEach(() => {
 //   usersMemory = new UsersInMemory()
 // })
@@ -18,7 +20,7 @@ const user = User.create({
 
 test("should create given user", async () => {
   expect(usersMemory.users).toHaveLength(0)
-  const usersRepository = new UsersRepositoryInMemory(usersMemory)
+  const usersRepository = new UsersRepositoryInMemory(usersMemory, steamAccountsInMemory)
   await usersRepository.create(user)
   expect(usersMemory.users).toHaveLength(1)
   expect(await usersRepository.getByID("user1")).toBeInstanceOf(User)
@@ -27,7 +29,7 @@ test("should create given user", async () => {
 
 test("should update given user", async () => {
   expect(usersMemory.users).toHaveLength(1)
-  const usersRepository = new UsersRepositoryInMemory(usersMemory)
+  const usersRepository = new UsersRepositoryInMemory(usersMemory, steamAccountsInMemory)
   const user2 = makeUser("user1", "versa")
   user2.addSteamAccount(
     SteamAccount.create({
@@ -50,7 +52,7 @@ test("should update given user", async () => {
 
 test("should throw when try to update non existing user", async () => {
   expect(usersMemory.users).toHaveLength(1)
-  const usersRepository = new UsersRepositoryInMemory(usersMemory)
+  const usersRepository = new UsersRepositoryInMemory(usersMemory, steamAccountsInMemory)
   const user2 = makeUser("RANDOM_ID_NEVER_SEEN_BEFORE", "versa")
   user2.addSteamAccount(
     SteamAccount.create({

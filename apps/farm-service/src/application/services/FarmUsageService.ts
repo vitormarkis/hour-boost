@@ -1,13 +1,15 @@
-import { ApplicationError, DataOrError, PlanType, PlanUsage } from "core"
+import { ApplicationError, DataOrError, PlanType, PlanUsage, Usage } from "core"
 
-import { UserCompletedFarmSessionUsageCommand, UserHasStartFarmingCommand } from "~/application/commands"
+import { UserCompleteFarmSessionCommand, UserHasStartFarmingCommand } from "~/application/commands"
 import { EventEmitter, UserClusterEvents } from "~/application/services"
 import {
   AccountStatusList,
   FarmService,
   FarmingAccountDetailsWithAccountName,
+  PauseFarmOnAccountUsage,
 } from "~/application/services/FarmService"
 import { Publisher } from "~/infra/queue"
+import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
 
@@ -18,6 +20,7 @@ export class FarmUsageService extends FarmService {
   private usageLeft: number
   readonly initialUsageLeft: number
   readonly emitter: EventEmitter<UserClusterEvents>
+  readonly usageBuilder = new UsageBuilder()
 
   constructor(props: FarmUsageServiceProps) {
     super({
@@ -37,6 +40,47 @@ export class FarmUsageService extends FarmService {
     })
   }
 
+  private stopFarmImpl() {
+    const when = new Date()
+    this.status = "IDDLE"
+    this.accountsFarming.forEach(acc => {
+      acc.status = "IDDLE"
+    })
+    const usages = this.getFarmingAccountDetails().map(accountDetails => {
+      return this.usageBuilder.create({
+        accountName: accountDetails.accountName,
+        amountTime: accountDetails.usageAmountInSeconds,
+        createdAt: when,
+        plan_id: this.planId,
+      })
+    })
+    clearInterval(this.farmingInterval)
+    return { usages }
+  }
+
+  protected stopFarm(): void {
+    const { usages } = this.stopFarmImpl()
+    this.publishCompleteFarmSession({
+      type: "STOP-ALL",
+      usages,
+    })
+    clearInterval(this.farmingInterval)
+  }
+
+  protected stopFarmSync(): Usage[] {
+    const { usages } = this.stopFarmImpl()
+    return usages
+  }
+
+  pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
+    if (this.getActiveFarmingAccountsAmount() === 1) {
+      const usages = this.stopFarmSync()
+      return [null, { type: "STOP-ALL", usages }]
+    }
+    this.setAccountStatus(accountName, "IDDLE")
+    return [null, { type: "STOP-SILENTLY" }]
+  }
+
   private getFarmingAccountDetails(): FarmingAccountDetailsWithAccountName[] {
     const farmingAccountDetails = [] as FarmingAccountDetailsWithAccountName[]
     for (const [accountName, details] of this.accountsFarming) {
@@ -49,10 +93,18 @@ export class FarmUsageService extends FarmService {
     return farmingAccountDetails
   }
 
-  publishCompleteFarmSession(): void {
+  pauseFarmOnAccount(accountName: string): DataOrError<null> {
+    if (this.getActiveFarmingAccountsAmount() === 1) {
+      this.stopFarm()
+    }
+    this.setAccountStatus(accountName, "IDDLE")
+    return [null, null]
+  }
+
+  publishCompleteFarmSession(pauseFarmCategory: PauseFarmOnAccountUsage): void {
     this.publisher.publish(
-      new UserCompletedFarmSessionUsageCommand({
-        farmingAccountDetails: this.getFarmingAccountDetails(),
+      new UserCompleteFarmSessionCommand({
+        pauseFarmCategory,
         planId: this.planId,
         when: new Date(),
       })
@@ -69,7 +121,6 @@ export class FarmUsageService extends FarmService {
           { accountName: this.username },
           "PLAN_MAX_USAGE_EXCEEDED"
         ),
-        null,
       ]
     }
     this.farmingInterval = setInterval(() => {
@@ -95,22 +146,6 @@ export class FarmUsageService extends FarmService {
     )
 
     return [null, null]
-  }
-
-  stopFarm() {
-    this.status = "IDDLE"
-    this.accountsFarming.forEach(acc => {
-      acc.status = "IDDLE"
-    })
-    this.publishCompleteFarmSession()
-    clearInterval(this.farmingInterval)
-  }
-
-  pauseFarmOnAccount(accountName: string): void {
-    if (this.getActiveFarmingAccountsAmount() === 1) {
-      this.stopFarm()
-    }
-    this.setAccountStatus(accountName, "IDDLE")
   }
 
   getUsageLeft() {

@@ -22,6 +22,15 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
     this.logger = new Logger(`State Redis`)
   }
 
+  async deleteAllEntriesFromAccount(accountName: string): Promise<void> {
+    this.logger.log(`Deleting all entries for [${accountName}].`)
+    await this.redis
+      .multi()
+      .call("JSON.DEL", this.KEY_STATE(accountName))
+      .del(this.KEY_REFRESH_TOKEN(accountName))
+      .exec()
+  }
+
   async stopFarm(accountName: string): Promise<void> {
     const key = this.KEY_STATE(accountName)
     await this.redis

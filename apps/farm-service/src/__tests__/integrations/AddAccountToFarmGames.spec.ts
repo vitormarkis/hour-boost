@@ -1,14 +1,9 @@
-import { AddSteamAccount, IDGeneratorUUID } from "core"
-import {
-  CustomInstances,
-  MakeTestInstancesProps,
-  makeTestInstances,
-  password,
-  testUsers as s,
-} from "~/__tests__/instances"
+import { AddSteamAccount } from "core"
+import { CustomInstances, MakeTestInstancesProps, makeTestInstances, password } from "~/__tests__/instances"
+import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { AddSteamAccountController, FarmGamesController, promiseHandler } from "~/presentation/controllers"
 import { SteamUserMockBuilder } from "~/utils/builders"
-import { makeUser } from "~/utils/makeUser"
 
 const validSteamAccounts = [
   { accountName: "paco", password },
@@ -24,23 +19,21 @@ let i = makeTestInstances({
 })
 let addSteamAccountController: AddSteamAccountController
 let farmGamesController: FarmGamesController
-
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   // meInstances = await i.createUser("me")
-  const addSteamAccount = new AddSteamAccount(
-    i.usersRepository,
-    i.steamAccountsRepository,
-    new IDGeneratorUUID()
-  )
-  const me = makeUser(s.me.userId, s.me.username)
-  await i.usersRepository.create(me)
-  addSteamAccountController = new AddSteamAccountController(
+  await i.createUser("me", {
+    persistSteamAccounts: false,
+  })
+  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+  const addSteamAccountUseCase = new AddSteamAccountUseCase(
     addSteamAccount,
     i.allUsersClientsStorage,
     i.usersDAO,
     i.checkSteamAccountOwnerStatusUseCase
   )
+
+  addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)
 
   farmGamesController = new FarmGamesController({
     allUsersClientsStorage: i.allUsersClientsStorage,
@@ -51,6 +44,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     usersRepository: i.usersRepository,
     farmGamesUseCase: i.farmGamesUseCase,
   })
+  i.steamAccountsMemory.disownSteamAccountsAll()
+  i.usersMemory.dropAllSteamAccounts()
 }
 
 beforeEach(async () => {
@@ -59,6 +54,7 @@ beforeEach(async () => {
   })
 })
 
+console.log = log
 describe("should register a new steam account in the storage after addition of a new steam account", () => {
   test("should create user1", async () => {
     const userx1 = await i.usersRepository.getByID(s.me.userId)
@@ -110,14 +106,12 @@ describe("should register a new steam account in the storage after addition of a
     test("should ask for steam guard code, set and then remove it from last handler", async () => {
       const getUserSAC = () =>
         i.allUsersClientsStorage.getOrThrow(s.me.userId).getAccountClientOrThrow(s.me.accountName)
-      expect(() => getUserSAC()).toThrowError("Esse usuário não possui contas da Steam ativas na plataforma.")
-      // expect to not have a client instance of this account before it is added
 
-      const response = await promiseHandler(
+      await promiseHandler(
         addSteamAccountController.handle({
           payload: {
             accountName: s.me.accountName,
-            password: "user1_PASS",
+            password,
             userId: s.me.userId,
           },
         })

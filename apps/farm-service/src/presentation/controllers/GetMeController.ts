@@ -1,4 +1,5 @@
-import { Controller, CreateUser, GetUser, HttpClient, UserSession, UsersRepository } from "core"
+import { Controller, GetUser, HttpClient, UserSession, UsersRepository } from "core"
+import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { makeRes, makeResError } from "~/utils"
 
 export namespace GetMeHandle {
@@ -12,7 +13,7 @@ export namespace GetMeHandle {
 export class GetMeController implements Controller<GetMeHandle.Payload, GetMeHandle.Response> {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly createUser: CreateUser,
+    private readonly createUserUseCase: CreateUserUseCase,
     private readonly getUser: GetUser
   ) {}
 
@@ -21,7 +22,9 @@ export class GetMeController implements Controller<GetMeHandle.Payload, GetMeHan
       const { userId } = payload
       if (!userId) return { json: null, status: 200 }
       const user = await this.usersRepository.getByID(userId)
-      if (!user) await this.createUser.execute(userId)
+      if (!user) {
+        await this.createUserUseCase.execute(userId)
+      }
       const userSession = await this.getUser.execute(userId)
       if (!userSession) return makeRes(500, "Something went wrong during the creation of your user.")
       return {

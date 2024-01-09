@@ -1,8 +1,8 @@
 import {
   CustomInstances,
   MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
-  testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
 
@@ -12,7 +12,7 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = i.makeUserInstances("me", s.me)
+let meInstances = {} as PrefixKeys<"me">
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)

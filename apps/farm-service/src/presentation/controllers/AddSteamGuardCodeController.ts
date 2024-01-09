@@ -1,8 +1,8 @@
 import { ApplicationError, Controller, HttpClient } from "core"
 import { AllUsersClientsStorage } from "~/application/services"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
-import { SteamClientEventsRequired } from "~/presentation/controllers"
 import { makeRes } from "~/utils"
+import { SteamClientEventsRequired } from "~/utils/SteamClientEventsRequired"
 
 export namespace AddSteamGuardCodeHandle {
   export type Payload = {

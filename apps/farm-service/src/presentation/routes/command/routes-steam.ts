@@ -1,9 +1,8 @@
 import { ClerkExpressRequireAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
-import { AddSteamAccount, ApplicationError } from "core"
+import { AddSteamAccount } from "core"
 import { Request, Response, Router } from "express"
+import { AddSteamAccountUseCase, RemoveSteamAccountUseCase } from "~/application/use-cases"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
-import { prisma } from "~/infra/libs"
-import { UsersRepositoryDatabase } from "~/infra/repository"
 
 import {
   AddSteamAccountController,
@@ -12,6 +11,7 @@ import {
   StopFarmController,
 } from "~/presentation/controllers"
 import { AddSteamGuardCodeController } from "~/presentation/controllers/AddSteamGuardCodeController"
+import { RemoveSteamAccountControllerController } from "~/presentation/controllers/RemoveSteamAccountController"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import {
   allUsersClientsStorage,
@@ -26,10 +26,16 @@ import {
   usersDAO,
   usersRepository,
 } from "~/presentation/instances"
-import { makeRes } from "~/utils"
 
 export const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
 const stopAllFarmsUseCase = new StopAllFarms(usersClusterStorage)
+const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
+  usersRepository,
+  allUsersClientsStorage,
+  steamAccountClientStateCacheRepository,
+  usersClusterStorage,
+  planRepository
+)
 
 export const command_routerSteam: Router = Router()
 
@@ -41,14 +47,18 @@ command_routerSteam.post(
   "/steam-accounts",
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
-    const createSteamAccountController = new AddSteamAccountController(
+    const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
+    const addSteamAccountUseCase = new AddSteamAccountUseCase(
       addSteamAccount,
       allUsersClientsStorage,
       usersDAO,
       checkSteamAccountOwnerStatusUseCase
     )
+
+    const addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)
+
     const { json, status } = await promiseHandler(
-      createSteamAccountController.handle({
+      addSteamAccountController.handle({
         payload: {
           accountName: req.body.accountName,
           password: req.body.password,
@@ -64,19 +74,23 @@ command_routerSteam.post(
 
 command_routerSteam.delete(
   "/steam-accounts",
-  // ClerkExpressRequireAuth(),
+  ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
-    const usersRepository = new UsersRepositoryDatabase(prisma)
-    const { userID, steamAccountID } = req.body
+    const removeSteamAccountControllerController = new RemoveSteamAccountControllerController(
+      removeSteamAccountUseCase
+    )
 
-    const perform = async () => {
-      const user = await usersRepository.getByID(userID)
-      if (!user) throw new ApplicationError("Usuário não encontrado.", 404)
-      user.steamAccounts.remove(steamAccountID)
-      await usersRepository.update(user)
-      return makeRes(200, `Successfully removed ${steamAccountID}.`)
-    }
-    const { status, json } = await promiseHandler(perform())
+    console.log("0. calling remove steam account controller")
+    const { status, json } = await promiseHandler(
+      removeSteamAccountControllerController.handle({
+        payload: {
+          accountName: req.body.accountName,
+          steamAccountId: req.body.steamAccountId,
+          userId: req.auth.userId!,
+          username: req.body.username,
+        },
+      })
+    )
     return res.status(status).json(json)
   }
 )

@@ -1,11 +1,12 @@
 import {
   CustomInstances,
   MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
   password,
-  testUsers as s,
 } from "~/__tests__/instances"
 import { SteamUserMock } from "~/infra/services"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { FarmGamesController, promiseHandler } from "~/presentation/controllers"
 import { sleep } from "~/utils"
 import { SteamUserMockBuilder } from "~/utils/builders"
@@ -18,7 +19,7 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = i.makeUserInstances("me", s.me)
+let meInstances = {} as PrefixKeys<"me">
 let farmGamesController: FarmGamesController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {

@@ -1,5 +1,5 @@
-import { SteamAccountCredentials } from "./SteamAccountCredentials"
 import { IDGenerator } from "../contracts"
+import { SteamAccountCredentials } from "./SteamAccountCredentials"
 
 export class SteamAccount {
   id_steamAccount: string
@@ -21,6 +21,10 @@ export class SteamAccount {
 
   static restore(props: SteamAccountProps) {
     return new SteamAccount(props)
+  }
+
+  disown() {
+    this.ownerId = null
   }
 }
 

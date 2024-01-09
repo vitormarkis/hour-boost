@@ -3,6 +3,9 @@ import { SteamAccount, SteamAccountCredentials, SteamAccountsRepository } from "
 
 export class SteamAccountsRepositoryDatabase implements SteamAccountsRepository {
   constructor(private readonly prisma: PrismaClient) {}
+  save(steamAccount: SteamAccount): Promise<void> {
+    throw new Error("Method not implemented.")
+  }
 
   async getByAccountName(accountName: string): Promise<SteamAccount | null> {
     const dbSteamAccount = await this.prisma.steamAccount.findUnique({

@@ -1,5 +1,13 @@
 import { PrismaClient } from "@prisma/client"
-import { DatabaseSteamAccount, GameSession, Persona, PlanUsage, UserSession, UsersDAO } from "core"
+import {
+  DatabaseSteamAccount,
+  GameSession,
+  Persona,
+  PlanUsage,
+  SteamAccountClientStateCacheRepository,
+  UserSession,
+  UsersDAO,
+} from "core"
 import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 
@@ -9,7 +17,8 @@ export class UsersDAODatabase implements UsersDAO {
   constructor(
     private readonly prisma: PrismaClient,
     private readonly getPersonaStateUseCase: GetPersonaStateUseCase,
-    private readonly getUserSteamGamesUseCase: GetUserSteamGamesUseCase
+    private readonly getUserSteamGamesUseCase: GetUserSteamGamesUseCase,
+    private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository
   ) {}
 
   async getPlanId(userId: string): Promise<string | null> {
@@ -73,12 +82,13 @@ export class UsersDAODatabase implements UsersDAO {
         const [error, foundPersona] = personaResponse
         persona = error ? getDefaultPersona() : foundPersona
         games = gamesError ? null : foundGames.toJSON()
+        const accountState = await this.steamAccountClientStateCacheRepository.get(sa.accountName)
 
         return {
           accountName: sa.accountName,
           games,
           id_steamAccount: sa.id_steamAccount,
-          farmingGames: [],
+          farmingGames: accountState?.gamesPlaying ?? [],
           ...persona,
         }
       })

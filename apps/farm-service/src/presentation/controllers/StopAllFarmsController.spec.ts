@@ -1,19 +1,19 @@
 import {
   CustomInstances,
   MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
   password,
-  testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { ensureExpectation } from "~/__tests__/utils"
-import { UserCompletedFarmSessionUsageCommand } from "~/application/commands"
+import { UserCompleteFarmSessionCommand } from "~/application/commands"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
+import { PauseFarmOnAccountUsage } from "~/application/services"
 import { StopAllFarms } from "~/application/use-cases"
-import { PersistFarmSessionUsageHandler } from "~/domain/handler"
-import { PersistFarmSessionInfinityHandler } from "~/domain/handler/PersistFarmSessionInfinityHandler"
-import { FarmGamesController } from "~/presentation/controllers"
-import { StopAllFarmsController } from "~/presentation/controllers"
+import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
+import { FarmGamesController, StopAllFarmsController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 
 const log = console.log
@@ -22,8 +22,8 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = i.makeUserInstances("me", s.me)
-let friendInstances = i.makeUserInstances("friend", s.friend)
+let meInstances = {} as PrefixKeys<"me">
+let friendInstances = {} as PrefixKeys<"friend">
 let stopAllFarmsUseCase: StopAllFarms
 let stopAllFarmsController: StopAllFarmsController
 let farmGamesController: FarmGamesController
@@ -53,8 +53,7 @@ beforeEach(async () => {
   await setupInstances({
     validSteamAccounts,
   })
-  i.publisher.register(new PersistFarmSessionUsageHandler(i.planRepository, i.usageBuilder))
-  i.publisher.register(new PersistFarmSessionInfinityHandler(i.planRepository, i.usageBuilder))
+  i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
 })
 
 afterEach(() => {
@@ -152,25 +151,29 @@ describe("Start 2 farming, and stop all farms test suite", () => {
     await promiseHandler(stopAllFarmsController.handle({ payload: { secret: "secret" } }))
 
     const usagesCommands = spyPublish.mock.calls
-      .filter(([call]) => call.operation === "user-complete-farm-session-usage")
+      .filter(([call]) => call.operation === "user-complete-farm-session")
       .flat(1)
 
     expect(usagesCommands).toHaveLength(2)
-    const [meCommand, friendCommand] = usagesCommands as UserCompletedFarmSessionUsageCommand[]
-    expect(meCommand.farmingAccountDetails).toStrictEqual([
-      {
-        accountName: s.me.accountName,
-        status: "IDDLE",
-        usageAmountInSeconds: 7200,
-      },
-    ])
-    expect(friendCommand.farmingAccountDetails).toStrictEqual([
-      {
-        accountName: s.friend.accountName,
-        status: "IDDLE",
-        usageAmountInSeconds: 7200,
-      },
-    ])
+    const [meCommand, friendCommand] = usagesCommands as UserCompleteFarmSessionCommand[]
+    expect(meCommand.pauseFarmCategory).toStrictEqual({
+      type: "STOP-ALL",
+      usages: expect.arrayContaining([
+        expect.objectContaining({
+          accountName: s.me.accountName,
+          amountTime: 7200,
+        }),
+      ]),
+    })
+    expect(friendCommand.pauseFarmCategory).toStrictEqual({
+      type: "STOP-ALL",
+      usages: expect.arrayContaining([
+        expect.objectContaining({
+          accountName: s.friend.accountName,
+          amountTime: 7200,
+        }),
+      ]),
+    } satisfies PauseFarmOnAccountUsage)
     jest.useRealTimers()
   })
 

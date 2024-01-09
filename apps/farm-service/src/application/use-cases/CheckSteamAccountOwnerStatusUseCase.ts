@@ -28,9 +28,9 @@ export class CheckSteamAccountOwnerStatusUseCase
         const userIsAccountOwner = foundSteamAccount.ownerId === userId
         return [null, userIsAccountOwner ? "OWNED_BY_USER" : "OWNED_BY_OTHER_USER"]
       } else if (foundSteamAccount == null) return [null, "NEVER_REGISTERED"]
-      return [new ApplicationError("Erro desconhecido da aplicação.", 400), null]
+      return [new ApplicationError("Erro desconhecido da aplicação.", 400)]
     } catch (error) {
-      return [new ApplicationError("Erro desconhecido no servidor.", 500), null]
+      return [new ApplicationError("Erro desconhecido no servidor.", 500)]
     }
   }
 }

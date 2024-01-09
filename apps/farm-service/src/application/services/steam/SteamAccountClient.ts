@@ -175,7 +175,7 @@ export class SteamAccountClient extends LastHandler {
   }
 
   async getAccountGamesList(): Promise<DataOrError<AccountSteamGamesList>> {
-    if (!this.client.steamID) return [new ApplicationError("No steam id set."), null]
+    if (!this.client.steamID) return [new ApplicationError("No steam id set.")]
     const { apps } = (await this.client.getUserOwnedApps(this.client.steamID)) as unknown as AccountGames
     const games: GameSession[] = apps.map(game => ({
       id: game.appid,

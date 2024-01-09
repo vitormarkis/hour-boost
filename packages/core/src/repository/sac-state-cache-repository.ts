@@ -15,6 +15,7 @@ export interface SteamAccountClientStateCacheRepository {
   getPersona(accountName: string): Promise<SteamAccountPersonaState | null>
   setPersona(accountName: string, persona: SteamAccountPersonaState): Promise<void>
   stopFarm(accountName: string): Promise<void>
+  deleteAllEntriesFromAccount(accountName: string): Promise<void>
 }
 
 export interface SteamAccountPersonaState {

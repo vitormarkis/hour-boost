@@ -2,13 +2,15 @@ import { GuestPlan, PlanUsage, Usage, User } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
-  testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
-import { UserCompletedFarmSessionUsageCommand } from "~/application/commands"
-import { FarmUsageService } from "~/application/services"
-import { ChangePlanStatusHandler, PersistFarmSessionUsageHandler } from "~/domain/handler"
+import { UserCompleteFarmSessionCommand } from "~/application/commands"
+import { FarmUsageService, NSFarmSessionCategory } from "~/application/services"
+import { ChangePlanStatusHandler } from "~/domain/handler"
+import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 const log = console.log
 console.log = () => {}
@@ -17,7 +19,7 @@ const now = new Date("2023-06-10T10:00:00Z")
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = i.makeUserInstances("me", s.me)
+let meInstances = {} as PrefixKeys<"me">
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
@@ -29,8 +31,8 @@ beforeEach(async () => {
   await setupInstances({
     validSteamAccounts,
   })
-  i.publisher.register(new PersistFarmSessionUsageHandler(i.planRepository, i.usageBuilder))
   i.publisher.register(new ChangePlanStatusHandler(i.planRepository))
+  i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
 })
 
 afterAll(() => {
@@ -94,13 +96,13 @@ describe("FarmUsageService test suite", () => {
       expect(spyPublishCompleteFarmSession).toHaveBeenCalledTimes(1)
     })
 
-    test("should farm with 2 accounts, exceed plan max usage, and publish user-complete-farm-session-usage command", async () => {
+    test("should farm with 2 accounts, exceed plan max usage, and publish user-complete-farm-session command", async () => {
       jest.advanceTimersByTime(1000 * 3600 * 4) // 4 hora
       await new Promise(setImmediate)
       expect(spyPublishCompleteFarmSession).toHaveBeenCalledTimes(1)
       expect(spyPublish).toHaveBeenCalledWith(
         expect.objectContaining({
-          operation: "user-complete-farm-session-usage",
+          operation: "user-complete-farm-session",
         })
       )
     })
@@ -139,35 +141,34 @@ describe("FarmUsageService test suite", () => {
     expect(meFarmService.getUsageLeft()).toBe(0)
 
     const publishesUserCompleteFarmSession = spyPublish.mock.calls
-      .filter(s => s[0].operation === "user-complete-farm-session-usage")
-      .map(command => command[0]) as UserCompletedFarmSessionUsageCommand[]
+      .filter(s => s[0].operation === "user-complete-farm-session")
+      .map(command => command[0]) as UserCompleteFarmSessionCommand[]
 
     expect(spyPublish).toHaveBeenCalledWith(
       expect.objectContaining({
-        operation: "user-complete-farm-session-usage",
+        operation: "user-complete-farm-session",
       })
     )
 
-    expect(publishesUserCompleteFarmSession[0].farmingAccountDetails).toHaveLength(3)
-    expect(publishesUserCompleteFarmSession[0]).toStrictEqual(
+    const farmSessionCategory = publishesUserCompleteFarmSession[0]
+      .pauseFarmCategory as NSFarmSessionCategory.StopAll
+    expect(farmSessionCategory.usages).toHaveLength(3)
+    expect(farmSessionCategory.usages[0]).toStrictEqual(
       expect.objectContaining({
-        farmingAccountDetails: expect.arrayContaining([
-          {
-            usageAmountInSeconds: 8640, // 2hrs 24min
-            status: "IDDLE",
-            accountName: s.me.accountName,
-          },
-          {
-            usageAmountInSeconds: 8640, // 2hrs 24min
-            status: "IDDLE",
-            accountName: s.me.accountName2,
-          },
-          {
-            usageAmountInSeconds: 4320, // 1hr 12min
-            status: "IDDLE",
-            accountName: s.me.accountName3,
-          },
-        ]),
+        amountTime: 8640, // 2hrs 24min
+        accountName: s.me.accountName,
+      })
+    )
+    expect(farmSessionCategory.usages[1]).toStrictEqual(
+      expect.objectContaining({
+        amountTime: 8640, // 2hrs 24min
+        accountName: s.me.accountName2,
+      })
+    )
+    expect(farmSessionCategory.usages[2]).toStrictEqual(
+      expect.objectContaining({
+        amountTime: 4320, // 1hr 12min
+        accountName: s.me.accountName3,
       })
     )
   })
@@ -309,30 +310,31 @@ describe("FarmUsageService test suite", () => {
     await new Promise(setImmediate)
 
     const publishesUserCompleteFarmSession = spyPublish.mock.calls
-      .filter(s => s[0].operation === "user-complete-farm-session-usage")
-      .map(command => command[0]) as UserCompletedFarmSessionUsageCommand[]
+      .filter(s => s[0].operation === "user-complete-farm-session")
+      .map(command => command[0]) as UserCompleteFarmSessionCommand[]
 
     expect(spyPublish).toHaveBeenCalledWith(
       expect.objectContaining({
-        operation: "user-complete-farm-session-usage",
+        operation: "user-complete-farm-session",
       })
     )
 
-    expect(publishesUserCompleteFarmSession[0].farmingAccountDetails).toHaveLength(2)
-    expect(publishesUserCompleteFarmSession[0]).toStrictEqual(
+    const farmSessionCategory = publishesUserCompleteFarmSession[0]
+      .pauseFarmCategory as NSFarmSessionCategory.StopAll
+
+    expect(farmSessionCategory.usages).toHaveLength(2)
+
+    expect(farmSessionCategory.usages[0]).toStrictEqual(
       expect.objectContaining({
-        farmingAccountDetails: expect.arrayContaining([
-          {
-            usageAmountInSeconds: 9000, // 1 hora
-            status: "IDDLE",
-            accountName: s.me.accountName,
-          },
-          {
-            usageAmountInSeconds: 1800, // 1 hora
-            status: "IDDLE",
-            accountName: s.me.accountName2,
-          },
-        ]),
+        amountTime: 9000,
+        accountName: s.me.accountName,
+      })
+    )
+
+    expect(farmSessionCategory.usages[1]).toStrictEqual(
+      expect.objectContaining({
+        amountTime: 1800,
+        accountName: s.me.accountName2,
       })
     )
   })
@@ -359,47 +361,42 @@ describe("FarmUsageService test suite", () => {
     await new Promise(setImmediate)
 
     const publishesUserCompleteFarmSession = spyPublish.mock.calls
-      .filter(s => s[0].operation === "user-complete-farm-session-usage")
-      .map(command => command[0]) as UserCompletedFarmSessionUsageCommand[]
-    console.log({
-      calls: publishesUserCompleteFarmSession,
-    })
+      .filter(s => s[0].operation === "user-complete-farm-session")
+      .map(command => command[0]) as UserCompleteFarmSessionCommand[]
 
     expect(spyPublish).toHaveBeenCalledWith(
       expect.objectContaining({
-        operation: "user-complete-farm-session-usage",
+        operation: "user-complete-farm-session",
       })
     )
+
+    const farmSessionCategory = publishesUserCompleteFarmSession[0]
+      .pauseFarmCategory as NSFarmSessionCategory.StopAll
+
+    const farmSessionCategory2 = publishesUserCompleteFarmSession[1]
+      .pauseFarmCategory as NSFarmSessionCategory.StopAll
 
     expect(publishesUserCompleteFarmSession).toHaveLength(2)
-    expect(publishesUserCompleteFarmSession[0].farmingAccountDetails).toHaveLength(1)
-    expect(publishesUserCompleteFarmSession[0]).toStrictEqual(
+
+    expect(farmSessionCategory.usages).toHaveLength(1)
+    expect(farmSessionCategory.usages[0]).toStrictEqual(
       expect.objectContaining({
-        farmingAccountDetails: [
-          {
-            usageAmountInSeconds: 3600, // 1 hora
-            status: "IDDLE",
-            accountName: s.me.accountName,
-          },
-        ],
+        amountTime: 3600,
+        accountName: s.me.accountName,
       })
     )
 
-    expect(publishesUserCompleteFarmSession[1].farmingAccountDetails).toHaveLength(2)
-    expect(publishesUserCompleteFarmSession[1]).toStrictEqual(
+    expect(farmSessionCategory2.usages).toHaveLength(2)
+    expect(farmSessionCategory2.usages[0]).toStrictEqual(
       expect.objectContaining({
-        farmingAccountDetails: expect.arrayContaining([
-          {
-            usageAmountInSeconds: 10800, // 1 hora
-            status: "IDDLE",
-            accountName: s.me.accountName,
-          },
-          {
-            usageAmountInSeconds: 5400, // 1 hora
-            status: "IDDLE",
-            accountName: s.me.accountName3,
-          },
-        ]),
+        amountTime: 10800,
+        accountName: s.me.accountName,
+      })
+    )
+    expect(farmSessionCategory2.usages[1]).toStrictEqual(
+      expect.objectContaining({
+        amountTime: 5400,
+        accountName: s.me.accountName3,
       })
     )
   })
@@ -410,21 +407,23 @@ describe("FarmUsageService test suite", () => {
     const me = await getMe()
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount(s.me.accountName)
-    jest.advanceTimersByTime(1000 * 60 * 60 * 4) // 6 horas
+    jest.advanceTimersByTime(1000 * 60 * 60 * 4)
     meFarmService.pauseFarmOnAccount(s.me.accountName)
     await new Promise(setImmediate)
     expect(spyPublish.mock.calls).toStrictEqual(
       expect.arrayContaining([
         [
-          new UserCompletedFarmSessionUsageCommand({
-            farmingAccountDetails: [
-              {
-                accountName: s.me.accountName,
-                status: "IDDLE",
-                usageAmountInSeconds: 3600 * 4,
-              },
-            ],
-            planId: meInstances.me.plan.id_plan,
+          new UserCompleteFarmSessionCommand({
+            pauseFarmCategory: {
+              type: "STOP-ALL",
+              usages: expect.arrayContaining([
+                expect.objectContaining({
+                  accountName: s.me.accountName,
+                  amountTime: 3600 * 4,
+                }),
+              ]),
+            },
+            planId: me.plan.id_plan,
             when: new Date("2023-06-10T14:00:00Z"),
           }),
         ],

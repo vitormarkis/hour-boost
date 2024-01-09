@@ -13,7 +13,7 @@ export class RefreshGamesUseCase {
   }: RefreshGamesUseCaseProps): Promise<DataOrError<AccountSteamGamesList>> {
     const sac = this.allUsersClientsStorage.getAccountClientOrThrow(userId, accountName)
     const [error, accountSteamGamesList] = await sac.getAccountGamesList()
-    if (error) return [error, null]
+    if (error) return [error]
     await this.steamAccountClientStateCacheRepository.setAccountGames(accountName, accountSteamGamesList)
     return [null, accountSteamGamesList]
   }

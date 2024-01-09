@@ -1,3 +1,3 @@
 export * from "./Command"
-export * from "./UserCompletedFarmSessionUsageCommand"
+export * from "./UserCompleteFarmSessionCommand"
 export * from "./UserHasStartFarmingCommand"

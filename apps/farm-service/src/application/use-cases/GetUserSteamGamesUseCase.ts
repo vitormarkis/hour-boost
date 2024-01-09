@@ -17,7 +17,7 @@ export class GetUserSteamGamesUseCase {
       accountName,
       userId,
     })
-    if (error) return [error, null]
+    if (error) return [error]
     return [null, steamGamesList]
   }
 }

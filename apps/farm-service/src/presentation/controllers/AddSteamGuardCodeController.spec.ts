@@ -1,14 +1,10 @@
-import { AddSteamAccount, IDGeneratorUUID } from "core"
+import { AddSteamAccount } from "core"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { makeUser } from "~/utils/makeUser"
 
-import {
-  CustomInstances,
-  MakeTestInstancesProps,
-  makeTestInstances,
-  password,
-  testUsers as s,
-} from "~/__tests__/instances"
+import { CustomInstances, MakeTestInstancesProps, makeTestInstances, password } from "~/__tests__/instances"
+import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { AddSteamAccountController, AddSteamGuardCodeController } from "~/presentation/controllers"
 
 const log = console.log
@@ -23,20 +19,21 @@ const validSteamAccounts = [
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let addSteamAccount: AddSteamAccount
 let addSteamGuardCodeController: AddSteamGuardCodeController
 let addSteamAccountController: AddSteamAccountController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
-  addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, new IDGeneratorUUID())
-  addSteamGuardCodeController = new AddSteamGuardCodeController(i.allUsersClientsStorage)
-  addSteamAccountController = new AddSteamAccountController(
+  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+  const addSteamAccountUseCase = new AddSteamAccountUseCase(
     addSteamAccount,
     i.allUsersClientsStorage,
     i.usersDAO,
     i.checkSteamAccountOwnerStatusUseCase
   )
+
+  addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)
+  addSteamGuardCodeController = new AddSteamGuardCodeController(i.allUsersClientsStorage)
 }
 
 describe("AddSteamGuardCodeController test suite", () => {
@@ -64,7 +61,11 @@ describe("AddSteamGuardCodeController test suite", () => {
     })
   })
   describe("user has attempted to log", () => {
-    beforeEach(async () => {})
+    beforeEach(async () => {
+      await setupInstances({
+        validSteamAccounts,
+      })
+    })
 
     test("should set the steam guard code and log in", async () => {
       await setupInstances({

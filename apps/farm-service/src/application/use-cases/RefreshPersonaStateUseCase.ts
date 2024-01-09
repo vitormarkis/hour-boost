@@ -1,8 +1,8 @@
 import {
-  SteamAccountPersonaState,
+  ApplicationError,
   DataOrError,
   SteamAccountClientStateCacheRepository,
-  ApplicationError,
+  SteamAccountPersonaState,
 } from "core"
 import { AllUsersClientsStorage } from "~/application/services"
 
@@ -23,11 +23,10 @@ export class RefreshPersonaStateUseCase {
           userId: input.userId,
           accountName: input.accountName,
         }),
-        null,
       ]
     }
     const [error, persona] = await sac.getAccountPersona()
-    if (error) return [error, null]
+    if (error) return [error]
     await this.steamAccountClientStateCacheRepository.setPersona(input.accountName, persona)
     return [null, persona]
   }

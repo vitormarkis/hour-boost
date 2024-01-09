@@ -1,6 +1,6 @@
 const log = console.log
 
-import { DataOrError, PlanType } from "core"
+import { DataOrError, PlanType, Usage } from "core"
 import { FarmServiceStatus } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 
@@ -83,7 +83,7 @@ export abstract class FarmService {
 
   farmWithAccount(accountName: string): DataOrError<null> {
     const [error] = this.farmWithAccountImpl(accountName)
-    if (error) return [error, null]
+    if (error) return [error]
 
     console.log(`farm-service: is ${accountName} added? `, this.isAccountAdded(accountName))
     if (!this.isAccountAdded(accountName)) {
@@ -106,11 +106,13 @@ export abstract class FarmService {
     this.stopFarm()
   }
 
-  protected abstract publishCompleteFarmSession(): void
+  protected abstract publishCompleteFarmSession(pauseFarmCategory: PauseFarmOnAccountUsage): void
 
   protected abstract startFarm(): DataOrError<null>
   protected abstract stopFarm(): void
-  abstract pauseFarmOnAccount(accountName: string): void
+  protected abstract stopFarmSync(): Usage[]
+  abstract pauseFarmOnAccount(accountName: string): DataOrError<null>
+  abstract pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage>
 
   private getActiveFarmingAccounts() {
     return Array.from(this.accountsFarming).filter(([_, details]) => details.status === "FARMING")
@@ -146,3 +148,22 @@ export abstract class FarmService {
 }
 
 export type AccountStatusList = Record<string, "IDDLE" | "FARMING">
+
+export type PauseFarmOnAccountUsage =
+  | NSFarmSessionCategory.StopSilently
+  | NSFarmSessionCategory.StopAll
+  | NSFarmSessionCategory.StopOne
+
+export namespace NSFarmSessionCategory {
+  export type StopSilently = {
+    type: "STOP-SILENTLY"
+  }
+  export type StopAll = {
+    type: "STOP-ALL"
+    usages: Usage[]
+  }
+  export type StopOne = {
+    type: "STOP-ONE"
+    usage: Usage
+  }
+}

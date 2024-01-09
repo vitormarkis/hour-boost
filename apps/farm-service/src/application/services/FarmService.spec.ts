@@ -1,14 +1,15 @@
 let farmService: FarmService
 
-import { DataOrError, PlanType } from "core"
+import { DataOrError, PlanType, Usage } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
-  testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
-import { AccountStatusList, FarmService } from "~/application/services/FarmService"
+import { AccountStatusList, FarmService, PauseFarmOnAccountUsage } from "~/application/services/FarmService"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 const log = console.log
 console.log = () => {}
@@ -16,7 +17,7 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = i.makeUserInstances("me", s.me)
+let meInstances = {} as PrefixKeys<"me">
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
@@ -59,7 +60,7 @@ describe("FarmService test suite", () => {
     farmService.farmWithAccount(s.me.accountName)
     expect(farmService.hasAccountsFarming()).toBe(true)
     expect(farmService.getServiceStatus()).toBe("FARMING")
-    farmService.pauseFarmOnAccount(s.me.accountName)
+    farmService.pauseFarmOnAccountSync(s.me.accountName)
     expect(farmService.hasAccountsFarming()).toBe(false)
     expect(farmService.getServiceStatus()).toBe("IDDLE")
   })
@@ -67,7 +68,7 @@ describe("FarmService test suite", () => {
   test("should resume farming", async () => {
     farmService.farmWithAccount(s.me.accountName)
     expect(farmService.hasAccountsFarming()).toBe(true)
-    farmService.pauseFarmOnAccount(s.me.accountName)
+    farmService.pauseFarmOnAccountSync(s.me.accountName)
     expect(farmService.hasAccountsFarming()).toBe(false)
     farmService.farmWithAccount(s.me.accountName)
     expect(farmService.hasAccountsFarming()).toBe(true)
@@ -75,7 +76,7 @@ describe("FarmService test suite", () => {
 
   // test("should THROW if tried to stop account that was never registered", async () => {
   //   expect(() => {
-  //     farmService.pauseFarmOnAccount(s.me.accountName)
+  //     farmService.pauseFarmOnAccountSync(s.me.accountName)
   //   }).toThrow("NSTH: Tried to resume farming on account that don't exists.")
   // })
 
@@ -83,7 +84,7 @@ describe("FarmService test suite", () => {
     farmService.farmWithAccount(s.me.accountName)
     farmService.farmWithAccount(s.me.accountName2)
     farmService.farmWithAccount(s.me.accountName3)
-    farmService.pauseFarmOnAccount(s.me.accountName)
+    farmService.pauseFarmOnAccountSync(s.me.accountName)
     expect(farmService.getFarmingAccounts()).toStrictEqual({
       [s.me.accountName]: "IDDLE",
       [s.me.accountName2]: "FARMING",
@@ -93,10 +94,29 @@ describe("FarmService test suite", () => {
 })
 
 class FarmServiceImpl extends FarmService {
+  pauseFarmOnAccount(accountName: string): DataOrError<null> {
+    return [null, null]
+  }
+  protected stopFarmSync(): Usage[] {
+    return []
+  }
+  pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
+    if (this.accountsFarming.size === 1) {
+      this.status = "IDDLE"
+    }
+
+    for (const [accountNameStr, acc] of this.accountsFarming) {
+      if (accountNameStr === accountName) {
+        acc.status = "IDDLE"
+      }
+    }
+    return [null, { type: "STOP-ALL", usages: [] }]
+  }
   getAccountsStatus(): AccountStatusList {
     return {}
   }
   protected publishCompleteFarmSession(): void {}
+
   farmWithAccountImpl(accountName: string): DataOrError<null> {
     if (this.accountsFarming.size === 0) {
       this.status = "FARMING"
@@ -112,17 +132,6 @@ class FarmServiceImpl extends FarmService {
   protected stopFarm(): void {
     for (const [_, acc] of this.accountsFarming) {
       acc.status = "IDDLE"
-    }
-  }
-  pauseFarmOnAccount(accountName: string): void {
-    if (this.accountsFarming.size === 1) {
-      this.status = "IDDLE"
-    }
-
-    for (const [accountNameStr, acc] of this.accountsFarming) {
-      if (accountNameStr === accountName) {
-        acc.status = "IDDLE"
-      }
     }
   }
 }

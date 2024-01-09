@@ -6,4 +6,5 @@ export interface UsersRepository {
   update(user: User): Promise<void>
   create(user: User): Promise<string>
   dropAll(): Promise<void>
+  findMany(): Promise<User[]>
 }

@@ -9,13 +9,8 @@ import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateU
 import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 import { RefreshPersonaStateUseCase } from "~/application/use-cases/RefreshPersonaStateUseCase"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
-import {
-  LogSteamStartFarmHandler,
-  LogSteamStopFarmHandler,
-  PersistFarmSessionUsageHandler,
-  StartFarmPlanHandler,
-} from "~/domain/handler"
-import { PersistFarmSessionInfinityHandler } from "~/domain/handler/PersistFarmSessionInfinityHandler"
+import { LogSteamStartFarmHandler, LogSteamStopFarmHandler, StartFarmPlanHandler } from "~/domain/handler"
+import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
 import { UsersDAODatabase } from "~/infra/dao"
 import { prisma } from "~/infra/libs"
 import { redis } from "~/infra/libs/redis"
@@ -89,7 +84,12 @@ export const getUserSteamGamesUseCase = new GetUserSteamGamesUseCase(
   refreshGamesUseCase
 )
 
-export const usersDAO = new UsersDAODatabase(prisma, getPersonaStateUseCase, getUserSteamGamesUseCase)
+export const usersDAO = new UsersDAODatabase(
+  prisma,
+  getPersonaStateUseCase,
+  getUserSteamGamesUseCase,
+  steamAccountClientStateCacheRepository
+)
 export const userAuthentication = new ClerkAuthentication(clerkClient)
 export const usersRepository = new UsersRepositoryDatabase(prisma)
 export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)
@@ -98,9 +98,8 @@ export const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerSta
   steamAccountsRepository
 )
 
-publisher.register(new PersistFarmSessionUsageHandler(planRepository, usageBuilder))
-publisher.register(new PersistFarmSessionInfinityHandler(planRepository, usageBuilder))
 publisher.register(new StartFarmPlanHandler())
+publisher.register(new PersistFarmSessionHandler(planRepository))
 
 // publisher.register(new LogUserFarmedHandler())
 

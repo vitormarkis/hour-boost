@@ -1,4 +1,4 @@
-import { ApplicationError, Controller, HttpClient, UsersRepository } from "core"
+import { Controller, HttpClient, UsersRepository } from "core"
 import { UsersSACsFarmingClusterStorage } from "~/application/services"
 
 export namespace StopFarmHandle {
@@ -18,12 +18,13 @@ export class StopFarmController implements Controller<StopFarmHandle.Payload, St
 
   async handle({ payload }: APayload): AResponse {
     const { userId, accountName } = payload
-    const user = await this.usersRepository.getByID(payload.userId)
+    const user = await this.usersRepository.getByID(userId)
     if (!user) return { json: { message: "Usuário não encontrado." }, status: 404 }
 
-    const userCluster = this.usersClusterStorage.get(user.username)
-    if (!userCluster) throw new ApplicationError("Usuário não possui contas farmando.", 402)
-    userCluster.pauseFarmOnAccount(payload.accountName)
+    const [errorFindingUserCluster, userCluster] = this.usersClusterStorage.get(user.username)
+    if (errorFindingUserCluster) throw errorFindingUserCluster
+    const [errorPausingFarmOnAccount] = userCluster.pauseFarmOnAccount(accountName)
+    if (errorPausingFarmOnAccount) throw errorPausingFarmOnAccount
     return { json: null, status: 200 }
   }
 }

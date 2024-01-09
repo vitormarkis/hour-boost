@@ -1,10 +1,11 @@
 import {
   CustomInstances,
   MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
   password,
-  testUsers as s,
 } from "~/__tests__/instances"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { FarmGamesController, StopFarmController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { SteamUserMockBuilder } from "~/utils/builders"
@@ -19,7 +20,7 @@ let stopFarmController: StopFarmController
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = i.makeUserInstances("me", s.me)
+let meInstances = {} as PrefixKeys<"me">
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
@@ -61,12 +62,10 @@ describe("StopFarmController.spec test suite", () => {
         message: "Usuário não encontrado.",
       })
       expect(status).toBe(404)
-      expect(i.usersClusterStorage.getAccountsStatus()).toStrictEqual({})
+      expect(Object.keys(i.usersClusterStorage.getAccountsStatus())).toStrictEqual(["user_vrsl"])
     })
+
     test("should reject if user is not farming", async () => {
-      console.log({
-        users: i.usersMemory.users,
-      })
       const stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository)
       const { status, json } = await promiseHandler(
         stopFarmController.handle({
@@ -81,9 +80,10 @@ describe("StopFarmController.spec test suite", () => {
         message: "Usuário não possui contas farmando.",
       })
       expect(status).toBe(402)
-      expect(i.usersClusterStorage.getAccountsStatus()).toStrictEqual({})
+      expect(Object.keys(i.usersClusterStorage.getAccountsStatus())).toStrictEqual(["user_vrsl"])
     })
   })
+
   describe("Account Name IS farming", () => {
     beforeEach(async () => {
       await setupInstances(

@@ -4,10 +4,11 @@ import { RefreshGamesUseCase } from "~/presentation/presenters/RefreshGamesUseCa
 import {
   CustomInstances,
   MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
-  testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { FarmGamesController } from "~/presentation/controllers"
 
 const log = console.log
@@ -16,7 +17,7 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = i.makeUserInstances("me", s.me)
+let meInstances = {} as PrefixKeys<"me">
 let refreshGamesUseCase: RefreshGamesUseCase
 let farmGamesController: FarmGamesController
 

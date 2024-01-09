@@ -7,11 +7,12 @@ import { SteamUserMock } from "~/infra/services/SteamUserMock"
 import {
   CustomInstances,
   MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
   password,
-  testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 const log = console.log
 // console.log = () => {}
@@ -19,7 +20,8 @@ const log = console.log
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = i.makeUserInstances("me", s.me)
+let meInstances = {} as PrefixKeys<"me">
+let friendInstances = {} as PrefixKeys<"friend">
 let logSpy: jest.SpyInstance
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {

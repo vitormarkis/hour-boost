@@ -1,11 +1,8 @@
-import {
-  CustomInstances,
-  MakeTestInstancesProps,
-  makeTestInstances,
-  testUsers as s,
-} from "~/__tests__/instances"
+import { CustomInstances, MakeTestInstancesProps, makeTestInstances } from "~/__tests__/instances"
 import { UsersSACsFarmingClusterStorage } from "~/application/services/UsersSACsFarmingClusterStorage"
 // console.log = () => { }
+import { PrefixKeys } from "~/__tests__/instances"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 const validSteamAccounts = [
   { accountName: "paco", password: "123" },
@@ -18,8 +15,8 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = i.makeUserInstances("me", s.me)
-let friendInstances = i.makeUserInstances("friend", s.friend)
+let meInstances = {} as PrefixKeys<"me">
+let friendInstances = {} as PrefixKeys<"friend">
 let usersClusterStorage: UsersSACsFarmingClusterStorage
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
@@ -50,7 +47,7 @@ describe("List test suite", () => {
     meCluster.pauseFarmOnAccount(s.me.accountName)
     const accountStatus = usersClusterStorage.getAccountsStatus()
     expect(accountStatus).toStrictEqual({
-      vrsl: {
+      user_vrsl: {
         paco: "IDDLE",
       },
     })

@@ -1,4 +1,4 @@
-import { ApplicationError, PlanInfinity, PlanUsage } from "core"
+import { ApplicationError, DataOrError, PlanInfinity, PlanUsage } from "core"
 import { UserSACsFarmingCluster } from "~/application/services"
 import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
 
@@ -15,8 +15,11 @@ export class UsersSACsFarmingClusterStorage {
     }
   }
 
-  get(username: string) {
-    return this.usersCluster.get(username) ?? null
+  get(username: string): DataOrError<UserSACsFarmingCluster> {
+    const foundUserCluster = this.usersCluster.get(username)
+    if (!foundUserCluster)
+      return [new ApplicationError(`Nenhum cluster encontrado para o usuário [${username}].`)]
+    return [null, foundUserCluster]
   }
 
   getOrThrow(username: string) {
@@ -43,8 +46,8 @@ export class UsersSACsFarmingClusterStorage {
   }
 
   getOrAdd(username: string, plan: PlanUsage | PlanInfinity): UserSACsFarmingCluster {
-    const userCluster = this.get(username)
-    if (!userCluster) {
+    const [notFound, userCluster] = this.get(username)
+    if (notFound) {
       const newUserCluster = this.userClusterBuilder.create(username, plan)
       this.usersCluster.set(username, newUserCluster)
       return newUserCluster

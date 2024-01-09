@@ -1,5 +1,5 @@
-import { ApplicationError } from "core/entity/exceptions"
 import { SteamAccount } from "core/entity"
+import { ApplicationError } from "core/entity/exceptions"
 
 export class SteamAccountList {
   readonly data: SteamAccount[]
@@ -22,6 +22,12 @@ export class SteamAccountList {
     this.data.splice(steamAccountIndex, 1)
   }
 
+  removeAll() {
+    for (const id of this.getIDs()) {
+      this.remove(id)
+    }
+  }
+
   getByAccountName(accountName: string) {
     return this.data.find(sa => sa.credentials.accountName === accountName) ?? null
   }
@@ -40,6 +46,10 @@ export class SteamAccountList {
 
   deleteAll() {
     this.data.splice(0, this.data.length)
+    this.trash.splice(0, this.trash.length)
+  }
+
+  eraseTrash() {
     this.trash.splice(0, this.trash.length)
   }
 }

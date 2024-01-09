@@ -5,6 +5,7 @@ import {
   PlanUsage,
   SteamAccount,
   SteamAccountCredentials,
+  SteamAccountsRepository,
   Usage,
   User,
 } from "core"
@@ -14,6 +15,7 @@ import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
+import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
@@ -24,11 +26,17 @@ import {
   UsersInMemory,
   UsersRepositoryInMemory,
 } from "~/infra/repository"
+import { SteamAccountsInMemory } from "~/infra/repository/SteamAccountsInMemory"
+import {
+  TestUserProperties,
+  TestUsers,
+  UserAuthenticationInMemory,
+  testUsers,
+} from "~/infra/services/UserAuthenticationInMemory"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
 import { SteamUserMockBuilder } from "~/utils/builders/SteamMockBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
-import { makeUser } from "~/utils/makeUser"
 
 export const password = "pass"
 export const validSteamAccounts: SteamAccountCredentials[] = [
@@ -45,9 +53,14 @@ export type MakeTestInstancesProps = {
   createUsers?: string[]
 }
 
-export type CustomInstances = {
+export type CustomInstances = Partial<{
   steamUserBuilder: SteamUserMockBuilder
-}
+  steamAccountsRepository: SteamAccountsRepository
+}>
+
+type CreateUserOptions = Partial<{
+  persistSteamAccounts: boolean
+}>
 
 export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomInstances) {
   const { validSteamAccounts = [] } = props ?? {}
@@ -56,6 +69,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
 
   const idGenerator = new IDGeneratorUUID()
   const publisher = new Publisher()
+  const steamAccountsMemory = new SteamAccountsInMemory()
   const usersMemory = new UsersInMemory()
   const sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
   const usageBuilder = new UsageBuilder()
@@ -75,8 +89,9 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     usageBuilder
   )
   const usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
-  const usersRepository = new UsersRepositoryInMemory(usersMemory)
-  const steamAccountsRepository = new SteamAccountsRepositoryInMemory(usersMemory)
+  const usersRepository = new UsersRepositoryInMemory(usersMemory, steamAccountsMemory)
+  const steamAccountsRepository =
+    ci?.steamAccountsRepository ?? new SteamAccountsRepositoryInMemory(usersMemory, steamAccountsMemory)
   const usersDAO = new UsersDAOInMemory(usersMemory)
   const steamUserBuilder = ci?.steamUserBuilder ?? new SteamUserMockBuilder(validSteamAccounts)
   const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
@@ -88,16 +103,34 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     farmGamesUseCase,
     planRepository
   )
+  const userAuthentication = new UserAuthenticationInMemory()
   const sacFactory = makeSACFactory(validSteamAccounts, publisher)
+  const createUserUseCase = new CreateUserUseCase(usersRepository, userAuthentication, usersClusterStorage)
 
   const userInstancesBuilder = new UserInstancesBuilder(allUsersClientsStorage)
 
-  async function createUser<P extends TestUsers>(userPrefix: P) {
+  async function createUser<P extends TestUsers>(userPrefix: P, options?: CreateUserOptions) {
+    const { persistSteamAccounts = true } = options ?? {}
     console.log("test instances index > creating user and storing on repo")
-    const userInstances = userInstancesBuilder.create(userPrefix, testUsers[userPrefix])
-    const user = userInstances[userPrefix as any]
-    await usersRepository.create(user)
-    return userInstances as PrefixKeys<P>
+    const userHollowData = testUsers[userPrefix]
+    const user = await createUserUseCase.execute(userHollowData.userId)
+    const userInstances = userInstancesBuilder.create(
+      userPrefix,
+      testUsers[userPrefix],
+      user
+    ) as PrefixKeys<P>
+    const savingSteamAccount = userInstances[`${userPrefix}SteamAccount`]
+    if (!savingSteamAccount) {
+      console.log({
+        prefix: `${userPrefix}SteamAccount`,
+        userInstances,
+      })
+      throw new Error("NSTH: Não encontrou steam account no user instances para persistir")
+    }
+    if (persistSteamAccounts) {
+      await steamAccountsRepository.save(savingSteamAccount as unknown as SteamAccount)
+    }
+    return userInstances
   }
   async function addSteamAccount(
     userId: string,
@@ -136,8 +169,16 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     await usersRepository.update(user)
   }
 
+  async function resetSteamAccountsOfUser(userId: string) {
+    const user = await usersRepository.getByID(userId)
+    if (!user) throw new Error("addSteamAccount(): INSTANCES TEST Usuário não existe.")
+    user.steamAccounts.removeAll()
+    await usersRepository.update(user)
+  }
+
   return {
     usersMemory,
+    steamAccountsMemory,
     publisher,
     usersClusterStorage,
     allUsersClientsStorage,
@@ -155,33 +196,18 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     checkSteamAccountOwnerStatusUseCase,
     redis,
     idGenerator,
-    makeUserInstances<P extends TestUsers>(prefix: P, props: TestUserProperties) {
-      return userInstancesBuilder.create(prefix, props)
+    async makeUserInstances<P extends TestUsers>(prefix: P, props: TestUserProperties) {
+      const user = await createUserUseCase.execute(props.userId)
+      return userInstancesBuilder.create(prefix, props, user)
     },
     sacFactory,
     createUser,
     addSteamAccount,
     changeUserPlan,
     usePlan,
+    resetSteamAccountsOfUser,
   }
 }
-
-export const testUsers: Record<TestUsers, TestUserProperties> = {
-  me: {
-    userId: "123",
-    username: "vrsl",
-    accountName: "paco",
-    accountName2: "bane",
-    accountName3: "plan",
-  },
-  friend: {
-    userId: "f_123",
-    username: "mathew",
-    accountName: "fred",
-    accountName2: "noka",
-    accountName3: "urto",
-  },
-} as const
 
 export type PrefixKeys<P extends string> = {
   [K in keyof UserRelatedInstances as `${P & string}${K & string}`]: UserRelatedInstances[K]
@@ -195,7 +221,7 @@ export type UserRelatedInstances = {
 }
 
 interface IUserInstancesBuilder {
-  create<P extends TestUsers>(prefix: P, testUsersProps: TestUserProperties): PrefixKeys<P>
+  create<P extends TestUsers>(prefix: P, testUsersProps: TestUserProperties, user: User): PrefixKeys<P>
 }
 
 class UserInstancesBuilder implements IUserInstancesBuilder {
@@ -203,9 +229,9 @@ class UserInstancesBuilder implements IUserInstancesBuilder {
 
   create<P extends TestUsers>(
     prefix: P,
-    { accountName, userId, username, accountName2 }: TestUserProperties
+    { accountName, userId, username, accountName2 }: TestUserProperties,
+    user: User
   ): PrefixKeys<P> {
-    const user = makeUser(userId, username)
     const steamAccount = makeSteamAccount(user.id_user, accountName)
     const sac = this.allUsersClientsStorage.addSteamAccountFrom0({
       accountName,
@@ -238,14 +264,4 @@ export function makeSteamAccount(ownerId: string, accountName: string) {
     idGenerator,
     ownerId,
   })
-}
-
-export type TestUsers = "me" | "friend"
-
-type TestUserProperties = {
-  userId: string
-  username: string
-  accountName: string
-  accountName2: string
-  accountName3: string
 }

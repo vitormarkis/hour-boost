@@ -14,7 +14,9 @@ export class FarmGamesUseCase {
     planId,
   }: FarmGamesUseCaseProps): Promise<DataOrError<null>> {
     try {
-      const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
+      // const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
+      const [error, userCluster] = this.usersClusterStorage.get(username)
+      if (error) return [error]
       if (!userCluster.hasSteamAccountClient(accountName) && !userCluster.isAccountFarming(accountName)) {
         userCluster.addSAC(sac)
       }
@@ -22,9 +24,9 @@ export class FarmGamesUseCase {
     } catch (error) {
       console.log({ "FarmGamesUseCase.execute.error": error })
       if (error instanceof Error) {
-        return [new ApplicationError(error.message), null]
+        return [new ApplicationError(error.message)]
       }
-      return [new ApplicationError("Erro desconhecido"), null]
+      return [new ApplicationError("Erro desconhecido")]
     }
   }
 }

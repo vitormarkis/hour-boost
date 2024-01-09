@@ -2,18 +2,19 @@ import { GuestPlan, PlanUsage, Usage } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
-  testUsers as s,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { ensureExpectation } from "~/__tests__/utils"
+import { UserCompleteFarmSessionCommand } from "~/application/commands"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
-import { PersistFarmSessionUsageHandler } from "~/domain/handler"
-import { PersistFarmSessionInfinityHandler } from "~/domain/handler/PersistFarmSessionInfinityHandler"
+import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
+import { Observer } from "~/infra/queue"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { StopFarmController, promiseHandler } from "~/presentation/controllers"
 import { FarmGamesController } from "~/presentation/controllers/FarmGamesController"
 import { SteamUserMockBuilder } from "~/utils/builders"
-import { makeUser } from "~/utils/makeUser"
 jest.setTimeout(1000)
 
 const now = new Date("2023-06-10T10:00:00Z")
@@ -23,7 +24,7 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = i.makeUserInstances("me", s.me)
+let meInstances = {} as PrefixKeys<"me">
 let farmGamesController: FarmGamesController
 let stopFarmController: StopFarmController
 
@@ -84,8 +85,8 @@ describe("not mobile", () => {
     await setupInstances({
       validSteamAccounts,
     })
-    i.publisher.register(new PersistFarmSessionUsageHandler(i.planRepository, i.usageBuilder))
-    i.publisher.register(new PersistFarmSessionInfinityHandler(i.planRepository, i.usageBuilder))
+    i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
+    i.publisher.register(createLogPersistFarmSessionHandler())
   })
 
   test("should start the farm", async () => {
@@ -277,29 +278,15 @@ describe("not mobile", () => {
   })
 
   test("should NOT call the farm on client when plan has no usage left", async () => {
-    // SteamAccount.create({
-    //   credentials: SteamAccountCredentials.create({
-    //     accountName: s.me.accountName,
-    //     password: "steam_account_admin_pass",
-    //   }),
-    //   ownerId: user.id_user,
-    //   idGenerator,
-    // })
-
-    const reachedUserID = "user_ID"
-    const reachedPlan = GuestPlan.create({
-      ownerId: reachedUserID,
-    })
+    const user = meInstances.me
     const allUsage = Usage.create({
       amountTime: 21600,
       createdAt: new Date("2023-06-10T10:00:00Z"),
-      plan_id: reachedPlan.id_plan,
+      plan_id: user.plan.id_plan,
       accountName: s.me.accountName,
     })
-    reachedPlan.use(allUsage)
-    const user = makeUser(reachedUserID, "used_user", reachedPlan)
-    user.addSteamAccount(meInstances.meSteamAccount)
-    await i.usersRepository.create(user)
+
+    await i.usePlan(s.me.userId, allUsage)
 
     const response = await promiseHandler(
       farmGamesController.handle({
@@ -324,29 +311,15 @@ describe("not mobile", () => {
   })
 
   test("should return message saying user has run out of his plan max usage before steam guard is required", async () => {
-    const reachedUserID = "user_ID"
-    const reachedPlan = GuestPlan.create({
-      ownerId: reachedUserID,
-    })
-    const user = makeUser(reachedUserID, "used_user", reachedPlan)
-    // SteamAccount.create({
-    //   credentials: SteamAccountCredentials.create({
-    //     accountName: s.me.accountName,
-    //     password: "steam_account_admin_pass",
-    //   }),
-    //   ownerId: user.id_user,
-    //   idGenerator,
-    // })
-
+    const user = meInstances.me
     const allUsage = Usage.create({
       amountTime: 21600,
       createdAt: new Date("2023-06-10T10:00:00Z"),
-      plan_id: reachedPlan.id_plan,
+      plan_id: user.plan.id_plan,
       accountName: s.me.accountName,
     })
-    reachedPlan.use(allUsage)
-    user.addSteamAccount(meInstances.meSteamAccount)
-    await i.usersRepository.create(user)
+
+    await i.usePlan(s.me.userId, allUsage)
 
     const response = await promiseHandler(
       farmGamesController.handle({
@@ -382,7 +355,6 @@ describe("not mobile", () => {
     expect((meInstances.me.plan as PlanUsage).getUsageLeft()).toBe(0)
     expect((meInstances.me.plan as PlanUsage).getUsageTotal()).toBe(21600)
 
-    console.log = log
     const res = await promiseHandler(
       farmGamesController.handle({
         payload: {
@@ -393,7 +365,6 @@ describe("not mobile", () => {
       })
     )
     console.log(res)
-    console.log = () => {}
 
     const me2 = await i.usersRepository.getByID(s.me.userId)
     if (!me2) throw new Error("User not found.")
@@ -458,7 +429,6 @@ describe("not mobile", () => {
   // test("should start farm", async () => {
   //   jest.useFakeTimers({ doNotFake: ["setTimeout"] })
   //   const spyPublish = jest.spyOn(i.publisher, "publish")
-  //   console.log = log
   //   const promise = farmGamesController.handle({
   //     payload: {
   //       userId: s.me.userId,
@@ -577,8 +547,8 @@ test("should log the amount time when persist INFINITY farm session", async () =
   await setupInstances({
     validSteamAccounts,
   })
-  i.publisher.register(new PersistFarmSessionUsageHandler(i.planRepository, i.usageBuilder))
-  i.publisher.register(new PersistFarmSessionInfinityHandler(i.planRepository, i.usageBuilder))
+  i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
+  i.publisher.register(createLogPersistFarmSessionHandler())
 
   const logSpy = jest.spyOn(console, "log")
 
@@ -631,3 +601,20 @@ describe("no users on steam database", () => {
     })
   })
 })
+
+function createLogPersistFarmSessionHandler(): Observer {
+  return {
+    operation: "user-complete-farm-session",
+    async notify({ pauseFarmCategory }: UserCompleteFarmSessionCommand) {
+      if (pauseFarmCategory.type === "STOP-ALL") {
+        pauseFarmCategory.usages.forEach(({ accountName, amountTime }) => {
+          console.log(`[BROKER]: [${accountName}] farmou durante ${amountTime} segundos.`)
+        })
+      } else if (pauseFarmCategory.type === "STOP-ONE") {
+        const { accountName, amountTime } = pauseFarmCategory.usage
+        console.log(`[BROKER]: [${accountName}] farmou durante ${amountTime} segundos.`)
+      } else if (pauseFarmCategory.type === "STOP-SILENTLY") {
+      }
+    },
+  } as Observer
+}

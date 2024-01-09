@@ -21,6 +21,13 @@ import { getCurrentPlanOrCreateOne } from "~/utils"
 
 export class UsersRepositoryDatabase implements UsersRepository {
   constructor(private readonly prisma: PrismaClient) {}
+
+  async findMany(): Promise<User[]> {
+    const users = await prismaFindMany(this.prisma)
+    const usersDomain  = prismaUserListToDomain(users)
+    return usersDomain
+  }
+
   async dropAll(): Promise<void> {
     console.log("Você acidentalmente tentou limpar o banco de dados.")
   }
@@ -131,6 +138,42 @@ export function statusFactory(status: StatusName): Status {
   throw new ApplicationError("Invalid status received: " + status)
 }
 
+function prismaUserFindManyToUserDomain(user: PrismaFindMany[number]): User {
+  const userPlan = getCurrentPlanOrCreateOne(user.plan, user.id_user)
+
+  const steamAccounts: SteamAccountList = new SteamAccountList({
+    data: user.steamAccounts.map(sa => SteamAccount.restore({
+        credentials: SteamAccountCredentials.restore({
+          accountName: sa.accountName,
+          password: sa.password,
+        }),
+        id_steamAccount: sa.id_steamAccount,
+        ownerId: user.id_user,
+      })
+    ),
+  })
+  
+  return User.restore({
+    email: user.email,
+    id_user: user.id_user,
+    username: user.username,
+    plan: userPlan,
+    profilePic: user.profilePic,
+    purchases: user.purchases.map(p =>
+      Purchase.restore({
+        id_Purchase: p.id_Purchase,
+      })
+    ),
+    role: roleFactory(user.role),
+    status: statusFactory(user.status),
+    steamAccounts,
+  })
+}
+
+export function prismaUserListToDomain(users: PrismaFindMany): User[] {
+  return users.map(prismaUserFindManyToUserDomain)
+}
+
 export function prismaUserToDomain(dbUser: PrismaGetUser) {
   if (!dbUser) return null
   const steamAccounts: SteamAccountList = new SteamAccountList({
@@ -147,10 +190,7 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
   })
 
   const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
-  try {
-    const status = statusFactory(dbUser.status)
-  } catch (error) {}
-
+  
   return User.restore({
     email: dbUser.email,
     id_user: dbUser.id_user,
@@ -169,6 +209,7 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
 }
 
 export type IGetUserProps = { userId: string } | { username: string }
+export type PrismaFindMany = Awaited<ReturnType<typeof prismaFindMany>>
 export type PrismaGetUser = Awaited<ReturnType<typeof prismaGetUser>>
 export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
   return prisma.user.findUnique({
@@ -188,6 +229,20 @@ export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
       },
       purchases: true,
       steamAccounts: true,
+    },
+  })
+}
+
+export function prismaFindMany(prisma: PrismaClient) {
+  return prisma.user.findMany({
+    include: {
+      plan: {
+        include: {
+          usages: true
+        }
+      },
+      steamAccounts: true,
+      purchases: true,
     },
   })
 }

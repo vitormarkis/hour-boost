@@ -6,7 +6,7 @@ import {
   SteamAccountClientStateCacheRepository,
 } from "core"
 import { FarmServiceBuilder } from "~/application/factories"
-import { EventEmitter, FarmService, SACList } from "~/application/services"
+import { EventEmitter, FarmService, PauseFarmOnAccountUsage, SACList } from "~/application/services"
 import { SACStateCacheFactory, SteamAccountClient } from "~/application/services/steam"
 import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
@@ -102,16 +102,12 @@ export class UserSACsFarmingCluster {
           new ApplicationError(
             `[SAC Cluster.startFarm()]: Tried to start farm, but no SAC was found with name: ${accountName}. This account never logged on the application, or don't belong to the user ${this.username}.`
           ),
-          null,
         ]
 
       if (!this.farmService.hasAccountsFarming()) {
         const plan = await this.planRepository.getById(planId)
         if (!plan) {
-          return [
-            new ApplicationError(`NSTH: ID do plano não existe, contate o desenvolvedor. ${planId}`),
-            null,
-          ]
+          return [new ApplicationError(`NSTH: ID do plano não existe, contate o desenvolvedor. ${planId}`)]
         }
         const newFarmService = this.farmServiceFactory.create(this.username, plan)
         this.setFarmService(newFarmService)
@@ -121,9 +117,9 @@ export class UserSACsFarmingCluster {
     } catch (error) {
       console.log({ "usersFarmingCluster.farmWithAccount.error": error })
       if (error instanceof Error) {
-        return [new ApplicationError(error.message), null]
+        return [new ApplicationError(error.message)]
       }
-      return [new ApplicationError("Erro desconhecido"), null]
+      return [new ApplicationError("Erro desconhecido")]
     }
   }
 
@@ -134,19 +130,31 @@ export class UserSACsFarmingCluster {
   ): DataOrError<null> {
     this.logger.log(`Appending account to farm on service: `, accountName)
     const [error] = this.farmService.farmWithAccount(accountName)
-    if (error) return [error, null]
+    if (error) return [error]
     sac.farmGames(gamesId)
     return [null, null]
   }
 
-  pauseFarmOnAccount(accountName: string) {
+  private pauseFarmOnAccountImpl(accountName: string): DataOrError<null> {
+    if (this.sacList.list.size === 0)
+      return [new ApplicationError("Usuário não possui contas farmando.", 402)]
     const sac = this.sacList.get(accountName)
     if (!sac)
-      throw new ApplicationError(
-        `[SAC Cluster.stopFarm()]: Tried to stop farm, but no SAC was found with name: ${accountName}`
-      )
+      return [new ApplicationError(`NSTH: Usuário tentou pausar farm em uma conta que não estava farmando.`)]
     sac.stopFarm()
-    this.farmService.pauseFarmOnAccount(accountName)
+    return [null, null]
+  }
+  pauseFarmOnAccount(accountName: string): DataOrError<null> {
+    const [errorPausingFarm] = this.pauseFarmOnAccountImpl(accountName)
+    if (errorPausingFarm) return [errorPausingFarm]
+    const errorOrUsages = this.farmService.pauseFarmOnAccount(accountName)
+    return errorOrUsages
+  }
+
+  pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
+    this.pauseFarmOnAccountImpl(accountName)
+    const errorOrUsages = this.farmService.pauseFarmOnAccountSync(accountName)
+    return errorOrUsages
   }
 
   setFarmService(newFarmService: FarmService) {

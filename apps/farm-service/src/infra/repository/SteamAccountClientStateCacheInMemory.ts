@@ -13,6 +13,11 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
   private readonly refreshTokens: Map<string, IRefreshToken> = new Map()
   private readonly personas: Map<string, SteamAccountPersonaState> = new Map()
 
+  async deleteAllEntriesFromAccount(accountName: string): Promise<void> {
+    this.state.delete(accountName)
+    this.refreshTokens.delete(accountName)
+  }
+
   async getPersona(accountName: string): Promise<SteamAccountPersonaState | null> {
     const persona = this.personas.get(accountName)
     return Promise.resolve(persona ?? null)

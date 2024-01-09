@@ -1,15 +1,16 @@
 import "dotenv/config"
 
 import { ClerkExpressWithAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
-import { CreateUser, GetUser } from "core"
+import { GetUser } from "core"
 import { Request, Response, Router } from "express"
 
+import { CreateUserUseCase } from "~/application/use-cases"
 import { GetMeController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
-import { userAuthentication, usersDAO, usersRepository } from "~/presentation/instances"
+import { userAuthentication, usersClusterStorage, usersDAO, usersRepository } from "~/presentation/instances"
 
 export const query_routerUser: Router = Router()
-export const createUser = new CreateUser(usersRepository, userAuthentication)
+export const createUser = new CreateUserUseCase(usersRepository, userAuthentication, usersClusterStorage)
 export const getUser = new GetUser(usersDAO)
 
 const loginErrorMessages: Record<number, string> = {

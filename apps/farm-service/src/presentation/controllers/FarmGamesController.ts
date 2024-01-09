@@ -10,8 +10,8 @@ import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/applic
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { Publisher } from "~/infra/queue"
-import { SteamClientEventsRequired } from "~/presentation/controllers"
 import { areTwoArraysEqual, makeRes } from "~/utils"
+import { SteamClientEventsRequired } from "~/utils/SteamClientEventsRequired"
 
 export namespace FarmGamesHandle {
   export type Payload = {

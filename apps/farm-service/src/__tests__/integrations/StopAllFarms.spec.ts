@@ -1,17 +1,11 @@
 import { PlanInfinity, PlanUsage } from "core"
-import {
-  CustomInstances,
-  MakeTestInstancesProps,
-  makeTestInstances,
-  password,
-  testUsers as s,
-} from "~/__tests__/instances"
-import { UserCompletedFarmSessionInfinityCommand } from "~/application/commands/UserCompletedFarmSessionInfinityCommand"
+import { CustomInstances, MakeTestInstancesProps, makeTestInstances, password } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
-import { PersistFarmSessionUsageHandler } from "~/domain/handler"
-import { PersistFarmSessionInfinityHandler } from "~/domain/handler/PersistFarmSessionInfinityHandler"
+import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
+import { PrefixKeys } from "~/__tests__/instances"
 import { FarmGamesController } from "~/presentation/controllers"
 
 const validSteamAccounts = [
@@ -24,8 +18,8 @@ const log = console.log
 console.log = () => {}
 
 let i = makeTestInstances({ validSteamAccounts })
-let meInstances = i.makeUserInstances("me", s.me)
-let friendInstances = i.makeUserInstances("friend", s.friend)
+let meInstances = {} as PrefixKeys<"me">
+let friendInstances = {} as PrefixKeys<"friend">
 let farmGamesController: FarmGamesController
 let stopAllFarms: StopAllFarms
 
@@ -64,8 +58,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
       payload: { accountName: s.friend.accountName, gamesID: [109230], userId: s.friend.userId },
     })
 
-    i.publisher.register(new PersistFarmSessionInfinityHandler(i.planRepository, i.usageBuilder))
-    i.publisher.register(new PersistFarmSessionUsageHandler(i.planRepository, i.usageBuilder))
+    i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
   })
 
   test("should list all users SACs as farming", async () => {
