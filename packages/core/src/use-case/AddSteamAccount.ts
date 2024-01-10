@@ -23,7 +23,7 @@ export class AddSteamAccount {
     user.addSteamAccount(newSteamAccount)
     await this.usersRepository.update(user)
     return {
-      steamAccountID: newSteamAccount.id_steamAccount,
+      steamAccountId: newSteamAccount.id_steamAccount,
     }
   }
 }
@@ -35,5 +35,10 @@ export type AddSteamAccountInput = {
 }
 
 export type AddSteamAccountOutput = {
-  steamAccountID: string
+  steamAccountId: string
+}
+
+export type AddSteamAccountHTTPResponse = {
+  steamAccountId: string
+  message: string
 }

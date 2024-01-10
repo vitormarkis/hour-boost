@@ -15,6 +15,8 @@ const queryClient = new QueryClient()
 const barlow = Barlow({
   subsets: ["latin"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  display: "swap",
+  variable: "--barlow",
 })
 
 export default function App({ Component, pageProps }: AppProps) {

@@ -59,16 +59,19 @@ export const ModalAddSteamAccountView = React.forwardRef<
       authCode,
     })
     formController.resolveSubmit()
+    console.log([undesired, steamAccountId])
     if (typeof steamAccountId === "string") {
       toast.success("Conta adicionada com sucesso.")
       queryClient.invalidateQueries({ queryKey: ["me", user.id] })
       return s.completeForm()
     }
-    if (undesired.code == "STEAM_GUARD_REQUIRED") {
+    if (undesired) {
+      if (undesired.code == "STEAM_GUARD_REQUIRED") {
+        return toast[undesired.type](undesired.message)
+      }
+      console.log(undesired, steamAccountId)
       return toast[undesired.type](undesired.message)
     }
-    console.log(undesired, steamAccountId)
-    return toast[undesired.type](undesired.message)
   }
 
   const submitHandler: SubmitHandler<FormType> = async ({ accountName, authCode, password }) => {
@@ -88,7 +91,7 @@ export const ModalAddSteamAccountView = React.forwardRef<
       onOpenChange={isOpen => (isOpen ? s.openModal() : s.closeModal())}
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="border-slate-900">
+      <DialogContent>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(submitHandler)}

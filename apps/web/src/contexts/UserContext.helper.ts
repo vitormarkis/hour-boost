@@ -12,6 +12,10 @@ interface IHelper {
 export class Helper implements IHelper {
   constructor(private readonly user: UserSession) {}
 
+  isFarming() {
+    return this.user.steamAccounts.some(sa => sa.farmingGames.length > 0)
+  }
+
   updateFarmingGames(accountName: string, gameIdList: number[]): UserSession {
     const steamAccounts = this.user.steamAccounts.map(sa =>
       sa.accountName === accountName

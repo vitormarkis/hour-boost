@@ -43,7 +43,8 @@ export const DrawerSheetChooseFarmingGamesView = React.forwardRef<
   DrawerSheetChooseFarmingGamesViewProps & ControllerProps
 >(function DrawerSheetChooseFarmingGamesViewComponent({ children, farmGames, className, ...props }, ref) {
   const [open, setOpen] = useState(false)
-  const { accountName, games } = useContext(SteamAccountListItemContext)
+  const { accountName, games } = useContext(SteamAccountListItemContext).app
+  console.log({ context: useContext(SteamAccountListItemContext) })
   const { getToken } = useAuth()
   const user = useUser()
 

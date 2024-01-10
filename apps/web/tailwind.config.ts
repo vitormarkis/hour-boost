@@ -18,6 +18,9 @@ const config: Config = {
         mdx: "896px",
         // => @media (min-width: 896px) { ... }
       },
+      fontFamily: {
+        barlow: ["var(--font-barlow)"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -69,6 +72,14 @@ const config: Config = {
           // @ts-ignore
           to: { height: 0 },
         },
+        pulse: {
+          "0%, 100%": {
+            opacity: "1",
+          },
+          "50%": {
+            opacity: ".5",
+          },
+        },
         "spin-r": {
           to: {
             transform: "rotate(-360deg)",
@@ -96,6 +107,7 @@ const config: Config = {
       "ping-sm": "ping-sm 1s cubic-bezier(0, 0, 0.2, 1) infinite",
       "spin-r": "spin-r 1s linear infinite",
       spin: "spin 1s linear infinite",
+      pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
     },
   },
   plugins: [require("tailwindcss-animate")],

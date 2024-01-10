@@ -1,9 +1,11 @@
+import { TimeSince } from "@/components/atoms/TimeSince"
 import { IconChart } from "@/components/icons/IconChart"
 import { IconDeviceMobile } from "@/components/icons/IconDeviceMobile"
 import { IconJoystick } from "@/components/icons/IconJoystick"
 import { IconTrash } from "@/components/icons/IconTrash"
 import { DrawerSheetChooseFarmingGames } from "@/components/molecules/FarmGames/controller"
 import { ModalAddSteamAccount } from "@/components/molecules/ModalAddSteamAccount/controller"
+import { AlertDialogRemoveSteamAccount } from "@/components/molecules/RemoveSteamAccount/components/controller"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
@@ -37,7 +39,7 @@ export function SteamAccountList({
 }) {
   return (
     <SteamAccountListItemView
-      {...app}
+      app={app}
       {...status}
       status="offline"
       hoursFarmedInSeconds={0}
@@ -46,10 +48,9 @@ export function SteamAccountList({
   )
 }
 
-interface ISteamAccountListItemContext
-  extends SteamAccountStatusProps,
-    SteamAccountStatusLiveProps,
-    SteamAccountAppProps {}
+interface ISteamAccountListItemContext extends SteamAccountStatusProps, SteamAccountStatusLiveProps {
+  app: SteamAccountAppProps
+}
 
 export const SteamAccountListItemContext = React.createContext({} as ISteamAccountListItemContext)
 
@@ -58,22 +59,19 @@ export const SteamAccountListItemView = React.forwardRef<
   ISteamAccountListItemContext
 >(function SteamAccountListItemViewComponent(props, ref) {
   const {
-    accountName,
     farmingTime,
-    games,
     hoursFarmedInSeconds,
-    id_steamAccount,
     maxGamesAllowed,
-    profilePictureUrl,
-    status,
     autoRestarter,
+    status,
     header,
-    isFarming,
-    farmingGames,
     steamGuard,
+    app,
   } = props
+  const { accountName, games, id_steamAccount, profilePictureUrl, farmingGames } = app
   const user = useUser()
   console.log(user)
+  const isFarming = farmingGames.length > 0
 
   return (
     <SteamAccountListItemContext.Provider value={props}>
@@ -84,13 +82,15 @@ export const SteamAccountListItemView = React.forwardRef<
         {header && (
           <div className="absolute left-4 bottom-full">
             <ModalAddSteamAccount>
-              <Button className="rounded-t-md border-t border-x border-slate-800 bg-transparent text-white hover:bg-slate-800">
+              <Button className="border-t border-x border-slate-800 bg-transparent text-white hover:bg-slate-800">
                 Adicionar outra conta
               </Button>
             </ModalAddSteamAccount>
           </div>
         )}
-        {isFarming && <div className="absolute top-0 bottom-0 right-full w-[0.25rem] bg-accent" />}
+        {isFarming && (
+          <div className="absolute top-0 bottom-0 right-full w-[0.25rem] bg-accent animate-pulse" />
+        )}
         <div className="flex items-center">
           {steamGuard ? (
             <button className="relative flex items-center h-full px-6 group">
@@ -128,7 +128,9 @@ export const SteamAccountListItemView = React.forwardRef<
         </div>
         <div className="relative flex items-center px-6 min-w-[8.5rem]">
           <div className="pr-2">
-            <div className={cn("h-1.5 w-1.5 rounded-full bg-slate-500", isFarming && "bg-accent")} />
+            <div
+              className={cn("h-1.5 w-1.5 rounded-full bg-slate-500", isFarming && "bg-accent animate-pulse")}
+            />
           </div>
           {header && (
             <div className="absolute bottom-full px-6 left-0 right-0 py-2">
@@ -137,8 +139,9 @@ export const SteamAccountListItemView = React.forwardRef<
           )}
           {isFarming ? (
             <div className="flex flex-col justify-center h-full leading-none">
-              <span className="uppercase">2.5 horas</span>
-              <span className="text-sm text-slate-500">153 min</span>
+              {/* <span className="uppercase">2.5 horas</span> */}
+              {/* <span className="text-sm text-slate-500">153 min</span> */}
+              <TimeSince date={new Date()} />
             </div>
           ) : (
             <div className="flex flex-col justify-center h-full leading-none">
@@ -193,11 +196,13 @@ export const SteamAccountListItemView = React.forwardRef<
           <button className="flex items-center h-full px-4 hover:bg-slate-700">
             <IconChart className="h-5 w-5 fill-white" />
           </button>
-          <button className="flex items-center h-full px-4 hover:bg-slate-700">
-            <IconTrash className="h-5 w-5" />
-          </button>
+          <AlertDialogRemoveSteamAccount steamAccount={app}>
+            <button className="flex items-center h-full px-4 hover:bg-slate-700">
+              <IconTrash className="h-5 w-5" />
+            </button>
+          </AlertDialogRemoveSteamAccount>
           {isFarming ? (
-            <button className="flex items-center px-8 bg-accent h-full min-w-[10rem]">Farmando...</button>
+            <button className="flex items-center px-8 bg-accent h-full min-w-[10rem]">Parar farm</button>
           ) : (
             <button className="flex items-center px-8 bg-slate-800 h-full min-w-[10rem]">Começar farm</button>
           )}
