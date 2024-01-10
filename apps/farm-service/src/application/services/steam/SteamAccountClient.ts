@@ -79,7 +79,7 @@ export class SteamAccountClient extends LastHandler {
       this.logger.log("steam guard required.")
       this.getLastHandler("steamGuard")(...args)
       this.setLastArguments("steamGuard", args)
-      this.logoff()
+      this.changeInnerStatusToNotLogged()
       this.logger.log(
         domain
           ? `Steam Guard code needed from email ending in ${domain}`
@@ -97,7 +97,7 @@ export class SteamAccountClient extends LastHandler {
       this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
-      this.logoff()
+      this.changeInnerStatusToNotLogged()
     })
 
     this.client.on("disconnected", (...args) => {
@@ -106,7 +106,7 @@ export class SteamAccountClient extends LastHandler {
         `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(args)} \r\n`,
         () => {}
       )
-      this.logoff()
+      this.changeInnerStatusToNotLogged()
       this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
       this.logger.log("disconnected.", ...args)
       this.getLastHandler("disconnected")(...args)
@@ -151,8 +151,14 @@ export class SteamAccountClient extends LastHandler {
     })
   }
 
-  logoff() {
+  changeInnerStatusToNotLogged() {
     this.logged = false
+  }
+
+  logoff() {
+    this.logger.log(`${this.accountName} logged off.`)
+    this.emitter.emit("user-logged-off")
+    this.client.logOff()
   }
 
   getPlayingGames() {
@@ -249,6 +255,7 @@ export type SteamApplicationEvents = {
   "relog-with-state": [sacStateCache: SACStateCacheDTO]
   relog: []
   gotRefreshToken: [refreshTokenInterface: IRefreshToken & { accountName: string }]
+  "user-logged-off": []
 }
 
 export class SACStateCacheFactory {

@@ -84,6 +84,8 @@ export class UserClientsStorage {
   }
 
   removeAccountClient(accountName: string) {
+    const sac = this.steamAccountClients.get(accountName)
+    if (sac) sac.logoff()
     this.steamAccountClients.delete(accountName)
   }
 

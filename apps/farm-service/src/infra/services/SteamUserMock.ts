@@ -60,6 +60,8 @@ export class SteamUserMock extends EventEmitter<EventParameters> {
     return this.mobile
   }
 
+  logOff() {}
+
   async logOn(details: { accountName: string; password: string }) {
     let errorCode = 0
     const isValidCredentials = this.validSteamAccounts.some(

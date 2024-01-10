@@ -23,6 +23,7 @@ export class UserSACsFarmingCluster {
   private readonly planId: string
   private readonly usageBuilder: UsageBuilder
   private readonly logger: Logger
+  private shouldPersistSession = true
   readonly emitter: EventEmitter<UserClusterEvents>
 
   constructor(props: UserSACsFarmingClusterProps) {
@@ -54,23 +55,19 @@ export class UserSACsFarmingCluster {
 
     this.logger.log(`Appending interrupt async listener on ${sac.accountName}'s sac!`)
 
-    // sac.emitter.on("gotRefreshToken", async ({ refreshToken, userId, username, accountName }) => {
-    //   sac.logger.log("1/2 - app got refresh token.")
-    //   await this.sacStateCacheRepository.setRefreshToken(accountName, {
-    //     refreshToken,
-    //     userId,
-    //     username,
-    //   })
-    //   sac.logger.log("2/2 - refreshtoken set in cache.")
-    // })
+    sac.emitter.on("user-logged-off", () => {
+      this.logger.log(`${sac.accountName} logged off.`)
+      this.shouldPersistSession = false
+    })
 
     sac.emitter.on("interrupt", async sacStateCache => {
-      this.logger.log(
-        `${sacStateCache.accountName} was interrupt, setting the cache and pausing the farm on SAC.`
-      )
-      await this.sacStateCacheRepository.set(sac.accountName, SACStateCacheFactory.createDTO(sac))
-      this.logger.log(`${sacStateCache.accountName} has set the cache successfully.`)
-      this.pauseFarmOnAccount(sacStateCache.accountName)
+      if (this.shouldPersistSession) {
+        this.logger.log(`${sacStateCache.accountName} was interrupt.`)
+        this.logger.log("setting the cache and pausing the farm on SAC.")
+        await this.sacStateCacheRepository.set(sac.accountName, SACStateCacheFactory.createDTO(sac))
+        this.logger.log(`${sacStateCache.accountName} has set the cache successfully.`)
+        this.pauseFarmOnAccount(sacStateCache.accountName)
+      }
     })
 
     return this
@@ -144,6 +141,7 @@ export class UserSACsFarmingCluster {
     sac.stopFarm()
     return [null, null]
   }
+
   pauseFarmOnAccount(accountName: string): DataOrError<null> {
     const [errorPausingFarm] = this.pauseFarmOnAccountImpl(accountName)
     if (errorPausingFarm) return [errorPausingFarm]

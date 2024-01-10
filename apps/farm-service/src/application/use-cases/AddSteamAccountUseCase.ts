@@ -1,4 +1,11 @@
-import { AddSteamAccount, ApplicationError, DataOrError, UseCase, UsersDAO } from "core"
+import {
+  AddSteamAccount,
+  AddSteamAccountHTTPResponse,
+  ApplicationError,
+  DataOrError,
+  UseCase,
+  UsersDAO,
+} from "core"
 import { AllUsersClientsStorage } from "~/application/services"
 import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
@@ -12,16 +19,11 @@ export namespace AddSteamAccountUseCaseHandle {
     authCode?: string
   }
 
-  export type Response = Promise<
-    DataOrError<{
-      message: string
-      steamAccountId: string
-    }>
-  >
+  export type Response = DataOrError<AddSteamAccountHTTPResponse>
 }
 
 export class AddSteamAccountUseCase
-  implements UseCase<AddSteamAccountUseCaseHandle.Payload, AddSteamAccountUseCaseHandle.Response>
+  implements UseCase<AddSteamAccountUseCaseHandle.Payload, Promise<AddSteamAccountUseCaseHandle.Response>>
 {
   constructor(
     private readonly addSteamAccount: AddSteamAccount,
@@ -30,7 +32,7 @@ export class AddSteamAccountUseCase
     private readonly checkSteamAccountOwnerStatusUseCase: CheckSteamAccountOwnerStatusUseCase
   ) {}
 
-  async execute({ accountName, password, userId, authCode }: APayload): AResponse {
+  async execute({ accountName, password, userId, authCode }: APayload): Promise<AResponse> {
     const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
     const planId = await this.usersDAO.getPlanId(userId)
     if (!planId)
@@ -58,7 +60,7 @@ export class AddSteamAccountUseCase
     })
 
     if (sac.logged) {
-      const { steamAccountID } = await this.addSteamAccount.execute({
+      const { steamAccountId } = await this.addSteamAccount.execute({
         accountName,
         password,
         userId,
@@ -68,7 +70,7 @@ export class AddSteamAccountUseCase
         null,
         {
           message: `${accountName} adicionada com sucesso!`,
-          steamAccountId: steamAccountID,
+          steamAccountId,
         },
       ]
     }
@@ -118,7 +120,7 @@ export class AddSteamAccountUseCase
     }
 
     if (eventsPromisesResolved.type === "loggedOn") {
-      const { steamAccountID } = await this.addSteamAccount.execute({
+      const { steamAccountId } = await this.addSteamAccount.execute({
         accountName,
         password,
         userId,
@@ -128,7 +130,7 @@ export class AddSteamAccountUseCase
         null,
         {
           message: `${accountName} adicionada com sucesso!`,
-          steamAccountId: steamAccountID,
+          steamAccountId,
         },
       ]
     }
