@@ -10,8 +10,7 @@ import React from "react"
 export type HeaderDashboardProps = Omit<
   React.ComponentPropsWithoutRef<typeof HeaderStructure>,
   "children"
-> & {
-}
+> & {}
 
 export const HeaderDashboard = React.forwardRef<
   React.ElementRef<typeof HeaderStructure>,
@@ -27,7 +26,7 @@ export const HeaderDashboard = React.forwardRef<
       ref={ref}
     >
       <div className="flex-1 h-full flex gap-4 items-center"></div>
-      <div className="h-full flex gap-4 items-center">
+      <div className="hidden mdx:flex h-full gap-4 items-center">
         <RoleBadge role={user.role} />
         <div className="flex items-center gap-2 text-sm">
           <span className="font-semibold">Status:</span>
