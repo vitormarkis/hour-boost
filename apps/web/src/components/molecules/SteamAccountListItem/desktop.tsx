@@ -11,54 +11,20 @@ import { Switch } from "@/components/ui/switch"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
 import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
-import { SteamAccountSession } from "core"
 import React from "react"
+import { SteamAccountListItemContext, ISteamAccountListItemContext } from "./context"
+import { ButtonAddNewAccount } from "./components"
 
-type SteamAccountStatusProps = {
-  header?: boolean
-  maxGamesAllowed: number
+type SteamAccountListItemViewDesktopProps = ISteamAccountListItemContext & {
+  className: string
 }
 
-type SteamAccountAppProps = SteamAccountSession
-
-type SteamAccountStatusLiveProps = {
-  autoRestarter?: boolean
-  isFarming?: boolean
-  steamGuard?: boolean
-  status: "offline" | "online"
-  hoursFarmedInSeconds: number
-  farmingTime: number
-}
-
-export function SteamAccountList({
-  app,
-  status,
-}: {
-  status: SteamAccountStatusProps
-  app: SteamAccountAppProps
-}) {
-  return (
-    <SteamAccountListItemView
-      app={app}
-      {...status}
-      status="offline"
-      hoursFarmedInSeconds={0}
-      farmingTime={0}
-    />
-  )
-}
-
-interface ISteamAccountListItemContext extends SteamAccountStatusProps, SteamAccountStatusLiveProps {
-  app: SteamAccountAppProps
-}
-
-export const SteamAccountListItemContext = React.createContext({} as ISteamAccountListItemContext)
-
-export const SteamAccountListItemView = React.forwardRef<
+export const SteamAccountListItemViewDesktop = React.forwardRef<
   React.ElementRef<"div">,
-  ISteamAccountListItemContext
->(function SteamAccountListItemViewComponent(props, ref) {
+  SteamAccountListItemViewDesktopProps
+>(function SteamAccountListItemViewDesktopComponent(props, ref) {
   const {
+    className,
     farmingTime,
     hoursFarmedInSeconds,
     maxGamesAllowed,
@@ -76,16 +42,12 @@ export const SteamAccountListItemView = React.forwardRef<
   return (
     <SteamAccountListItemContext.Provider value={props}>
       <div
-        className={cn("relative h-[4.5rem] border border-slate-800 flex", header && "mt-[4.5rem]")}
+        className={cn("relative h-[4.5rem] border border-slate-800 flex", header && "mt-[4.5rem]", className)}
         ref={ref}
       >
         {header && (
           <div className="absolute left-4 bottom-full">
-            <ModalAddSteamAccount>
-              <Button className="border-t border-x border-slate-800 bg-transparent text-white hover:bg-slate-800">
-                Adicionar outra conta
-              </Button>
-            </ModalAddSteamAccount>
+            <ButtonAddNewAccount />
           </div>
         )}
         {isFarming && (
@@ -141,7 +103,10 @@ export const SteamAccountListItemView = React.forwardRef<
             <div className="flex flex-col justify-center h-full leading-none">
               {/* <span className="uppercase">2.5 horas</span> */}
               {/* <span className="text-sm text-slate-500">153 min</span> */}
-              <TimeSince date={new Date()} />
+              <TimeSince.Root date={new Date()}>
+                <TimeSince.HighlightTime className="text-sm" />
+                <TimeSince.SecondaryTime className="text-xs" />
+              </TimeSince.Root>
             </div>
           ) : (
             <div className="flex flex-col justify-center h-full leading-none">
@@ -193,11 +158,11 @@ export const SteamAccountListItemView = React.forwardRef<
             )}
             <Switch size="1.25rem" />
           </div>
-          <button className="flex items-center h-full px-4 hover:bg-slate-700">
+          <button className="flex items-center h-full px-4 hover:bg-slate-700 transition-all duration-300">
             <IconChart className="h-5 w-5 fill-white" />
           </button>
           <AlertDialogRemoveSteamAccount steamAccount={app}>
-            <button className="flex items-center h-full px-4 hover:bg-slate-700">
+            <button className="flex items-center h-full px-4 hover:bg-slate-700 transition-all duration-300">
               <IconTrash className="h-5 w-5" />
             </button>
           </AlertDialogRemoveSteamAccount>
@@ -226,4 +191,4 @@ export const SteamAccountListItemView = React.forwardRef<
 </div> */
 }
 
-SteamAccountListItemView.displayName = "SteamAccountListItem"
+SteamAccountListItemViewDesktop.displayName = "SteamAccountListItem"

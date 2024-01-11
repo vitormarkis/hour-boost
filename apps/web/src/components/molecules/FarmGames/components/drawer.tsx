@@ -1,6 +1,5 @@
 import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
 import { GameItem } from "@/components/molecules/GameItem"
-import { SteamAccountListItemContext } from "@/components/molecules/SteamAccountListItem"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -23,6 +22,7 @@ import React, { useContext, useState } from "react"
 import { toast } from "sonner"
 import { FarmGamesPayload } from "../controller"
 import { IntentionCodes } from "../view"
+import { SteamAccountListItemContext } from "@/components/molecules/SteamAccountListItem/context"
 
 export type DrawerSheetChooseFarmingGamesViewProps = React.ComponentPropsWithoutRef<"div"> & {
   farmGames: UseMutationResult<DataOrMessage<string, IntentionCodes>, Error, FarmGamesPayload, unknown>

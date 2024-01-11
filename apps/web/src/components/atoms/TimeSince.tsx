@@ -1,5 +1,6 @@
 "use client"
-import { useEffect, useState } from "react"
+import { cn } from "@/lib/utils"
+import { createContext, useContext, useEffect, useState } from "react"
 
 const MINUTE = 60
 const HOUR = 60 * MINUTE
@@ -83,22 +84,103 @@ export function useTimeSince(date: Date) {
   return { timeSince: formatter.format(timeSince) }
 }
 
-interface TimeSinceProps {
-  date: Date
+interface ITimeSinceContext {
+  highlightTime: string
+  secondaryTime: string
 }
 
-export function TimeSince({ date }: TimeSinceProps) {
-  const { timeSince } = useTimeSince(date)
-  const [timeNumber, category, ...secondaryRest] = timeSince.split(" ")
+const TimeSinceContext = createContext({} as ITimeSinceContext)
 
-  const highlightTime = [timeNumber, category].join(" ")
-  const secondaryTime = secondaryRest.join(" ")
+import React from "react"
+
+export type TimeSinceRootProps = React.ComponentPropsWithoutRef<"div"> & {
+  date: Date
+  children: React.ReactNode
+  column?: boolean
+}
+
+export const TimeSinceRoot = React.forwardRef<React.ElementRef<"div">, TimeSinceRootProps>(
+  function TimeSinceRootComponent({ column, children, date, className, ...props }, ref) {
+    const { timeSince } = useTimeSince(date)
+    const [timeNumber, category, ...secondaryRest] = timeSince.split(" ")
+
+    const highlightTime = [timeNumber, category].join(" ")
+    const secondaryTime = secondaryRest.join(" ")
+
+    return (
+      <TimeSinceContext.Provider
+        value={{
+          highlightTime,
+          secondaryTime,
+        }}
+      >
+        <div
+          {...props}
+          className={cn("flex relative tabular-nums", column && "flex-col", className)}
+          ref={ref}
+        >
+          {children}
+        </div>
+      </TimeSinceContext.Provider>
+    )
+  }
+)
+
+TimeSinceRoot.displayName = "TimeSinceRoot"
+
+export type TimeSinceHighlightTimeProps = React.ComponentPropsWithoutRef<"strong"> & {}
+
+export const TimeSinceHighlightTime = React.forwardRef<
+  React.ElementRef<"strong">,
+  TimeSinceHighlightTimeProps
+>(function TimeSinceHighlightTimeComponent({ className, ...props }, ref) {
+  const { highlightTime } = useContext(TimeSinceContext)
+
   return (
-    <div className="flex flex-col relative tabular-nums w-[5.75rem]">
-      <strong className="leading-none font-medium">{highlightTime}</strong>
-      <div className="absolute top-full">
-        <span className="pt-0.5 leading-none text-xs text-slate-500">{secondaryTime}</span>
-      </div>
-    </div>
+    <strong
+      {...props}
+      className={cn("leading-none font-medium whitespace-nowrap", className)}
+      ref={ref}
+    >
+      {highlightTime}
+    </strong>
   )
+})
+
+TimeSinceHighlightTime.displayName = "TimeSinceHighlightTime"
+
+export type TimeSinceSecondaryTimeProps = React.ComponentPropsWithoutRef<"span"> & {
+  suspense?: "bottom" | false
+}
+
+export const TimeSinceSecondaryTime = React.forwardRef<React.ElementRef<"span">, TimeSinceSecondaryTimeProps>(
+  function TimeSinceSecondaryTimeComponent({ suspense = "bottom", className, ...props }, ref) {
+    const { secondaryTime } = useContext(TimeSinceContext)
+
+    const Text: React.FC = () => (
+      <span
+        {...props}
+        className={cn("pt-0.5 leading-none text-xs text-slate-500 whitespace-nowrap", className)}
+        ref={ref}
+      >
+        {secondaryTime}
+      </span>
+    )
+
+    if (suspense === false) return <Text />
+
+    return (
+      <div className="absolute top-full">
+        <Text />
+      </div>
+    )
+  }
+)
+
+TimeSinceSecondaryTime.displayName = "TimeSinceSecondaryTime"
+
+export const TimeSince = {
+  Root: TimeSinceRoot,
+  HighlightTime: TimeSinceHighlightTime,
+  SecondaryTime: TimeSinceSecondaryTime,
 }

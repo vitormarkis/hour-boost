@@ -34,7 +34,7 @@ export default function DashboardPage({ user }: UserSessionParams) {
   return (
     <UserProvider serverUser={user}>
       <HeaderDashboard />
-      <div className="max-w-[1440px] w-full mx-auto px-8">
+      <div className="max-w-[1440px] w-full mx-auto mdx:px-8">
         <DashboardSteamAccountsList />
       </div>
     </UserProvider>

@@ -19,20 +19,23 @@ export const DashboardSteamAccountsList = React.forwardRef<
   return (
     <section
       {...props}
-      className={cn("flex flex-col gap-2 p-2", className)}
+      className={cn("flex flex-col gap-16 mdx:gap-2 mdx:p-2", className)}
       ref={ref}
     >
       {user.hasAccounts() ? (
-        user.steamAccounts.map((app, index) => (
-          <SteamAccountList
-            key={app.id_steamAccount}
-            app={app}
-            status={{
-              maxGamesAllowed: user.plan.maxGamesAllowed,
-              header: index === 0,
-            }}
-          />
-        ))
+        <>
+          {user.steamAccounts.map((app, index) => (
+            <SteamAccountList
+              key={app.id_steamAccount}
+              app={app}
+              status={{
+                maxGamesAllowed: user.plan.maxGamesAllowed,
+                header: index === 0,
+              }}
+            />
+          ))}
+          <div className="pb-16" />
+        </>
       ) : (
         <div className="w-full h-full grid place-items-center">
           <div className="py-12 flex items-center">

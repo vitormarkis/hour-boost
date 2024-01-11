@@ -1,6 +1,5 @@
 import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
 import { GameItem } from "@/components/molecules/GameItem"
-import { SteamAccountListItemContext } from "@/components/molecules/SteamAccountListItem"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -22,6 +21,7 @@ import { API_GET_RefreshAccountGames } from "core"
 import React, { useContext, useState } from "react"
 import { toast } from "sonner"
 import { FarmGamesPayload } from "./controller"
+import { SteamAccountListItemContext } from "@/components/molecules/SteamAccountListItem/context"
 
 export type IntentionCodes =
   | "STEAM_GUARD_REQUIRED"
@@ -44,7 +44,6 @@ export const DrawerSheetChooseFarmingGamesView = React.forwardRef<
 >(function DrawerSheetChooseFarmingGamesViewComponent({ children, farmGames, className, ...props }, ref) {
   const [open, setOpen] = useState(false)
   const { accountName, games } = useContext(SteamAccountListItemContext).app
-  console.log({ context: useContext(SteamAccountListItemContext) })
   const { getToken } = useAuth()
   const user = useUser()
 
@@ -174,7 +173,7 @@ export const DrawerSheetChooseFarmingGamesView = React.forwardRef<
             onClick={handleStopFarm}
             className="flex-1 "
           >
-            <span>Limpar farm!</span>
+            <span>Limpar farm</span>
           </Button>
           <Button
             onClick={handleRefreshGames}
