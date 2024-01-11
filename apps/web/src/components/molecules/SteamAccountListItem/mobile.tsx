@@ -109,7 +109,7 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
                 <div className="flex flex-col justify-center h-full leading-none">
                   <TimeSince.Root
                     className="items-end gap-2"
-                    date={new Date("2024-01-11T01:26:00.000Z")}
+                    date={new Date()}
                   >
                     <TimeSince.HighlightTime />
                     <TimeSince.SecondaryTime suspense={false} />
@@ -135,7 +135,7 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
             </div>
           </li>
         </ul>
-        <ul className="flex pt-3 h-20">
+        <ul className="flex h-24">
           <li>
             <button className="flex items-center h-full px-4 hover:bg-slate-700 transition-[background-color] duration-300">
               <IconChart className="h-5 w-5 fill-white" />
@@ -154,8 +154,8 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
               <button className="relative py-2 flex items-center px-6 group hover:bg-slate-700 transition-[background-color] duration-300 h-full">
                 <div className="flex flex-col items-end">
                   <strong className="pb-0.5">Jogos</strong>
-                  <div className="flex items-center gap-1 h-6 ">
-                    <span className="uppercase text-sm pb-1">
+                  <div className="flex items-center gap-2 h-6 ">
+                    <span className="uppercase text-sm">
                       {farmingGames.length}/{maxGamesAllowed}
                     </span>
                     <IconJoystick className="transition-[background-color] duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />

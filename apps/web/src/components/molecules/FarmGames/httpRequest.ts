@@ -2,7 +2,7 @@ import { DataOrMessage, MessageMaker } from "@/util/DataOrMessage"
 import { resolvePromiseToMessage } from "@/util/resolvePromiseToMessage"
 import { AxiosInstance, AxiosResponse } from "axios"
 import { FarmGamesPayload } from "./controller"
-import { IntentionCodes } from "./view"
+import { IntentionCodes } from "./types"
 
 type FarmGamesOutput = {
   message: string

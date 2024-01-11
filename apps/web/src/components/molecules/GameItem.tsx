@@ -1,23 +1,29 @@
 import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
 import { GameSession } from "core"
-import React, { useContext } from "react"
+import React, { CSSProperties, useContext } from "react"
 
 export type GameItemProps = React.ComponentPropsWithoutRef<"div"> & {
   game: GameSession
   isSelected?: boolean
   handleFarmGame(): void
+  height?: `${number}rem`
 }
 
 export const GameItem = React.forwardRef<React.ElementRef<"div">, GameItemProps>(function GameItemComponent(
-  { game, className, isSelected, handleFarmGame, ...props },
+  { game, height = "8rem", className, isSelected, handleFarmGame, ...props },
   ref
 ) {
   return (
     <div
       {...props}
-      className={cn("h-20 flex", className)}
+      className={cn("h-[var(--game-item-height)] flex", className)}
       ref={ref}
+      style={
+        {
+          "--game-item-height": height,
+        } as CSSProperties
+      }
     >
       <div
         className={cn(
@@ -35,7 +41,9 @@ export const GameItem = React.forwardRef<React.ElementRef<"div">, GameItemProps>
         </span>
         <img
           src={game.imageUrl}
-          className="h-full w-full absolute inset-0 object-cover group-hover:scale-105 transition-all duration-500"
+          className={cn(
+            "h-full w-full absolute inset-0 object-cover group-hover:scale-105 transition-all duration-500"
+          )}
         />
       </button>
     </div>

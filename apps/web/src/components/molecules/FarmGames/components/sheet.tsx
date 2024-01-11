@@ -20,7 +20,7 @@ import { UseMutationResult, useMutation } from "@tanstack/react-query"
 import { API_GET_RefreshAccountGames } from "core"
 import React, { useContext, useState } from "react"
 import { toast } from "sonner"
-import { FarmGamesPayload } from "./controller"
+import { FarmGamesPayload } from "../controller"
 import { SteamAccountListItemContext } from "@/components/molecules/SteamAccountListItem/context"
 
 export type IntentionCodes =
@@ -30,7 +30,7 @@ export type IntentionCodes =
   | "PLAN_MAX_USAGE_EXCEEDED"
 // Seu plano não possui mais uso disponível.
 
-export type DrawerSheetChooseFarmingGamesViewProps = React.ComponentPropsWithoutRef<"div"> & {
+export type SheetChooseFarmingGamesViewProps = React.ComponentPropsWithoutRef<"div"> & {
   children: React.ReactNode
 }
 
@@ -38,10 +38,10 @@ export type ControllerProps = {
   farmGames: UseMutationResult<DataOrMessage<string, IntentionCodes>, Error, FarmGamesPayload, unknown>
 }
 
-export const DrawerSheetChooseFarmingGamesView = React.forwardRef<
+export const SheetChooseFarmingGamesView = React.forwardRef<
   React.ElementRef<"div">,
-  DrawerSheetChooseFarmingGamesViewProps & ControllerProps
->(function DrawerSheetChooseFarmingGamesViewComponent({ children, farmGames, className, ...props }, ref) {
+  SheetChooseFarmingGamesViewProps & ControllerProps
+>(function SheetChooseFarmingGamesViewComponent({ children, farmGames, className, ...props }, ref) {
   const [open, setOpen] = useState(false)
   const { accountName, games } = useContext(SteamAccountListItemContext).app
   const { getToken } = useAuth()
@@ -230,4 +230,4 @@ export const DrawerSheetChooseFarmingGamesView = React.forwardRef<
   )
 })
 
-DrawerSheetChooseFarmingGamesView.displayName = "DrawerSheetChooseFarmingGamesView"
+SheetChooseFarmingGamesView.displayName = "SheetChooseFarmingGamesView"
