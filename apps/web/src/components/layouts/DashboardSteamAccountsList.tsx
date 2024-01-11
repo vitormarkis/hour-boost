@@ -38,12 +38,12 @@ export const DashboardSteamAccountsList = React.forwardRef<
         </>
       ) : (
         <div className="w-full h-full grid place-items-center">
-          <div className="py-12 flex items-center">
-            <h1 className="font-bold w-fit h-fit text-[2.6rem]/none text-right text-slate-600/80">
+          <div className="py-12 flex items-center px-16 md:px-0">
+            <h1 className="font-bold w-fit h-fit text-[2.6rem] md:text-[2rem] mdx:text-[2.6rem] leading-none text-center md:text-right text-slate-600/80">
               Você não possui contas no momento...
             </h1>
-            <div>
-              <IconPullRequest className="w-[3.5rem] fill-slate-600/80" />
+            <div className="hidden md:block">
+              <IconPullRequest className="ml-4 w-[3.5rem] fill-slate-600/80" />
             </div>
           </div>
           <div className="flex items-center justify-center">
