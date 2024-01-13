@@ -30,7 +30,7 @@ export class GetMeController implements Controller<GetMeHandle.Payload, GetMeHan
       return {
         json: {
           ...userSession,
-        } as UserSession,
+        },
         status: 201,
       }
     } catch (error) {

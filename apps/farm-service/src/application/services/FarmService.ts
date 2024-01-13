@@ -4,17 +4,6 @@ import { DataOrError, PlanType, Usage } from "core"
 import { FarmServiceStatus } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 
-type AccountFarmingStatus = "FARMING" | "IDDLE"
-
-export type FarmingAccountDetails = {
-  usageAmountInSeconds: number
-  status: AccountFarmingStatus
-}
-
-export type FarmingAccountDetailsWithAccountName = FarmingAccountDetails & {
-  accountName: string
-}
-
 export type FarmServiceProps = {
   startedAt: Date
   planId: string
@@ -24,14 +13,13 @@ export type FarmServiceProps = {
 }
 
 export abstract class FarmService {
-  protected readonly accountsFarming = new Map<string, FarmingAccountDetails>()
   protected readonly publisher: Publisher
   abstract readonly type: PlanType
   protected status: FarmServiceStatus
-  protected readonly startedAt: Date
   protected readonly planId: string
   protected readonly userId: string
   protected readonly username: string
+  readonly startedAt: Date
 
   constructor(props: FarmServiceProps) {
     this.status = "IDDLE"
@@ -42,60 +30,14 @@ export abstract class FarmService {
     this.publisher = props.publisher
   }
 
-  getAccountDetails(accountName: string) {
-    return this.accountsFarming.get(accountName) ?? null
-  }
-
   abstract getAccountsStatus(): AccountStatusList
 
-  protected setAccountStatus(accountName: string, status: "FARMING" | "IDDLE") {
-    const account = this.getAccountDetails(accountName)
-    if (!account) return
-    // if (!account) {
-    //   const msg = `NSTH: Tried to resume farming on account that don't exists. ${accountName}`
-    //   throw new ApplicationError(msg, 500)
-    // }
-    this.accountsFarming.set(accountName, {
-      ...account,
-      status,
-    })
-
-    // account = {
-    //   ...account,
-    //   status,
-    // }
-  }
-
-  private appendAccount(accountName: string) {
-    this.accountsFarming.set(accountName, {
-      usageAmountInSeconds: 0,
-      status: "FARMING",
-    })
-  }
-
-  private resumeFarming(accountName: string) {
-    this.setAccountStatus(accountName, "FARMING")
-  }
-
-  private isAccountAdded(accountName: string) {
-    return !!this.getAccountDetails(accountName)
-  }
-
-  farmWithAccount(accountName: string): DataOrError<null> {
-    const [error] = this.farmWithAccountImpl(accountName)
-    if (error) return [error]
-
-    console.log(`farm-service: is ${accountName} added? `, this.isAccountAdded(accountName))
-    if (!this.isAccountAdded(accountName)) {
-      console.log(
-        `Since the ${accountName} is not added, I'm appending this account again with the status 'FARMING'`
-      )
-    }
-    if (this.isAccountAdded(accountName)) this.resumeFarming(accountName)
-    else this.appendAccount(accountName)
-    return [null, null]
-  }
-
+  abstract getActiveFarmingAccountsAmount(): number
+  abstract getFarmingAccounts(): DataOrError<NSFarmService.GetFarmingAccounts>
+  abstract isAccountFarming(accountName: string): boolean
+  abstract isAccountAdded(accountName: string): boolean
+  abstract hasAccountsFarming(): boolean
+  abstract farmWithAccount(accountName: string): DataOrError<null>
   abstract farmWithAccountImpl(accountName: string): DataOrError<null>
 
   getServiceStatus() {
@@ -113,26 +55,6 @@ export abstract class FarmService {
   protected abstract stopFarmSync(): Usage[]
   abstract pauseFarmOnAccount(accountName: string): DataOrError<null>
   abstract pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage>
-
-  private getActiveFarmingAccounts() {
-    return Array.from(this.accountsFarming).filter(([_, details]) => details.status === "FARMING")
-  }
-
-  getActiveFarmingAccountsAmount() {
-    return this.getActiveFarmingAccounts().length
-  }
-
-  hasAccountsFarming(): boolean {
-    return this.getActiveFarmingAccountsAmount() > 0
-  }
-
-  getFarmingAccounts() {
-    const farmingAccounts: Record<string, AccountFarmingStatus> = {}
-    for (const [accountName, details] of this.accountsFarming) {
-      farmingAccounts[accountName] = details.status
-    }
-    return farmingAccounts
-  }
 
   getPlanId() {
     return this.planId
@@ -166,4 +88,9 @@ export namespace NSFarmSessionCategory {
     type: "STOP-ONE"
     usage: Usage
   }
+}
+
+export namespace NSFarmService {
+  export type AccounStatus = "IDDLE" | "FARMING"
+  export type GetFarmingAccounts = Record<string, AccounStatus>
 }

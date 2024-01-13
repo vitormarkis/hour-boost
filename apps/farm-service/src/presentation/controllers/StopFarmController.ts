@@ -23,7 +23,7 @@ export class StopFarmController implements Controller<StopFarmHandle.Payload, St
 
     const [errorFindingUserCluster, userCluster] = this.usersClusterStorage.get(user.username)
     if (errorFindingUserCluster) throw errorFindingUserCluster
-    const [errorPausingFarmOnAccount] = userCluster.pauseFarmOnAccount(accountName)
+    const [errorPausingFarmOnAccount] = userCluster.pauseFarmOnAccount({ accountName })
     if (errorPausingFarmOnAccount) throw errorPausingFarmOnAccount
     return { json: null, status: 200 }
   }

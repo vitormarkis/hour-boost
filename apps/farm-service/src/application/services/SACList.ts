@@ -1,4 +1,3 @@
-import { TsJestCompiler } from "ts-jest"
 import { SteamAccountClient } from "~/application/services/steam"
 
 export class SACList {
@@ -20,6 +19,10 @@ export class SACList {
     for (const [_, sac] of this.list) {
       sac.stopFarm()
     }
+  }
+
+  delete(accountName: string) {
+    this.list.delete(accountName)
   }
 
   hasAccountsFarming() {

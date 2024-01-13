@@ -115,6 +115,7 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
       planId: user.plan.id_plan,
       sac,
       username: user.username,
+      sessionType: "NEW",
     })
 
     if (error) throw error

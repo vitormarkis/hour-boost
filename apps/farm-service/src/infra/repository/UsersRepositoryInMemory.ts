@@ -26,7 +26,6 @@ export class UsersRepositoryInMemory implements UsersRepository {
         const foundSteamAccount = this.steamAccountsMemory.getById(id)
         user.addSteamAccount(foundSteamAccount)
       } catch (e) {
-        console.log("22: error", e)
         console.log("trying to find ")
       }
     }

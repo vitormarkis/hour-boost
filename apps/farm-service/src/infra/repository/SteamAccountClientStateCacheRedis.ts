@@ -3,6 +3,7 @@ import {
   GameSession,
   IRefreshToken,
   InitProps,
+  NSSteamAccountClientStateCacheRepository,
   SACStateCacheDTO,
   SteamAccountClientStateCacheRepository,
   SteamAccountPersonaState,
@@ -22,6 +23,19 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
     this.logger = new Logger(`State Redis`)
   }
 
+  async startFarm({
+    accountName,
+    when,
+    initSession = true,
+  }: NSSteamAccountClientStateCacheRepository.StartFarmProps): Promise<void> {
+    const key = this.KEY_STATE(accountName)
+    const farmStartedAt = when.getTime()
+    this.logger.log("Saving farmStartedAt: ", farmStartedAt)
+    if (initSession) {
+      await this.redis.call("JSON.SET", key, "$.farmStartedAt", farmStartedAt)
+    }
+  }
+
   async deleteAllEntriesFromAccount(accountName: string): Promise<void> {
     this.logger.log(`Deleting all entries for [${accountName}].`)
     await this.redis
@@ -37,6 +51,7 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
       .multi()
       .call("JSON.SET", key, "$.gamesPlaying", "[]")
       .call("JSON.SET", key, "$.isFarming", "false")
+      .call("JSON.SET", key, "$.farmStartedAt", "null")
       .exec()
   }
 
@@ -66,6 +81,7 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
         isFarming: false,
         planId,
         username,
+        farmStartedAt: null,
       })
       return
     }
@@ -138,7 +154,6 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
     }
     this.logger.log(`state found for user ${accountName}`)
     const [state] = JSON.parse(foundState) as [state: SACStateCacheDTO]
-    this.logger.log(`no state found for user ${accountName}`)
     return Promise.resolve(state)
   }
 

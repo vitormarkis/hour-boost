@@ -42,9 +42,14 @@ describe("List test suite", () => {
     // const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
     const meCluster = usersClusterStorage.add(s.me.username, meInstances.me.plan)
     meCluster.addSAC(meInstances.meSAC)
-    await meCluster.farmWithAccount(s.me.accountName, [109], meInstances.me.plan.id_plan)
+    await meCluster.farmWithAccount({
+      accountName: s.me.accountName,
+      gamesId: [109],
+      planId: meInstances.me.plan.id_plan,
+      sessionType: "NEW",
+    })
     jest.advanceTimersByTime(1000 * 60) // 1 minute
-    meCluster.pauseFarmOnAccount(s.me.accountName)
+    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName })
     const accountStatus = usersClusterStorage.getAccountsStatus()
     expect(accountStatus).toStrictEqual({
       user_vrsl: {
@@ -60,8 +65,18 @@ describe("List test suite", () => {
     meCluster.addSAC(meInstances.meSAC)
     const friendCluster = usersClusterStorage.add(s.friend.username, friendInstances.friend.plan)
     friendCluster.addSAC(friendInstances.friendSAC)
-    await meCluster.farmWithAccount(s.me.accountName, [109], meInstances.me.plan.id_plan)
-    await friendCluster.farmWithAccount(s.friend.accountName, [109], friendInstances.friend.plan.id_plan)
+    await meCluster.farmWithAccount({
+      accountName: s.me.accountName,
+      gamesId: [109],
+      planId: meInstances.me.plan.id_plan,
+      sessionType: "NEW",
+    })
+    await friendCluster.farmWithAccount({
+      accountName: s.friend.accountName,
+      gamesId: [109],
+      planId: friendInstances.friend.plan.id_plan,
+      sessionType: "NEW",
+    })
     const accountStatus = usersClusterStorage.getAccountsStatus()
     expect(accountStatus).toStrictEqual({
       [s.me.username]: {
@@ -82,28 +97,48 @@ describe("List test suite", () => {
 
     expect(spy_meCluster_setFarmService).toHaveBeenCalledTimes(0)
     // 1 conta, busca plano
-    await meCluster.farmWithAccount(s.me.accountName, [109], meInstances.me.plan.id_plan)
+    await meCluster.farmWithAccount({
+      accountName: s.me.accountName,
+      gamesId: [109],
+      planId: meInstances.me.plan.id_plan,
+      sessionType: "NEW",
+    })
     expect(spy_meCluster_setFarmService).toHaveBeenCalledTimes(1)
     expect(spy_planRepository_getById).toHaveBeenCalledTimes(1)
     expect(spy_planRepository_getById).toHaveBeenCalledWith(meInstances.me.plan.id_plan)
 
     // 2 contas, usa plano existente
-    await meCluster.farmWithAccount(s.me.accountName2, [109], meInstances.me.plan.id_plan)
+    await meCluster.farmWithAccount({
+      accountName: s.me.accountName2,
+      gamesId: [109],
+      planId: meInstances.me.plan.id_plan,
+      sessionType: "NEW",
+    })
     expect(spy_planRepository_getById).toHaveBeenCalledTimes(1)
 
     jest.advanceTimersByTime(1000 * 60) // 1 minute
-    meCluster.pauseFarmOnAccount(s.me.accountName)
+    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName })
 
     // 2 contas, usa plano existente, chamando o s.me.accountName
-    await meCluster.farmWithAccount(s.me.accountName, [109], meInstances.me.plan.id_plan)
+    await meCluster.farmWithAccount({
+      accountName: s.me.accountName,
+      gamesId: [109],
+      planId: meInstances.me.plan.id_plan,
+      sessionType: "NEW",
+    })
     expect(spy_planRepository_getById).toHaveBeenCalledTimes(1)
 
     jest.advanceTimersByTime(1000 * 60) // 1 minute
-    meCluster.pauseFarmOnAccount(s.me.accountName)
-    meCluster.pauseFarmOnAccount(s.me.accountName2)
+    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName })
+    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName2 })
 
     // 0 contas, farm novo, busca plano
-    await meCluster.farmWithAccount(s.me.accountName2, [109], meInstances.me.plan.id_plan)
+    await meCluster.farmWithAccount({
+      accountName: s.me.accountName2,
+      gamesId: [109],
+      planId: meInstances.me.plan.id_plan,
+      sessionType: "NEW",
+    })
     expect(spy_planRepository_getById).toHaveBeenCalledTimes(2)
     expect(spy_meCluster_setFarmService).toHaveBeenCalledTimes(2)
   })

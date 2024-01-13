@@ -1,7 +1,9 @@
 import {
   ApplicationError,
   DataOrError,
+  PlanInfinity,
   PlanRepository,
+  PlanUsage,
   SACStateCache,
   SteamAccountClientStateCacheRepository,
 } from "core"
@@ -14,7 +16,7 @@ import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 
 export class UserSACsFarmingCluster {
   private readonly publisher: Publisher
-  private farmService: FarmService
+  farmService: FarmService
   private readonly sacList: SACList = new SACList()
   private readonly username: string
   private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
@@ -60,13 +62,22 @@ export class UserSACsFarmingCluster {
       this.shouldPersistSession = false
     })
 
-    sac.emitter.on("interrupt", async sacStateCache => {
+    sac.emitter.on("interrupt", async sacStateCacheDTO => {
       if (this.shouldPersistSession) {
-        this.logger.log(`${sacStateCache.accountName} was interrupt.`)
-        this.logger.log("setting the cache and pausing the farm on SAC.")
-        await this.sacStateCacheRepository.set(sac.accountName, SACStateCacheFactory.createDTO(sac))
+        const sacStateCache = SACStateCacheFactory.createDTO({
+          accountName: sacStateCacheDTO.accountName,
+          gamesPlaying: sacStateCacheDTO.gamesPlaying,
+          isFarming: sacStateCacheDTO.isFarming,
+          planId: sacStateCacheDTO.planId,
+          username: sacStateCacheDTO.username,
+          farmStartedAt: this.farmService.startedAt,
+        })
+        await this.sacStateCacheRepository.set(sac.accountName, sacStateCache)
         this.logger.log(`${sacStateCache.accountName} has set the cache successfully.`)
-        this.pauseFarmOnAccount(sacStateCache.accountName)
+        this.pauseFarmOnAccount({
+          accountName: sacStateCache.accountName,
+          killSession: false,
+        })
       }
     })
 
@@ -91,7 +102,12 @@ export class UserSACsFarmingCluster {
     return !!this.sacList.has(accountName)
   }
 
-  async farmWithAccount(accountName: string, gamesId: number[], planId: string): Promise<DataOrError<null>> {
+  async farmWithAccount({
+    accountName,
+    gamesId,
+    planId,
+    sessionType,
+  }: NSUserCluster.FarmWithAccount): Promise<DataOrError<null>> {
     try {
       const sac = this.sacList.get(accountName)
       if (!sac)
@@ -102,12 +118,16 @@ export class UserSACsFarmingCluster {
         ]
 
       if (!this.farmService.hasAccountsFarming()) {
+        this.logger.log("SETANDO PRIMEIRO FARM")
         const plan = await this.planRepository.getById(planId)
         if (!plan) {
           return [new ApplicationError(`NSTH: ID do plano não existe, contate o desenvolvedor. ${planId}`)]
         }
-        const newFarmService = this.farmServiceFactory.create(this.username, plan)
-        this.setFarmService(newFarmService)
+        this.updateFarmService(plan)
+      }
+      const accountIsNotFarming = !this.isAccountFarming(accountName)
+      if (accountIsNotFarming && sessionType === "NEW") {
+        await this.notifyFirstTimeFarming(accountName)
       }
       await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId, planId, sac.username)
       return this.farmWithAccountImpl(sac, accountName, gamesId)
@@ -120,38 +140,61 @@ export class UserSACsFarmingCluster {
     }
   }
 
+  private async notifyFirstTimeFarming(accountName: string) {
+    const when = new Date()
+    await this.sacStateCacheRepository.startFarm({
+      accountName,
+      when,
+      initSession: true,
+    })
+  }
+
+  private updateFarmService(plan: PlanInfinity | PlanUsage) {
+    const now = new Date()
+    const newFarmService = this.farmServiceFactory.create(this.username, plan, now)
+    this.setFarmService(newFarmService)
+  }
+
   private farmWithAccountImpl(
     sac: SteamAccountClient,
     accountName: string,
     gamesId: number[]
   ): DataOrError<null> {
     this.logger.log(`Appending account to farm on service: `, accountName)
-    const [error] = this.farmService.farmWithAccount(accountName)
-    if (error) return [error]
+    if (!this.isAccountFarming(accountName)) {
+      const [error] = this.farmService.farmWithAccount(accountName)
+      if (error) return [error]
+    }
     sac.farmGames(gamesId)
     return [null, null]
   }
 
-  private pauseFarmOnAccountImpl(accountName: string): DataOrError<null> {
+  private pauseFarmOnAccountImpl({
+    accountName,
+    killSession = true,
+  }: NSUserCluster.PauseFarmOnAccountProps): DataOrError<null> {
     if (this.sacList.list.size === 0)
       return [new ApplicationError("Usuário não possui contas farmando.", 402)]
     const sac = this.sacList.get(accountName)
     if (!sac)
       return [new ApplicationError(`NSTH: Usuário tentou pausar farm em uma conta que não estava farmando.`)]
+    // this.farmService.pauseFarmOnAccount(accountName)
+    if (killSession) this.sacStateCacheRepository.stopFarm(accountName)
     sac.stopFarm()
     return [null, null]
   }
 
-  pauseFarmOnAccount(accountName: string): DataOrError<null> {
-    const [errorPausingFarm] = this.pauseFarmOnAccountImpl(accountName)
+  pauseFarmOnAccount(props: NSUserCluster.PauseFarmOnAccountProps): DataOrError<null> {
+    const [errorPausingFarm] = this.pauseFarmOnAccountImpl(props)
     if (errorPausingFarm) return [errorPausingFarm]
-    const errorOrUsages = this.farmService.pauseFarmOnAccount(accountName)
+    const errorOrUsages = this.farmService.pauseFarmOnAccount(props.accountName)
     return errorOrUsages
   }
 
-  pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
-    this.pauseFarmOnAccountImpl(accountName)
-    const errorOrUsages = this.farmService.pauseFarmOnAccountSync(accountName)
+  pauseFarmOnAccountSync(props: NSUserCluster.PauseFarmOnAccountProps): DataOrError<PauseFarmOnAccountUsage> {
+    const [errorPausingFarm] = this.pauseFarmOnAccountImpl(props)
+    if (errorPausingFarm) return [errorPausingFarm]
+    const errorOrUsages = this.farmService.pauseFarmOnAccountSync(props.accountName)
     return errorOrUsages
   }
 
@@ -159,9 +202,12 @@ export class UserSACsFarmingCluster {
     this.farmService = newFarmService
   }
 
-  isAccountFarming(accountName: string) {
-    const accountDetails = this.farmService.getAccountDetails(accountName)
-    return accountDetails?.status === "FARMING"
+  isAccountFarming(accountName: string): boolean {
+    return this.farmService.isAccountFarming(accountName)
+  }
+
+  removeSAC(accountName: string) {
+    this.sacList.delete(accountName)
   }
 }
 
@@ -179,4 +225,20 @@ export type UserSACsFarmingClusterProps = {
 
 export type UserClusterEvents = {
   "service:max-usage-exceeded": []
+}
+
+export namespace NSUserCluster {
+  export type PauseFarmOnAccountProps = {
+    accountName: string
+    killSession?: boolean
+  }
+
+  export type SessionType = "NEW" | "CONTINUE-FROM-PREVIOUS"
+
+  export type FarmWithAccount = {
+    accountName: string
+    gamesId: number[]
+    planId: string
+    sessionType: SessionType
+  }
 }

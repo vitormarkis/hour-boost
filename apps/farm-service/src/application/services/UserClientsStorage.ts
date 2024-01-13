@@ -10,6 +10,7 @@ export class UserClientsStorage {
   readonly logger: Logger
 
   constructor(
+    readonly username: string,
     private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository,
     private readonly farmGamesUseCase: FarmGamesUseCase,
     private readonly planRepository: PlanRepository
@@ -31,22 +32,16 @@ export class UserClientsStorage {
       sac.logger.log("refreshtoken set in cache.")
     })
 
-    this.logger.log("Appending init cache listener on LoggedOn event.")
     sac.emitter.on("hasSession", async () => {
       await this.sacStateCacheRepository.init({
         accountName: sac.accountName,
         planId: sac.planId,
         username: sac.username,
       })
-      this.logger.log(`Finish initing ${sac.accountName}`)
-      this.logger.log("Starting to fetch SAC State Cache.")
       const sacStateCache = await this.sacStateCacheRepository.get(sac.accountName)
-      this.logger.log(`Found SAC State Cache for [${sac.accountName}]`, sacStateCache)
-      if (sacStateCache) {
-        this.logger.log(`-> sac.emitter: ${sac.accountName} relog with state! [...]`, sacStateCache)
+      if (sacStateCache && !sac.logged) {
         sac.emitter.emit("relog-with-state", sacStateCache)
       } else {
-        this.logger.log(`-> sac.emitter: ${sac.accountName} relog without any state.`, sacStateCache)
         sac.emitter.emit("relog")
       }
     })
@@ -68,6 +63,7 @@ export class UserClientsStorage {
           planId,
           sac,
           username,
+          sessionType: "CONTINUE-FROM-PREVIOUS",
         })
         if (error?.code === "PLAN_MAX_USAGE_EXCEEDED") {
           console.log(`Parando farm na conta ${accountName}.`)
@@ -85,7 +81,11 @@ export class UserClientsStorage {
 
   removeAccountClient(accountName: string) {
     const sac = this.steamAccountClients.get(accountName)
-    if (sac) sac.logoff()
+    if (!sac) {
+      console.log(`NSTH: SAC para [${accountName}], não está no cluster do [${this.username}]`)
+      return
+    }
+    sac.logoff()
     this.steamAccountClients.delete(accountName)
   }
 

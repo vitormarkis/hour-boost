@@ -17,7 +17,7 @@ export class UserClusterBuilder implements Builder<UserSACsFarmingCluster> {
 
   create(username: string, plan: PlanUsage | PlanInfinity): UserSACsFarmingCluster {
     return new UserSACsFarmingCluster({
-      farmService: this.farmServiceFactory.create(username, plan),
+      farmService: this.farmServiceFactory.create(username, plan, new Date()), // deveria ser nulo ja que nao nesse momento nao tem ninguem farmando... pode levar a erros
       sacStateCacheRepository: this.sacStateCacheRepository,
       farmServiceFactory: this.farmServiceFactory,
       planRepository: this.planRepository,

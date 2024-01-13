@@ -1,3 +1,4 @@
+import { SACStateCacheDTO } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
@@ -36,6 +37,7 @@ test("should write a ME cache and retrieves it", async () => {
       isFarming: false,
       planId: meInstances.me.plan.id_plan,
       username: s.me.username,
+      farmStartedAt: null,
     })
   ).resolves.not.toThrow()
   const cache = await i.sacStateCacheRepository.get("markis")
@@ -44,7 +46,10 @@ test("should write a ME cache and retrieves it", async () => {
     accountName: "markis",
     gamesPlaying: [],
     isFarming: false,
-  })
+    farmStartedAt: null,
+    planId: meInstances.me.plan.id_plan,
+    username: s.me.username,
+  } as SACStateCacheDTO)
 })
 
 test("should init state cache", async () => {
@@ -62,6 +67,11 @@ test("should init state cache", async () => {
 
 test("should init in case object weren't created", async () => {
   await i.sacStateCacheRepository.flushAll()
+  await i.sacStateCacheRepository.init({
+    accountName: s.me.accountName,
+    planId: meInstances.me.plan.id_plan,
+    username: s.me.username,
+  })
   await i.sacStateCacheRepository.setPlayingGames(s.me.accountName, [1009])
   const state = await i.sacStateCacheRepository.get(s.me.accountName)
   expect(state?.accountName).toBe(s.me.accountName)

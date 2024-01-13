@@ -5,6 +5,7 @@ import {
   Persona,
   PlanUsage,
   SteamAccountClientStateCacheRepository,
+  SteamAccountSession,
   UserSession,
   UsersDAO,
 } from "core"
@@ -64,8 +65,8 @@ export class UsersDAODatabase implements UsersDAO {
 
     const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
 
-    const steamAccounts = await Promise.all(
-      dbUser.steamAccounts.map(async sa => {
+    const steamAccounts: SteamAccountSession[] = await Promise.all(
+      dbUser.steamAccounts.map(async (sa): Promise<SteamAccountSession> => {
         let games: GameSession[] | null
         let persona: Persona
         const [personaResponse, gamesResponse] = await Promise.all([
@@ -84,13 +85,14 @@ export class UsersDAODatabase implements UsersDAO {
         games = gamesError ? null : foundGames.toJSON()
         const accountState = await this.steamAccountClientStateCacheRepository.get(sa.accountName)
 
-        return {
+        return Promise.resolve({
           accountName: sa.accountName,
           games,
           id_steamAccount: sa.id_steamAccount,
           farmingGames: accountState?.gamesPlaying ?? [],
           ...persona,
-        }
+          farmStartedAt: accountState?.farmStartedAt ? new Date(accountState.farmStartedAt) : null,
+        })
       })
     )
 

@@ -1,6 +1,11 @@
 import { ApplicationError, DataOrError, PlanInfinity, PlanType, Usage } from "core"
 import { UserCompleteFarmSessionCommand } from "~/application/commands"
-import { AccountStatusList, FarmService, PauseFarmOnAccountUsage } from "~/application/services/FarmService"
+import {
+  AccountStatusList,
+  FarmService,
+  NSFarmService,
+  PauseFarmOnAccountUsage,
+} from "~/application/services/FarmService"
 import { getUsageAmountTimeFromDateRange } from "~/domain/utils/getUsageAmountTimeFromDateRange"
 import { Publisher } from "~/infra/queue"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
@@ -12,6 +17,26 @@ export type FarmInfinityAccountStatus = {
 
 export class FarmInfinityService extends FarmService {
   readonly usageBuilder = new UsageBuilder()
+  protected readonly farmingAccounts = new Map<string, FarmInfinityAccountStatus>()
+  type: PlanType = "INFINITY"
+
+  constructor(publisher: Publisher, plan: PlanInfinity, username: string, now: Date) {
+    super({
+      planId: plan.id_plan,
+      startedAt: now,
+      userId: plan.ownerId,
+      username,
+      publisher,
+    })
+  }
+
+  getActiveFarmingAccountsAmount(): number {
+    return this.farmingAccounts.size
+  }
+
+  hasAccountsFarming(): boolean {
+    return this.getActiveFarmingAccountsAmount() > 0
+  }
 
   protected publishCompleteFarmSession(pauseFarmCategory: PauseFarmOnAccountUsage): void {
     this.publisher.publish(
@@ -54,12 +79,13 @@ export class FarmInfinityService extends FarmService {
 
   private pauseFarmOnAccountImpl(accountName: string): DataOrError<Usage> {
     const account = this.getAccount(accountName)
-    if (!account)
+    if (!account) {
       return [
         new ApplicationError(
           `Tentativa de pausar farm na conta [${accountName}], mas ela não foi encontrada.`
         ),
       ]
+    }
     const when = new Date()
     const amountTime = getUsageAmountTimeFromDateRange(this.startedAt, when)
     const usageBuilder = new UsageBuilder()
@@ -76,10 +102,7 @@ export class FarmInfinityService extends FarmService {
   pauseFarmOnAccount(accountName: string): DataOrError<null> {
     const [errorPausingFarmOnAccount, usage] = this.pauseFarmOnAccountImpl(accountName)
     if (errorPausingFarmOnAccount) return [errorPausingFarmOnAccount]
-    this.publishCompleteFarmSession({
-      type: "STOP-ONE",
-      usage,
-    })
+    this.publishCompleteFarmSession({ type: "STOP-ONE", usage })
     return [null, null]
   }
 
@@ -97,19 +120,6 @@ export class FarmInfinityService extends FarmService {
   //   this.farmingAccounts.clear()
   // }
 
-  protected readonly farmingAccounts = new Map<string, FarmInfinityAccountStatus>()
-  type: PlanType = "INFINITY"
-
-  constructor(publisher: Publisher, plan: PlanInfinity, username: string, now: Date) {
-    super({
-      planId: plan.id_plan,
-      startedAt: now,
-      userId: plan.ownerId,
-      username,
-      publisher,
-    })
-  }
-
   getAccountsStatus(): AccountStatusList {
     const accountStatusList: AccountStatusList = {}
 
@@ -118,6 +128,15 @@ export class FarmInfinityService extends FarmService {
     }
 
     return accountStatusList
+  }
+
+  getFarmingAccounts(): DataOrError<NSFarmService.GetFarmingAccounts> {
+    let accountStatus = {} as NSFarmService.GetFarmingAccounts
+    for (const [accountName] of this.farmingAccounts) {
+      accountStatus[accountName] = "FARMING"
+    }
+
+    return [null, accountStatus]
   }
 
   farmWithAccountImpl(accountName: string): DataOrError<null> {
@@ -139,5 +158,22 @@ export class FarmInfinityService extends FarmService {
 
   protected startFarmImpl(): void {
     console.log(`${this.username} starting farming`)
+  }
+
+  farmWithAccount(accountName: string): DataOrError<null> {
+    if (this.isAccountAdded(accountName)) {
+      return [new ApplicationError("Essa conta já está farmando.")]
+    } else {
+      this.farmWithAccountImpl(accountName)
+    }
+    return [null, null]
+  }
+
+  isAccountFarming(accountName: string): boolean {
+    return this.farmingAccounts.has(accountName)
+  }
+
+  isAccountAdded(accountName: string): boolean {
+    return this.farmingAccounts.has(accountName)
   }
 }

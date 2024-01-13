@@ -1,6 +1,6 @@
 let farmService: FarmService
 
-import { DataOrError, PlanType, Usage } from "core"
+import { ApplicationError, DataOrError, PlanType, Usage } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
@@ -8,7 +8,13 @@ import {
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
-import { AccountStatusList, FarmService, PauseFarmOnAccountUsage } from "~/application/services/FarmService"
+import { FarmingAccountDetails } from "~/application/services"
+import {
+  AccountStatusList,
+  FarmService,
+  NSFarmService,
+  PauseFarmOnAccountUsage,
+} from "~/application/services/FarmService"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 const log = console.log
@@ -85,7 +91,9 @@ describe("FarmService test suite", () => {
     farmService.farmWithAccount(s.me.accountName2)
     farmService.farmWithAccount(s.me.accountName3)
     farmService.pauseFarmOnAccountSync(s.me.accountName)
-    expect(farmService.getFarmingAccounts()).toStrictEqual({
+    const [errorGettingAccountStatus, accountsStatus] = farmService.getFarmingAccounts()
+    expect(errorGettingAccountStatus).toBeNull()
+    expect(accountsStatus).toStrictEqual({
       [s.me.accountName]: "IDDLE",
       [s.me.accountName2]: "FARMING",
       [s.me.accountName3]: "FARMING",
@@ -94,10 +102,46 @@ describe("FarmService test suite", () => {
 })
 
 class FarmServiceImpl extends FarmService {
+  accountsFarming: Map<string, FarmingAccountDetails> = new Map()
+
+  getActiveFarmingAccountsAmount(): number {
+    return Array.from(this.accountsFarming).filter(([_, details]) => details.status === "FARMING").length
+  }
+
+  getFarmingAccounts(): DataOrError<NSFarmService.GetFarmingAccounts> {
+    return [
+      null,
+      Array.from(this.accountsFarming).reduce((acc, [accountName, details]) => {
+        acc[accountName] = details.status
+        return acc
+      }, {} as NSFarmService.GetFarmingAccounts),
+    ]
+  }
+
+  isAccountFarming(accountName: string): boolean {
+    return this.accountsFarming.has(accountName)
+  }
+  isAccountAdded(accountName: string): boolean {
+    return this.accountsFarming.has(accountName)
+  }
+  hasAccountsFarming(): boolean {
+    return this.getActiveFarmingAccountsAmount() > 0
+  }
+  farmWithAccount(accountName: string): DataOrError<null> {
+    this.farmWithAccountImpl(accountName)
+    return [null, null]
+  }
   pauseFarmOnAccount(accountName: string): DataOrError<null> {
+    const account = this.accountsFarming.get(accountName)
+    if (!account) return [new ApplicationError("Account not found", 404)]
+    this.accountsFarming.set(accountName, {
+      ...account,
+      status: "IDDLE",
+    })
     return [null, null]
   }
   protected stopFarmSync(): Usage[] {
+    this.accountsFarming.clear()
     return []
   }
   pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
@@ -113,7 +157,8 @@ class FarmServiceImpl extends FarmService {
     return [null, { type: "STOP-ALL", usages: [] }]
   }
   getAccountsStatus(): AccountStatusList {
-    return {}
+    let accountStatusList = {} as AccountStatusList
+    return accountStatusList
   }
   protected publishCompleteFarmSession(): void {}
 
@@ -121,6 +166,10 @@ class FarmServiceImpl extends FarmService {
     if (this.accountsFarming.size === 0) {
       this.status = "FARMING"
     }
+    this.accountsFarming.set(accountName, {
+      status: "FARMING",
+      usageAmountInSeconds: 0,
+    })
     return [null, null]
   }
 

@@ -5,7 +5,7 @@ import { EventEmitter, UserClusterEvents } from "~/application/services"
 import {
   AccountStatusList,
   FarmService,
-  FarmingAccountDetailsWithAccountName,
+  NSFarmService,
   PauseFarmOnAccountUsage,
 } from "~/application/services/FarmService"
 import { Publisher } from "~/infra/queue"
@@ -13,7 +13,18 @@ import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
 
+export type FarmingAccountDetails = {
+  usageAmountInSeconds: number
+  status: AccountFarmingStatus
+}
+type AccountFarmingStatus = "FARMING" | "IDDLE"
+
+export type FarmingAccountDetailsWithAccountName = FarmingAccountDetails & {
+  accountName: string
+}
+
 export class FarmUsageService extends FarmService {
+  readonly accountsFarming = new Map<string, FarmingAccountDetails>()
   type: PlanType = "USAGE"
   private FARMING_GAP = FARMING_INTERVAL_IN_SECONDS
   private farmingInterval: NodeJS.Timeout | undefined
@@ -38,6 +49,80 @@ export class FarmUsageService extends FarmService {
       console.log("1. ouviu `service:max-usage-exceeded`: chamando stopFarmAllAccounts")
       this.stopFarmAllAccounts()
     })
+  }
+
+  getAccountDetails(accountName: string) {
+    return this.accountsFarming.get(accountName) ?? null
+  }
+
+  protected resumeFarming(accountName: string) {
+    this.setAccountStatus(accountName, "FARMING")
+  }
+
+  isAccountAdded(accountName: string) {
+    return !!this.getAccountDetails(accountName)
+  }
+
+  getActiveFarmingAccountsAmount() {
+    return this.getActiveFarmingAccounts().length
+  }
+
+  hasAccountsFarming(): boolean {
+    return this.getActiveFarmingAccountsAmount() > 0
+  }
+
+  getFarmingAccounts(): DataOrError<NSFarmService.GetFarmingAccounts> {
+    let accountStatus = {} as NSFarmService.GetFarmingAccounts
+    for (const [accountName, details] of this.accountsFarming) {
+      accountStatus[accountName] = details.status
+    }
+
+    return [null, accountStatus]
+  }
+
+  private getActiveFarmingAccounts() {
+    const res = Array.from(this.accountsFarming).filter(([_, details]) => details.status === "FARMING")
+    return res
+  }
+
+  farmWithAccount(accountName: string): DataOrError<null> {
+    const [error] = this.farmWithAccountImpl(accountName)
+    if (error) return [error]
+
+    console.log(`farm-service: is ${accountName} added? `, this.isAccountAdded(accountName))
+    if (!this.isAccountAdded(accountName)) {
+      console.log(
+        `Since the ${accountName} is not added, I'm appending this account again with the status 'FARMING'`
+      )
+    }
+    if (this.isAccountAdded(accountName)) this.resumeFarming(accountName)
+    else this.appendAccount(accountName)
+    return [null, null]
+  }
+
+  protected appendAccount(accountName: string) {
+    this.accountsFarming.set(accountName, {
+      usageAmountInSeconds: 0,
+      status: "FARMING",
+    })
+  }
+
+  private setAccountStatus(accountName: string, status: "FARMING" | "IDDLE") {
+    const account = this.getAccountDetails(accountName)
+    if (!account) return
+    // if (!account) {
+    //   const msg = `NSTH: Tried to resume farming on account that don't exists. ${accountName}`
+    //   throw new ApplicationError(msg, 500)
+    // }
+    this.accountsFarming.set(accountName, {
+      ...account,
+      status,
+    })
+
+    // account = {
+    //   ...account,
+    //   status,
+    // }
   }
 
   private stopFarmImpl() {
@@ -70,6 +155,11 @@ export class FarmUsageService extends FarmService {
   protected stopFarmSync(): Usage[] {
     const { usages } = this.stopFarmImpl()
     return usages
+  }
+
+  isAccountFarming(accountName: string): boolean {
+    const acc = this.accountsFarming.get(accountName)
+    return !!(acc?.status === "FARMING")
   }
 
   pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {

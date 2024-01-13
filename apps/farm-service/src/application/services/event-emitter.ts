@@ -32,11 +32,6 @@ export class EventEmitter<EventArgs extends EventsTuple = EventsTuple> {
     if (event === "interrupt") console.log({ asyncHandlers, handlers })
     Promise.all(promises).finally(() => {
       const resolver = this.resolvers[event]
-      console.log("FINALLY", {
-        event,
-        hasResolvers: Object.keys(this.resolvers),
-        resolver,
-      })
       if (!resolver) return
       console.log(`[event-handler]: Promise.all.finally(), calling the resolver. ${event.toString()}`)
       resolver()

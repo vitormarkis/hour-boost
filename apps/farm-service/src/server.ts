@@ -2,6 +2,7 @@ import { LooseAuthProp } from "@clerk/clerk-sdk-node"
 import cors from "cors"
 import "dotenv/config"
 import express, { Application, NextFunction, Request, Response } from "express"
+import { RestoreAccountSessionsUseCase } from "~/application/use-cases/RestoreAccountSessionsUseCase"
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
 import {
   allUsersClientsStorage,
@@ -50,62 +51,19 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   })
 })
 
-interface RestoreSessionSchema {
-  accountName: string
-  key: string
-}
-
 const restoreUsersSessionsUseCase = new RestoreUsersSessionsUseCase(usersClusterStorage)
+const restoreAccountSessionsUseCase = new RestoreAccountSessionsUseCase(
+  steamAccountClientStateCacheRepository,
+  planRepository,
+  allUsersClientsStorage,
+  usersClusterStorage
+)
 
 async function main() {
   try {
     const users = await usersRepository.findMany()
     restoreUsersSessionsUseCase.execute({ users })
-
-    const logger = new Logger("MAIN")
-    const loggedUsersKeys = await steamAccountClientStateCacheRepository.getUsersRefreshToken()
-    logger.log("got accounts keys ", loggedUsersKeys)
-    const sessionsSchema = loggedUsersKeys.reduce((acc, key) => {
-      const [accountName] = key.split(":")
-      acc.push({
-        accountName,
-        key,
-      })
-      return acc
-    }, [] as RestoreSessionSchema[])
-    const sessionsPromises = sessionsSchema.map(async ({ accountName }) => {
-      const foundRefreshToken = await steamAccountClientStateCacheRepository.getRefreshToken(accountName)
-      if (!foundRefreshToken) return null
-
-      return {
-        accountName,
-        ...foundRefreshToken,
-      }
-    })
-    const sessions = await Promise.all(sessionsPromises)
-    logger.log(
-      "got refresh tokens for each account ",
-      sessions.map(s => s?.accountName)
-    )
-    for (const session of sessions) {
-      if (!session) continue
-      const { accountName, refreshToken, userId, username, planId } = session
-      const plan = await planRepository.getById(planId)
-      if (!plan) {
-        console.log(
-          `[NSTH]: Plano não encontrado com id [${planId}]; username: [${username}]; accountName: [${accountName}]`
-        )
-        continue
-      }
-      const state = await steamAccountClientStateCacheRepository.get(accountName)
-      const sac = allUsersClientsStorage.addSteamAccountFrom0({ accountName, userId, username, planId })
-      const userCluster = usersClusterStorage.getOrAdd(username, plan).addSAC(sac)
-      if (state && state.isFarming) {
-        userCluster.farmWithAccount(accountName, state.gamesPlaying, planId)
-      }
-      logger.log(`Restoring session for account [${accountName}].`)
-      sac.loginWithToken(refreshToken)
-    }
+    await restoreAccountSessionsUseCase.execute()
   } catch (error) {
     console.log("main error", error)
   }

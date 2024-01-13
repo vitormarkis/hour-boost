@@ -74,7 +74,6 @@ export class SteamAccountsInMemory {
 
   disownSteamAccountsAll() {
     const ids = this.steamAccounts.map(sa => sa.id_steamAccount)
-    console.log("22: Disowing all of these ", ids)
     this.disownSteamAccounts(ids)
   }
 }

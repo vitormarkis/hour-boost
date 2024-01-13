@@ -33,8 +33,14 @@ if (httpProxy) {
   console.log(`Usando proxy ${httpProxy.slice(0, 18) + "*******"}`)
 }
 
+let options: ConstructorParameters<typeof SteamUser>[0] = {
+  enablePicsCache: true,
+  autoRelogin: false,
+}
+if (httpProxy) options.httpProxy = httpProxy
+
 export const steamBuilder: SteamBuilder = {
-  create: () => new SteamUser(httpProxy ? { httpProxy, enablePicsCache: true } : { enablePicsCache: true }),
+  create: () => new SteamUser(options),
 }
 
 const usageBuilder = new UsageBuilder()

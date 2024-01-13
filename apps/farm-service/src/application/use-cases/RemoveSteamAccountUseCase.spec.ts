@@ -75,3 +75,29 @@ test("should remove steam account", async () => {
   expect(account2?.credentials.accountName).toBe("paco")
   expect(account2?.ownerId).toBe(null)
 })
+
+test("should remove steam account and logoff client", async () => {
+  await addSteamAccount.execute({
+    accountName: s.me.accountName,
+    userId: s.me.userId,
+    password,
+  })
+  const sac = i.allUsersClientsStorage.getAccountClient(s.me.userId, s.me.accountName)!
+  const spy = jest.spyOn(sac.client, "logOff")
+  const accountId = meInstances.me.steamAccounts.data[0].id_steamAccount
+  const account1 = await i.steamAccountsRepository.getByAccountName(s.me.accountName)
+  expect(account1?.ownerId).toBe(s.me.userId)
+  expect(spy).toHaveBeenCalledTimes(0)
+
+  const [error] = await removeSteamAccountUseCase.execute({
+    accountName: s.me.accountName,
+    steamAccountId: accountId,
+    userId: s.me.userId,
+    username: s.me.username,
+  })
+  if (error) throw error
+  const account2 = await i.steamAccountsRepository.getByAccountName(s.me.accountName)
+  expect(account2?.credentials.accountName).toBe("paco")
+  expect(account2?.ownerId).toBe(null)
+  expect(spy).toHaveBeenCalledTimes(1)
+})

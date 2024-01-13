@@ -91,7 +91,7 @@ export class AddSteamAccountUseCase
 
     if (eventsPromisesResolved.type === "steamGuard") {
       const [domain, setCode] = eventsPromisesResolved.args
-      this.allUsersClientsStorage.addSteamAccount(userId, sac)
+      this.allUsersClientsStorage.addSteamAccount(username, userId, sac)
       sac.setManualHandler("steamGuard", code => setCode(code))
       return [
         new ApplicationError(

@@ -88,16 +88,16 @@ export class SteamAccountClient extends LastHandler {
     })
 
     this.client.on("error", (...args) => {
+      this.changeInnerStatusToNotLogged()
       appendFile(
         "logs/sac-errors.txt",
         `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(...args)} \r\n`,
         () => {}
       )
-      this.logger.log("error.", ...args)
-      this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
+      this.logger.log("error.", { eresult: args[0].eresult })
+      this.emitter.emit("interrupt", this.createStateDTO())
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
-      this.changeInnerStatusToNotLogged()
     })
 
     this.client.on("disconnected", (...args) => {
@@ -107,7 +107,7 @@ export class SteamAccountClient extends LastHandler {
         () => {}
       )
       this.changeInnerStatusToNotLogged()
-      this.emitter.emit("interrupt", SACStateCacheFactory.createDTO(this))
+      this.emitter.emit("interrupt", this.createStateDTO())
       this.logger.log("disconnected.", ...args)
       this.getLastHandler("disconnected")(...args)
       this.setLastArguments("disconnected", args)
@@ -129,6 +129,16 @@ export class SteamAccountClient extends LastHandler {
       this.getLastHandler("webSession")(...args)
       this.setLastArguments("webSession", args)
     })
+  }
+
+  private createStateDTO(): NSSACStateCacheFactory.CreateDTO_SAC_Props {
+    return {
+      accountName: this.accountName,
+      gamesPlaying: this.gamesPlaying,
+      isFarming: this.isFarming(),
+      planId: this.planId,
+      username: this.username,
+    }
   }
 
   getGamesPlaying() {
@@ -250,7 +260,7 @@ export type OnEventReturn = {
 }
 
 export type SteamApplicationEvents = {
-  interrupt: [sacStateCache: SACStateCacheDTO]
+  interrupt: [createCacheStateDTO: NSSACStateCacheFactory.CreateDTO_SAC_Props]
   hasSession: []
   "relog-with-state": [sacStateCache: SACStateCacheDTO]
   relog: []
@@ -259,13 +269,30 @@ export type SteamApplicationEvents = {
 }
 
 export class SACStateCacheFactory {
-  static createDTO(sac: SteamAccountClient): SACStateCacheDTO {
+  static createDTO(props: NSSACStateCacheFactory.CreateDTOProps): SACStateCacheDTO {
     return {
-      accountName: sac.accountName,
-      gamesPlaying: sac.gamesPlaying,
-      isFarming: sac.isFarming(),
-      planId: sac.planId,
-      username: sac.username,
+      accountName: props.accountName,
+      gamesPlaying: props.gamesPlaying,
+      isFarming: props.isFarming,
+      planId: props.planId,
+      username: props.username,
+      farmStartedAt: props.farmStartedAt?.getTime() ?? null,
     }
   }
+}
+
+export namespace NSSACStateCacheFactory {
+  export type CreateDTO_SAC_Props = {
+    accountName: string
+    gamesPlaying: number[]
+    isFarming: boolean
+    planId: string
+    username: string
+  }
+
+  export type CreateDTOClusterProps = {
+    farmStartedAt: Date | null
+  }
+
+  export type CreateDTOProps = CreateDTO_SAC_Props & CreateDTOClusterProps
 }

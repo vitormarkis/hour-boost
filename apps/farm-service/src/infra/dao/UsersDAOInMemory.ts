@@ -53,6 +53,7 @@ export class UsersDAOInMemory implements UsersDAO {
         games: null,
         profilePictureUrl: null,
         farmingGames: [],
+        farmStartedAt: null,
       })),
       username: foundUser.username,
     }

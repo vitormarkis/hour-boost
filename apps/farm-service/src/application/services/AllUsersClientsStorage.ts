@@ -24,8 +24,13 @@ export class AllUsersClientsStorage {
     })
   }
 
-  private generateUserClients(): UserClientsStorage {
-    return new UserClientsStorage(this.sacStateCacheRepository, this.farmGamesUseCase, this.planRepository)
+  private generateUserClients(username: string): UserClientsStorage {
+    return new UserClientsStorage(
+      username,
+      this.sacStateCacheRepository,
+      this.farmGamesUseCase,
+      this.planRepository
+    )
   }
 
   getOrAddSteamAccount({ accountName, userId, username, planId }: AddUserProps): SteamAccountClient {
@@ -34,11 +39,19 @@ export class AllUsersClientsStorage {
     const foundSac = userClients?.getAccountClient(accountName)
     const userHasAccount = !!foundSac
     if (!userRegistered) {
-      this.registerUser(userId, this.generateUserClients())
-      return this.addSteamAccount(userId, this.generateSAC({ accountName, userId, username, planId }))
+      this.registerUser(userId, this.generateUserClients(username))
+      return this.addSteamAccount(
+        username,
+        userId,
+        this.generateSAC({ accountName, userId, username, planId })
+      )
     }
     if (!userHasAccount) {
-      return this.addSteamAccount(userId, this.generateSAC({ accountName, userId, username, planId }))
+      return this.addSteamAccount(
+        username,
+        userId,
+        this.generateSAC({ accountName, userId, username, planId })
+      )
     }
     return foundSac
   }
@@ -48,10 +61,15 @@ export class AllUsersClientsStorage {
     userSteamClients.removeAccountClient(accountName)
   }
 
-  addSteamAccount(userId: string, steamAccountClient: SteamAccountClient): SteamAccountClient {
+  addSteamAccount(
+    username: string,
+    userId: string,
+    steamAccountClient: SteamAccountClient
+  ): SteamAccountClient {
     const userClientsStorage = this.users.get(userId)
     if (!userClientsStorage) {
       const userClientsStorage = new UserClientsStorage(
+        username,
         this.sacStateCacheRepository,
         this.farmGamesUseCase,
         this.planRepository
@@ -66,7 +84,7 @@ export class AllUsersClientsStorage {
 
   addSteamAccountFrom0({ accountName, userId, username, planId }: AddUserProps): SteamAccountClient {
     const sac = this.sacBuilder.create({ accountName, userId, username, planId })
-    this.addSteamAccount(userId, sac)
+    this.addSteamAccount(username, userId, sac)
     return sac
   }
 
@@ -111,6 +129,12 @@ export class AllUsersClientsStorage {
       usersIDs[userId] = client.getAccountsStatus()
     }
     return usersIDs
+  }
+
+  flushAllAccounts() {
+    for (const [username] of this.users) {
+      this.users.set(username, this.generateUserClients(username))
+    }
   }
 }
 

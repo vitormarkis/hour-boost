@@ -1,5 +1,11 @@
-import { ApplicationError, DataOrError, PlanInfinity, PlanUsage } from "core"
-import { UsersSACsFarmingClusterStorage } from "~/application/services"
+import {
+  ApplicationError,
+  DataOrError,
+  NSSteamAccountClientStateCacheRepository,
+  PlanInfinity,
+  PlanUsage,
+} from "core"
+import { NSUserCluster, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 
 export class FarmGamesUseCase {
@@ -12,15 +18,26 @@ export class FarmGamesUseCase {
     sac,
     gamesId,
     planId,
+    sessionType,
   }: FarmGamesUseCaseProps): Promise<DataOrError<null>> {
     try {
       // const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
       const [error, userCluster] = this.usersClusterStorage.get(username)
       if (error) return [error]
-      if (!userCluster.hasSteamAccountClient(accountName) && !userCluster.isAccountFarming(accountName)) {
+      console.log("farm-games:", {
+        accountStatus: userCluster.farmService.getAccountsStatus(),
+        hasAccount: userCluster.farmService.hasAccountsFarming(),
+      })
+      const isAccountFarming = userCluster.isAccountFarming(accountName)
+      if (!userCluster.hasSteamAccountClient(accountName) && !isAccountFarming) {
         userCluster.addSAC(sac)
       }
-      return userCluster.farmWithAccount(accountName, gamesId, planId)
+      return userCluster.farmWithAccount({
+        accountName,
+        gamesId,
+        planId,
+        sessionType,
+      })
     } catch (error) {
       console.log({ "FarmGamesUseCase.execute.error": error })
       if (error instanceof Error) {
@@ -38,4 +55,5 @@ type FarmGamesUseCaseProps = {
   sac: SteamAccountClient
   gamesId: number[]
   planId: string
+  sessionType: NSUserCluster.SessionType
 }

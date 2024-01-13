@@ -2,16 +2,34 @@ import {
   AccountSteamGamesList,
   IRefreshToken,
   InitProps,
+  NSSteamAccountClientStateCacheRepository,
+  SACStateCache,
   SACStateCacheDTO,
   SteamAccountClientStateCacheRepository,
   SteamAccountPersonaState,
 } from "core"
+import { Logger } from "~/utils/Logger"
 
 export class SteamAccountClientStateCacheInMemory implements SteamAccountClientStateCacheRepository {
   private readonly state: Map<string, SACStateCacheDTO> = new Map()
   private readonly games: Map<string, AccountSteamGamesList> = new Map()
   private readonly refreshTokens: Map<string, IRefreshToken> = new Map()
   private readonly personas: Map<string, SteamAccountPersonaState> = new Map()
+  private readonly logger = new Logger("sac-cache-in-memory")
+
+  async startFarm({
+    accountName,
+    when,
+    initSession,
+  }: NSSteamAccountClientStateCacheRepository.StartFarmProps): Promise<void> {
+    let foundState = this.state.get(accountName)
+    if (!foundState) return
+    if (initSession) {
+      foundState.farmStartedAt = when.getTime()
+    }
+    this.logger.log("starting the farm: ", foundState)
+    this.state.set(accountName, foundState)
+  }
 
   async deleteAllEntriesFromAccount(accountName: string): Promise<void> {
     this.state.delete(accountName)
@@ -22,6 +40,7 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
     const persona = this.personas.get(accountName)
     return Promise.resolve(persona ?? null)
   }
+
   async setPersona(accountName: string, persona: SteamAccountPersonaState): Promise<void> {
     this.personas.set(accountName, persona)
   }
@@ -47,6 +66,7 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
         isFarming: false,
         planId,
         username,
+        farmStartedAt: null,
       })
     }
   }
@@ -56,16 +76,25 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
     if (!foundState) return
     foundState.gamesPlaying = []
     foundState.isFarming = false
+    foundState.farmStartedAt = null
+    this.logger.log("stopping the farm: ", foundState)
     this.state.set(accountName, foundState)
   }
 
   async setPlayingGames(accountName: string, gamesId: number[]): Promise<void> {
     const prev = this.state.get(accountName)
-    if (!prev) return
-    this.state.set(accountName, {
-      ...prev,
-      gamesPlaying: gamesId,
-    })
+    if (!prev) {
+      return
+    }
+
+    const sacStateCache = new SACStateCache(
+      gamesId,
+      accountName,
+      prev.planId,
+      prev.username,
+      prev.farmStartedAt ? new Date(prev.farmStartedAt) : null
+    )
+    this.state.set(accountName, sacStateCache.toJSON())
   }
 
   async setAccountGames(accountName: string, games: AccountSteamGamesList): Promise<void> {
