@@ -18,7 +18,6 @@ export async function httpCreateSteamAccount(
     )
   )
   if (error) return [error, null]
-  console.log("22: ", [error, response])
   if (response.status === 201) {
     return [null, response.data.steamAccountId]
   }

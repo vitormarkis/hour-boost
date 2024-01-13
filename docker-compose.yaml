@@ -1,16 +1,6 @@
 version: "3"
 
 services:
-  db:
-    image: mysql:8.0
-    restart: always
-    environment:
-      MYSQL_DATABASE: hourboost-db
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - 3307:3306
-    volumes:
-      - ./.docker/database:/var/lib/mysql
   cache:
     image: redis/redis-stack
     restart: always
@@ -22,5 +12,4 @@ services:
     volumes:
       - ./.docker/cache:/data
 volumes:
-  db:
   cache:

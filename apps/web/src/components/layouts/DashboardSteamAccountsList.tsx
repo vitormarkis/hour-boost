@@ -14,8 +14,6 @@ export const DashboardSteamAccountsList = React.forwardRef<
 >(function DashboardSteamAccountsListComponent({ className, ...props }, ref) {
   const user = useUser()
 
-  console.log(user.steamAccounts)
-
   return (
     <section
       {...props}

@@ -16,6 +16,15 @@ export interface SteamAccountClientStateCacheRepository {
   setPersona(accountName: string, persona: SteamAccountPersonaState): Promise<void>
   stopFarm(accountName: string): Promise<void>
   deleteAllEntriesFromAccount(accountName: string): Promise<void>
+  startFarm(props: NSSteamAccountClientStateCacheRepository.StartFarmProps): Promise<void>
+}
+
+export namespace NSSteamAccountClientStateCacheRepository {
+  export type StartFarmProps = {
+    accountName: string
+    when: Date
+    initSession?: boolean
+  }
 }
 
 export interface SteamAccountPersonaState {
@@ -41,7 +50,8 @@ export class SACStateCache {
     readonly gamesPlaying: number[],
     readonly accountName: string,
     readonly planId: string,
-    readonly username: string
+    readonly username: string,
+    readonly farmStartedAt: Date | null = null
   ) {}
   isFarming() {
     return this.gamesPlaying.length > 0
@@ -54,6 +64,7 @@ export class SACStateCache {
       isFarming: this.isFarming(),
       planId: this.planId,
       username: this.username,
+      farmStartedAt: this.farmStartedAt?.getTime() ?? null,
     }
   }
 }
@@ -64,4 +75,5 @@ export interface SACStateCacheDTO {
   isFarming: boolean
   username: string
   planId: string
+  farmStartedAt: number | null
 }

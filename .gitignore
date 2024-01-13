@@ -45,3 +45,4 @@ dist
 .docker
 
 apps/routes.http
+*.http

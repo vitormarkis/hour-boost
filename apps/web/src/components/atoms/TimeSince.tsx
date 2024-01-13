@@ -101,7 +101,8 @@ export type TimeSinceRootProps = React.ComponentPropsWithoutRef<"div"> & {
 
 export const TimeSinceRoot = React.forwardRef<React.ElementRef<"div">, TimeSinceRootProps>(
   function TimeSinceRootComponent({ column, children, date, className, ...props }, ref) {
-    const { timeSince } = useTimeSince(date)
+    const dateInstance = typeof date === "string" ? new Date(date) : date
+    const { timeSince } = useTimeSince(dateInstance)
     const [timeNumber, category, ...secondaryRest] = timeSince.split(" ")
 
     const highlightTime = [timeNumber, category].join(" ")

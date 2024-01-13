@@ -27,13 +27,18 @@ export const MenuDropdownUserHeader = React.forwardRef<
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent
         {...props}
-        className={cn("bg-slate-800 border-slate-700", className)}
+        className={cn("", className)}
         ref={ref}
         align="end"
       >
         {/* <DropdownMenuLabel />
         <DropdownMenuSeparator /> */}
-        <DropdownMenuItem onClick={() => signOut()}>Sair</DropdownMenuItem>
+        <DropdownMenuItem
+          className="focus:bg-red-500"
+          onClick={() => signOut()}
+        >
+          Sair
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

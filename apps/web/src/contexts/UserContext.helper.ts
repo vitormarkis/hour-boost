@@ -1,5 +1,5 @@
 import { GameSession, Persona, PersonaWithAccountName, UserSession } from "core"
-import { NSUserContext } from "./UserContext"
+import { NSUserContext, NSUserMethods } from "./UserContext"
 
 interface IHelper {
   setGames(accountName: string, games: GameSession[]): UserSession
@@ -7,10 +7,27 @@ interface IHelper {
   hasGames(): boolean
   updateFarmingGames(accountName: string, gameIdList: number[]): UserSession
   udpate(newUser: UserSession): UserSession
+  startFarm(props: NSUserMethods.StartFarmProps): UserSession
 }
 
 export class Helper implements IHelper {
   constructor(private readonly user: UserSession) {}
+
+  startFarm({ accountName, when }: NSUserMethods.StartFarmProps): UserSession {
+    const steamAccounts = this.user.steamAccounts.map(sa =>
+      sa.accountName === accountName
+        ? {
+            ...sa,
+            farmStartedAt: when,
+          }
+        : sa
+    )
+
+    return {
+      ...this.user,
+      steamAccounts,
+    }
+  }
 
   isFarming() {
     return this.user.steamAccounts.some(sa => sa.farmingGames.length > 0)

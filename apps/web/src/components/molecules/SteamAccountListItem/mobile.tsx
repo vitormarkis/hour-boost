@@ -32,9 +32,8 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
     steamGuard,
     app,
   } = props
-  const { accountName, games, id_steamAccount, profilePictureUrl, farmingGames } = app
+  const { accountName, games, id_steamAccount, profilePictureUrl, farmingGames, farmStartedAt } = app
   const user = useUser()
-  console.log(user)
   const isFarming = farmingGames.length > 0
 
   return (
@@ -107,13 +106,17 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
             <div className="">
               {isFarming ? (
                 <div className="flex flex-col justify-center h-full leading-none">
-                  <TimeSince.Root
-                    className="items-end gap-2"
-                    date={new Date()}
-                  >
-                    <TimeSince.HighlightTime />
-                    <TimeSince.SecondaryTime suspense={false} />
-                  </TimeSince.Root>
+                  {farmStartedAt ? (
+                    <TimeSince.Root
+                      className="items-end gap-2"
+                      date={farmStartedAt}
+                    >
+                      <TimeSince.HighlightTime />
+                      <TimeSince.SecondaryTime suspense={false} />
+                    </TimeSince.Root>
+                  ) : (
+                    <span>Sem informações do farm</span>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col justify-center h-full leading-none">

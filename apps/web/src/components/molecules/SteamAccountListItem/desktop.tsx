@@ -34,9 +34,8 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
     steamGuard,
     app,
   } = props
-  const { accountName, games, id_steamAccount, profilePictureUrl, farmingGames } = app
+  const { accountName, games, id_steamAccount, profilePictureUrl, farmingGames, farmStartedAt } = app
   const user = useUser()
-  console.log(user)
   const isFarming = farmingGames.length > 0
 
   return (
@@ -71,7 +70,7 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
             </div>
           )}
         </div>
-        <div className="flex items-center pr-6 gap-4 overflow-hidden">
+        <div className="flex items-center pr-6 gap-4 overflow-hidden max-w-[19rem] w-full">
           <div className="h-[4.5rem] w-[4.5rem] relative shrink-0">
             <img
               // src="https://avatarcloudflare.steamstatic.com/2ec38f7a0953fe2585abdda0757324dbbb519749_full.jpg"
@@ -103,10 +102,14 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
             <div className="flex flex-col justify-center h-full leading-none">
               {/* <span className="uppercase">2.5 horas</span> */}
               {/* <span className="text-sm text-slate-500">153 min</span> */}
-              <TimeSince.Root date={new Date()}>
-                <TimeSince.HighlightTime className="text-sm" />
-                <TimeSince.SecondaryTime className="text-xs" />
-              </TimeSince.Root>
+              {farmStartedAt ? (
+                <TimeSince.Root date={farmStartedAt}>
+                  <TimeSince.HighlightTime className="text-sm" />
+                  <TimeSince.SecondaryTime className="text-xs" />
+                </TimeSince.Root>
+              ) : (
+                <span>Sem informações do farm</span>
+              )}
             </div>
           ) : (
             <div className="flex flex-col justify-center h-full leading-none">
