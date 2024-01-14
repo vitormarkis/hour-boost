@@ -1,9 +1,8 @@
-import React from "react"
-import { cn } from "@/lib/utils"
-import { ChooseFarmingGamesViewProps } from "./types"
+import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
+import { GameItem } from "@/components/molecules/GameItem"
+import { Button } from "@/components/ui/button"
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -11,21 +10,19 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
-import { Button } from "@/components/ui/button"
-import { SteamAccountListItemContext } from "@/components/molecules/SteamAccountListItem/context"
-import { GameItem } from "@/components/molecules/GameItem"
-import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import React from "react"
+import { local_useSteamAccountListItem } from "./controller"
+import { ChooseFarmingGamesViewProps } from "./types"
 
 export type DrawerChooseFarmingGamesViewProps = ChooseFarmingGamesViewProps
 
 export const DrawerChooseFarmingGamesView = React.forwardRef<
   React.ElementRef<"div">,
   DrawerChooseFarmingGamesViewProps
->(function DrawerChooseFarmingGamesViewComponent({ state, helpers, children, className }, ref) {
-  const { app } = React.useContext(SteamAccountListItemContext)
+>(function DrawerChooseFarmingGamesViewComponent({ state, helpers, children }, ref) {
+  const local = local_useSteamAccountListItem.farmGames()
   const [open, setOpen] = state
-  const { accountName, games, farmingGames, id_steamAccount, profilePictureUrl } = app
   return (
     <Drawer
       open={open}
@@ -34,20 +31,20 @@ export const DrawerChooseFarmingGamesView = React.forwardRef<
       <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="py-6 px-4">
-          <DrawerTitle>{accountName} - Seus jogos</DrawerTitle>
+          <DrawerTitle>{local.accountName} - Seus jogos</DrawerTitle>
           <DrawerDescription>Selecione os jogos que queira farmar e clique em salvar.</DrawerDescription>
         </DrawerHeader>
         <main className="flex-1 overflow-y-scroll">
           <ScrollArea className="h-[45vh] rounded-sm px-4">
             <div className="flex flex-col gap-2">
-              {games ? (
-                games.map(game => (
+              {local.games ? (
+                local.games.map(game => (
                   <GameItem
                     height="5rem"
                     key={game.id}
                     game={game}
                     handleFarmGame={() => helpers.handleFarmGame(game.id)}
-                    isSelected={helpers.stageFarmingGames.includes(game.id)}
+                    isSelected={local.stageFarmingGames.includes(game.id)}
                   />
                 ))
               ) : (
@@ -59,11 +56,12 @@ export const DrawerChooseFarmingGamesView = React.forwardRef<
         <DrawerFooter className="pt-4">
           <Button
             className="h-16 flex-1 relative disabled:opacity-70 z-40"
-            onClick={helpers.handleFarmGames}
-            disabled={helpers.farmGames.isPending || helpers.stopFarm.isPending}
+            onClick={() => alert("implementar")}
+            // onClick={helpers.handleFarmGames}
+            disabled={local.farmGames.isPending || local.stopFarm.isPending}
           >
-            <span>{helpers.farmGames.isPending || helpers.stopFarm.isPending ? "Salvando" : "Salvar"}</span>
-            {(helpers.farmGames.isPending || helpers.stopFarm.isPending) && (
+            <span>{local.farmGames.isPending || local.stopFarm.isPending ? "Salvando" : "Salvar"}</span>
+            {(local.farmGames.isPending || local.stopFarm.isPending) && (
               <div className="absolute top-1/2 -translate-y-1/2 right-4">
                 <IconArrowClockwise className="w-4 h-4 animate-spin" />
               </div>

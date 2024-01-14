@@ -21,7 +21,10 @@ import { API_GET_RefreshAccountGames } from "core"
 import React, { useContext, useState } from "react"
 import { toast } from "sonner"
 import { FarmGamesPayload } from "../controller"
-import { SteamAccountListItemContext } from "@/components/molecules/SteamAccountListItem/context"
+import {
+  SteamAccountListItemContext,
+  useSteamAccountListItem,
+} from "@/components/molecules/SteamAccountListItem/context"
 
 export type IntentionCodes =
   | "STEAM_GUARD_REQUIRED"
@@ -43,7 +46,10 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
   SheetChooseFarmingGamesViewProps & ControllerProps
 >(function SheetChooseFarmingGamesViewComponent({ children, farmGames, className, ...props }, ref) {
   const [open, setOpen] = useState(false)
-  const { accountName, games } = useContext(SteamAccountListItemContext).app
+  const { accountName, games } = useSteamAccountListItem(state => ({
+    accountName: state.app.accountName,
+    games: state.app.games,
+  }))
   const { getToken } = useAuth()
   const user = useUser()
 

@@ -1,4 +1,5 @@
 import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
+import { local_useSteamAccountListItem } from "@/components/molecules/FarmGames/controller"
 import { GameItem } from "@/components/molecules/GameItem"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,7 +14,6 @@ import {
 import { cn } from "@/lib/utils"
 import React from "react"
 import { ChooseFarmingGamesViewProps } from "./types"
-import { SteamAccountListItemContext } from "@/components/molecules/SteamAccountListItem/context"
 
 type SheetChooseFarmingGamesViewProps = ChooseFarmingGamesViewProps
 
@@ -21,8 +21,7 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
   React.ElementRef<"div">,
   SheetChooseFarmingGamesViewProps
 >(function SheetChooseFarmingGamesViewComponent({ state, helpers, children, className, ...props }, ref) {
-  const { app, modalSelectGames } = React.useContext(SteamAccountListItemContext)
-  const { accountName, games, farmingGames, id_steamAccount, profilePictureUrl } = app
+  const local = local_useSteamAccountListItem.farmGames()
   const [open, setOpen] = state
 
   return (
@@ -38,7 +37,7 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
         side="right"
       >
         <SheetHeader className="py-6 px-4">
-          <SheetTitle>{accountName} - Seus jogos</SheetTitle>
+          <SheetTitle>{local.accountName} - Seus jogos</SheetTitle>
           <SheetDescription>Selecione os jogos que queira farmar e clique em salvar.</SheetDescription>
         </SheetHeader>
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
@@ -50,11 +49,11 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
           </Button>
           <Button
             onClick={helpers.handleRefreshGames}
-            disabled={helpers.refreshGames.isPending}
+            disabled={local.refreshGames.isPending}
             className="flex-1 relative"
           >
-            <span>{helpers.refreshGames.isPending ? "Atualizando" : "Atualizar"}</span>
-            {helpers.refreshGames.isPending && (
+            <span>{local.refreshGames.isPending ? "Atualizando" : "Atualizar"}</span>
+            {local.refreshGames.isPending && (
               <div className="absolute top-1/2 -translate-y-1/2 right-4">
                 <IconArrowClockwise className="w-4 h-4 animate-spin" />
               </div>
@@ -63,13 +62,13 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
         </div>
         <main className="flex-1 overflow-y-scroll pb-14">
           <div className="flex flex-col gap-2">
-            {games ? (
-              games.map(game => (
+            {local.games ? (
+              local.games.map(game => (
                 <GameItem
                   key={game.id}
                   game={game}
                   handleFarmGame={() => helpers.handleFarmGame(game.id)}
-                  isSelected={helpers.stageFarmingGames.includes(game.id)}
+                  isSelected={local.stageFarmingGames.includes(game.id)}
                 />
               ))
             ) : (
@@ -78,14 +77,15 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
           </div>
         </main>
         <SheetFooter className="absolute left-0 right-0 bottom-0 z-30 gap-2">
-          <div className="absolute left-0 right-0 bottom-0 h-32 bg-gradient-to-t from-black/80 to-transparent" />
+          <div className="absolute left-0 right-0 bottom-0 h-32 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
           <Button
             className="flex-1 relative disabled:opacity-70 z-40"
-            onClick={helpers.handleFarmGames}
-            disabled={helpers.farmGames.isPending || helpers.stopFarm.isPending}
+            onClick={() => alert("implementar")}
+            // onClick={helpers.handleFarmGames}
+            disabled={local.farmGames.isPending || local.stopFarm.isPending}
           >
-            <span>{helpers.farmGames.isPending || helpers.stopFarm.isPending ? "Salvando" : "Salvar"}</span>
-            {(helpers.farmGames.isPending || helpers.stopFarm.isPending) && (
+            <span>{local.farmGames.isPending || local.stopFarm.isPending ? "Salvando" : "Salvar"}</span>
+            {(local.farmGames.isPending || local.stopFarm.isPending) && (
               <div className="absolute top-1/2 -translate-y-1/2 right-4">
                 <IconArrowClockwise className="w-4 h-4 animate-spin" />
               </div>

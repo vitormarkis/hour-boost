@@ -1,16 +1,13 @@
-import { api } from "@/lib/axios"
-import { useAuth } from "@clerk/clerk-react"
-
-import React, { useContext, useState } from "react"
 import { useMediaQuery } from "@/components/hooks"
+import { useSteamAccountListItem } from "@/components/molecules/SteamAccountListItem/context"
+import { useUser } from "@/contexts/UserContext"
+import { showToastFarmGamesResult, showToastFarmingGame } from "@/util/toaster"
+import { GameSession } from "core"
+import React from "react"
+import { toast } from "sonner"
+import { SheetChooseFarmingGamesView } from "./desktop"
 import { DrawerChooseFarmingGamesView } from "./mobile"
 import { ChooseFarmingGamesHelpers } from "./types"
-import { SheetChooseFarmingGamesView } from "./desktop"
-import { useUser } from "@/contexts/UserContext"
-import { SteamAccountListItemContext } from "@/components/molecules/SteamAccountListItem/context"
-import { toast } from "sonner"
-import { AppError } from "@/util/AppError"
-import { useFarmGamesMutation, useRefreshGamesMutation, useStopFarmMutation } from "@/mutations"
 
 export interface FarmGamesPayload {
   accountName: string
@@ -27,114 +24,62 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
   React.ElementRef<typeof SheetChooseFarmingGamesView>,
   DrawerSheetChooseFarmingGamesProps
 >(function DrawerSheetChooseFarmingGamesComponent({ children }, ref) {
-  const { modalSelectGames } = useContext(SteamAccountListItemContext)
-  const { closeModal, state } = modalSelectGames
+  const {
+    modalSelectGames,
+    stagingFarmGames,
+    accountName,
+    games,
+    farmGames,
+    stopFarm,
+    refreshGames,
+    handlers,
+  } = local_useSteamAccountListItem.controller()
   const isLessDesktop = useMediaQuery("(max-width: 896px)")
-
-  const { accountName, games } = useContext(SteamAccountListItemContext).app
-  const { getToken } = useAuth()
   const user = useUser()
 
   const initialStageFarmingGames = user.steamAccounts.find(sa => sa.accountName === accountName)
     ?.farmingGames!
-  const [stageFarmingGames, setStageFarmingGames] = useState<number[]>(initialStageFarmingGames)
 
-  const getAPI = async () => {
-    api.defaults.headers["Authorization"] = `Bearer ${await getToken()}`
-    return api
-  }
+  const stopFarmGamesHandler = React.useCallback(async () => {
+    await stopFarm.mutateAsync({ accountName })
+  }, [stopFarm])
 
-  const refreshGames = useRefreshGamesMutation(getAPI)
-  const stopFarm = useStopFarmMutation(getAPI)
-  const farmGames = useFarmGamesMutation(getAPI)
-
-  function toggleFarmGame(gameId: number, onError: (error: AppError) => void) {
-    setStageFarmingGames(stageFarmingGames => {
-      const isAdding = !stageFarmingGames.includes(gameId)
-      if (isAdding) {
-        if (stageFarmingGames.length >= user.plan.maxGamesAllowed) {
-          onError(
-            new AppError(
-              `Seu plano permite apenas o farm de ${user.plan.maxGamesAllowed} jogos ao mesmo tempo.`
-            )
-          )
-          return stageFarmingGames
-        }
-        return [...stageFarmingGames, gameId]
-      }
-      return stageFarmingGames.filter(gid => gid !== gameId)
-    })
-  }
-
-  async function handleRefreshGames() {
-    const { games } = await refreshGames.mutateAsync({ accountName })
-    user.setGames(accountName, games)
-  }
-
-  async function handleFarmGames() {
-    if (!games) return
-    try {
-      const isStoppingTheFarm = stageFarmingGames.length === 0
-      if (isStoppingTheFarm) {
-        await stopFarm.mutateAsync({ accountName })
-      } else {
-        const [underised] = await farmGames.mutateAsync({
-          accountName,
-          gamesID: stageFarmingGames,
-          userId: user.id,
-        })
-        if (underised) {
-          toast[underised.type](underised.message)
-          return
-        }
-        const now = new Date()
-        console.log("Starting the farm with the props: ", {
-          accountName,
-          when: now,
-        })
-        user.startFarm({
-          accountName,
-          when: now,
-        })
-        const gamesNames: string[] = stageFarmingGames.map(gameId => games.find(g => g.id === gameId)!.name)
-        toast.success(`Farmando os jogos ${gamesNames.join(", ")}.`)
-        console.log("[user context] farmed games")
-      }
-      user.updateFarmingGames({
-        accountName,
-        gameIdList: stageFarmingGames,
-      })
-      closeModal()
-    } catch (error) {
-      toast(error.message)
-    }
-  }
+  const farmGamesHandler = React.useCallback(
+    async (games: GameSession[]) => {
+      const { dataOrMessage } = await handlers.handleFarmGames(accountName, stagingFarmGames.list, user.id)
+      const [undesired] = dataOrMessage
+      if (undesired) return showToastFarmGamesResult(undesired)
+      showToastFarmingGame(stagingFarmGames.list, games)
+      modalSelectGames.closeModal()
+    },
+    [farmGames, modalSelectGames, stagingFarmGames.list, user]
+  )
 
   function handleStopFarm() {
-    setStageFarmingGames([])
+    stagingFarmGames.clear()
   }
 
   function handleFarmGame(gameId: number) {
-    toggleFarmGame(gameId, error => {
+    stagingFarmGames.toggleFarmGame(gameId, error => {
       toast.info(error.message)
     })
   }
 
+  async function handleRefreshGames() {
+    const { games } = await refreshGames.mutateAsync({ accountName: accountName })
+    user.setGames(accountName, games)
+  }
+
   const helpers: ChooseFarmingGamesHelpers = {
-    farmGames,
     handleFarmGame,
-    handleFarmGames,
     handleRefreshGames,
     handleStopFarm,
-    refreshGames,
-    stageFarmingGames,
-    stopFarm,
   }
 
   if (isLessDesktop) {
     return (
       <DrawerChooseFarmingGamesView
-        state={state}
+        state={modalSelectGames.state}
         ref={ref}
         helpers={helpers}
       >
@@ -145,7 +90,7 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
 
   return (
     <SheetChooseFarmingGamesView
-      state={state}
+      state={modalSelectGames.state}
       ref={ref}
       helpers={helpers}
     >
@@ -155,3 +100,31 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
 })
 
 DrawerSheetChooseFarmingGames.displayName = "DrawerSheetChooseFarmingGames"
+
+export const local_useSteamAccountListItem = {
+  controller() {
+    return useSteamAccountListItem(state => ({
+      refreshGames: state.mutations.refreshGames,
+      modalSelectGames: {
+        closeModal: state.modalSelectGames.closeModal,
+        state: state.modalSelectGames.state,
+      },
+      stagingFarmGames: state.stagingFarmGames,
+      accountName: state.app.accountName,
+      games: state.app.games,
+      farmGames: state.mutations.farmGames,
+      stopFarm: state.mutations.stopFarm,
+      handlers: state.handlers,
+    }))
+  },
+  farmGames() {
+    return useSteamAccountListItem(state => ({
+      accountName: state.app.accountName,
+      games: state.app.games,
+      stageFarmingGames: state.stagingFarmGames.list,
+      farmGames: state.mutations.farmGames,
+      stopFarm: state.mutations.stopFarm,
+      refreshGames: state.mutations.refreshGames,
+    }))
+  },
+}

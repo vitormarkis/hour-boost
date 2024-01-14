@@ -26,7 +26,6 @@ import {
   query_routerSteam,
   query_routerUser,
 } from "~/presentation/routes/query"
-import { Logger } from "~/utils/Logger"
 
 const app: Application = express()
 app.use(
@@ -63,7 +62,9 @@ async function main() {
   try {
     const users = await usersRepository.findMany()
     restoreUsersSessionsUseCase.execute({ users })
-    await restoreAccountSessionsUseCase.execute()
+    await restoreAccountSessionsUseCase.execute({
+      whitelistAccountNames: ["versalebackup"],
+    })
   } catch (error) {
     console.log("main error", error)
   }

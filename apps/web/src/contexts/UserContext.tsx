@@ -83,7 +83,12 @@ export function UserProvider({ serverUser, children }: IUserProviderProps) {
   )
 }
 
-export const useUser = () => useContext(UserContext)
+export function useUser<R>(): IUserContext
+export function useUser<R>(selector: (context: IUserContext) => R): R
+export function useUser(selector?: (...args: any[]) => any) {
+  const context = useContext(UserContext)
+  return selector ? selector(context) : context
+}
 
 export namespace NSUserContext {
   export interface StageFarmingGames {
