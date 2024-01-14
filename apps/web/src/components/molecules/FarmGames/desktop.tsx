@@ -20,12 +20,10 @@ type SheetChooseFarmingGamesViewProps = ChooseFarmingGamesViewProps
 export const SheetChooseFarmingGamesView = React.forwardRef<
   React.ElementRef<"div">,
   SheetChooseFarmingGamesViewProps
->(function SheetChooseFarmingGamesViewComponent(
-  { helpers, setOpen, open, children, className, ...props },
-  ref
-) {
-  const { app } = React.useContext(SteamAccountListItemContext)
+>(function SheetChooseFarmingGamesViewComponent({ state, helpers, children, className, ...props }, ref) {
+  const { app, modalSelectGames } = React.useContext(SteamAccountListItemContext)
   const { accountName, games, farmingGames, id_steamAccount, profilePictureUrl } = app
+  const [open, setOpen] = state
 
   return (
     <Sheet

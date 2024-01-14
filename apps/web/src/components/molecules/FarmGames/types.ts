@@ -3,6 +3,7 @@ import { IUserMethods } from "@/contexts/UserContext"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { UseMutationResult } from "@tanstack/react-query"
 import { API_GET_RefreshAccountGames } from "core"
+import { Dispatch, SetStateAction } from "react"
 
 export type IntentionCodes =
   | "STEAM_GUARD_REQUIRED"
@@ -25,8 +26,7 @@ export type ChooseFarmingGamesHelpers = {
 export type ChooseFarmingGamesViewProps = React.ComponentPropsWithoutRef<"div"> & {
   helpers: ChooseFarmingGamesHelpers
   children: React.ReactNode
-  open: boolean
-  setOpen(isOpening: boolean): void
+  state: [state: boolean, setState: Dispatch<SetStateAction<boolean>>]
 }
 
 type MutationStopFarm = UseMutationResult<

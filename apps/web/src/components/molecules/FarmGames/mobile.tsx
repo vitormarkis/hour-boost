@@ -22,8 +22,9 @@ export type DrawerChooseFarmingGamesViewProps = ChooseFarmingGamesViewProps
 export const DrawerChooseFarmingGamesView = React.forwardRef<
   React.ElementRef<"div">,
   DrawerChooseFarmingGamesViewProps
->(function DrawerChooseFarmingGamesViewComponent({ helpers, open, setOpen, children, className }, ref) {
+>(function DrawerChooseFarmingGamesViewComponent({ state, helpers, children, className }, ref) {
   const { app } = React.useContext(SteamAccountListItemContext)
+  const [open, setOpen] = state
   const { accountName, games, farmingGames, id_steamAccount, profilePictureUrl } = app
   return (
     <Drawer

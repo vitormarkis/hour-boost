@@ -13,16 +13,13 @@ import { IconTrash } from "@/components/icons/IconTrash"
 import { IconChart } from "@/components/icons/IconChart"
 import { Switch } from "@/components/ui/switch"
 
-type SteamAccountListItemViewMobileProps = ISteamAccountListItemContext & {
-  className: string
-}
+type SteamAccountListItemViewMobileProps = ISteamAccountListItemContext & {}
 
 export const SteamAccountListItemViewMobile = React.forwardRef<
   React.ElementRef<"div">,
   SteamAccountListItemViewMobileProps
 >(function SteamAccountListItemViewMobileComponent(props, ref) {
   const {
-    className,
     farmingTime,
     hoursFarmedInSeconds,
     maxGamesAllowed,
@@ -39,7 +36,7 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
   return (
     <SteamAccountListItemContext.Provider value={props}>
       <div
-        className={cn("relative flex flex-col border-t border-slate-800", header && "mt-[4.5rem]", className)}
+        className={cn("relative flex flex-col border-t border-slate-800", header && "mt-[4.5rem]")}
         ref={ref}
       >
         {header && (

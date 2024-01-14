@@ -18,6 +18,8 @@ export interface FarmGamesPayload {
   userId: string
 }
 export type DrawerSheetChooseFarmingGamesProps = {
+  open?: boolean
+  onOpenChange?(isOpening: boolean): boolean
   children: React.ReactNode
 }
 
@@ -25,8 +27,9 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
   React.ElementRef<typeof SheetChooseFarmingGamesView>,
   DrawerSheetChooseFarmingGamesProps
 >(function DrawerSheetChooseFarmingGamesComponent({ children }, ref) {
-  const [open, setOpen] = React.useState(false)
-  const isDesktop = useMediaQuery("(min-width: 896px)")
+  const { modalSelectGames } = useContext(SteamAccountListItemContext)
+  const { closeModal, state } = modalSelectGames
+  const isLessDesktop = useMediaQuery("(max-width: 896px)")
 
   const { accountName, games } = useContext(SteamAccountListItemContext).app
   const { getToken } = useAuth()
@@ -101,7 +104,7 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
         accountName,
         gameIdList: stageFarmingGames,
       })
-      setOpen(false)
+      closeModal()
     } catch (error) {
       toast(error.message)
     }
@@ -128,28 +131,26 @@ export const DrawerSheetChooseFarmingGames = React.forwardRef<
     stopFarm,
   }
 
-  if (isDesktop) {
+  if (isLessDesktop) {
     return (
-      <SheetChooseFarmingGamesView
+      <DrawerChooseFarmingGamesView
+        state={state}
         ref={ref}
-        open={open}
-        setOpen={setOpen}
         helpers={helpers}
       >
         {children}
-      </SheetChooseFarmingGamesView>
+      </DrawerChooseFarmingGamesView>
     )
   }
 
   return (
-    <DrawerChooseFarmingGamesView
+    <SheetChooseFarmingGamesView
+      state={state}
       ref={ref}
-      open={open}
-      setOpen={setOpen}
       helpers={helpers}
     >
       {children}
-    </DrawerChooseFarmingGamesView>
+    </SheetChooseFarmingGamesView>
   )
 })
 

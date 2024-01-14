@@ -15,16 +15,13 @@ import React from "react"
 import { SteamAccountListItemContext, ISteamAccountListItemContext } from "./context"
 import { ButtonAddNewAccount } from "./components"
 
-type SteamAccountListItemViewDesktopProps = ISteamAccountListItemContext & {
-  className: string
-}
+type SteamAccountListItemViewDesktopProps = ISteamAccountListItemContext & {}
 
 export const SteamAccountListItemViewDesktop = React.forwardRef<
   React.ElementRef<"div">,
   SteamAccountListItemViewDesktopProps
 >(function SteamAccountListItemViewDesktopComponent(props, ref) {
   const {
-    className,
     farmingTime,
     hoursFarmedInSeconds,
     maxGamesAllowed,
@@ -41,7 +38,7 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
   return (
     <SteamAccountListItemContext.Provider value={props}>
       <div
-        className={cn("relative h-[4.5rem] border border-slate-800 flex", header && "mt-[4.5rem]", className)}
+        className={cn("relative h-[4.5rem] border border-slate-800 flex", header && "mt-[4.5rem]")}
         ref={ref}
       >
         {header && (
