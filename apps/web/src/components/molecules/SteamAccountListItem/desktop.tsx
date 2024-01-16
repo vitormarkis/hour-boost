@@ -5,6 +5,7 @@ import { IconJoystick } from "@/components/icons/IconJoystick"
 import { IconTrash } from "@/components/icons/IconTrash"
 import { DrawerSheetChooseFarmingGames } from "@/components/molecules/FarmGames/controller"
 import { AlertDialogRemoveSteamAccount } from "@/components/molecules/RemoveSteamAccount/components/controller"
+import { getFarmedTimeSince } from "@/components/molecules/SteamAccountListItem"
 import { Switch } from "@/components/ui/switch"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
 import { cn } from "@/lib/utils"
@@ -42,6 +43,8 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
     const { games, list } = payload
     showToastFarmingGame(list, games)
   }
+
+  const farmedTimeSince = getFarmedTimeSince(app.farmedTimeInSeconds)
 
   return (
     <div
@@ -121,21 +124,24 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
           </div>
         )}
       </div>
-      <div className="relative flex items-center px-10 group cursor-default whitespace-nowrap">
+      <div className="relative flex items-center px-6 group cursor-default whitespace-nowrap min-w-[8.5rem]">
         {header && (
           <div className="absolute bottom-full px-6 left-0 right-0 py-2">
-            <span>horas ganhas</span>
+            <span>tempo farmado</span>
           </div>
         )}
-        <div className="flex flex-col">
-          <div className="">
-            <span className="leading-none text-[1rem]/[1rem]">{(5000 / 60 / 1000).toFixed(2)} </span>
-            <span className="leading-none text-[0.875rem]/[0.875rem]">horas</span>
-            {/* <span className="inline-block text-sm px-2">/</span>
-              <span className="text-normal">6 </span>
-              <span className="text-sm">horas</span> */}
+        <div className="flex flex-col mx-auto">
+          <div className="flex relative tabular-nums">
+            <strong className="leading-none font-medium whitespace-nowrap text-sm">
+              {farmedTimeSince.highlightTime}
+            </strong>
+            <div className="absolute top-full">
+              <span className="pt-0.5 leading-none text-xs text-slate-500 whitespace-nowrap">
+                {farmedTimeSince.secondaryTime}
+              </span>
+            </div>
           </div>
-          <span className="leading-none text-[0.75rem]/[0.75rem] text-slate-500">nessa conta</span>
+          {/* <span className="leading-none text-[0.75rem]/[0.75rem] text-slate-500">nessa conta</span> */}
         </div>
       </div>
       <DrawerSheetChooseFarmingGames>

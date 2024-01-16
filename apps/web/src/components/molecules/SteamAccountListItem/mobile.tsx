@@ -5,6 +5,7 @@ import { IconJoystick } from "@/components/icons/IconJoystick"
 import { IconTrash } from "@/components/icons/IconTrash"
 import { DrawerSheetChooseFarmingGames } from "@/components/molecules/FarmGames/controller"
 import { AlertDialogRemoveSteamAccount } from "@/components/molecules/RemoveSteamAccount/components/controller"
+import { getFarmedTimeSince } from "@/components/molecules/SteamAccountListItem"
 import { Switch } from "@/components/ui/switch"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
 import { cn } from "@/lib/utils"
@@ -25,7 +26,6 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
 >(function SteamAccountListItemViewMobileComponent({ handleClickFarmButton, actionText }, ref) {
   const {
     farmingTime,
-    hoursFarmedInSeconds,
     maxGamesAllowed,
     autoRestarter,
     status,
@@ -45,6 +45,9 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
     const { games, list } = payload
     showToastFarmingGame(list, games)
   }
+
+  const farmedTimeSince = getFarmedTimeSince(app.farmedTimeInSeconds)
+  const accountHasEverFarmed = app.farmedTimeInSeconds > 0
 
   return (
     <div
@@ -102,7 +105,7 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
           } as CSSProperties
         }
       >
-        <li className="flex items-center  min-h-[2rem]">
+        <li className="flex items-center  min-h-[2.25rem]">
           <span className="pr-3 w-[var(--propertiesWidth)]">Farmando:</span>
           <div className="pr-3">
             <div
@@ -134,13 +137,28 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
             )}
           </div>
         </li>
-        <li className="flex items-center  min-h-[2rem]">
+        <li className="flex items-center  min-h-[2.25rem]">
           <span className="pr-3 w-[var(--propertiesWidth)]">Horas ganhas:</span>
+
           <div className="flex flex-col justify-center h-full leading-none">
-            <span className="text-slate-500">0 horas</span>
+            <div className="flex gap-2 relative tabular-nums">
+              <strong
+                className={cn(
+                  "leading-none font-medium whitespace-nowrap",
+                  !accountHasEverFarmed && "text-slate-500"
+                )}
+              >
+                {accountHasEverFarmed ? farmedTimeSince.highlightTime : "0 horas"}
+              </strong>
+              {farmedTimeSince.secondaryTime.length ? (
+                <span className="pt-0.5 leading-none text-sm text-slate-500 whitespace-nowrap">
+                  {farmedTimeSince.secondaryTime}
+                </span>
+              ) : null}
+            </div>
           </div>
         </li>
-        <li className="flex items-center  min-h-[2rem]">
+        <li className="flex items-center  min-h-[2.25rem]">
           <span className="pr-3 w-[var(--propertiesWidth)]">Auto restart:</span>
           <div className="flex flex-col justify-center h-full leading-none">
             <Switch size="1.25rem" />

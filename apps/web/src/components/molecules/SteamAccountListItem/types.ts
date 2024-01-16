@@ -6,7 +6,6 @@ export type SteamAccountStatusLiveProps = {
   autoRestarter?: boolean
   steamGuard?: boolean
   status: "offline" | "online"
-  hoursFarmedInSeconds: number
   farmingTime: number
 }
 

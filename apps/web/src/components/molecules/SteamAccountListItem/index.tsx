@@ -6,7 +6,7 @@ import { useFarmGamesMutation, useRefreshGamesMutation, useStopFarmMutation } fr
 import { DataOrMessage, Message } from "@/util/DataOrMessage"
 import { useAuth } from "@clerk/clerk-react"
 import { useQueryClient } from "@tanstack/react-query"
-import { GameSession } from "core"
+import { GameSession, formatTimeSince } from "core"
 import React, { useMemo, useState } from "react"
 import { ISteamAccountListItemContext, SteamAccountListItemContext } from "./context"
 import { SteamAccountListItemViewDesktop } from "./desktop"
@@ -125,7 +125,6 @@ export function SteamAccountList({
       stagingFarmGames,
       app,
       status: "offline",
-      hoursFarmedInSeconds: 0,
       farmingTime: 0,
       modalSelectGames: {
         closeModal,
@@ -185,4 +184,17 @@ export function getActionText({
   if (stopFarmPending) return <Text>Parando farm...</Text>
   if (isFarming) return <Text>Parar farm</Text>
   return <Text>Começar farm</Text>
+}
+
+export function getFarmedTimeSince(timeInSeconds: number) {
+  const timeSince = formatTimeSince(timeInSeconds * 1000)
+  const [timeNumber, category, ...secondaryRest] = timeSince.split(" ")
+
+  const highlightTime = [timeNumber, category].join(" ")
+  const secondaryTime = secondaryRest.join(" ")
+
+  return {
+    highlightTime,
+    secondaryTime,
+  }
 }
