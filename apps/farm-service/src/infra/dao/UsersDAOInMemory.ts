@@ -50,6 +50,9 @@ export class UsersDAOInMemory implements UsersDAO {
       steamAccounts: foundUser.steamAccounts.data.map(sa => ({
         accountName: sa.credentials.accountName,
         id_steamAccount: sa.id_steamAccount,
+        farmedTimeInSeconds: foundUser.plan.usages.data.reduce((acc, item) => {
+          return acc + item.amountTime
+        }, 0),
         games: null,
         profilePictureUrl: null,
         farmingGames: [],

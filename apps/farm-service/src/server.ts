@@ -62,9 +62,7 @@ async function main() {
   try {
     const users = await usersRepository.findMany()
     restoreUsersSessionsUseCase.execute({ users })
-    await restoreAccountSessionsUseCase.execute({
-      whitelistAccountNames: ["versalebackup"],
-    })
+    await restoreAccountSessionsUseCase.execute()
   } catch (error) {
     console.log("main error", error)
   }

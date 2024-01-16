@@ -30,6 +30,7 @@ export interface SteamAccountSession extends Persona {
   games: GameSession[] | null
   farmingGames: number[]
   farmStartedAt: Date | null
+  farmedTimeInSeconds: number
 }
 
 export interface PersonaWithAccountName extends Persona {
