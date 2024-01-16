@@ -1,7 +1,6 @@
 import {
   CustomInstances,
   MakeTestInstancesProps,
-  PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
@@ -63,7 +62,11 @@ test("should ", async () => {
   /**
    * Stop farm
    */
-  const stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository)
+  const stopFarmController = new StopFarmController(
+    i.usersClusterStorage,
+    i.usersRepository,
+    i.planRepository
+  )
   await promiseHandler(
     stopFarmController.handle({
       payload: {

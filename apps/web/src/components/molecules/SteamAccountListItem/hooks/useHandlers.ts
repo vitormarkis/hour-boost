@@ -32,7 +32,7 @@ export function useHandlers({ stopFarm, queryClient, stagingFarmGames, userId, f
         })
       }
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user_session(userId) })
-      stagingFarmGames.clear()
+      // stagingFarmGames.clear()
       return Promise.resolve({
         dataOrMessage: [null, success],
       })

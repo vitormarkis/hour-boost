@@ -129,7 +129,7 @@ command_routerSteam.post(
     const perform = async () => {
       const { accountName } = req.body
 
-      const stopFarmController = new StopFarmController(usersClusterStorage, usersRepository)
+      const stopFarmController = new StopFarmController(usersClusterStorage, usersRepository, planRepository)
       return await stopFarmController.handle({
         payload: {
           userId: req.auth.userId!,

@@ -42,7 +42,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     usersRepository: i.usersRepository,
     farmGamesUseCase: i.farmGamesUseCase,
   })
-  stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository)
+  stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository, i.planRepository)
   // console.log("ccc promise race")
   // await i.redis.call("FLUSHALL")
   // console.log("DDD promise finished")
@@ -517,8 +517,6 @@ describe("not mobile", () => {
   })
 
   test("should log the amount time when persist USAGE farm session", async () => {
-    const logSpy = jest.spyOn(console, "log")
-
     jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
     const responseFarm1 = await promiseHandler(
       farmGamesController.handle({
@@ -531,15 +529,12 @@ describe("not mobile", () => {
       stopFarmController.handle({ payload: { accountName: s.me.accountName, userId: s.me.userId } })
     )
     ensureExpectation(200, responseStop1)
-    await new Promise(setImmediate)
 
     const mePlan = (await i.planRepository.getById(meInstances.me.plan.id_plan)) as PlanUsage
-    const [usage] = mePlan?.usages.data ?? []
-    const logs = logSpy.mock.calls.filter(s => s.length === 1 && typeof s[0] === "string")
-    console.log({
-      logs,
-    })
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("10800"))
+    const usages = mePlan?.usages.data
+    expect(usages).toHaveLength(1)
+    expect(usages[0].accountName).toBe(s.me.accountName)
+    expect(usages[0].amountTime).toBe(3600 * 3)
   })
 })
 
@@ -548,9 +543,6 @@ test("should log the amount time when persist INFINITY farm session", async () =
     validSteamAccounts,
   })
   i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
-  i.publisher.register(createLogPersistFarmSessionHandler())
-
-  const logSpy = jest.spyOn(console, "log")
 
   const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
   await i.changeUserPlan(diamondPlan)
@@ -567,11 +559,12 @@ test("should log the amount time when persist INFINITY farm session", async () =
     stopFarmController.handle({ payload: { accountName: s.me.accountName, userId: s.me.userId } })
   )
   ensureExpectation(200, responseStop1)
-  await new Promise(setImmediate)
 
-  const mePlan = await i.planRepository.getById(meInstances.me.plan.id_plan)
-  const [usage] = mePlan?.usages.data ?? []
-  expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("10800"))
+  const mePlan = (await i.planRepository.getById(meInstances.me.plan.id_plan)) as PlanUsage
+  const usages = mePlan?.usages.data
+  expect(usages).toHaveLength(1)
+  expect(usages[0].accountName).toBe(s.me.accountName)
+  expect(usages[0].amountTime).toBe(3600 * 3)
 })
 
 describe("no users on steam database", () => {

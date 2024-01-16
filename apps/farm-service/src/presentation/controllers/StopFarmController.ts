@@ -1,5 +1,6 @@
-import { Controller, HttpClient, UsersRepository } from "core"
+import { Controller, HttpClient, PlanRepository, UsersRepository } from "core"
 import { UsersSACsFarmingClusterStorage } from "~/application/services"
+import { persistUsagesOnDatabase } from "~/application/utils/persistUsagesOnDatabase"
 
 export namespace StopFarmHandle {
   export type Payload = {
@@ -13,7 +14,8 @@ export namespace StopFarmHandle {
 export class StopFarmController implements Controller<StopFarmHandle.Payload, StopFarmHandle.Response> {
   constructor(
     private readonly usersClusterStorage: UsersSACsFarmingClusterStorage,
-    private readonly usersRepository: UsersRepository
+    private readonly usersRepository: UsersRepository,
+    private readonly planRepository: PlanRepository
   ) {}
 
   async handle({ payload }: APayload): AResponse {
@@ -23,8 +25,10 @@ export class StopFarmController implements Controller<StopFarmHandle.Payload, St
 
     const [errorFindingUserCluster, userCluster] = this.usersClusterStorage.get(user.username)
     if (errorFindingUserCluster) throw errorFindingUserCluster
-    const [errorPausingFarmOnAccount] = userCluster.pauseFarmOnAccount({ accountName })
+    const [errorPausingFarmOnAccount, usages] = userCluster.pauseFarmOnAccountSync({ accountName })
     if (errorPausingFarmOnAccount) throw errorPausingFarmOnAccount
+    const [errorPersisting] = await persistUsagesOnDatabase(user.plan.id_plan, usages, this.planRepository)
+    if (errorPersisting) throw errorPersisting
     return { json: null, status: 200 }
   }
 }

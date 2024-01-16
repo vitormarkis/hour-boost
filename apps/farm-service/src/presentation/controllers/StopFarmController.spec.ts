@@ -34,7 +34,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     usersRepository: i.usersRepository,
     farmGamesUseCase: i.farmGamesUseCase,
   })
-  stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository)
+  stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository, i.planRepository)
 }
 
 beforeEach(async () => {
@@ -50,7 +50,7 @@ afterEach(() => {
 describe("StopFarmController.spec test suite", () => {
   describe("Account Name IS NOT farming", () => {
     test("should reject is not registered user is provided", async () => {
-      const stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository)
+      const stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository, i.planRepository)
       const { status, json } = await stopFarmController.handle({
         payload: {
           userId: "RANDOM_ID",
@@ -66,7 +66,7 @@ describe("StopFarmController.spec test suite", () => {
     })
 
     test("should reject if user is not farming", async () => {
-      const stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository)
+      const stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository, i.planRepository)
       const { status, json } = await promiseHandler(
         stopFarmController.handle({
           payload: {
