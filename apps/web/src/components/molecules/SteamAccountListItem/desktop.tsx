@@ -7,22 +7,21 @@ import { DrawerSheetChooseFarmingGames } from "@/components/molecules/FarmGames/
 import { AlertDialogRemoveSteamAccount } from "@/components/molecules/RemoveSteamAccount/components/controller"
 import { Switch } from "@/components/ui/switch"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
-import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
-import { showToastFarmGamesResult, showToastFarmingGame } from "@/util/toaster"
+import { Message } from "@/util/DataOrMessage"
+import { showToastFarmingGame } from "@/util/toaster"
 import React from "react"
 import { toast } from "sonner"
 import { ButtonAddNewAccount } from "./components"
 import { useSteamAccountListItem } from "./context"
+import { SteamAccountListItemViewProps } from "./types"
 
-type SteamAccountListItemViewDesktopProps = {}
+type SteamAccountListItemViewDesktopProps = SteamAccountListItemViewProps
 
 export const SteamAccountListItemViewDesktop = React.forwardRef<
   React.ElementRef<"div">,
   SteamAccountListItemViewDesktopProps
->(function SteamAccountListItemViewDesktopComponent(props, ref) {
-  const context = useSteamAccountListItem()
-  console.log({ context })
+>(function SteamAccountListItemViewDesktopComponent({ handleClickFarmButton, actionText }, ref) {
   const {
     maxGamesAllowed,
     header,
@@ -32,35 +31,16 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
     modalSelectGames,
     mutations,
     handlers,
-  } = context
+    isFarming,
+  } = useSteamAccountListItem()
   const { accountName, games, profilePictureUrl, farmingGames, farmStartedAt } = app
-  const isFarming = farmingGames.length > 0
-  const userId = useUser(u => u.id)
 
-  const handleClickFarmButton = async () => {
-    if (isFarming) {
-      await mutations.stopFarm.mutateAsync({
-        accountName,
-      })
-    }
-    const isStoppingTheFarm = !stagingFarmGames.hasGamesOnTheList()
-    if (isStoppingTheFarm) {
-      const [_, setUrgentState] = stagingFarmGames.urgentState
-      setUrgentState(true)
-      modalSelectGames.openModal()
-      toast.info("Você precisa escolher alguns jogos primeiro.")
-      // farm on save true
-    }
-    if (!isStoppingTheFarm) {
-      if (!games) {
-        toast.error("Nenhum jogo foi encontrado na sua conta, atualize seus jogos ou a página.")
-        return
-      }
-      const { dataOrMessage } = await handlers.handleFarmGames(accountName, stagingFarmGames.list, userId)
-      const [undesired] = dataOrMessage
-      if (undesired) return showToastFarmGamesResult(undesired)
-      showToastFarmingGame(stagingFarmGames.list, games)
-    }
+  const handleClickFarmButtonImpl = async () => {
+    const [undesired, payload] = await handleClickFarmButton()
+    if (undesired) return toast[undesired.type](undesired.message)
+    if (payload instanceof Message) return toast[payload.type](payload.message)
+    const { games, list } = payload
+    showToastFarmingGame(list, games)
   }
 
   return (
@@ -73,7 +53,7 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
           <ButtonAddNewAccount />
         </div>
       )}
-      {isFarming && (
+      {isFarming() && (
         <div className="absolute top-0 bottom-0 right-full w-[0.25rem] bg-accent animate-pulse" />
       )}
       <div className="flex items-center">
@@ -114,7 +94,7 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
       <div className="relative flex items-center px-6 min-w-[8.5rem]">
         <div className="pr-2">
           <div
-            className={cn("h-1.5 w-1.5 rounded-full bg-slate-500", isFarming && "bg-accent animate-pulse")}
+            className={cn("h-1.5 w-1.5 rounded-full bg-slate-500", isFarming() && "bg-accent animate-pulse")}
           />
         </div>
         {header && (
@@ -122,7 +102,7 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
             <span>farmando</span>
           </div>
         )}
-        {isFarming ? (
+        {isFarming() ? (
           <div className="flex flex-col justify-center h-full leading-none">
             {/* <span className="uppercase">2.5 horas</span> */}
             {/* <span className="text-sm text-slate-500">153 min</span> */}
@@ -194,10 +174,14 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
           </button>
         </AlertDialogRemoveSteamAccount>
         <button
-          className={cn("flex items-center px-8 h-full min-w-[10rem] bg-slate-800", isFarming && "bg-accent")}
-          onClick={handleClickFarmButton}
+          disabled={mutations.farmGames.isPending || mutations.stopFarm.isPending}
+          className={cn(
+            "flex justify-center text-white items-center px-8 h-full min-w-[12.6rem] bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:cursor-not-allowed",
+            isFarming() && "bg-accent hover:bg-accent-500 disabled:bg-accent-700"
+          )}
+          onClick={handleClickFarmButtonImpl}
         >
-          {isFarming ? "Parar farm" : "Começar farm"}
+          {actionText}
         </button>
       </div>
     </div>

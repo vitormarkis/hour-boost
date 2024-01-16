@@ -11,9 +11,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       className="toaster group custom"
       toastOptions={{
+        style: {
+          borderRadius: "0",
+        },
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-slate-800 group-[.toaster]:shadow-lg",
+            "group toast rounded-none group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-slate-800 group-[.toaster]:shadow-lg",
           description: "group-[.toast]:text-muted-foreground",
           info: "group-[.toaster]:border-neutral-900 group-[.toaster]:bg-black",
           actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",

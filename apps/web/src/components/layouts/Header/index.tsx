@@ -1,13 +1,12 @@
-import React from "react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { AuthSession } from "@/types/UserSession"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MenuDropdownUserHeader } from "@/components/molecules/menu-dropdown-user-header"
 import { SheetHeaderNavbar } from "@/components/molecules/sheet-header-navbar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { getUserInitials } from "@/util/getUserInitials"
 import { UserSession } from "core"
+import Link from "next/link"
+import React from "react"
 
 export type HeaderProps = React.ComponentPropsWithoutRef<"header"> & {
   user: UserSession | null

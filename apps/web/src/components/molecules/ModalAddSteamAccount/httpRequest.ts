@@ -17,13 +17,13 @@ export async function httpCreateSteamAccount(
       payload
     )
   )
-  if (error) return [error, null]
+  if (error) return [error]
   if (response.status === 201) {
     return [null, response.data.steamAccountId]
   }
   if (response.status === 202) {
-    return [msg.new("Código Steam Guard requerido.", "info", "STEAM_GUARD_REQUIRED"), null]
+    return [msg.new("Código Steam Guard requerido.", "info", "STEAM_GUARD_REQUIRED")]
   }
   console.log({ response })
-  return [msg.new("Resposta desconhecida.", "info"), null]
+  return [msg.new("Resposta desconhecida.", "info")]
 }

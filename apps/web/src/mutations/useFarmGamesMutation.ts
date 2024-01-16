@@ -10,3 +10,5 @@ export function useFarmGamesMutation(getApi: () => Promise<AxiosInstance>) {
     mutationFn: async (...args) => httpFarmGames(...args, getApi),
   })
 }
+
+export type FarmGamesMutationResult = ReturnType<typeof useFarmGamesMutation>

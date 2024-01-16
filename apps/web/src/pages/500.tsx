@@ -1,8 +1,7 @@
 export default function Custom500(...args: any[]) {
   return (
-    <>
-      <h1>500 - Server-side error occurred</h1>
-      <pre>{JSON.stringify({ args }, null, 2)}</pre>
-    </>
+    <div className="px-16 pt-24 font-black text-xl mdx:text-5xl text-white text-center flex justify-center">
+      <h1>Aconteceu um erro, tente novamento mais tarde.</h1>
+    </div>
   )
 }

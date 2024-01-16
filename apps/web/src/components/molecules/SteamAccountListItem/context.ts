@@ -1,38 +1,27 @@
 import { FarmGamesPayload } from "@/components/molecules/FarmGames/controller"
-import { IntentionCodes } from "@/components/molecules/FarmGames/types"
-import { IUserMethods } from "@/contexts/UserContext"
-import { AppError } from "@/util/AppError"
+import { IntentionCodes as IntentionCodes_FarmGames } from "@/components/molecules/FarmGames/types"
+import { HHandlers } from "@/components/molecules/SteamAccountListItem/hooks/useHandlers"
+import { StopFarmPayload } from "@/components/molecules/StopFarm/controller"
+import { IntentionCodes as IntentionCodes_StopFarm } from "@/components/molecules/StopFarm/types"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { UseMutationResult } from "@tanstack/react-query"
 import { API_GET_RefreshAccountGames } from "core"
-import React, { Dispatch, SetStateAction, useContext } from "react"
+import React from "react"
+import { HStagingFarmGames } from "./hooks/useStagingFarmGames"
 import { SteamAccountAppProps, SteamAccountStatusLiveProps, SteamAccountStatusProps } from "./types"
 
 export interface ISteamAccountListItemContext extends SteamAccountStatusProps, SteamAccountStatusLiveProps {
   app: SteamAccountAppProps
-  stagingFarmGames: {
-    urgentState: [state: boolean, setState: Dispatch<SetStateAction<boolean>>]
-    toggleFarmGame(gameId: number, onError: (error: AppError) => void): void
-    list: number[]
-    hasGamesOnTheList(): boolean
-    clear(): void
-  }
+  isFarming(): boolean
+  stagingFarmGames: HStagingFarmGames
   mutations: {
     stopFarm: MutationStopFarm
     refreshGames: MutationRefreshGames
     farmGames: MutationFarmGames
   }
-  handlers: {
-    handleFarmGames(
-      accountName: string,
-      gamesID: number[],
-      userId: string
-    ): Promise<{
-      dataOrMessage: DataOrMessage<string, IntentionCodes>
-    }>
-  }
+  handlers: HHandlers
   modalSelectGames: {
-    state: [state: boolean, setState: Dispatch<SetStateAction<boolean>>]
+    state: [state: boolean, setState: React.Dispatch<React.SetStateAction<boolean>>]
     openModal(): void
     closeModal(): void
   }
@@ -43,16 +32,14 @@ export const SteamAccountListItemContext = React.createContext({} as ISteamAccou
 export function useSteamAccountListItem<R>(): ISteamAccountListItemContext
 export function useSteamAccountListItem<R>(selector: (context: ISteamAccountListItemContext) => R): R
 export function useSteamAccountListItem(selector?: (...args: any[]) => any) {
-  const context = useContext(SteamAccountListItemContext)
+  const context = React.useContext(SteamAccountListItemContext)
   return selector ? selector(context) : context
 }
 
 export type MutationStopFarm = UseMutationResult<
-  IUserMethods.DataOrError,
-  unknown,
-  {
-    accountName: string
-  },
+  DataOrMessage<string, IntentionCodes_StopFarm>,
+  Error,
+  StopFarmPayload,
   unknown
 >
 
@@ -66,7 +53,7 @@ export type MutationRefreshGames = UseMutationResult<
 >
 
 export type MutationFarmGames = UseMutationResult<
-  DataOrMessage<string, IntentionCodes>,
+  DataOrMessage<string, IntentionCodes_FarmGames>,
   Error,
   FarmGamesPayload,
   unknown

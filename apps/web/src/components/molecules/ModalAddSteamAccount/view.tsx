@@ -59,7 +59,6 @@ export const ModalAddSteamAccountView = React.forwardRef<
       authCode,
     })
     formController.resolveSubmit()
-    console.log([undesired, steamAccountId])
     if (typeof steamAccountId === "string") {
       toast.success("Conta adicionada com sucesso.")
       queryClient.invalidateQueries({ queryKey: ["me", user.id] })
@@ -69,7 +68,6 @@ export const ModalAddSteamAccountView = React.forwardRef<
       if (undesired.code == "STEAM_GUARD_REQUIRED") {
         return toast[undesired.type](undesired.message)
       }
-      console.log(undesired, steamAccountId)
       return toast[undesired.type](undesired.message)
     }
   }

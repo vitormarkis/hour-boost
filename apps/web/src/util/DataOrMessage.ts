@@ -19,7 +19,7 @@ export class Message<TCode extends string | "UNKNOWN" = "UNKNOWN"> {
 }
 
 export type DataOrMessage<TData, TCode extends string | "UNKNOWN" = "UNKNOWN"> =
-  | [undesired: Message<TCode | "UNKNOWN">, data: null]
+  | [undesired: Message<TCode | "UNKNOWN">]
   | [undesired: null, data: TData]
 
 type Type = Exclude<keyof typeof toast, "custom" | "promise">

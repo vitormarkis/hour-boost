@@ -1,5 +1,5 @@
-import React from "react"
 import { cn } from "@/lib/utils"
+import React from "react"
 
 export type SteamAccountListHeaderProps = React.ComponentPropsWithoutRef<"div"> & {}
 
@@ -49,7 +49,6 @@ SteamAccountListHeader.displayName = "SteamAccountListHeader"
 export type SGVDeviceMobileProps = React.ComponentPropsWithoutRef<"svg">
 
 export function SGVDeviceMobile({ className, ...props }: SGVDeviceMobileProps) {
-  console.log(className)
   return (
     <svg
       {...props}

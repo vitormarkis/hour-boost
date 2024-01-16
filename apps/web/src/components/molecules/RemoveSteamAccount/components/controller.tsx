@@ -44,7 +44,6 @@ export const AlertDialogRemoveSteamAccount = React.forwardRef<
       toast[error.type](error.message)
       return
     }
-    console.log("removed account with success")
     toast.success("Conta da Steam removida do seu perfil.")
     queryClient.invalidateQueries({ queryKey: ["me", user.id] })
   }

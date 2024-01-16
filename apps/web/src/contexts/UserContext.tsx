@@ -1,5 +1,6 @@
 import { Helper } from "@/contexts/UserContext.helper"
 import { api } from "@/lib/axios"
+import { QUERY_KEYS } from "@/mutations/queryKeys"
 import { useAuth } from "@clerk/clerk-react"
 import { useQuery } from "@tanstack/react-query"
 import { GameSession, Persona, SteamAccountSession, UserSession } from "core"
@@ -39,7 +40,7 @@ export function UserProvider({ serverUser, children }: IUserProviderProps) {
   }
 
   useQuery<UserSession>({
-    queryKey: ["me", user.id],
+    queryKey: QUERY_KEYS.user_session(user.id),
     queryFn: async () => {
       const token = await getToken()
       const { data: user } = await api.get<UserSession>("/me", {

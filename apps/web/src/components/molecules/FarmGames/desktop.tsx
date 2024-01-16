@@ -1,6 +1,8 @@
 import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
+import { useFarmGames } from "@/components/molecules/FarmGames/context"
 import { local_useSteamAccountListItem } from "@/components/molecules/FarmGames/controller"
 import { GameItem } from "@/components/molecules/GameItem"
+import { useSteamAccountListItem } from "@/components/molecules/SteamAccountListItem/context"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -11,18 +13,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { cn } from "@/lib/utils"
 import React from "react"
-import { ChooseFarmingGamesViewProps } from "./types"
-
-type SheetChooseFarmingGamesViewProps = ChooseFarmingGamesViewProps
-
-export const SheetChooseFarmingGamesView = React.forwardRef<
-  React.ElementRef<"div">,
-  SheetChooseFarmingGamesViewProps
->(function SheetChooseFarmingGamesViewComponent({ state, helpers, children, className, ...props }, ref) {
+export function SheetChooseFarmingGamesView({ children }: React.PropsWithChildren) {
+  const { state, helpers } = useFarmGames()
+  const { stagingFarmGames } = useSteamAccountListItem()
   const local = local_useSteamAccountListItem.farmGames()
   const [open, setOpen] = state
+  const [urgent, setUrgent] = local.stageFarmingGames.urgentState
+
+  const handleCancelClick = () => {
+    setOpen(false)
+    if (urgent) setUrgent(false)
+  }
 
   return (
     <Sheet
@@ -31,9 +33,7 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
     >
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent
-        {...props}
-        className={cn("p-0 flex flex-col border-slate-800 h-screen", className)}
-        ref={ref}
+        className="p-0 flex flex-col border-slate-800 h-screen"
         side="right"
       >
         <SheetHeader className="py-6 px-4">
@@ -67,8 +67,8 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
                 <GameItem
                   key={game.id}
                   game={game}
-                  handleFarmGame={() => helpers.handleFarmGame(game.id)}
-                  isSelected={local.stageFarmingGames.includes(game.id)}
+                  handleFarmGame={() => helpers.handleAddGameToFarmStaging(game.id)}
+                  isSelected={stagingFarmGames.local.hasGame(game.id)}
                 />
               ))
             ) : (
@@ -80,8 +80,7 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
           <div className="absolute left-0 right-0 bottom-0 h-32 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
           <Button
             className="flex-1 relative disabled:opacity-70 z-40"
-            onClick={() => alert("implementar")}
-            // onClick={helpers.handleFarmGames}
+            onClick={helpers.handleActionButton}
             disabled={local.farmGames.isPending || local.stopFarm.isPending}
           >
             <span>{local.farmGames.isPending || local.stopFarm.isPending ? "Salvando" : "Salvar"}</span>
@@ -94,7 +93,7 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
           <Button
             className="flex-1 z-30"
             variant="destructive"
-            onClick={() => setOpen(false)}
+            onClick={handleCancelClick}
           >
             Cancelar
           </Button>
@@ -102,6 +101,6 @@ export const SheetChooseFarmingGamesView = React.forwardRef<
       </SheetContent>
     </Sheet>
   )
-})
+}
 
 SheetChooseFarmingGamesView.displayName = "SheetChooseFarmingGamesView"

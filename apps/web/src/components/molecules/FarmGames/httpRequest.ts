@@ -18,14 +18,14 @@ export async function httpFarmGames(
     api.post<any, AxiosResponse<FarmGamesOutput>, FarmGamesPayload>("/farm/start", payload)
   )
   if (error) {
-    return [error, null]
+    return [error]
   }
   if (response.status === 200) {
     return [null, response.data.message]
   }
   if (response.status === 202) {
-    return [msg.new("Código Steam Guard requerido.", "info", "STEAM_GUARD_REQUIRED"), null]
+    return [msg.new("Código Steam Guard requerido.", "info", "STEAM_GUARD_REQUIRED")]
   }
   console.log({ response })
-  return [msg.new("Resposta desconhecida.", "info"), null]
+  return [msg.new("Resposta desconhecida.", "info")]
 }

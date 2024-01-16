@@ -8,17 +8,21 @@ import { AlertDialogRemoveSteamAccount } from "@/components/molecules/RemoveStea
 import { Switch } from "@/components/ui/switch"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
 import { cn } from "@/lib/utils"
+import { Message } from "@/util/DataOrMessage"
+import { showToastFarmingGame } from "@/util/toaster"
 import { useUser } from "@clerk/clerk-react"
 import React, { CSSProperties } from "react"
+import { toast } from "sonner"
 import { ButtonAddNewAccount } from "./components"
 import { useSteamAccountListItem } from "./context"
+import { SteamAccountListItemViewProps } from "./types"
 
-type SteamAccountListItemViewMobileProps = {}
+type SteamAccountListItemViewMobileProps = SteamAccountListItemViewProps
 
 export const SteamAccountListItemViewMobile = React.forwardRef<
   React.ElementRef<"div">,
   SteamAccountListItemViewMobileProps
->(function SteamAccountListItemViewMobileComponent(props, ref) {
+>(function SteamAccountListItemViewMobileComponent({ handleClickFarmButton, actionText }, ref) {
   const {
     farmingTime,
     hoursFarmedInSeconds,
@@ -27,11 +31,20 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
     status,
     header,
     steamGuard,
+    mutations,
     app,
+    isFarming,
   } = useSteamAccountListItem()
   const { accountName, games, id_steamAccount, profilePictureUrl, farmingGames, farmStartedAt } = app
   const user = useUser()
-  const isFarming = farmingGames.length > 0
+
+  const handleClickFarmButtonImpl = async () => {
+    const [undesired, payload] = await handleClickFarmButton()
+    if (undesired) return toast[undesired.type](undesired.message)
+    if (payload instanceof Message) return toast[payload.type](payload.message)
+    const { games, list } = payload
+    showToastFarmingGame(list, games)
+  }
 
   return (
     <div
@@ -45,7 +58,7 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
       )}
       <div className="flex items-center gap-4 overflow-hidden">
         <div className="flex">
-          {isFarming && <div className="h-[4.5rem] w-[0.25rem] bg-accent animate-pulse" />}
+          {isFarming() && <div className="h-[4.5rem] w-[0.25rem] bg-accent animate-pulse" />}
           <div className={cn("h-[4.5rem] w-[4.5rem] relative shrink-0")}>
             <img
               // src="https://avatarcloudflare.steamstatic.com/2ec38f7a0953fe2585abdda0757324dbbb519749_full.jpg"
@@ -93,11 +106,14 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
           <span className="pr-3 w-[var(--propertiesWidth)]">Farmando:</span>
           <div className="pr-3">
             <div
-              className={cn("h-1.5 w-1.5 rounded-full bg-slate-500", isFarming && "bg-accent animate-pulse")}
+              className={cn(
+                "h-1.5 w-1.5 rounded-full bg-slate-500",
+                isFarming() && "bg-accent animate-pulse"
+              )}
             />
           </div>
           <div className="">
-            {isFarming ? (
+            {isFarming() ? (
               <div className="flex flex-col justify-center h-full leading-none">
                 {farmStartedAt ? (
                   <TimeSince.Root
@@ -164,16 +180,17 @@ export const SteamAccountListItemViewMobile = React.forwardRef<
           </DrawerSheetChooseFarmingGames>
         </li>
       </ul>
-      <div>
-        {isFarming ? (
-          <button className="flex items-center justify-center px-8 bg-accent h-20 w-full text-lg font-medium">
-            Parar farm
-          </button>
-        ) : (
-          <button className="flex items-center justify-center px-8 bg-slate-800 h-20 w-full text-lg font-medium">
-            Começar farm
-          </button>
-        )}
+      <div className="w-full">
+        <button
+          disabled={mutations.farmGames.isPending || mutations.stopFarm.isPending}
+          className={cn(
+            "flex justify-center w-full text-white items-center px-8 h-20 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:cursor-not-allowed",
+            isFarming() && "bg-accent hover:bg-accent-500 disabled:bg-accent-700"
+          )}
+          onClick={handleClickFarmButtonImpl}
+        >
+          {actionText}
+        </button>
       </div>
     </div>
   )

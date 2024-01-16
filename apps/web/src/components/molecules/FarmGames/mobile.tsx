@@ -1,28 +1,26 @@
 import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
 import { GameItem } from "@/components/molecules/GameItem"
+import { useSteamAccountListItem } from "@/components/molecules/SteamAccountListItem/context"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import React from "react"
+import { useFarmGames } from "./context"
 import { local_useSteamAccountListItem } from "./controller"
-import { ChooseFarmingGamesViewProps } from "./types"
 
-export type DrawerChooseFarmingGamesViewProps = ChooseFarmingGamesViewProps
-
-export const DrawerChooseFarmingGamesView = React.forwardRef<
-  React.ElementRef<"div">,
-  DrawerChooseFarmingGamesViewProps
->(function DrawerChooseFarmingGamesViewComponent({ state, helpers, children }, ref) {
+export function DrawerChooseFarmingGamesView({ children }: React.PropsWithChildren) {
+  const { state, helpers } = useFarmGames()
   const local = local_useSteamAccountListItem.farmGames()
+  const { stagingFarmGames } = useSteamAccountListItem()
   const [open, setOpen] = state
+
   return (
     <Drawer
       open={open}
@@ -35,16 +33,16 @@ export const DrawerChooseFarmingGamesView = React.forwardRef<
           <DrawerDescription>Selecione os jogos que queira farmar e clique em salvar.</DrawerDescription>
         </DrawerHeader>
         <main className="flex-1 overflow-y-scroll">
-          <ScrollArea className="h-[45vh] rounded-sm px-4">
+          <ScrollArea className="h-[65vh] rounded-sm px-2">
             <div className="flex flex-col gap-2">
               {local.games ? (
                 local.games.map(game => (
                   <GameItem
-                    height="5rem"
+                    height="9rem"
                     key={game.id}
                     game={game}
-                    handleFarmGame={() => helpers.handleFarmGame(game.id)}
-                    isSelected={local.stageFarmingGames.includes(game.id)}
+                    handleFarmGame={() => helpers.handleAddGameToFarmStaging(game.id)}
+                    isSelected={stagingFarmGames.local.hasGame(game.id)}
                   />
                 ))
               ) : (
@@ -53,11 +51,17 @@ export const DrawerChooseFarmingGamesView = React.forwardRef<
             </div>
           </ScrollArea>
         </main>
-        <DrawerFooter className="pt-4">
+        <div className="p-2 flex gap-2">
           <Button
-            className="h-16 flex-1 relative disabled:opacity-70 z-40"
-            onClick={() => alert("implementar")}
-            // onClick={helpers.handleFarmGames}
+            className="h-12 flex-1 rounded-sm z-30"
+            variant="destructive"
+            onClick={() => setOpen(false)}
+          >
+            Cancelar
+          </Button>
+          <Button
+            className="h-12 flex-1 rounded-sm relative z-40"
+            onClick={helpers.handleActionButton}
             disabled={local.farmGames.isPending || local.stopFarm.isPending}
           >
             <span>{local.farmGames.isPending || local.stopFarm.isPending ? "Salvando" : "Salvar"}</span>
@@ -67,17 +71,10 @@ export const DrawerChooseFarmingGamesView = React.forwardRef<
               </div>
             )}
           </Button>
-          <Button
-            className="h-16 flex-1 z-30"
-            variant="destructive"
-            onClick={() => setOpen(false)}
-          >
-            Cancelar
-          </Button>
-        </DrawerFooter>
+        </div>
       </DrawerContent>
     </Drawer>
   )
-})
+}
 
 DrawerChooseFarmingGamesView.displayName = "DrawerChooseFarmingGamesView"

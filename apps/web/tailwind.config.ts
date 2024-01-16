@@ -19,9 +19,22 @@ const config: Config = {
         // => @media (min-width: 896px) { ... }
       },
       fontFamily: {
-        barlow: ["var(--font-barlow)"],
+        barlow: ["var(--barlow)"],
       },
       colors: {
+        accent: {
+          "50": "hsl(206, 100%, 97%)",
+          "100": "hsl(206, 95%, 93%)",
+          "200": "hsl(206, 97%, 87%)",
+          "300": "hsl(204, 98%, 78%)",
+          "400": "hsl(205, 95%, 68%)",
+          "500": "hsl(209, 92%, 60%)",
+          DEFAULT: "hsl(213, 84%, 55%)",
+          "700": "hsl(217, 77%, 48%)",
+          "800": "hsl(218, 72%, 40%)",
+          "900": "hsl(216, 65%, 33%)",
+          "950": "hsl(218, 57%, 21%)",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -43,10 +56,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
+        "accent-foreground": "hsl(var(--accent-foreground))",
+        // accent: {
+        //   DEFAULT: "hsl(var(--accent))",
+        // },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
