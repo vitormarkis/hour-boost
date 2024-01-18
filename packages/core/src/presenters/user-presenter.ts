@@ -31,7 +31,9 @@ export interface SteamAccountSession extends Persona {
   farmingGames: number[]
   farmStartedAt: Date | null
   farmedTimeInSeconds: number
+  status: AppAccountStatus
 }
+export type AppAccountStatus = "offline" | "online"
 
 export interface PersonaWithAccountName extends Persona {
   accountName: string

@@ -4,9 +4,10 @@ import { useUser } from "@/contexts/UserContext"
 import { api } from "@/lib/axios"
 import { useFarmGamesMutation, useRefreshGamesMutation, useStopFarmMutation } from "@/mutations"
 import { DataOrMessage, Message } from "@/util/DataOrMessage"
+import { thisPlanIsUsage } from "@/util/thisPlanIsUsage"
 import { useAuth } from "@clerk/clerk-react"
 import { useQueryClient } from "@tanstack/react-query"
-import { GameSession, formatTimeSince } from "core"
+import { AppAccountStatus, GameSession, formatTimeSince } from "core"
 import React, { useMemo, useState } from "react"
 import { ISteamAccountListItemContext, SteamAccountListItemContext } from "./context"
 import { SteamAccountListItemViewDesktop } from "./desktop"
@@ -17,16 +18,22 @@ import { SteamAccountAppProps, SteamAccountListItemViewProps, SteamAccountStatus
 
 export function SteamAccountList({
   app,
-  status,
+  status: statusProps,
 }: {
   status: SteamAccountStatusProps
   app: SteamAccountAppProps
 }) {
+  const [status, setStatusState] = useState<AppAccountStatus>(app.status)
   const { getToken } = useAuth()
   const getAPI = async () => {
     api.defaults.headers["Authorization"] = `Bearer ${await getToken()}`
     return api
   }
+
+  const setStatus = React.useCallback(async (newStatus: AppAccountStatus) => {
+    await new Promise(res => setTimeout(res, 1000))
+    setStatusState(newStatus)
+  }, [])
 
   const queryClient = useQueryClient()
 
@@ -36,16 +43,10 @@ export function SteamAccountList({
 
   const isLessDesktop = useMediaQuery("(max-width: 896px)")
   const [modalSelectGamesOpen, setModalSelectGamesOpen] = useState(false)
-  const user = useUser(user => ({
-    id: user.id,
-    maxGamesAllowed: user.plan.maxGamesAllowed,
-    setGames: user.setGames,
-    updateFarmingGames: user.updateFarmingGames,
-    startFarm: user.startFarm,
-  }))
+  const user = useUser()
   const stagingFarmGames = useStagingFarmGames({
     farmingGames: app.farmingGames,
-    planMaxGamesAllowed: user.maxGamesAllowed,
+    planMaxGamesAllowed: user.plan.maxGamesAllowed,
   })
 
   const handlers = useHandlers({
@@ -68,6 +69,11 @@ export function SteamAccountList({
   const isFarming = React.useCallback(() => {
     return app.farmingGames.length > 0
   }, [app.farmingGames.length])
+
+  const hasUsagePlanLeft = React.useCallback(() => {
+    if (!thisPlanIsUsage(user.plan)) return true
+    return app.farmedTimeInSeconds < user.plan.maxUsageTime
+  }, [app.farmedTimeInSeconds])
 
   const handleClickFarmButton = React.useCallback(async (): Promise<
     DataOrMessage<{ list: number[]; games: GameSession[] } | Message, IntentionCodes>
@@ -114,17 +120,19 @@ export function SteamAccountList({
 
   const value: ISteamAccountListItemContext = useMemo(
     () => ({
-      ...status,
+      setStatus,
+      ...statusProps,
       mutations: {
         farmGames,
         refreshGames,
         stopFarm,
       },
       isFarming,
+      hasUsagePlanLeft,
       handlers,
       stagingFarmGames,
       app,
-      status: "offline",
+      status,
       farmingTime: 0,
       modalSelectGames: {
         closeModal,
@@ -133,7 +141,7 @@ export function SteamAccountList({
       },
     }),
     [
-      status,
+      statusProps,
       farmGames,
       refreshGames,
       stopFarm,

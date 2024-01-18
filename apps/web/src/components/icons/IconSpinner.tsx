@@ -1,9 +1,11 @@
 import { cn } from "@/lib/utils"
 import twc from "tailwindcss/colors"
 
-export type IconSpinnerProps = React.ComponentPropsWithoutRef<"svg">
+export type IconSpinnerProps = React.ComponentPropsWithoutRef<"svg"> & {
+  color?: string
+}
 
-export function IconSpinner({ className, ...props }: IconSpinnerProps) {
+export function IconSpinner({ color = twc.slate["800"], className, ...props }: IconSpinnerProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -21,26 +23,26 @@ export function IconSpinner({ className, ...props }: IconSpinnerProps) {
       >
         <stop
           offset={0}
-          stopColor={twc.slate["800"]}
+          stopColor={color}
         />
         <stop
           offset=".3"
-          stopColor={twc.slate["800"]}
+          stopColor={color}
           stopOpacity=".9"
         />
         <stop
           offset=".6"
-          stopColor={twc.slate["800"]}
+          stopColor={color}
           stopOpacity=".6"
         />
         <stop
           offset=".8"
-          stopColor={twc.slate["800"]}
+          stopColor={color}
           stopOpacity=".3"
         />
         <stop
           offset={1}
-          stopColor={twc.slate["800"]}
+          stopColor={color}
           stopOpacity={0}
         />
       </radialGradient>
@@ -60,7 +62,7 @@ export function IconSpinner({ className, ...props }: IconSpinnerProps) {
         transform-origin="center"
         fill="none"
         opacity=".2"
-        stroke={twc.slate["800"]}
+        stroke={color}
         strokeWidth={30}
         strokeLinecap="round"
         cx={100}

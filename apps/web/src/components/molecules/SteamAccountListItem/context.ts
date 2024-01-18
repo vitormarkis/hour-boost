@@ -5,7 +5,7 @@ import { StopFarmPayload } from "@/components/molecules/StopFarm/controller"
 import { IntentionCodes as IntentionCodes_StopFarm } from "@/components/molecules/StopFarm/types"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { UseMutationResult } from "@tanstack/react-query"
-import { API_GET_RefreshAccountGames } from "core"
+import { API_GET_RefreshAccountGames, AppAccountStatus } from "core"
 import React from "react"
 import { HStagingFarmGames } from "./hooks/useStagingFarmGames"
 import { SteamAccountAppProps, SteamAccountStatusLiveProps, SteamAccountStatusProps } from "./types"
@@ -13,6 +13,9 @@ import { SteamAccountAppProps, SteamAccountStatusLiveProps, SteamAccountStatusPr
 export interface ISteamAccountListItemContext extends SteamAccountStatusProps, SteamAccountStatusLiveProps {
   app: SteamAccountAppProps
   isFarming(): boolean
+  hasUsagePlanLeft(): boolean
+  status: AppAccountStatus
+  setStatus(newStatus: AppAccountStatus): Promise<void>
   stagingFarmGames: HStagingFarmGames
   mutations: {
     stopFarm: MutationStopFarm

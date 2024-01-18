@@ -2,10 +2,11 @@ import { TimeSince } from "@/components/atoms/TimeSince"
 import { IconChart } from "@/components/icons/IconChart"
 import { IconDeviceMobile } from "@/components/icons/IconDeviceMobile"
 import { IconJoystick } from "@/components/icons/IconJoystick"
+import { IconSpinner } from "@/components/icons/IconSpinner"
 import { IconTrash } from "@/components/icons/IconTrash"
 import { DrawerSheetChooseFarmingGames } from "@/components/molecules/FarmGames/controller"
 import { AlertDialogRemoveSteamAccount } from "@/components/molecules/RemoveSteamAccount/components/controller"
-import { getFarmedTimeSince } from "@/components/molecules/SteamAccountListItem"
+import { MenuDropdownChooseAccountStatus } from "@/components/molecules/menu-dropdown-choose-account-status"
 import { Switch } from "@/components/ui/switch"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
 import { useUser } from "@/contexts/UserContext"
@@ -14,6 +15,7 @@ import { Message } from "@/util/DataOrMessage"
 import { showToastFarmingGame } from "@/util/toaster"
 import React from "react"
 import { toast } from "sonner"
+import twc from "tailwindcss/colors"
 import { ButtonAddNewAccount } from "./components"
 import { useSteamAccountListItem } from "./context"
 import { SteamAccountListItemViewProps } from "./types"
@@ -33,7 +35,9 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
     modalSelectGames,
     mutations,
     handlers,
+    hasUsagePlanLeft,
     isFarming,
+    status,
   } = useSteamAccountListItem()
   const { accountName, games, profilePictureUrl, farmingGames, farmStartedAt } = app
   const plan = useUser(u => u.plan)
@@ -46,7 +50,7 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
     showToastFarmingGame(list, games)
   }
 
-  const farmedTimeSince = getFarmedTimeSince(app.farmedTimeInSeconds)
+  // const farmedTimeSince = getFarmedTimeSince(app.farmedTimeInSeconds)
 
   return (
     <div
@@ -90,9 +94,19 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
         </div>
         <div className="leading-none flex flex-col">
           <strong>{accountName}</strong>
-          <div className="text-xs">
-            <span>Status: </span>
-            <span className="text-slate-500">Offline</span>
+          <div className="text-xs flex gap-1 items-center mt-1 ">
+            <MenuDropdownChooseAccountStatus>
+              <div className="h-1 w-1 rounded-full bg-green-500 mr-1.5" />
+              <span className="text-slate-300 select-none cursor-pointer hover:underline -translate-y-[1px] pr-2">
+                {status}
+              </span>
+              <div className="">
+                <IconSpinner
+                  color={twc.blue["500"]}
+                  className="h-3 w-3"
+                />
+              </div>
+            </MenuDropdownChooseAccountStatus>
           </div>
         </div>
       </div>
@@ -129,19 +143,20 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
       <div className="relative flex items-center px-6 group cursor-default whitespace-nowrap min-w-[8.5rem]">
         {header && (
           <div className="absolute bottom-full px-6 left-0 right-0 py-2">
-            <span>tempo farmado</span>
+            <span>horas farmadas</span>
           </div>
         )}
         <div className="flex flex-col mx-auto">
           <div className="flex relative tabular-nums">
-            <strong className="leading-none font-medium whitespace-nowrap text-sm">
-              {farmedTimeSince.highlightTime}
-            </strong>
-            <div className="absolute top-full">
+            <div className="flex gap-1 leading-none font-medium whitespace-nowrap text-sm">
+              {(app.farmedTimeInSeconds / 60 / 60).toFixed(2)}
+              <span className="text-slate-600">horas</span>
+            </div>
+            {/* <div className="absolute top-full">
               <span className="pt-0.5 leading-none text-xs text-slate-500 whitespace-nowrap">
                 {farmedTimeSince.secondaryTime}
               </span>
-            </div>
+            </div> */}
           </div>
           {/* <span className="leading-none text-[0.75rem]/[0.75rem] text-slate-500">nessa conta</span> */}
         </div>
@@ -184,14 +199,14 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
           </button>
         </AlertDialogRemoveSteamAccount>
         <button
-          disabled={mutations.farmGames.isPending || mutations.stopFarm.isPending}
+          disabled={mutations.farmGames.isPending || mutations.stopFarm.isPending || !hasUsagePlanLeft()}
           className={cn(
             "flex justify-center text-white items-center px-8 h-full min-w-[12.6rem] bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:cursor-not-allowed",
             isFarming() && "bg-accent hover:bg-accent-500 disabled:bg-accent-700"
           )}
           onClick={handleClickFarmButtonImpl}
         >
-          {actionText}
+          {hasUsagePlanLeft() ? actionText : "Seu plano acabou"}
         </button>
       </div>
     </div>

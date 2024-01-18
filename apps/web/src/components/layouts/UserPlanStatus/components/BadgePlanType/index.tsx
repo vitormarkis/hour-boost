@@ -13,7 +13,7 @@ export function getPlanName(planName: PlanAllNames): string {
   return planNamesMapper[planName]
 }
 
-export const badgePlanTypeVariants = cva("border py-0 5 px-2 rounded-md shadow-md", {
+export const badgePlanTypeVariants = cva("border py-0 5 px-2 shadow-md", {
   variants: {
     name: {
       DIAMOND: "bg-sky-600 border-sky-500 text-sky-100 shadow-sky-800/60",

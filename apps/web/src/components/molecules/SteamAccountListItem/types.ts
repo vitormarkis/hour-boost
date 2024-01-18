@@ -5,7 +5,6 @@ import { GameSession, SteamAccountSession } from "core"
 export type SteamAccountStatusLiveProps = {
   autoRestarter?: boolean
   steamGuard?: boolean
-  status: "offline" | "online"
   farmingTime: number
 }
 
@@ -30,3 +29,4 @@ export namespace NSSteamAccountListItemViewProps {
     export type Response = DataOrMessage<Payload | Message, IntentionCodes>
   }
 }
+

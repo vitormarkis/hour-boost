@@ -1,10 +1,12 @@
 import { IconPullRequest } from "@/components/icons/IconPullRequest"
 import { ModalAddSteamAccount } from "@/components/molecules/ModalAddSteamAccount/controller"
-import { SteamAccountList } from "@/components/molecules/SteamAccountListItem"
+import { SteamAccountList as SteamAccountListComp } from "@/components/molecules/SteamAccountListItem"
 import { Button } from "@/components/ui/button"
 import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
 import React from "react"
+
+const SteamAccountList = React.memo(SteamAccountListComp)
 
 export type DashboardSteamAccountsListProps = React.ComponentPropsWithoutRef<"section"> & {}
 

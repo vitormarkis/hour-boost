@@ -14,6 +14,10 @@ export function UserPlanStatus() {
   }, 0)
 
   const planName = getPlanName(plan.name)
+  const maxUsage = thisPlanIsUsage(plan) ? getTimePast(plan.maxUsageTime) : getTimePastInfinity()
+  const remaining = thisPlanIsUsage(plan)
+    ? getTimePast(plan.maxUsageTime - accountTotalFarmed)
+    : getTimePastInfinity()
 
   return (
     <div className="flex justify-between pt-12">
@@ -23,7 +27,7 @@ export function UserPlanStatus() {
           <div className="flex gap-2 items-center justify-end">
             <span className="text-slate-400">Plano:</span>
             <BadgePlanType name={plan.name}>
-              <span className="leading-none">{planName}</span>
+              <span className="leading-none font-semibold">{planName}</span>
             </BadgePlanType>
           </div>
           <div className="flex gap-2 pt-2 select-none justify-end">
@@ -33,7 +37,9 @@ export function UserPlanStatus() {
             >
               <HoverCardTrigger asChild>
                 <BadgePlanInfo.Root className="hover:ring-2 hover:ring-slate-900/70 hover:cursor-pointer">
-                  <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">32</BadgePlanInfo.Number>
+                  <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">
+                    {plan.maxGamesAllowed}
+                  </BadgePlanInfo.Number>
                   <BadgePlanInfo.SubWrapper className="border-slate-700 bg-slate-600 text-slate-300">
                     <BadgePlanInfo.Icon className="fill-slate-200">
                       <IconJoystick />
@@ -71,56 +77,64 @@ export function UserPlanStatus() {
             </HoverCard>
           </div>
           <div className="flex gap-2 pt-2 select-none justify-end">
-            {thisPlanIsUsage(plan) ? (
-              <RenderFormatter
-                timeInSeconds={plan.maxUsageTime}
-                render={text => (
-                  <BadgePlanInfo.Root className="hover:ring-2 hover:ring-zinc-900/70 hover:cursor-pointer">
-                    <BadgePlanInfo.SubWrapper className="border-zinc-700 bg-zinc-600 text-zinc-300">
-                      <BadgePlanInfo.Icon className="fill-zinc-200">
-                        <IconClock />
-                      </BadgePlanInfo.Icon>
-                      <BadgePlanInfo.Label>no máximo</BadgePlanInfo.Label>
-                    </BadgePlanInfo.SubWrapper>
-                    <BadgePlanInfo.Number className="border-zinc-700 bg-zinc-800">
-                      {/* {text.highlightTime} */}
-                      <div className="flex gap-1.5 items-end">
-                        <span className="text-white font-medium">{text.highlightTime}</span>
-                        {text.secondaryTime.length > 0 && (
-                          <span className="text-zinc-400 text-sm">{text.secondaryTime}</span>
-                        )}
-                      </div>
-                    </BadgePlanInfo.Number>
-                  </BadgePlanInfo.Root>
-                )}
-              />
-            ) : null}
+            <HoverCard
+              openDelay={300}
+              closeDelay={0}
+            >
+              <HoverCardTrigger asChild>
+                <BadgePlanInfo.Root className="hover:ring-2 hover:ring-zinc-900/70 hover:cursor-pointer">
+                  <BadgePlanInfo.SubWrapper className="border-zinc-700 bg-zinc-600 text-zinc-300">
+                    <BadgePlanInfo.Icon className="fill-zinc-200">
+                      <IconClock />
+                    </BadgePlanInfo.Icon>
+                    <BadgePlanInfo.Label>no máximo</BadgePlanInfo.Label>
+                  </BadgePlanInfo.SubWrapper>
+                  <BadgePlanInfo.Number className="border-zinc-700 bg-zinc-800">
+                    <div className="flex gap-1.5 items-center">
+                      <span className="text-white font-medium">
+                        <maxUsage.HighlightTime />
+                      </span>
+                      <maxUsage.SecondaryTime />
+                    </div>
+                  </BadgePlanInfo.Number>
+                </BadgePlanInfo.Root>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <p className="text-slate-300">
+                  Quantidade máxima de tempo que seu plano permite você farmar.
+                </p>
+              </HoverCardContent>
+            </HoverCard>
           </div>
           <div className="flex gap-2 pt-2 select-none justify-end">
-            {thisPlanIsUsage(plan) ? (
-              <RenderFormatter
-                timeInSeconds={plan.maxUsageTime - accountTotalFarmed}
-                render={text => (
-                  <BadgePlanInfo.Root className="hover:ring-2 hover:ring-slate-900/70 hover:cursor-pointer">
-                    <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">
-                      {/* {text.highlightTime} */}
-                      <div className="flex gap-1.5 items-end">
-                        <span className="text-white font-medium">{text.highlightTime}</span>
-                        {text.secondaryTime.length > 0 && (
-                          <span className="text-slate-300 text-xs font-normal">{text.secondaryTime}</span>
-                        )}
-                      </div>
-                    </BadgePlanInfo.Number>
-                    <BadgePlanInfo.SubWrapper className="border-slate-700 bg-slate-600 text-slate-300">
-                      <BadgePlanInfo.Label>restantes</BadgePlanInfo.Label>
-                      <BadgePlanInfo.Icon className="fill-slate-200">
-                        <IconHourGlass />
-                      </BadgePlanInfo.Icon>
-                    </BadgePlanInfo.SubWrapper>
-                  </BadgePlanInfo.Root>
-                )}
-              />
-            ) : null}
+          <HoverCard
+              openDelay={300}
+              closeDelay={0}
+            >
+              <HoverCardTrigger asChild>
+              <BadgePlanInfo.Root className="hover:ring-2 hover:ring-slate-900/70 hover:cursor-pointer">
+              <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">
+                <div className="flex gap-1.5 items-center">
+                  <span className="text-white font-medium">
+                    <remaining.HighlightTime />
+                  </span>
+                  <remaining.SecondaryTime />
+                </div>
+              </BadgePlanInfo.Number>
+              <BadgePlanInfo.SubWrapper className="border-slate-700 bg-slate-600 text-slate-300">
+                <BadgePlanInfo.Label>restantes</BadgePlanInfo.Label>
+                <BadgePlanInfo.Icon className="fill-slate-200">
+                  <IconHourGlass />
+                </BadgePlanInfo.Icon>
+              </BadgePlanInfo.SubWrapper>
+            </BadgePlanInfo.Root>
+              </HoverCardTrigger>
+              <HoverCardContent>
+                <p className="text-slate-300">
+                  Quantidade tempo restante que você ainda pode farmar na Hourboost.
+                </p>
+              </HoverCardContent>
+            </HoverCard>
           </div>
         </div>
       </div>
@@ -128,15 +142,26 @@ export function UserPlanStatus() {
   )
 }
 
-function RenderFormatter({
-  timeInSeconds,
-  render,
-}: {
-  render: React.FC<{ highlightTime: string; secondaryTime: string }>
-  timeInSeconds: number
-}) {
-  const texts = getFarmedTimeSince(timeInSeconds)
-  return render(texts)
+function getTimePast(time: number) {
+  const { highlightTime, secondaryTime } = getFarmedTimeSince(time)
+  const SecondaryTime: React.FC = () =>
+    secondaryTime.length ? <span className="text-zinc-400 text-sm">{secondaryTime}</span> : null
+
+  return {
+    SecondaryTime,
+    HighlightTime: () => highlightTime,
+  }
+}
+
+function getTimePastInfinity() {
+  return {
+    SecondaryTime: () => null,
+    HighlightTime: () => (
+      <BadgePlanInfo.Icon className="fill-zinc-200">
+        <IconInfinity />
+      </BadgePlanInfo.Icon>
+    ),
+  }
 }
 
 export type IconUserProps = React.ComponentPropsWithoutRef<"svg">
@@ -195,6 +220,33 @@ export function IconClock({ className, ...props }: IconClockProps) {
         fill="none"
       />
       <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm56,112H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48a8,8,0,0,1,0,16Z" />
+    </svg>
+  )
+}
+
+export type IconInfinityProps = React.ComponentPropsWithoutRef<"svg">
+
+export function IconInfinity({ className, ...props }: IconInfinityProps) {
+  return (
+    <svg
+      {...props}
+      className={cn("", className)}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 256 256"
+    >
+      <rect
+        width={256}
+        height={256}
+        fill="none"
+      />
+      <path
+        d="M101.28,158.17l-3.34,3.77a48,48,0,1,1,0-67.88l60.12,67.88a48,48,0,1,0,0-67.88l-3.34,3.77"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={24}
+      />
     </svg>
   )
 }
