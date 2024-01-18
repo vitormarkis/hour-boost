@@ -38,6 +38,7 @@ test("should write a ME cache and retrieves it", async () => {
       planId: meInstances.me.plan.id_plan,
       username: s.me.username,
       farmStartedAt: null,
+      status: "online",
     })
   ).resolves.not.toThrow()
   const cache = await i.sacStateCacheRepository.get("markis")
@@ -49,6 +50,7 @@ test("should write a ME cache and retrieves it", async () => {
     farmStartedAt: null,
     planId: meInstances.me.plan.id_plan,
     username: s.me.username,
+    status: "online",
   } as SACStateCacheDTO)
 })
 

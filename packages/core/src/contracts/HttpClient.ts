@@ -3,7 +3,7 @@ export namespace HttpClient {
     payload: T
   }
   export type Response<T = Record<string, any> | null> = {
-    json?: T
+    json: T
     status: number
   }
 }

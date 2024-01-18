@@ -1,4 +1,5 @@
 import { AccountSteamGamesList } from "core/entity"
+import { AppAccountStatus } from "core/presenters"
 
 export interface SteamAccountClientStateCacheRepository {
   get(accountName: string): Promise<SACStateCacheDTO | null>
@@ -17,6 +18,7 @@ export interface SteamAccountClientStateCacheRepository {
   stopFarm(accountName: string): Promise<void>
   deleteAllEntriesFromAccount(accountName: string): Promise<void>
   startFarm(props: NSSteamAccountClientStateCacheRepository.StartFarmProps): Promise<void>
+  setStatus({ accountName, status }: NSSteamAccountClientStateCacheRepository.SetStatusProps): Promise<void>
 }
 
 export namespace NSSteamAccountClientStateCacheRepository {
@@ -24,6 +26,11 @@ export namespace NSSteamAccountClientStateCacheRepository {
     accountName: string
     when: Date
     initSession?: boolean
+  }
+
+  export type SetStatusProps = {
+    status: AppAccountStatus
+    accountName: string
   }
 }
 
@@ -51,7 +58,8 @@ export class SACStateCache {
     readonly accountName: string,
     readonly planId: string,
     readonly username: string,
-    readonly farmStartedAt: Date | null = null
+    readonly farmStartedAt: Date | null = null,
+    readonly status: AppAccountStatus
   ) {}
   isFarming() {
     return this.gamesPlaying.length > 0
@@ -65,6 +73,7 @@ export class SACStateCache {
       planId: this.planId,
       username: this.username,
       farmStartedAt: this.farmStartedAt?.getTime() ?? null,
+      status: this.status,
     }
   }
 }
@@ -76,4 +85,5 @@ export interface SACStateCacheDTO {
   username: string
   planId: string
   farmStartedAt: number | null
+  status: AppAccountStatus
 }

@@ -39,6 +39,10 @@ export class UserClientsStorage {
         username: sac.username,
       })
       const sacStateCache = await this.sacStateCacheRepository.get(sac.accountName)
+      console.log("22: hasSession", {
+        sacStateCache,
+        sacLogged: sac.logged,
+      })
       if (sacStateCache && !sac.logged) {
         sac.emitter.emit("relog-with-state", sacStateCache)
       } else {
@@ -47,7 +51,10 @@ export class UserClientsStorage {
     })
 
     sac.emitter.on("relog-with-state", async state => {
-      const { accountName, username, gamesPlaying, isFarming, planId } = state
+      // TROCAR A LOGICA DESSA FUNÇÃO POR UMA USE CASE DE RESTAURAR ESTADO
+
+      const { accountName, username, gamesPlaying, isFarming, planId, status } = state
+      // sac.setStatus(status)
       this.logger.log(`${accountName} relogou com state.`)
       if (isFarming) {
         this.logger.log(`${accountName} relogou farmando os jogos ${gamesPlaying}`)

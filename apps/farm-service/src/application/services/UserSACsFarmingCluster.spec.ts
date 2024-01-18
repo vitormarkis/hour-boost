@@ -102,6 +102,7 @@ test("should stop farming once interrupt occurs", async () => {
     isFarming: true,
     planId: meInstances.me.plan.id_plan,
     username: s.me.username,
+    status: "offline",
   }
   expect(sacEmitterCalls[0]).toStrictEqual(["interrupt", sacState])
 
@@ -239,6 +240,7 @@ test("should start farm again when relog with state happens", async () => {
     isFarming: true,
     planId: meInstances.me.plan.id_plan,
     username: s.me.username,
+    status: "offline",
   }
   expect(sacEmitterCalls[0]).toStrictEqual(["interrupt", sacState]) // null porque primeira vez sendo pausado
   expect(sacEmitterCalls[1]).toStrictEqual(["hasSession"])

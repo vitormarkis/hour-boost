@@ -11,6 +11,15 @@ import {
 import { Logger } from "~/utils/Logger"
 
 export class SteamAccountClientStateCacheInMemory implements SteamAccountClientStateCacheRepository {
+  async setStatus({
+    accountName,
+    status,
+  }: NSSteamAccountClientStateCacheRepository.SetStatusProps): Promise<void> {
+    let foundState = this.state.get(accountName)
+    if (!foundState) return
+    foundState.status = status
+    this.state.set(accountName, foundState)
+  }
   private readonly state: Map<string, SACStateCacheDTO> = new Map()
   private readonly games: Map<string, AccountSteamGamesList> = new Map()
   private readonly refreshTokens: Map<string, IRefreshToken> = new Map()
@@ -67,6 +76,7 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
         planId,
         username,
         farmStartedAt: null,
+        status: "online",
       })
     }
   }
@@ -92,7 +102,8 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
       accountName,
       prev.planId,
       prev.username,
-      prev.farmStartedAt ? new Date(prev.farmStartedAt) : null
+      prev.farmStartedAt ? new Date(prev.farmStartedAt) : null,
+      prev.status
     )
     this.state.set(accountName, sacStateCache.toJSON())
   }

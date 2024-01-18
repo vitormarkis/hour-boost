@@ -74,6 +74,7 @@ export class UserSACsFarmingCluster {
       if (this.shouldPersistSession) {
         console.log("22: 2.5 !!!! salvando cache", sacStateCacheDTO)
         const sacStateCache = SACStateCacheFactory.createDTO({
+          status: sacStateCacheDTO.status,
           accountName: sacStateCacheDTO.accountName,
           gamesPlaying: sacStateCacheDTO.gamesPlaying,
           isFarming: sacStateCacheDTO.isFarming,

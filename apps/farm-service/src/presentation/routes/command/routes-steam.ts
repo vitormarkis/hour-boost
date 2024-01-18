@@ -1,7 +1,12 @@
 import { ClerkExpressRequireAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
-import { AddSteamAccount } from "core"
+import { AddSteamAccount, HttpClient, appAccountStatusSchema } from "core"
 import { Request, Response, Router } from "express"
-import { AddSteamAccountUseCase, RemoveSteamAccountUseCase } from "~/application/use-cases"
+import { z } from "zod"
+import {
+  AddSteamAccountUseCase,
+  ChangeAccountStatusUseCase,
+  RemoveSteamAccountUseCase,
+} from "~/application/use-cases"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
 
 import {
@@ -171,3 +176,56 @@ command_routerSteam.post("/farm/stop/all", async (req, res) => {
 
   return json ? res.status(status).json(json) : res.status(status).end()
 })
+
+command_routerSteam.patch(
+  "/account/status",
+  ClerkExpressRequireAuth(),
+  async (req: WithAuthProp<Request>, res: Response) => {
+    const perform = (async () => {
+      const validation = z
+        .object({ accountName: z.string().min(1), status: appAccountStatusSchema })
+        .safeParse(req.body)
+      if (!validation.success)
+        return Promise.resolve({
+          status: 400,
+          json: {
+            issues: validation.error.issues,
+            code: "ERROR_ValidatingRequestBody",
+            validationMessage: validation.error.message,
+            message: "Validação falhou.",
+          },
+        } satisfies HttpClient.Response<any>)
+
+      const { accountName, status } = validation.data
+      const changeAccountStatusUseCase = new ChangeAccountStatusUseCase(
+        allUsersClientsStorage,
+        steamAccountClientStateCacheRepository
+      )
+      const [error] = await changeAccountStatusUseCase.execute({
+        accountName,
+        status,
+        userId: req.auth.userId!,
+      })
+      if (error)
+        return {
+          status: error.status,
+          json: {
+            code: "ERROR_ChangeAccountStatusUseCase",
+            message: error.message,
+          },
+        }
+      return Promise.resolve({
+        status: 200,
+        json: {
+          message: `Status mudado para: ${status}.` as const,
+          code: "SUCCESS",
+        },
+      })
+      // })
+    }) satisfies () => Promise<HttpClient.Response<any>>
+
+    const { status, json } = await promiseHandler(perform())
+    // const { status, json } = await promiseHandler(perform())
+    return json ? res.status(status).json(json) : res.status(status).end()
+  }
+)

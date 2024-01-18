@@ -72,6 +72,8 @@ export class RestoreAccountSessionsUseCase
       const sac = this.allUsersClientsStorage.addSteamAccountFrom0({ accountName, userId, username, planId })
       const userCluster = this.usersClusterStorage.getOrAdd(username, plan).addSAC(sac)
 
+      if (state) sac.setStatus(state.status)
+
       if (state && state.isFarming) {
         userCluster.farmWithAccount({
           accountName: state.accountName,

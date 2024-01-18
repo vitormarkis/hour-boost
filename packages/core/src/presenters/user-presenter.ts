@@ -1,3 +1,4 @@
+import z from "zod"
 import { PlanInfinityName, PlanUsageName } from "../entity/plan/Plan"
 import { RoleName } from "../entity/role/Role"
 import { StatusName } from "../entity/status/Status"
@@ -33,7 +34,8 @@ export interface SteamAccountSession extends Persona {
   farmedTimeInSeconds: number
   status: AppAccountStatus
 }
-export type AppAccountStatus = "offline" | "online"
+export const appAccountStatusSchema = z.enum(["offline", "online"])
+export type AppAccountStatus = z.infer<typeof appAccountStatusSchema>
 
 export interface PersonaWithAccountName extends Persona {
   accountName: string

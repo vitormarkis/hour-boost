@@ -22,6 +22,13 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
   constructor(private readonly redis: Redis) {
     this.logger = new Logger(`State Redis`)
   }
+  async setStatus({
+    accountName,
+    status,
+  }: NSSteamAccountClientStateCacheRepository.SetStatusProps): Promise<void> {
+    const key = this.KEY_STATE(accountName)
+    await this.redis.call("JSON.SET", key, "$.status", JSON.stringify(status))
+  }
 
   async startFarm({
     accountName,
@@ -70,7 +77,6 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
   }
 
   async init({ accountName, planId, username }: InitProps): Promise<void> {
-    this.logger.log(`init() called! for ${accountName}`)
     const key = this.KEY_STATE(accountName)
     const hasState = await this.redis.call("JSON.TYPE", key)
     if (!hasState) {
@@ -82,10 +88,10 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
         planId,
         username,
         farmStartedAt: null,
+        status: "online",
       })
       return
     }
-    this.logger.log(`state found, not initting ${accountName}`)
   }
   async setRefreshToken(accountName: string, refreshToken: IRefreshToken): Promise<void> {
     this.logger.log(`set refresh token for ${accountName}`)

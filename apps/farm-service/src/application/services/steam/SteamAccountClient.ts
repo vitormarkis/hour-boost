@@ -1,6 +1,7 @@
 import {
   AccountGames,
   AccountSteamGamesList,
+  AppAccountStatus,
   ApplicationError,
   DataOrError,
   GameSession,
@@ -9,7 +10,7 @@ import {
   SteamAccountPersonaState,
 } from "core"
 import { appendFile } from "fs"
-import SteamUser from "steam-user"
+import SteamUser, { EPersonaState } from "steam-user"
 import { connection } from "~/__tests__/connection"
 import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
@@ -22,6 +23,7 @@ export class SteamAccountClient extends LastHandler {
   private readonly publisher: Publisher
   readonly logger: Logger
   readonly emitter: EventEmitter<SteamApplicationEvents>
+  status: AppAccountStatus
   client: SteamUser
   userId: string
   username: string
@@ -41,6 +43,7 @@ export class SteamAccountClient extends LastHandler {
     this.emitter = instances.emitter
     this.accountName = props.accountName
     this.logger = new Logger(this.accountName)
+    this.status = "offline"
 
     this.client.on("loggedOn", (...args) => {
       this.emitter.emit("hasSession")
@@ -138,6 +141,7 @@ export class SteamAccountClient extends LastHandler {
       isFarming: this.isFarming(),
       planId: this.planId,
       username: this.username,
+      status: this.status,
     }
   }
 
@@ -188,6 +192,12 @@ export class SteamAccountClient extends LastHandler {
 
   isFarming(): boolean {
     return this.gamesPlaying.length > 0
+  }
+
+  setStatus(status: AppAccountStatus): void {
+    this.logger.log(`22: setting [${this.accountName}] to status: [${status}]!`)
+    const persona = mapStatusToPersona(status)
+    this.client.setPersona(persona)
   }
 
   async getAccountGamesList(): Promise<DataOrError<AccountSteamGamesList>> {
@@ -277,6 +287,7 @@ export class SACStateCacheFactory {
       planId: props.planId,
       username: props.username,
       farmStartedAt: props.farmStartedAt?.getTime() ?? null,
+      status: props.status,
     }
   }
 }
@@ -288,6 +299,7 @@ export namespace NSSACStateCacheFactory {
     isFarming: boolean
     planId: string
     username: string
+    status: AppAccountStatus
   }
 
   export type CreateDTOClusterProps = {
@@ -295,4 +307,13 @@ export namespace NSSACStateCacheFactory {
   }
 
   export type CreateDTOProps = CreateDTO_SAC_Props & CreateDTOClusterProps
+}
+
+function mapStatusToPersona(status: AppAccountStatus): EPersonaState {
+  const mapping: Record<AppAccountStatus, EPersonaState> = {
+    offline: EPersonaState.Offline,
+    online: EPersonaState.Online,
+  }
+
+  return mapping[status]
 }

@@ -1,4 +1,5 @@
 export * from "./AddSteamAccountUseCase"
+export * from "./ChangeAccountStatusUseCase"
 export * from "./CheckSteamAccountOwnerStatusUseCase"
 export * from "./CreateUserUseCase"
 export * from "./RemoveSteamAccountUseCase"

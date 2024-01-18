@@ -48,6 +48,7 @@ export class UsersDAOInMemory implements UsersDAO {
       role: foundUser.role.name,
       status: foundUser.status.name,
       steamAccounts: foundUser.steamAccounts.data.map(sa => ({
+        status: "online",
         accountName: sa.credentials.accountName,
         id_steamAccount: sa.id_steamAccount,
         farmedTimeInSeconds: foundUser.plan.usages.data.reduce((acc, item) => {

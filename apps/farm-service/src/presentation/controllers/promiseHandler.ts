@@ -1,19 +1,23 @@
 import { ApplicationError, HttpClient } from "core"
 
-export async function promiseHandler(
-  promise: Promise<HttpClient.Response>
-): Promise<HttpClient.Response<any>> {
+export const promiseHandler = (async <T>(
+  promise: T extends Promise<HttpClient.Response> ? T : never
+): Promise<T extends Promise<infer R> ? R : never> => {
   try {
-    const response = await promise
-    return response
+    const { status, json } = await promise
+    return { status, json: json } as T extends Promise<infer R> ? R : never
   } catch (error) {
     console.log(error)
     if (error instanceof ApplicationError) {
-      return { status: error.status, json: { message: error.message } }
+      return { status: error.status, json: { message: error.message } } as T extends Promise<infer R>
+        ? R
+        : never
     }
     if (error instanceof Error) {
-      return { status: 500, json: { message: error.message } }
+      return { status: 500, json: { message: error.message } } as T extends Promise<infer R> ? R : never
     }
-    return { status: 500, json: { message: "Erro interno no servidor." } }
+    return { status: 500, json: { message: "Erro interno no servidor." } } as T extends Promise<infer R>
+      ? R
+      : never
   }
-}
+}) satisfies <T>(promise: T extends Promise<HttpClient.Response> ? T : never) => Promise<HttpClient.Response>

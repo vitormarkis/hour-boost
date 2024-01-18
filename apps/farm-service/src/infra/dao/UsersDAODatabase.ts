@@ -103,8 +103,9 @@ export class UsersDAODatabase implements UsersDAO {
           id_steamAccount: sa.id_steamAccount,
           farmingGames: accountState?.gamesPlaying ?? [],
           farmedTimeInSeconds,
-          ...persona,
           farmStartedAt: accountState?.farmStartedAt ? new Date(accountState.farmStartedAt) : null,
+          status: accountState?.status ?? "offline",
+          ...persona,
         })
       })
     )

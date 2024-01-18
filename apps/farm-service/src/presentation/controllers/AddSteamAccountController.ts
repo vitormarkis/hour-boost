@@ -1,4 +1,4 @@
-import { Controller, HttpClient } from "core"
+import { AddSteamAccountHTTPResponse, Controller, HttpClient } from "core"
 import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 
 export namespace AddSteamAccountHandle {
@@ -9,7 +9,7 @@ export namespace AddSteamAccountHandle {
     authCode?: string
   }
 
-  export type Response = {}
+  export type Response = AddSteamAccountHTTPResponse
 }
 
 export class AddSteamAccountController
