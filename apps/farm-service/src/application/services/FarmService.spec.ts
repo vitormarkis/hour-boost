@@ -66,7 +66,7 @@ describe("FarmService test suite", () => {
     farmService.farmWithAccount(s.me.accountName)
     expect(farmService.hasAccountsFarming()).toBe(true)
     expect(farmService.getServiceStatus()).toBe("FARMING")
-    farmService.pauseFarmOnAccountSync(s.me.accountName)
+    farmService.pauseFarmOnAccountSync(s.me.accountName, false)
     expect(farmService.hasAccountsFarming()).toBe(false)
     expect(farmService.getServiceStatus()).toBe("IDDLE")
   })
@@ -74,7 +74,7 @@ describe("FarmService test suite", () => {
   test("should resume farming", async () => {
     farmService.farmWithAccount(s.me.accountName)
     expect(farmService.hasAccountsFarming()).toBe(true)
-    farmService.pauseFarmOnAccountSync(s.me.accountName)
+    farmService.pauseFarmOnAccountSync(s.me.accountName, false)
     expect(farmService.hasAccountsFarming()).toBe(false)
     farmService.farmWithAccount(s.me.accountName)
     expect(farmService.hasAccountsFarming()).toBe(true)
@@ -82,7 +82,7 @@ describe("FarmService test suite", () => {
 
   // test("should THROW if tried to stop account that was never registered", async () => {
   //   expect(() => {
-  //     farmService.pauseFarmOnAccountSync(s.me.accountName)
+  //     farmService.pauseFarmOnAccountSync(s.me.accountName, false)
   //   }).toThrow("NSTH: Tried to resume farming on account that don't exists.")
   // })
 
@@ -90,7 +90,7 @@ describe("FarmService test suite", () => {
     farmService.farmWithAccount(s.me.accountName)
     farmService.farmWithAccount(s.me.accountName2)
     farmService.farmWithAccount(s.me.accountName3)
-    farmService.pauseFarmOnAccountSync(s.me.accountName)
+    farmService.pauseFarmOnAccountSync(s.me.accountName, false)
     const [errorGettingAccountStatus, accountsStatus] = farmService.getFarmingAccounts()
     expect(errorGettingAccountStatus).toBeNull()
     expect(accountsStatus).toStrictEqual({
@@ -102,6 +102,9 @@ describe("FarmService test suite", () => {
 })
 
 class FarmServiceImpl extends FarmService {
+  protected getFarmingAccountsNameList(): string[] {
+    return []
+  }
   accountsFarming: Map<string, FarmingAccountDetails> = new Map()
 
   getActiveFarmingAccountsAmount(): number {
@@ -154,7 +157,7 @@ class FarmServiceImpl extends FarmService {
         acc.status = "IDDLE"
       }
     }
-    return [null, { type: "STOP-ALL", usages: [] }]
+    return [null, { type: "STOP-ALL", usages: [], accountNameList: [] }]
   }
   getAccountsStatus(): AccountStatusList {
     let accountStatusList = {} as AccountStatusList

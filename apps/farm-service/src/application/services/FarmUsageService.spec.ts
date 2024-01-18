@@ -32,7 +32,7 @@ beforeEach(async () => {
     validSteamAccounts,
   })
   i.publisher.register(new ChangePlanStatusHandler(i.planRepository))
-  i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
+  i.publisher.register(new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository))
 })
 
 afterAll(() => {
@@ -232,8 +232,8 @@ describe("FarmUsageService test suite", () => {
     meFarmService.farmWithAccount(s.me.accountName2)
     meFarmService.farmWithAccount(s.me.accountName)
     expect(meFarmService.hasAccountsFarming()).toBeTruthy()
-    meFarmService.pauseFarmOnAccount(s.me.accountName2)
-    meFarmService.pauseFarmOnAccount(s.me.accountName)
+    meFarmService.pauseFarmOnAccount(s.me.accountName2, false)
+    meFarmService.pauseFarmOnAccount(s.me.accountName, false)
     expect(meFarmService.hasAccountsFarming()).toBeFalsy()
   })
 
@@ -242,7 +242,7 @@ describe("FarmUsageService test suite", () => {
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount(s.me.accountName2)
     jest.advanceTimersByTime(1000 * 60) // 1 minute
-    meFarmService.stopFarmAllAccounts()
+    meFarmService.stopFarmAllAccounts({ killSession: false })
     const me2 = await getMe()
     expect((me2.plan as PlanUsage).usages.data).toHaveLength(1)
     expect((me2.plan as PlanUsage).getUsageLeft()).toBe(21540)
@@ -265,7 +265,7 @@ describe("FarmUsageService test suite", () => {
     meFarmService.farmWithAccount(s.me.accountName2)
     meFarmService.farmWithAccount(s.me.accountName)
     jest.advanceTimersByTime(1000 * 60 * 60 * 6) // 6 horas
-    meFarmService.stopFarmAllAccounts()
+    meFarmService.stopFarmAllAccounts({ killSession: false })
     const { usageAmountInSeconds: usageAmount1 } = meFarmService.getAccountDetails(s.me.accountName2) ?? {}
     const { usageAmountInSeconds: usageAmount2 } = meFarmService.getAccountDetails(s.me.accountName) ?? {}
     expect(usageAmount1).toBe(21600 / 2)
@@ -282,7 +282,7 @@ describe("FarmUsageService test suite", () => {
     meFarmService.farmWithAccount(s.me.accountName)
     meFarmService.farmWithAccount(s.me.accountName3)
     jest.advanceTimersByTime(1000 * 60 * 60 * 3) // 6 horas
-    meFarmService.stopFarmAllAccounts()
+    meFarmService.stopFarmAllAccounts({ killSession: false })
     const acc1Details = meFarmService.getAccountDetails(s.me.accountName2)
     const acc2Details = meFarmService.getAccountDetails(s.me.accountName)
     const acc3Details = meFarmService.getAccountDetails(s.me.accountName3)
@@ -299,14 +299,14 @@ describe("FarmUsageService test suite", () => {
     meFarmService.farmWithAccount(s.me.accountName2)
     jest.advanceTimersByTime(1000 * 60 * 60 * 0.5) // 1 hora e meia
     // 1800 * 2
-    meFarmService.pauseFarmOnAccount(s.me.accountName2)
+    meFarmService.pauseFarmOnAccount(s.me.accountName2, false)
     jest.advanceTimersByTime(1000 * 60 * 60 * 2) // 2 horas
     console.log({
       acc1: meFarmService.getAccountDetails(s.me.accountName),
       acc2: meFarmService.getAccountDetails(s.me.accountName2),
     })
     // 1800 * 2 + 7200
-    meFarmService.pauseFarmOnAccount(s.me.accountName) // persistiu
+    meFarmService.pauseFarmOnAccount(s.me.accountName, false) // persistiu
     await new Promise(setImmediate)
 
     const publishesUserCompleteFarmSession = spyPublish.mock.calls
@@ -346,7 +346,7 @@ describe("FarmUsageService test suite", () => {
     meFarmService.farmWithAccount(s.me.accountName)
     jest.advanceTimersByTime(1000 * 60 * 60 * 1) // 1 hora
     // acc2: 3600; left: 18000
-    meFarmService.pauseFarmOnAccount(s.me.accountName) // persistiu
+    meFarmService.pauseFarmOnAccount(s.me.accountName, false) // persistiu
     await new Promise(setImmediate)
 
     const meFarmService2 = getFarmService(meInstances.me)
@@ -354,10 +354,10 @@ describe("FarmUsageService test suite", () => {
     meFarmService2.farmWithAccount(s.me.accountName3)
     jest.advanceTimersByTime(1000 * 60 * 60 * 1.5) // 1 hora e meia
     // acc2total: 9000; acc2: 5400; acc3: 5400; left: 7200
-    meFarmService2.pauseFarmOnAccount(s.me.accountName3)
+    meFarmService2.pauseFarmOnAccount(s.me.accountName3, false)
     jest.advanceTimersByTime(1000 * 60 * 60 * 1.5) // 1 hora e meia
     // acc2total: 14400; acc2: 10800; acc3: 5400; left: 1800
-    meFarmService2.pauseFarmOnAccount(s.me.accountName) // persistiu
+    meFarmService2.pauseFarmOnAccount(s.me.accountName, false) // persistiu
     await new Promise(setImmediate)
 
     const publishesUserCompleteFarmSession = spyPublish.mock.calls
@@ -408,13 +408,14 @@ describe("FarmUsageService test suite", () => {
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount(s.me.accountName)
     jest.advanceTimersByTime(1000 * 60 * 60 * 4)
-    meFarmService.pauseFarmOnAccount(s.me.accountName)
+    meFarmService.pauseFarmOnAccount(s.me.accountName, false)
     await new Promise(setImmediate)
     expect(spyPublish.mock.calls).toStrictEqual(
       expect.arrayContaining([
         [
           new UserCompleteFarmSessionCommand({
             pauseFarmCategory: {
+              accountNameList: [s.me.accountName],
               type: "STOP-ALL",
               usages: expect.arrayContaining([
                 expect.objectContaining({
@@ -423,6 +424,7 @@ describe("FarmUsageService test suite", () => {
                 }),
               ]),
             },
+            killSession: false,
             planId: me.plan.id_plan,
             when: new Date("2023-06-10T14:00:00Z"),
           }),

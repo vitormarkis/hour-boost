@@ -6,8 +6,8 @@ export namespace CheckSteamAccountOwnerStatusUseCaseHandle {
     accountName: string
   }
 
-  export type Response = DataOrError<
-    "NOT_OWNED" | "OWNED_BY_USER" | "OWNED_BY_OTHER_USER" | "NEVER_REGISTERED"
+  export type Response = Promise<
+    DataOrError<"NOT_OWNED" | "OWNED_BY_USER" | "OWNED_BY_OTHER_USER" | "NEVER_REGISTERED">
   >
 }
 
@@ -36,4 +36,4 @@ export class CheckSteamAccountOwnerStatusUseCase
 }
 
 type APayload = CheckSteamAccountOwnerStatusUseCaseHandle.Payload
-type AResponse = Promise<CheckSteamAccountOwnerStatusUseCaseHandle.Response>
+type AResponse = CheckSteamAccountOwnerStatusUseCaseHandle.Response

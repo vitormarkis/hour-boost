@@ -47,7 +47,7 @@ export class FarmUsageService extends FarmService {
 
     this.emitter.on("service:max-usage-exceeded", () => {
       console.log("1. ouviu `service:max-usage-exceeded`: chamando stopFarmAllAccounts")
-      this.stopFarmAllAccounts()
+      this.stopFarmAllAccounts({ killSession: true })
     })
   }
 
@@ -143,12 +143,16 @@ export class FarmUsageService extends FarmService {
     return { usages }
   }
 
-  protected stopFarm(): void {
+  protected stopFarm(killSession: boolean): void {
     const { usages } = this.stopFarmImpl()
-    this.publishCompleteFarmSession({
-      type: "STOP-ALL",
-      usages,
-    })
+    this.publishCompleteFarmSession(
+      {
+        type: "STOP-ALL",
+        usages,
+        accountNameList: this.getFarmingAccountsNameList(),
+      },
+      killSession
+    )
     clearInterval(this.farmingInterval)
   }
 
@@ -165,10 +169,10 @@ export class FarmUsageService extends FarmService {
   pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
     if (this.getActiveFarmingAccountsAmount() === 1) {
       const usages = this.stopFarmSync()
-      return [null, { type: "STOP-ALL", usages }]
+      return [null, { type: "STOP-ALL", usages, accountNameList: this.getFarmingAccountsNameList() }]
     }
     this.setAccountStatus(accountName, "IDDLE")
-    return [null, { type: "STOP-SILENTLY" }]
+    return [null, { type: "STOP-SILENTLY", accountName }]
   }
 
   private getFarmingAccountDetails(): FarmingAccountDetailsWithAccountName[] {
@@ -183,22 +187,27 @@ export class FarmUsageService extends FarmService {
     return farmingAccountDetails
   }
 
-  pauseFarmOnAccount(accountName: string): DataOrError<null> {
+  pauseFarmOnAccount(accountName: string, killSession: boolean): DataOrError<null> {
     if (this.getActiveFarmingAccountsAmount() === 1) {
-      this.stopFarm()
+      this.stopFarm(killSession)
     }
     this.setAccountStatus(accountName, "IDDLE")
     return [null, null]
   }
 
-  publishCompleteFarmSession(pauseFarmCategory: PauseFarmOnAccountUsage): void {
+  publishCompleteFarmSession(pauseFarmCategory: PauseFarmOnAccountUsage, killSession: boolean): void {
     this.publisher.publish(
       new UserCompleteFarmSessionCommand({
         pauseFarmCategory,
         planId: this.planId,
         when: new Date(),
+        killSession,
       })
     )
+  }
+
+  protected getFarmingAccountsNameList(): string[] {
+    return Array.from(this.accountsFarming.keys())
   }
 
   startFarm(): DataOrError<null> {

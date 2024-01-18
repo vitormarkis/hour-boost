@@ -9,9 +9,9 @@ export class UsersSACsFarmingClusterStorage {
 
   constructor(private readonly userClusterBuilder: UserClusterBuilder) {}
 
-  stopAll() {
+  stopAll(killSession: boolean) {
     for (const [_, userCluster] of this.usersCluster) {
-      userCluster.stopFarmAllAccounts()
+      userCluster.stopFarmAllAccounts({ killSession })
     }
   }
 

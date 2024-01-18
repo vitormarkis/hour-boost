@@ -47,6 +47,8 @@ export class AddSteamGuardCodeController
       eventsPromisesResolved,
     })
     if (eventsPromisesResolved.type === "loggedOn") {
+      // 22: persistir auth code
+
       return {
         status: 200,
         json: eventsPromisesResolved.args,

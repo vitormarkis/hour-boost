@@ -58,7 +58,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
       payload: { accountName: s.friend.accountName, gamesID: [109230], userId: s.friend.userId },
     })
 
-    i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
+    i.publisher.register(new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository))
   })
 
   test("should list all users SACs as farming", async () => {
@@ -98,7 +98,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
     let spyPublish: jest.SpyInstance
     beforeEach(async () => {
       spyPublish = jest.spyOn(i.publisher, "publish")
-      stopAllFarms.execute()
+      stopAllFarms.execute({ killSession: false })
       await new Promise(setImmediate)
     })
 

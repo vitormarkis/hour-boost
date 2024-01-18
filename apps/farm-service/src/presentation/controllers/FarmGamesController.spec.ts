@@ -85,7 +85,7 @@ describe("not mobile", () => {
     await setupInstances({
       validSteamAccounts,
     })
-    i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
+    i.publisher.register(new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository))
     i.publisher.register(createLogPersistFarmSessionHandler())
   })
 
@@ -542,7 +542,7 @@ test("should log the amount time when persist INFINITY farm session", async () =
   await setupInstances({
     validSteamAccounts,
   })
-  i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
+  i.publisher.register(new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository))
 
   const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
   await i.changeUserPlan(diamondPlan)

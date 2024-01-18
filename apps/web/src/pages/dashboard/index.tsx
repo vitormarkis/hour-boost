@@ -1,5 +1,6 @@
 import { DashboardSteamAccountsList } from "@/components/layouts/DashboardSteamAccountsList"
 import { HeaderDashboard } from "@/components/layouts/Header/header-dashboard"
+import { UserPlanStatus } from "@/components/layouts/UserPlanStatus/component"
 import { UserProvider } from "@/contexts/UserContext"
 import { api } from "@/lib/axios"
 import { UserSession } from "core"
@@ -35,6 +36,7 @@ export default function DashboardPage({ user }: UserSessionParams) {
     <UserProvider serverUser={user}>
       <HeaderDashboard />
       <div className="max-w-[1440px] w-full mx-auto mdx:px-8">
+        <UserPlanStatus />
         <DashboardSteamAccountsList />
       </div>
     </UserProvider>

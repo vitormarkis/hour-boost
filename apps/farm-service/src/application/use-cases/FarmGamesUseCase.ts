@@ -1,10 +1,4 @@
-import {
-  ApplicationError,
-  DataOrError,
-  NSSteamAccountClientStateCacheRepository,
-  PlanInfinity,
-  PlanUsage,
-} from "core"
+import { ApplicationError, DataOrError, PlanInfinity, PlanUsage } from "core"
 import { NSUserCluster, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 
@@ -24,10 +18,6 @@ export class FarmGamesUseCase {
       // const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
       const [error, userCluster] = this.usersClusterStorage.get(username)
       if (error) return [error]
-      console.log("farm-games:", {
-        accountStatus: userCluster.farmService.getAccountsStatus(),
-        hasAccount: userCluster.farmService.hasAccountsFarming(),
-      })
       const isAccountFarming = userCluster.isAccountFarming(accountName)
       if (!userCluster.hasSteamAccountClient(accountName) && !isAccountFarming) {
         userCluster.addSAC(sac)

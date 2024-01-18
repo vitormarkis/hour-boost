@@ -26,13 +26,6 @@ export const HeaderDashboard = React.forwardRef<
       ref={ref}
     >
       <div className="flex-1 h-full flex gap-4 items-center"></div>
-      <div className="hidden mdx:flex h-full gap-4 items-center">
-        <RoleBadge role={user.role} />
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-semibold">Status:</span>
-          <span className="leading-none py-1 px-2 rounded-md bg-green-400/70">{user.status}</span>
-        </div>
-      </div>
       <div className="h-full flex gap-4 items-center">
         <MenuDropdownUserHeader>
           <Avatar className="h-7 w-7">

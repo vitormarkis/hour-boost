@@ -55,7 +55,11 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
       planId: user.plan.id_plan,
     })
     if (!sac.logged) {
-      sac.login(steamAccountDomain.credentials.accountName, steamAccountDomain.credentials.password)
+      sac.login(
+        steamAccountDomain.credentials.accountName,
+        steamAccountDomain.credentials.password
+        // steamAccountDomain.credentials.authCode
+      )
 
       const steamClientEventsRequired = new SteamClientEventsRequired(sac, EVENT_PROMISES_TIMEOUT_IN_SECONDS)
 

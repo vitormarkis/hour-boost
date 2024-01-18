@@ -8,6 +8,7 @@ import { AlertDialogRemoveSteamAccount } from "@/components/molecules/RemoveStea
 import { getFarmedTimeSince } from "@/components/molecules/SteamAccountListItem"
 import { Switch } from "@/components/ui/switch"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
+import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
 import { Message } from "@/util/DataOrMessage"
 import { showToastFarmingGame } from "@/util/toaster"
@@ -35,6 +36,7 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
     isFarming,
   } = useSteamAccountListItem()
   const { accountName, games, profilePictureUrl, farmingGames, farmStartedAt } = app
+  const plan = useUser(u => u.plan)
 
   const handleClickFarmButtonImpl = async () => {
     const [undesired, payload] = await handleClickFarmButton()
@@ -163,14 +165,16 @@ export const SteamAccountListItemViewDesktop = React.forwardRef<
         </button>
       </DrawerSheetChooseFarmingGames>
       <div className="flex items-center ml-auto">
-        <div className="relative flex items-center h-full px-4">
-          {header && (
-            <div className="absolute bottom-full px-6 left-0 right-0 py-2">
-              <span>auto-restarter</span>
-            </div>
-          )}
-          <Switch size="1.25rem" />
-        </div>
+        {plan.autoRestarter ? (
+          <div className="relative flex items-center h-full px-4">
+            {header && (
+              <div className="absolute bottom-full px-6 left-0 right-0 py-2">
+                <span>auto-restarter</span>
+              </div>
+            )}
+            <Switch size="1.25rem" />
+          </div>
+        ) : null}
         <button className="flex items-center h-full px-4 hover:bg-slate-700 transition-all duration-300">
           <IconChart className="h-5 w-5 fill-white" />
         </button>

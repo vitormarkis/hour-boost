@@ -38,14 +38,22 @@ export class FarmInfinityService extends FarmService {
     return this.getActiveFarmingAccountsAmount() > 0
   }
 
-  protected publishCompleteFarmSession(pauseFarmCategory: PauseFarmOnAccountUsage): void {
+  protected publishCompleteFarmSession(
+    pauseFarmCategory: PauseFarmOnAccountUsage,
+    killSession: boolean
+  ): void {
     this.publisher.publish(
       new UserCompleteFarmSessionCommand({
         pauseFarmCategory,
         planId: this.planId,
         when: new Date(),
+        killSession,
       })
     )
+  }
+
+  protected getFarmingAccountsNameList(): string[] {
+    return Array.from(this.farmingAccounts.keys())
   }
 
   protected stopFarmImpl() {
@@ -65,13 +73,6 @@ export class FarmInfinityService extends FarmService {
     return { usages }
   }
 
-  protected stopFarm(): void {
-    const { usages } = this.stopFarmImpl()
-    this.publishCompleteFarmSession({
-      type: "STOP-ALL",
-      usages,
-    })
-  }
   protected stopFarmSync(): Usage[] {
     const { usages } = this.stopFarmImpl()
     return usages
@@ -99,17 +100,17 @@ export class FarmInfinityService extends FarmService {
     return [null, usage]
   }
 
-  pauseFarmOnAccount(accountName: string): DataOrError<null> {
+  pauseFarmOnAccount(accountName: string, killSession: boolean): DataOrError<null> {
     const [errorPausingFarmOnAccount, usage] = this.pauseFarmOnAccountImpl(accountName)
     if (errorPausingFarmOnAccount) return [errorPausingFarmOnAccount]
-    this.publishCompleteFarmSession({ type: "STOP-ONE", usage })
+    this.publishCompleteFarmSession({ type: "STOP-ONE", usage, accountName }, killSession)
     return [null, null]
   }
 
   pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
     const [errorPausingFarmOnAccount, usage] = this.pauseFarmOnAccountImpl(accountName)
     if (errorPausingFarmOnAccount) return [errorPausingFarmOnAccount]
-    return [null, { type: "STOP-ONE", usage }]
+    return [null, { type: "STOP-ONE", usage, accountName }]
   }
 
   // pauseFarmOnAccount(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
@@ -150,6 +151,18 @@ export class FarmInfinityService extends FarmService {
   private getAccount(accountName: string): FarmInfinityAccountStatus | null {
     const foundAccount = this.farmingAccounts.get(accountName)
     return foundAccount ?? null
+  }
+
+  protected stopFarm(killSession: boolean): void {
+    const { usages } = this.stopFarmImpl()
+    this.publishCompleteFarmSession(
+      {
+        type: "STOP-ALL",
+        usages,
+        accountNameList: this.getFarmingAccountsNameList(),
+      },
+      killSession
+    )
   }
 
   protected startFarm(): DataOrError<null> {

@@ -53,7 +53,7 @@ beforeEach(async () => {
   await setupInstances({
     validSteamAccounts,
   })
-  i.publisher.register(new PersistFarmSessionHandler(i.planRepository))
+  i.publisher.register(new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository))
 })
 
 afterEach(() => {
@@ -158,6 +158,7 @@ describe("Start 2 farming, and stop all farms test suite", () => {
     const [meCommand, friendCommand] = usagesCommands as UserCompleteFarmSessionCommand[]
     expect(meCommand.pauseFarmCategory).toStrictEqual({
       type: "STOP-ALL",
+      accountNameList: [s.me.accountName],
       usages: expect.arrayContaining([
         expect.objectContaining({
           accountName: s.me.accountName,
@@ -167,6 +168,7 @@ describe("Start 2 farming, and stop all farms test suite", () => {
     })
     expect(friendCommand.pauseFarmCategory).toStrictEqual({
       type: "STOP-ALL",
+      accountNameList: [s.friend.accountName],
       usages: expect.arrayContaining([
         expect.objectContaining({
           accountName: s.friend.accountName,

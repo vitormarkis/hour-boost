@@ -44,17 +44,24 @@ export abstract class FarmService {
     return this.status
   }
 
-  stopFarmAllAccounts() {
-    this.stopFarm()
+  stopFarmAllAccounts({ killSession }: { killSession: boolean }) {
+    this.stopFarm(killSession)
   }
 
-  protected abstract publishCompleteFarmSession(pauseFarmCategory: PauseFarmOnAccountUsage): void
+  protected abstract publishCompleteFarmSession(
+    pauseFarmCategory: PauseFarmOnAccountUsage,
+    killSession: boolean
+  ): void
 
+  protected abstract getFarmingAccountsNameList(): string[]
   protected abstract startFarm(): DataOrError<null>
-  protected abstract stopFarm(): void
+  protected abstract stopFarm(killSession: boolean): void
   protected abstract stopFarmSync(): Usage[]
-  abstract pauseFarmOnAccount(accountName: string): DataOrError<null>
-  abstract pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage>
+  abstract pauseFarmOnAccount(accountName: string, killSession: boolean): DataOrError<null>
+  abstract pauseFarmOnAccountSync(
+    accountName: string,
+    killSession: boolean
+  ): DataOrError<PauseFarmOnAccountUsage>
 
   getPlanId() {
     return this.planId
@@ -79,14 +86,17 @@ export type PauseFarmOnAccountUsage =
 export namespace NSFarmSessionCategory {
   export type StopSilently = {
     type: "STOP-SILENTLY"
+    accountName: string
   }
   export type StopAll = {
     type: "STOP-ALL"
     usages: Usage[]
+    accountNameList: string[]
   }
   export type StopOne = {
     type: "STOP-ONE"
     usage: Usage
+    accountName: string
   }
 }
 

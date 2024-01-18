@@ -45,9 +45,9 @@ export class UserSACsFarmingCluster {
     return this.farmService.getAccountsStatus()
   }
 
-  stopFarmAllAccounts() {
+  stopFarmAllAccounts(props: { killSession: boolean }) {
     this.sacList.stopFarmAllAccounts()
-    this.farmService.stopFarmAllAccounts()
+    this.farmService.stopFarmAllAccounts(props)
   }
 
   addSAC(sac: SteamAccountClient): UserSACsFarmingCluster {
@@ -62,8 +62,17 @@ export class UserSACsFarmingCluster {
       this.shouldPersistSession = false
     })
 
+    this.emitter.on("service:max-usage-exceeded", () => {
+      console.log(
+        "22: 1. plano excedeu uso, nao deve persist a session, e mais, deve parar o farm matando a session"
+      )
+      this.shouldPersistSession = false
+    })
+
     sac.emitter.on("interrupt", async sacStateCacheDTO => {
+      console.log("22: 2. rodou interrupt")
       if (this.shouldPersistSession) {
+        console.log("22: 2.5 !!!! salvando cache", sacStateCacheDTO)
         const sacStateCache = SACStateCacheFactory.createDTO({
           accountName: sacStateCacheDTO.accountName,
           gamesPlaying: sacStateCacheDTO.gamesPlaying,
@@ -74,11 +83,14 @@ export class UserSACsFarmingCluster {
         })
         await this.sacStateCacheRepository.set(sac.accountName, sacStateCache)
         this.logger.log(`${sacStateCache.accountName} has set the cache successfully.`)
-        this.pauseFarmOnAccount({
-          accountName: sacStateCache.accountName,
-          killSession: false,
-        })
       }
+      console.log(
+        `22: 3. pausando farm em todas as contas, deve matar sessão? 'sim': [${!this.shouldPersistSession}]`
+      )
+      this.pauseFarmOnAccount({
+        accountName: sac.accountName,
+        killSession: !this.shouldPersistSession,
+      })
     })
 
     return this
@@ -187,14 +199,17 @@ export class UserSACsFarmingCluster {
   pauseFarmOnAccount(props: NSUserCluster.PauseFarmOnAccountProps): DataOrError<null> {
     const [errorPausingFarm] = this.pauseFarmOnAccountImpl(props)
     if (errorPausingFarm) return [errorPausingFarm]
-    const errorOrUsages = this.farmService.pauseFarmOnAccount(props.accountName)
+    const errorOrUsages = this.farmService.pauseFarmOnAccount(props.accountName, props.killSession ?? false)
     return errorOrUsages
   }
 
   pauseFarmOnAccountSync(props: NSUserCluster.PauseFarmOnAccountProps): DataOrError<PauseFarmOnAccountUsage> {
     const [errorPausingFarm] = this.pauseFarmOnAccountImpl(props)
     if (errorPausingFarm) return [errorPausingFarm]
-    const errorOrUsages = this.farmService.pauseFarmOnAccountSync(props.accountName)
+    const errorOrUsages = this.farmService.pauseFarmOnAccountSync(
+      props.accountName,
+      props.killSession ?? false
+    )
     return errorOrUsages
   }
 

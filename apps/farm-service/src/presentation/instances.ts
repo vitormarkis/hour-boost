@@ -39,6 +39,7 @@ let options: ConstructorParameters<typeof SteamUser>[0] = {
 }
 if (httpProxy) options.httpProxy = httpProxy
 
+console.log({ options })
 export const steamBuilder: SteamBuilder = {
   create: () => new SteamUser(options),
 }
@@ -105,7 +106,7 @@ export const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerSta
 )
 
 publisher.register(new StartFarmPlanHandler())
-publisher.register(new PersistFarmSessionHandler(planRepository))
+publisher.register(new PersistFarmSessionHandler(planRepository, steamAccountClientStateCacheRepository))
 
 // publisher.register(new LogUserFarmedHandler())
 

@@ -32,7 +32,7 @@ export class AddSteamAccountUseCase
     private readonly checkSteamAccountOwnerStatusUseCase: CheckSteamAccountOwnerStatusUseCase
   ) {}
 
-  async execute({ accountName, password, userId, authCode }: APayload): Promise<AResponse> {
+  async execute({ accountName, password, userId, authCode }: APayload): AResponse {
     const { username } = (await this.usersDAO.getUsername(userId)) ?? {}
     const planId = await this.usersDAO.getPlanId(userId)
     if (!planId)
@@ -125,6 +125,8 @@ export class AddSteamAccountUseCase
         password,
         userId,
       })
+
+      // 22: salvar auth code no banco de dados
 
       return [
         null,

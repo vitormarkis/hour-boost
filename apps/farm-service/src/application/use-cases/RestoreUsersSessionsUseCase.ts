@@ -22,4 +22,4 @@ export class RestoreUsersSessionsUseCase
 }
 
 type APayload = RestoreUsersSessionsUseCaseHandle.Payload
-type AResponse = Promise<RestoreUsersSessionsUseCaseHandle.Response>
+type AResponse = RestoreUsersSessionsUseCaseHandle.Response

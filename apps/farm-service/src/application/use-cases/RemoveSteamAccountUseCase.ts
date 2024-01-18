@@ -22,7 +22,7 @@ export namespace RemoveSteamAccountUseCaseHandle {
 }
 
 export class RemoveSteamAccountUseCase
-  implements UseCase<RemoveSteamAccountUseCaseHandle.Payload, RemoveSteamAccountUseCaseHandle.Response>
+  implements UseCase<RemoveSteamAccountUseCaseHandle.Payload, AResponse>
 {
   private readonly logger: Logger
   constructor(
@@ -36,17 +36,18 @@ export class RemoveSteamAccountUseCase
   }
 
   async execute({ accountName, steamAccountId, userId, username }: APayload): AResponse {
-    this.logger.log("[1/8] Finding user.")
     const user = await this.usersRepository.getByID(userId)
-    if (!user) return [new ApplicationError("Usuário não encontrado.", 404)]
+    if (!user) {
+      return [new ApplicationError("Usuário não encontrado.", 404)]
+    }
 
-    this.logger.log("[2/8] Getting user cluster")
     const [clusterNotFound, userCluster] = this.usersSACsFarmingClusterStorage.get(username)
 
-    if (clusterNotFound) return [new ApplicationError(`Cluster para [${username}] não encontrado.`)]
+    if (clusterNotFound) {
+      return [new ApplicationError(`Cluster para [${username}] não encontrado.`)]
+    }
 
     const isAccountFarming = userCluster.isAccountFarming(accountName)
-    this.logger.log(`[3/8] Account [${accountName}] is ${isAccountFarming ? "" : "NOT"} farming.`)
 
     if (isAccountFarming) {
       const [errorPausingFarmOnAccount, usages] = userCluster.pauseFarmOnAccountSync({
@@ -54,9 +55,6 @@ export class RemoveSteamAccountUseCase
         killSession: true,
       })
       if (errorPausingFarmOnAccount) {
-        console.log({
-          [`farmingAccounts:[${accountName}]`]: userCluster.getAccountsStatus(),
-        })
         return [errorPausingFarmOnAccount]
       }
 
@@ -65,20 +63,17 @@ export class RemoveSteamAccountUseCase
         usages,
         this.planRepository
       )
-      if (errorPersistingUsages) return [errorPersistingUsages]
+      if (errorPersistingUsages) {
+        return [errorPersistingUsages]
+      }
     }
 
-    this.logger.log("[4/8] Removing steam account from user domain.")
     user.steamAccounts.remove(steamAccountId)
-    this.logger.log("[5/8] Updating user on user repository.")
     await this.usersRepository.update(user)
 
-    this.logger.log("[6/8] Deleting all session entries from cache.")
     await this.steamAccountClientStateCacheRepository.deleteAllEntriesFromAccount(accountName)
 
-    this.logger.log("[7/8] Logging account off, and removing it from clients storage.")
     this.allUsersClientsStorage.removeSteamAccount(userId, accountName)
-    this.logger.log("[8/8] Removing SAC from cluster.")
     userCluster.removeSAC(accountName)
     return [null, null]
   }
