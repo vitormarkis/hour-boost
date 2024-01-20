@@ -179,7 +179,7 @@ export const SteamAccountListItemViewMobile = React.memo(
             <i className="my-auto h-1/2 border-r border-slate-700" />
             <li className="ml-auto">
               <ChooseFarmingGames />
-                {/* <button className="relative py-2 flex items-center px-6 group hover:bg-slate-700 transition-[background-color] duration-300 h-full">
+              {/* <button className="relative py-2 flex items-center px-6 group hover:bg-slate-700 transition-[background-color] duration-300 h-full">
                   <div className="flex flex-col items-end">
                     <strong className="pb-0.5">Jogos</strong>
                     <div className="flex items-center gap-2 h-6 ">

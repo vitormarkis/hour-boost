@@ -110,6 +110,17 @@ export class UsersDAODatabase implements UsersDAO {
       })
     )
 
+    const farmUsedTime = (
+      await this.prisma.usage.aggregate({
+        where: { plan_id: dbUser.plan?.id_plan },
+        _sum: {
+          amountTime: true,
+        },
+      })
+    )._sum.amountTime
+
+    if (farmUsedTime === null) console.log(`Farmed used time voltou como null. [${userId}]`)
+
     return {
       email: dbUser.email,
       id: dbUser.id_user,
@@ -122,6 +133,7 @@ export class UsersDAODatabase implements UsersDAO {
               maxUsageTime: userPlan.maxUsageTime,
               name: userPlan.name,
               type: userPlan.type as "USAGE",
+              farmUsedTime: farmUsedTime ?? 0,
             }
           : {
               autoRestarter: userPlan.autoRestarter,

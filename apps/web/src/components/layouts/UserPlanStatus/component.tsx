@@ -3,20 +3,17 @@ import { getFarmedTimeSince } from "@/components/molecules/SteamAccountListItem"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
-import { thisPlanIsUsage } from "@/util/thisPlanIsUsage"
+import { planIsUsage } from "@/util/thisPlanIsUsage"
 import React from "react"
 import { BadgePlanInfo, BadgePlanType, getPlanName } from "./components"
 
 export function UserPlanStatus() {
   const { plan, steamAccounts } = useUser()
-  const accountTotalFarmed = steamAccounts.reduce((acc, item) => {
-    return acc + item.farmedTimeInSeconds
-  }, 0)
 
   const planName = getPlanName(plan.name)
-  const maxUsage = thisPlanIsUsage(plan) ? getTimePast(plan.maxUsageTime) : getTimePastInfinity()
-  const remaining = thisPlanIsUsage(plan)
-    ? getTimePast(plan.maxUsageTime - accountTotalFarmed)
+  const maxUsage = planIsUsage(plan) ? getTimePast(plan.maxUsageTime) : getTimePastInfinity()
+  const remaining = planIsUsage(plan)
+    ? getTimePast(plan.maxUsageTime - plan.farmUsedTime)
     : getTimePastInfinity()
 
   return (

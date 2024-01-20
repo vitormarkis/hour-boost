@@ -7,7 +7,7 @@ import { useUser } from "@/contexts/UserContext"
 import { api } from "@/lib/axios"
 import { useRefreshGamesMutation, useStopFarmMutation } from "@/mutations"
 import { DataOrMessage, Message } from "@/util/DataOrMessage"
-import { thisPlanIsUsage } from "@/util/thisPlanIsUsage"
+import { planIsUsage } from "@/util/thisPlanIsUsage"
 import { useAuth } from "@clerk/clerk-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { AppAccountStatus, GameSession, formatTimeSince } from "core"
@@ -63,8 +63,13 @@ export function SteamAccountList({
   }, [app.farmingGames.length])
 
   const hasUsagePlanLeft = React.useCallback(() => {
-    if (!thisPlanIsUsage(user.plan)) return true
-    return app.farmedTimeInSeconds < user.plan.maxUsageTime
+    console.log({
+      plan: user.plan,
+      farmUsedTime: planIsUsage(user.plan) ? user.plan.farmUsedTime : "Not usage plan",
+      maxUsageTime: planIsUsage(user.plan) ? user.plan.maxUsageTime : "Not usage plan",
+    })
+    if (!planIsUsage(user.plan)) return true
+    return user.plan.farmUsedTime < user.plan.maxUsageTime
   }, [app.farmedTimeInSeconds])
 
   const handleClickFarmButton = React.useCallback(async (): Promise<

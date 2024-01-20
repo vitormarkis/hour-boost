@@ -29,4 +29,3 @@ export namespace NSSteamAccountListItemViewProps {
     export type Response = DataOrMessage<Payload | Message, IntentionCodes>
   }
 }
-

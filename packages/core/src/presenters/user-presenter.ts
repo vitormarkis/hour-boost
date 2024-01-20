@@ -61,6 +61,7 @@ export interface PlanUsageSession extends PlanSession {
   type: "USAGE"
   name: PlanUsageName
   maxUsageTime: number
+  farmUsedTime: number
 }
 
 export interface PlanInfinitySession extends PlanSession {
