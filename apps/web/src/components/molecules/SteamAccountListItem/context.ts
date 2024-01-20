@@ -1,3 +1,5 @@
+import { ChangeAccountStatusPayload } from "@/components/molecules/ChangeAccountStatus/controller"
+import { IntentionCodes as IntentionCodes_ChangeStatus } from "@/components/molecules/ChangeAccountStatus/types"
 import { FarmGamesPayload } from "@/components/molecules/FarmGames/controller"
 import { IntentionCodes as IntentionCodes_FarmGames } from "@/components/molecules/FarmGames/types"
 import { HHandlers } from "@/components/molecules/SteamAccountListItem/hooks/useHandlers"
@@ -7,27 +9,21 @@ import { DataOrMessage } from "@/util/DataOrMessage"
 import { UseMutationResult } from "@tanstack/react-query"
 import { API_GET_RefreshAccountGames, AppAccountStatus } from "core"
 import React from "react"
-import { HStagingFarmGames } from "./hooks/useStagingFarmGames"
 import { SteamAccountAppProps, SteamAccountStatusLiveProps, SteamAccountStatusProps } from "./types"
 
 export interface ISteamAccountListItemContext extends SteamAccountStatusProps, SteamAccountStatusLiveProps {
   app: SteamAccountAppProps
+  handleChangeStatus(newStatus: AppAccountStatus): Promise<DataOrMessage<string, IntentionCodes_ChangeStatus>>
   isFarming(): boolean
   hasUsagePlanLeft(): boolean
   status: AppAccountStatus
-  setStatus(newStatus: AppAccountStatus): Promise<void>
-  stagingFarmGames: HStagingFarmGames
   mutations: {
     stopFarm: MutationStopFarm
     refreshGames: MutationRefreshGames
     farmGames: MutationFarmGames
+    changeAccountStatus: MutationChangeAccountStatus
   }
   handlers: HHandlers
-  modalSelectGames: {
-    state: [state: boolean, setState: React.Dispatch<React.SetStateAction<boolean>>]
-    openModal(): void
-    closeModal(): void
-  }
 }
 
 export const SteamAccountListItemContext = React.createContext({} as ISteamAccountListItemContext)
@@ -59,5 +55,12 @@ export type MutationFarmGames = UseMutationResult<
   DataOrMessage<string, IntentionCodes_FarmGames>,
   Error,
   FarmGamesPayload,
+  unknown
+>
+
+export type MutationChangeAccountStatus = UseMutationResult<
+  DataOrMessage<string, IntentionCodes_ChangeStatus>,
+  Error,
+  ChangeAccountStatusPayload,
   unknown
 >

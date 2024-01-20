@@ -1,6 +1,8 @@
 import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
+import { IconJoystick } from "@/components/icons/IconJoystick"
 import { GameItem } from "@/components/molecules/GameItem"
 import { useSteamAccountListItem } from "@/components/molecules/SteamAccountListItem/context"
+import { useSteamAccountStore } from "@/components/molecules/SteamAccountListItem/store/useSteamAccountStore"
 import { Button } from "@/components/ui/button"
 import {
   Drawer,
@@ -11,22 +13,41 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import React from "react"
+import { useUser } from "@/contexts/UserContext"
 import { useFarmGames } from "./context"
 import { local_useSteamAccountListItem } from "./controller"
 
-export function DrawerChooseFarmingGamesView({ children }: React.PropsWithChildren) {
-  const { state, helpers } = useFarmGames()
+export function DrawerChooseFarmingGamesView() {
+  const { helpers } = useFarmGames()
   const local = local_useSteamAccountListItem.farmGames()
-  const { stagingFarmGames } = useSteamAccountListItem()
-  const [open, setOpen] = state
+  const maxGamesAllowed = useUser(u => u.plan.maxGamesAllowed)
+  const modalOpen_desktop = useSteamAccountStore(state => state.modalOpen_desktop)
+  const { app } = useSteamAccountListItem()
+  const setModalOpen_desktop = useSteamAccountStore(state => state.setModalOpen_desktop)
+  const localStagingFarm_hasGame = useSteamAccountStore(state => state.localStagingFarm_hasGame)
+  const closeModal_desktop = useSteamAccountStore(state => state.closeModal_desktop)
 
   return (
     <Drawer
-      open={open}
-      onOpenChange={setOpen}
+      open={modalOpen_desktop}
+      onOpenChange={setModalOpen_desktop}
     >
-      <DrawerTrigger asChild>{children}</DrawerTrigger>
+      <DrawerTrigger asChild>
+        <button className="relative py-2 flex items-center px-6 group hover:bg-slate-700 transition-[background-color] duration-300 h-full">
+          <div className="flex flex-col items-end">
+            <strong className="pb-0.5">Jogos</strong>
+            <div className="flex items-center gap-2 h-6 ">
+              <span className="uppercase text-sm">
+                {app.farmingGames.length}/{maxGamesAllowed}
+              </span>
+              <IconJoystick className="transition-[background-color] duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />
+              <span className="transition-[background-color] duration-300 text-slate-500 group-hover:text-white">
+                +
+              </span>
+            </div>
+          </div>
+        </button>
+      </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="py-6 px-4">
           <DrawerTitle>{local.accountName} - Seus jogos</DrawerTitle>
@@ -42,7 +63,7 @@ export function DrawerChooseFarmingGamesView({ children }: React.PropsWithChildr
                     key={game.id}
                     game={game}
                     handleFarmGame={() => helpers.handleAddGameToFarmStaging(game.id)}
-                    isSelected={stagingFarmGames.local.hasGame(game.id)}
+                    isSelected={localStagingFarm_hasGame(game.id)}
                   />
                 ))
               ) : (
@@ -55,7 +76,7 @@ export function DrawerChooseFarmingGamesView({ children }: React.PropsWithChildr
           <Button
             className="h-12 flex-1 rounded-sm z-30"
             variant="destructive"
-            onClick={() => setOpen(false)}
+            onClick={closeModal_desktop}
           >
             Cancelar
           </Button>

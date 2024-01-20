@@ -1,6 +1,7 @@
 import { IconPullRequest } from "@/components/icons/IconPullRequest"
 import { ModalAddSteamAccount } from "@/components/molecules/ModalAddSteamAccount/controller"
 import { SteamAccountList as SteamAccountListComp } from "@/components/molecules/SteamAccountListItem"
+import { ZustandSteamAccountStoreProvider } from "@/components/molecules/SteamAccountListItem/store/useSteamAccountStore"
 import { Button } from "@/components/ui/button"
 import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
@@ -25,14 +26,27 @@ export const DashboardSteamAccountsList = React.forwardRef<
       {user.hasAccounts() ? (
         <>
           {user.steamAccounts.map((app, index) => (
-            <SteamAccountList
+            <ZustandSteamAccountStoreProvider
               key={app.id_steamAccount}
-              app={app}
-              status={{
-                maxGamesAllowed: user.plan.maxGamesAllowed,
-                header: index === 0,
+              initialState={{
+                localStagingFarm_list: app.farmingGames,
+                stageFarmingGames_list: app.farmingGames,
+                urgent: false, // desnecessario
+                modalOpen_desktop: false,
               }}
-            />
+              contextInfo={{
+                planMaxGamesAllowed: user.plan.maxGamesAllowed,
+              }}
+            >
+              <SteamAccountList
+                key={app.id_steamAccount}
+                app={app}
+                status={{
+                  maxGamesAllowed: user.plan.maxGamesAllowed,
+                  header: index === 0,
+                }}
+              />
+            </ZustandSteamAccountStoreProvider>
           ))}
           <div className="pb-16" />
         </>

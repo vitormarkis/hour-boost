@@ -1,8 +1,10 @@
 import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
+import { IconJoystick } from "@/components/icons/IconJoystick"
 import { useFarmGames } from "@/components/molecules/FarmGames/context"
 import { local_useSteamAccountListItem } from "@/components/molecules/FarmGames/controller"
 import { GameItem } from "@/components/molecules/GameItem"
 import { useSteamAccountListItem } from "@/components/molecules/SteamAccountListItem/context"
+import { useSteamAccountStore } from "@/components/molecules/SteamAccountListItem/store/useSteamAccountStore"
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -13,25 +15,35 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { useUser } from "@/contexts/UserContext"
 import React from "react"
-export function SheetChooseFarmingGamesView({ children }: React.PropsWithChildren) {
-  const { state, helpers } = useFarmGames()
-  const { stagingFarmGames } = useSteamAccountListItem()
+// export function ChooseFarmingGamesDesktop({ children }: React.PropsWithChildren) {
+export function ChooseFarmingGamesDesktop() {
+  const { helpers } = useFarmGames()
+  const maxGamesAllowed = useUser(u => u.plan.maxGamesAllowed)
+  const { app } = useSteamAccountListItem()
   const local = local_useSteamAccountListItem.farmGames()
-  const [open, setOpen] = state
-  const [urgent, setUrgent] = local.stageFarmingGames.urgentState
-
-  const handleCancelClick = () => {
-    setOpen(false)
-    if (urgent) setUrgent(false)
-  }
+  const modalOpen_desktop = useSteamAccountStore(state => state.modalOpen_desktop)
+  const setModalOpen_desktop = useSteamAccountStore(state => state.setModalOpen_desktop)
 
   return (
     <Sheet
-      open={open}
-      onOpenChange={setOpen}
+      open={modalOpen_desktop}
+      onOpenChange={setModalOpen_desktop}
     >
-      <SheetTrigger asChild>{children}</SheetTrigger>
+      <SheetTrigger asChild>
+        <button className="flex h-full items-center px-6 group hover:bg-slate-700 transition-all duration-300">
+          <div className="flex flex-col items-center">
+            <span className="uppercase text-sm pb-1">
+              {app.farmingGames.length}/{maxGamesAllowed}
+            </span>
+            <div className="flex items-center gap-1 h-6 ">
+              <IconJoystick className="transition-all duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />
+              <span className="transition-all duration-300 text-slate-500 group-hover:text-white">+</span>
+            </div>
+          </div>
+        </button>
+      </SheetTrigger>
       <SheetContent
         className="p-0 flex flex-col border-slate-800 h-screen"
         side="right"
@@ -64,11 +76,10 @@ export function SheetChooseFarmingGamesView({ children }: React.PropsWithChildre
           <div className="flex flex-col gap-2">
             {local.games ? (
               local.games.map(game => (
-                <GameItem
+                <GameItemWrapper
                   key={game.id}
                   game={game}
                   handleFarmGame={() => helpers.handleAddGameToFarmStaging(game.id)}
-                  isSelected={stagingFarmGames.local.hasGame(game.id)}
                 />
               ))
             ) : (
@@ -90,17 +101,59 @@ export function SheetChooseFarmingGamesView({ children }: React.PropsWithChildre
               </div>
             )}
           </Button>
-          <Button
+          <CancelClick
             className="flex-1 z-30"
             variant="destructive"
-            onClick={handleCancelClick}
           >
             Cancelar
-          </Button>
+          </CancelClick>
         </SheetFooter>
       </SheetContent>
     </Sheet>
   )
 }
 
-SheetChooseFarmingGamesView.displayName = "SheetChooseFarmingGamesView"
+ChooseFarmingGamesDesktop.displayName = "ChooseFarmingGamesDesktop"
+
+export type GameItemWrapperProps = Omit<React.ComponentPropsWithoutRef<typeof GameItem>, "isSelected"> & {}
+
+export type CancelClickProps = Omit<React.ComponentPropsWithoutRef<typeof Button>, "onClick"> & {}
+
+export const CancelClick = React.forwardRef<React.ElementRef<typeof Button>, CancelClickProps>(
+  function CancelClickComponent({ ...props }, ref) {
+    const urgent = useSteamAccountStore(state => state.urgent)
+    const setUrgent = useSteamAccountStore(state => state.setUrgent)
+    const closeModal_desktop = useSteamAccountStore(state => state.closeModal_desktop)
+
+    const handleCancelClick = () => {
+      closeModal_desktop()
+      if (urgent) setUrgent(false)
+    }
+
+    return (
+      <Button
+        {...props}
+        onClick={handleCancelClick}
+        ref={ref}
+      />
+    )
+  }
+)
+
+CancelClick.displayName = "CancelClick"
+
+export const GameItemWrapper = React.forwardRef<React.ElementRef<typeof GameItem>, GameItemWrapperProps>(
+  function GameItemWrapperComponent({ ...props }, ref) {
+    const localStagingFarm_hasGame = useSteamAccountStore(state => state.localStagingFarm_hasGame)
+
+    return (
+      <GameItem
+        {...props}
+        isSelected={localStagingFarm_hasGame(props.game.id)}
+        ref={ref}
+      />
+    )
+  }
+)
+
+GameItemWrapper.displayName = "GameItemWrapper"

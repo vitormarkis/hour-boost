@@ -1,9 +1,8 @@
 import { ChooseFarmingGamesHelpers } from "@/components/molecules/FarmGames/types"
-import React, { Dispatch, SetStateAction, createContext, useContext } from "react"
+import React, { createContext, useContext } from "react"
 
 export interface IFarmGamesContext {
   helpers: ChooseFarmingGamesHelpers
-  state: [state: boolean, setState: Dispatch<SetStateAction<boolean>>]
 }
 
 export interface IFarmGamesProviderProps {

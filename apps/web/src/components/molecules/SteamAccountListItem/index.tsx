@@ -1,8 +1,11 @@
 import { useMediaQuery } from "@/components/hooks"
-import { IntentionCodes } from "@/components/molecules/FarmGames/types"
+import { useChangeAccountStatus } from "@/components/molecules/ChangeAccountStatus"
+import { IntentionCodes as IntentionCodes_ChangeStatus } from "@/components/molecules/ChangeAccountStatus/types"
+import { IntentionCodes, useFarmGamesMutation } from "@/components/molecules/FarmGames"
+import { useSteamAccountStore } from "@/components/molecules/SteamAccountListItem/store/useSteamAccountStore"
 import { useUser } from "@/contexts/UserContext"
 import { api } from "@/lib/axios"
-import { useFarmGamesMutation, useRefreshGamesMutation, useStopFarmMutation } from "@/mutations"
+import { useRefreshGamesMutation, useStopFarmMutation } from "@/mutations"
 import { DataOrMessage, Message } from "@/util/DataOrMessage"
 import { thisPlanIsUsage } from "@/util/thisPlanIsUsage"
 import { useAuth } from "@clerk/clerk-react"
@@ -12,7 +15,6 @@ import React, { useMemo, useState } from "react"
 import { ISteamAccountListItemContext, SteamAccountListItemContext } from "./context"
 import { SteamAccountListItemViewDesktop } from "./desktop"
 import { useHandlers } from "./hooks/useHandlers"
-import { useStagingFarmGames } from "./hooks/useStagingFarmGames"
 import { SteamAccountListItemViewMobile } from "./mobile"
 import { SteamAccountAppProps, SteamAccountListItemViewProps, SteamAccountStatusProps } from "./types"
 
@@ -30,41 +32,31 @@ export function SteamAccountList({
     return api
   }
 
-  const setStatus = React.useCallback(async (newStatus: AppAccountStatus) => {
-    await new Promise(res => setTimeout(res, 1000))
-    setStatusState(newStatus)
-  }, [])
-
   const queryClient = useQueryClient()
 
   const refreshGames = useRefreshGamesMutation(getAPI)
   const stopFarm = useStopFarmMutation(getAPI)
   const farmGames = useFarmGamesMutation(getAPI)
+  const changeAccountStatus = useChangeAccountStatus(getAPI)
 
   const isLessDesktop = useMediaQuery("(max-width: 896px)")
-  const [modalSelectGamesOpen, setModalSelectGamesOpen] = useState(false)
   const user = useUser()
-  const stagingFarmGames = useStagingFarmGames({
-    farmingGames: app.farmingGames,
-    planMaxGamesAllowed: user.plan.maxGamesAllowed,
-  })
+
+  const stageFarmingGames_list = useSteamAccountStore(state => state.stageFarmingGames_list)
+  const stageFarmingGames_hasGamesOnTheList = useSteamAccountStore(
+    state => state.stageFarmingGames_hasGamesOnTheList
+  )
+  const urgent = useSteamAccountStore(state => state.urgent)
+  const setUrgent = useSteamAccountStore(state => state.setUrgent)
+  const openModal_desktop = useSteamAccountStore(state => state.openModal_desktop)
 
   const handlers = useHandlers({
     farmGames,
     queryClient,
-    stagingFarmGames,
     stopFarm,
     user,
     userId: user.id,
   })
-
-  function closeModal() {
-    setModalSelectGamesOpen(false)
-  }
-
-  function openModal() {
-    setModalSelectGamesOpen(true)
-  }
 
   const isFarming = React.useCallback(() => {
     return app.farmingGames.length > 0
@@ -85,12 +77,11 @@ export function SteamAccountList({
       // if (undesired) return toast[undesired.type](undesired.message)
       return [null, new Message("Farm pausado.", "info")]
     }
-    if (!stagingFarmGames.hasGamesOnTheList()) {
-      const [_, setUrgentState] = stagingFarmGames.urgentState
-      setUrgentState(true)
-      openModal()
+    if (!stageFarmingGames_hasGamesOnTheList()) {
+      setUrgent(true)
+      openModal_desktop()
 
-      return [new Message("Você precisa escolher alguns jogos primeiro.", "info")]
+      return [new Message("Escolha alguns jogos primeiro.", "info")]
       // toast.info("Você precisa escolher alguns jogos primeiro.")
       // farm on save true
     }
@@ -100,59 +91,63 @@ export function SteamAccountList({
       ]
       // toast.error("Nenhum jogo foi encontrado na sua conta, atualize seus jogos ou a página.")
     }
-    const { dataOrMessage } = await handlers.handleFarmGames(app.accountName, stagingFarmGames.list, user.id)
+    const { dataOrMessage } = await handlers.handleFarmGames(app.accountName, stageFarmingGames_list, user.id)
     const [undesired] = dataOrMessage
     if (undesired) return [undesired]
-    return [null, { list: stagingFarmGames.list, games: app.games }]
+    return [null, { list: stageFarmingGames_list, games: app.games }]
     // onError(staging)
     // if (undesired) return showToastFarmGamesResult(undesired)
     // showToastFarmingGame(stagingFarmGames.list, games)
   }, [
     handlers.handleStopFarm,
     app.accountName,
-    stagingFarmGames.hasGamesOnTheList,
-    stagingFarmGames.urgentState,
-    openModal,
+    stageFarmingGames_hasGamesOnTheList,
+    urgent,
+    openModal_desktop,
     app.games,
     handlers.handleFarmGames,
-    stagingFarmGames.list,
+    stageFarmingGames_list,
   ])
+
+  const handleChangeStatus = React.useCallback(
+    async (newStatus: AppAccountStatus) => {
+      const [error, result] = await changeAccountStatus.mutateAsync({
+        accountName: app.accountName,
+        status: newStatus,
+      })
+      if (error) return [error] as DataOrMessage<string, IntentionCodes_ChangeStatus>
+      setStatusState(newStatus)
+      return [null, result] as DataOrMessage<string, IntentionCodes_ChangeStatus>
+    },
+    [changeAccountStatus, app.accountName]
+  )
 
   const value: ISteamAccountListItemContext = useMemo(
     () => ({
-      setStatus,
+      handleChangeStatus,
       ...statusProps,
       mutations: {
         farmGames,
         refreshGames,
         stopFarm,
+        changeAccountStatus,
       },
       isFarming,
       hasUsagePlanLeft,
       handlers,
-      stagingFarmGames,
       app,
       status,
       farmingTime: 0,
-      modalSelectGames: {
-        closeModal,
-        openModal,
-        state: [modalSelectGamesOpen, setModalSelectGamesOpen],
-      },
     }),
     [
       statusProps,
       farmGames,
       refreshGames,
       stopFarm,
+      changeAccountStatus,
       app.farmingGames.length,
       handlers,
-      stagingFarmGames,
       app,
-      closeModal,
-      openModal,
-      modalSelectGamesOpen,
-      setModalSelectGamesOpen,
     ]
   )
 

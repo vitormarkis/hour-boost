@@ -25,7 +25,7 @@ export function UserPlanStatus() {
       <div className="flex">
         <div className="flex flex-col justify-end rounded-md border border-dashed border-slate-900 p-3">
           <div className="flex gap-2 items-center justify-end">
-            <span className="text-slate-400">Plano:</span>
+            <span className="text-slate-400">Seu plano:</span>
             <BadgePlanType name={plan.name}>
               <span className="leading-none font-semibold">{planName}</span>
             </BadgePlanType>
@@ -107,27 +107,27 @@ export function UserPlanStatus() {
             </HoverCard>
           </div>
           <div className="flex gap-2 pt-2 select-none justify-end">
-          <HoverCard
+            <HoverCard
               openDelay={300}
               closeDelay={0}
             >
               <HoverCardTrigger asChild>
-              <BadgePlanInfo.Root className="hover:ring-2 hover:ring-slate-900/70 hover:cursor-pointer">
-              <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">
-                <div className="flex gap-1.5 items-center">
-                  <span className="text-white font-medium">
-                    <remaining.HighlightTime />
-                  </span>
-                  <remaining.SecondaryTime />
-                </div>
-              </BadgePlanInfo.Number>
-              <BadgePlanInfo.SubWrapper className="border-slate-700 bg-slate-600 text-slate-300">
-                <BadgePlanInfo.Label>restantes</BadgePlanInfo.Label>
-                <BadgePlanInfo.Icon className="fill-slate-200">
-                  <IconHourGlass />
-                </BadgePlanInfo.Icon>
-              </BadgePlanInfo.SubWrapper>
-            </BadgePlanInfo.Root>
+                <BadgePlanInfo.Root className="hover:ring-2 hover:ring-slate-900/70 hover:cursor-pointer">
+                  <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">
+                    <div className="flex gap-1.5 items-center">
+                      <span className="text-white font-medium">
+                        <remaining.HighlightTime />
+                      </span>
+                      <remaining.SecondaryTime />
+                    </div>
+                  </BadgePlanInfo.Number>
+                  <BadgePlanInfo.SubWrapper className="border-slate-700 bg-slate-600 text-slate-300">
+                    <BadgePlanInfo.Label>restantes</BadgePlanInfo.Label>
+                    <BadgePlanInfo.Icon className="fill-slate-200">
+                      <IconHourGlass />
+                    </BadgePlanInfo.Icon>
+                  </BadgePlanInfo.SubWrapper>
+                </BadgePlanInfo.Root>
               </HoverCardTrigger>
               <HoverCardContent>
                 <p className="text-slate-300">
