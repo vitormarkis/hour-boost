@@ -78,7 +78,7 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
                 {...subtitleAnimations}
                 className="text-center text-xl xs:text-2xl md:text-3xl font-light tracking-[0.1rem] xs:tracking-[0.2rem] md:tracking-[0.4rem] text-zinc-500"
               >
-                Começe com 5 horas grátis
+                Começe com 6 horas grátis
               </motion.h2>
             </div>
           </div>

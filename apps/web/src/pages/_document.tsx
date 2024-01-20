@@ -6,7 +6,13 @@ export default function Document() {
       className="scroll-smooth"
       lang="en"
     >
-      <Head />
+      <Head>
+        <title>Hourboost</title>
+        <link
+          rel="shortcut icon"
+          href="/favicon.ico"
+        />
+      </Head>
       <body>
         <Main />
         <NextScript />
