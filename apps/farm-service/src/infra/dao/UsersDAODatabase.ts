@@ -65,18 +65,6 @@ export class UsersDAODatabase implements UsersDAO {
 
     const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
 
-    const usages = dbUser.plan
-      ? await this.prisma.usage.findMany({
-          where: { plan_id: dbUser.plan.id_plan },
-        })
-      : null
-
-    const farmedTimeInSeconds = usages
-      ? usages.reduce((acc, item) => {
-          return acc + item.amountTime
-        }, 0)
-      : 0
-
     const steamAccounts: SteamAccountSession[] = await Promise.all(
       dbUser.steamAccounts.map(async (sa): Promise<SteamAccountSession> => {
         let games: GameSession[] | null
@@ -96,6 +84,18 @@ export class UsersDAODatabase implements UsersDAO {
         persona = error ? getDefaultPersona() : foundPersona
         games = gamesError ? null : foundGames.toJSON()
         const accountState = await this.steamAccountClientStateCacheRepository.get(sa.accountName)
+
+        const usages = dbUser.plan
+          ? await this.prisma.usage.findMany({
+              where: { plan_id: dbUser.plan.id_plan, accountName: sa.accountName },
+            })
+          : null
+
+        const farmedTimeInSeconds = usages
+          ? usages.reduce((acc, item) => {
+              return acc + item.amountTime
+            }, 0)
+          : 0
 
         return Promise.resolve({
           accountName: sa.accountName,

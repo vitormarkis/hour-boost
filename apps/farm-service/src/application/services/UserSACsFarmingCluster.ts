@@ -63,16 +63,11 @@ export class UserSACsFarmingCluster {
     })
 
     this.emitter.on("service:max-usage-exceeded", () => {
-      console.log(
-        "22: 1. plano excedeu uso, nao deve persist a session, e mais, deve parar o farm matando a session"
-      )
       this.shouldPersistSession = false
     })
 
     sac.emitter.on("interrupt", async sacStateCacheDTO => {
-      console.log("22: 2. rodou interrupt")
       if (this.shouldPersistSession) {
-        console.log("22: 2.5 !!!! salvando cache", sacStateCacheDTO)
         const sacStateCache = SACStateCacheFactory.createDTO({
           status: sacStateCacheDTO.status,
           accountName: sacStateCacheDTO.accountName,
@@ -85,9 +80,6 @@ export class UserSACsFarmingCluster {
         await this.sacStateCacheRepository.set(sac.accountName, sacStateCache)
         this.logger.log(`${sacStateCache.accountName} has set the cache successfully.`)
       }
-      console.log(
-        `22: 3. pausando farm em todas as contas, deve matar sessão? 'sim': [${!this.shouldPersistSession}]`
-      )
       this.pauseFarmOnAccount({
         accountName: sac.accountName,
         killSession: !this.shouldPersistSession,

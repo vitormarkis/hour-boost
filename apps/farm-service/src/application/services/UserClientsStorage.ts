@@ -39,10 +39,6 @@ export class UserClientsStorage {
         username: sac.username,
       })
       const sacStateCache = await this.sacStateCacheRepository.get(sac.accountName)
-      console.log("22: hasSession", {
-        sacStateCache,
-        sacLogged: sac.logged,
-      })
       if (sacStateCache && !sac.logged) {
         sac.emitter.emit("relog-with-state", sacStateCache)
       } else {

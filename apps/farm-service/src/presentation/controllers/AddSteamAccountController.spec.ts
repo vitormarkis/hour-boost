@@ -63,18 +63,6 @@ describe("AddSteamAccountController test suite", () => {
           },
         })
       )
-      console.log = log
-      console.log(
-        "22: users and their accounts. ",
-        i.usersMemory.users.map(({ username, steamAccounts }) => ({
-          username,
-          steamAccounts: steamAccounts.data.map(({ credentials: { accountName }, ownerId }) => ({
-            ownerId,
-            accountName,
-          })),
-        }))
-      )
-      console.log = () => {}
       const dbMe2 = await i.usersRepository.getByID(s.me.userId)
       expect(dbMe2?.steamAccounts.data).toHaveLength(1)
       expect(json).toStrictEqual(

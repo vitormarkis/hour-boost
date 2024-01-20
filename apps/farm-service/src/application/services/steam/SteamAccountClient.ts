@@ -195,7 +195,6 @@ export class SteamAccountClient extends LastHandler {
   }
 
   setStatus(status: AppAccountStatus): void {
-    this.logger.log(`22: setting [${this.accountName}] to status: [${status}]!`)
     const persona = mapStatusToPersona(status)
     this.client.setPersona(persona)
   }
