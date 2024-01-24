@@ -17,6 +17,7 @@ import { SteamAccountClient } from "~/application/services/steam"
 import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
+import { AutoReloginScheduler } from "~/domain/cron/auto-relogin"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
 import {
@@ -67,6 +68,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   let redis: Redis = {} as Redis
   // redis = new Redis()
 
+  const autoReloginScheduler = new AutoReloginScheduler()
   const idGenerator = new IDGeneratorUUID()
   const publisher = new Publisher()
   const steamAccountsMemory = new SteamAccountsInMemory()
@@ -177,6 +179,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   }
 
   return {
+    autoReloginScheduler,
     usersMemory,
     steamAccountsMemory,
     publisher,
@@ -196,6 +199,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     checkSteamAccountOwnerStatusUseCase,
     redis,
     idGenerator,
+    userAuthentication,
     async makeUserInstances<P extends TestUsers>(prefix: P, props: TestUserProperties) {
       const user = await createUserUseCase.execute(props.userId)
       return userInstancesBuilder.create(prefix, props, user)

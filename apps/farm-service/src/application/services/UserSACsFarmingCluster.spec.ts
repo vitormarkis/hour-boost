@@ -242,6 +242,9 @@ test("should start farm again when relog with state happens", async () => {
     username: s.me.username,
     status: "offline",
   }
+  console.log = log
+  console.log({ sacEmitterCalls })
+  console.log = () => {}
   expect(sacEmitterCalls[0]).toStrictEqual(["interrupt", sacState]) // null porque primeira vez sendo pausado
   expect(sacEmitterCalls[1]).toStrictEqual(["hasSession"])
   expect(sacEmitterCalls[2]).toStrictEqual([

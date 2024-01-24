@@ -8,7 +8,9 @@ import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 import { RefreshPersonaStateUseCase } from "~/application/use-cases/RefreshPersonaStateUseCase"
+import { RestoreAccountSessionUseCase } from "~/application/use-cases/RestoreAccountSessionUseCase"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
+import { AutoReloginScheduler, ScheduleAutoRelogin } from "~/domain/cron/auto-relogin"
 import { LogSteamStartFarmHandler, LogSteamStopFarmHandler, StartFarmPlanHandler } from "~/domain/handler"
 import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
 import { UsersDAODatabase } from "~/infra/dao"
@@ -73,6 +75,15 @@ export const allUsersClientsStorage = new AllUsersClientsStorage(
   farmGamesUseCase,
   planRepository
 )
+export const userAuthentication = new ClerkAuthentication(clerkClient)
+export const usersRepository = new UsersRepositoryDatabase(prisma)
+export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)
+export const idGenerator = new IDGeneratorUUID()
+export const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(
+  steamAccountsRepository
+)
+
+export const autoReloginScheduler = new AutoReloginScheduler()
 
 export const refreshPersonaState = new RefreshPersonaStateUseCase(
   steamAccountClientStateCacheRepository,
@@ -97,12 +108,13 @@ export const usersDAO = new UsersDAODatabase(
   getUserSteamGamesUseCase,
   steamAccountClientStateCacheRepository
 )
-export const userAuthentication = new ClerkAuthentication(clerkClient)
-export const usersRepository = new UsersRepositoryDatabase(prisma)
-export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)
-export const idGenerator = new IDGeneratorUUID()
-export const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(
-  steamAccountsRepository
+
+export const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
+  steamAccountsRepository,
+  allUsersClientsStorage,
+  usersDAO,
+  usersClusterStorage,
+  steamAccountClientStateCacheRepository
 )
 
 publisher.register(new StartFarmPlanHandler())

@@ -1,8 +1,21 @@
-import { DatabaseSteamAccount, PlanUsage, UserSession, UsersDAO } from "core"
+import { DatabaseSteamAccount, PlanInfinity, PlanUsage, UserSession, UsersDAO } from "core"
 import { UsersInMemory } from "~/infra/repository"
 
 export class UsersDAOInMemory implements UsersDAO {
   constructor(private readonly users: UsersInMemory) {}
+
+  async getUserInfoById(
+    userId: string
+  ): Promise<{ username: string; userId: string; plan: PlanUsage | PlanInfinity } | null> {
+    const dbUser = this.users.users.find(u => u.id_user === userId)
+    return dbUser
+      ? {
+          username: dbUser.username,
+          plan: dbUser.plan,
+          userId: dbUser.id_user,
+        }
+      : null
+  }
 
   async getPlanId(userId: string): Promise<string | null> {
     const dbUser = this.users.users.find(u => u.id_user === userId)
@@ -29,14 +42,17 @@ export class UsersDAOInMemory implements UsersDAO {
       plan:
         foundUser.plan instanceof PlanUsage
           ? {
+              id_plan: foundUser.plan.id_plan,
               autoRestarter: foundUser.plan.autoRestarter,
               maxGamesAllowed: foundUser.plan.maxGamesAllowed,
               maxSteamAccounts: foundUser.plan.maxSteamAccounts,
               maxUsageTime: foundUser.plan.maxUsageTime,
               name: foundUser.plan.name,
               type: foundUser.plan.type as "USAGE",
+              farmUsedTime: 0,
             }
           : {
+              id_plan: foundUser.plan.id_plan,
               autoRestarter: foundUser.plan.autoRestarter,
               maxGamesAllowed: foundUser.plan.maxGamesAllowed,
               maxSteamAccounts: foundUser.plan.maxSteamAccounts,

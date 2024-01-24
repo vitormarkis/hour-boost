@@ -52,6 +52,7 @@ export interface GameSession {
 }
 
 export interface PlanSession {
+  id_plan: string
   maxSteamAccounts: number
   maxGamesAllowed: number
   autoRestarter: boolean

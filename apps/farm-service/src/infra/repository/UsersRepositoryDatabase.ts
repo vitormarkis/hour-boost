@@ -24,7 +24,7 @@ export class UsersRepositoryDatabase implements UsersRepository {
 
   async findMany(): Promise<User[]> {
     const users = await prismaFindMany(this.prisma)
-    const usersDomain  = prismaUserListToDomain(users)
+    const usersDomain = prismaUserListToDomain(users)
     return usersDomain
   }
 
@@ -142,7 +142,8 @@ function prismaUserFindManyToUserDomain(user: PrismaFindMany[number]): User {
   const userPlan = getCurrentPlanOrCreateOne(user.plan, user.id_user)
 
   const steamAccounts: SteamAccountList = new SteamAccountList({
-    data: user.steamAccounts.map(sa => SteamAccount.restore({
+    data: user.steamAccounts.map(sa =>
+      SteamAccount.restore({
         credentials: SteamAccountCredentials.restore({
           accountName: sa.accountName,
           password: sa.password,
@@ -152,7 +153,7 @@ function prismaUserFindManyToUserDomain(user: PrismaFindMany[number]): User {
       })
     ),
   })
-  
+
   return User.restore({
     email: user.email,
     id_user: user.id_user,
@@ -190,7 +191,7 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
   })
 
   const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
-  
+
   return User.restore({
     email: dbUser.email,
     id_user: dbUser.id_user,
@@ -238,8 +239,8 @@ export function prismaFindMany(prisma: PrismaClient) {
     include: {
       plan: {
         include: {
-          usages: true
-        }
+          usages: true,
+        },
       },
       steamAccounts: true,
       purchases: true,

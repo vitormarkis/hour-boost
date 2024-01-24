@@ -13,7 +13,11 @@ import { SACStateCacheFactory, SteamAccountClient } from "~/application/services
 import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
+import { nice, fail } from "~/utils/helpers"
 
+export interface IUserSACsFarmingCluster {
+  addSac(...args: any[]): DataOrError<{ userCluster: UserSACsFarmingCluster }>
+}
 export class UserSACsFarmingCluster {
   private readonly publisher: Publisher
   farmService: FarmService
@@ -50,9 +54,16 @@ export class UserSACsFarmingCluster {
     this.farmService.stopFarmAllAccounts(props)
   }
 
-  addSAC(sac: SteamAccountClient): UserSACsFarmingCluster {
+  addSAC(sac: SteamAccountClient) {
     if (this.sacList.has(sac.accountName))
-      throw new ApplicationError("[SAC Cluster]: Attempt to add sac that already exists.")
+      return fail(
+        new ApplicationError(
+          "[SAC Cluster]: Attempt to add sac that already exists.",
+          403,
+          undefined,
+          "TRIED_TO_ADD::ALREADY_EXISTS"
+        )
+      )
     this.sacList.set(sac.accountName, sac)
 
     this.logger.log(`Appending interrupt async listener on ${sac.accountName}'s sac!`)
@@ -86,7 +97,13 @@ export class UserSACsFarmingCluster {
       })
     })
 
-    return this
+    sac.emitter.on("access-denied", async ({ accountName }) => {
+      await this.sacStateCacheRepository.deleteAllEntriesFromAccount(accountName)
+    })
+
+    return nice({
+      userCluster: this as UserSACsFarmingCluster,
+    })
   }
 
   updateState({ gamesPlaying, accountName }: SACStateCache) {

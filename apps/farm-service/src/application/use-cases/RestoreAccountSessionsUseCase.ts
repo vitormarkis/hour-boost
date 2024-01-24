@@ -70,7 +70,8 @@ export class RestoreAccountSessionsUseCase
       }
       const state = await this.steamAccountClientStateCacheRepository.get(accountName)
       const sac = this.allUsersClientsStorage.addSteamAccountFrom0({ accountName, userId, username, planId })
-      const userCluster = this.usersClusterStorage.getOrAdd(username, plan).addSAC(sac)
+      const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
+      const [error] = userCluster.addSAC(sac)
 
       if (state) sac.setStatus(state.status)
 

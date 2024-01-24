@@ -56,6 +56,37 @@ export class AllUsersClientsStorage {
     return foundSac
   }
 
+  getOrAddSteamAccountUnsub({
+    accountName,
+    userId,
+    username,
+    planId,
+  }: AddUserProps): [sac: SteamAccountClient, unsub: () => void] {
+    const unsub = () => this.removeSteamAccount(userId, accountName)
+    const userClients = this.get(userId)
+    const userRegistered = !!userClients
+    const sac = userClients?.getAccountClient(accountName)
+    const userHasAccount = !!sac
+    if (!userRegistered) {
+      this.registerUser(userId, this.generateUserClients(username))
+      const sac = this.addSteamAccount(
+        username,
+        userId,
+        this.generateSAC({ accountName, userId, username, planId })
+      )
+      return [sac, unsub]
+    }
+    if (!userHasAccount) {
+      const sac = this.addSteamAccount(
+        username,
+        userId,
+        this.generateSAC({ accountName, userId, username, planId })
+      )
+      return [sac, unsub]
+    }
+    return [sac, unsub]
+  }
+
   removeSteamAccount(userId: string, accountName: string) {
     const userSteamClients = this.getOrThrow(userId)
     userSteamClients.removeAccountClient(accountName)

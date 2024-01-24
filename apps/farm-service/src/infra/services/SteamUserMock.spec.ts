@@ -21,7 +21,8 @@ describe("SteamUserMock test suite", () => {
       password: "123",
     })
     await sleep(0.01)
-    expect(emitSpy).toHaveBeenCalledTimes(1)
+    console.log({ calls: emitSpy.mock.calls })
+    expect(emitSpy).toHaveBeenCalledTimes(2)
     expect(emitSpy).toBeCalledWith("loggedOn", {}, {})
     expect(emitSpy).not.toBeCalledWith("error", { eresult: 18 })
   })

@@ -7,11 +7,14 @@ import {
   UsersRepository,
 } from "core"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { SteamAccountClient } from "~/application/services/steam"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual, makeRes } from "~/utils"
+import { LoginSteamWithCredentials } from "~/utils/LoginSteamWithCredentials"
 import { SteamClientEventsRequired } from "~/utils/SteamClientEventsRequired"
+import { GetError, GetResult, GetTuple } from "~/utils/helpers"
 
 export namespace FarmGamesHandle {
   export type Payload = {
@@ -55,49 +58,20 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
       planId: user.plan.id_plan,
     })
     if (!sac.logged) {
-      sac.login(
-        steamAccountDomain.credentials.accountName,
-        steamAccountDomain.credentials.password
-        // steamAccountDomain.credentials.authCode
-      )
-
-      const steamClientEventsRequired = new SteamClientEventsRequired(sac, EVENT_PROMISES_TIMEOUT_IN_SECONDS)
-
-      const eventsPromisesResolved = await Promise.race(
-        steamClientEventsRequired.getEventPromises({
+      const loginSteamClientAwaitEvents = new LoginSteamWithCredentials()
+      const loginSteamClientResult = await loginSteamClientAwaitEvents.execute({
+        sac,
+        accountName,
+        password: steamAccountDomain.credentials.password,
+        trackEvents: {
           loggedOn: true,
           steamGuard: true,
           error: true,
           timeout: true,
-        })
-      )
-
-      if (eventsPromisesResolved.type === "error") {
-        const [error] = eventsPromisesResolved.args
-        if (error.eresult === 18)
-          return makeRes(
-            404,
-            "Steam Account não existe no banco de dados da Steam, delete essa conta e crie novamente.",
-            error
-          )
-        if (error.eresult === 5) return makeRes(403, "Conta ou senha incorretas.", error)
-        return makeRes(400, "Aconteceu algum erro no client da Steam.", {
-          eresult: error.eresult,
-        })
-      }
-
-      if (eventsPromisesResolved.type === "steamGuard") {
-        const [domain, setCode] = eventsPromisesResolved.args
-        sac.setManualHandler("steamGuard", code => setCode(code))
-        return makeRes(
-          202,
-          `Steam Guard requerido. Enviando para ${domain ? `e-mail com final ${domain}` : `seu celular.`}`
-        )
-      }
-
-      // if (eventsPromisesResolved.type === "loggedOn") {
-      //   await this.sacStateCacheRepository.init(sac.accountName)
-      // }
+        },
+      })
+      const [errorLoggin] = this.errorWrapperLogingInSAC(loginSteamClientResult, sac)
+      if (errorLoggin) return errorLoggin
     }
     if (gamesID.length === 0) {
       throw new ApplicationError("Você não pode farmar 0 jogos, começe o farm a partir de 1.", 403)
@@ -125,6 +99,46 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
     if (error) throw error
 
     return makeRes(200, "Iniciando farm.")
+  }
+
+  private errorWrapperLogingInSAC(
+    [errorExecuting, result]: GetTuple<LoginSteamWithCredentials["execute"]>,
+    sac: SteamAccountClient
+  ): [HttpClient.Response<any>] | [undefined, GetResult<LoginSteamWithCredentials["execute"]>] {
+    if (errorExecuting) {
+      if (errorExecuting.payload?.type === "steamGuard") {
+        const [domain, setCode] = errorExecuting.payload?.args
+        sac.setManualHandler("steamGuard", code => setCode(code))
+        return [
+          makeRes(
+            202,
+            `Steam Guard requerido. Enviando para ${domain ? `e-mail com final ${domain}` : `seu celular.`}`
+          ),
+        ]
+      }
+
+      if (errorExecuting.payload?.type === "error") {
+        const [error] = errorExecuting.payload?.args
+        if (error.eresult === 18)
+          return [
+            makeRes(
+              404,
+              "Steam Account não existe no banco de dados da Steam, delete essa conta e crie novamente.",
+              error
+            ),
+          ]
+        if (error.eresult === 5) {
+          return [makeRes(403, "Conta ou senha incorretas.", error)]
+        }
+        return [
+          makeRes(400, "Aconteceu algum erro no client da Steam.", {
+            eresult: error.eresult,
+          }),
+        ]
+      }
+      throw new ApplicationError("Algo de inesperado aconteceu.")
+    }
+    return [undefined, result]
   }
 }
 

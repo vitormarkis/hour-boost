@@ -10,7 +10,7 @@ import {
   SteamAccountPersonaState,
 } from "core"
 import { appendFile } from "fs"
-import SteamUser, { EPersonaState } from "steam-user"
+import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
@@ -101,6 +101,14 @@ export class SteamAccountClient extends LastHandler {
       this.emitter.emit("interrupt", this.createStateDTO())
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
+
+      const [error] = args
+      if (error.eresult === SteamUser.EResult.LoggedInElsewhere) {
+        this.emitter.emit("logged-somewhere-else")
+      }
+      if (error.eresult === SteamUser.EResult.AccessDenied) {
+        this.emitter.emit("access-denied", { accountName: this.accountName })
+      }
     })
 
     this.client.on("disconnected", (...args) => {
@@ -117,12 +125,23 @@ export class SteamAccountClient extends LastHandler {
     })
 
     if (process.env.NODE_ENV === "development") {
-      connection.on("break", () => {
+      connection.on("break", ({ relog = true, replaceRefreshToken = false } = {}) => {
         this.logger.log(`Emitting noConnection error of user ${this.accountName} for the cluster.`)
         this.client.emit("error", { eresult: SteamUser.EResult.NoConnection })
-        setTimeout(() => {
-          this.client.emit("webSession")
-        }, 500).unref()
+        if (replaceRefreshToken) {
+          this.emitter.emit("gotRefreshToken", {
+            refreshToken: "INVALID",
+            userId: this.userId,
+            username: this.username,
+            accountName: this.accountName,
+            planId: this.planId,
+          })
+        }
+        if (relog) {
+          setTimeout(() => {
+            this.client.emit("webSession")
+          }, 500).unref()
+        }
       })
     }
 
@@ -275,6 +294,8 @@ export type SteamApplicationEvents = {
   relog: []
   gotRefreshToken: [refreshTokenInterface: IRefreshToken & { accountName: string }]
   "user-logged-off": []
+  "logged-somewhere-else": []
+  "access-denied": [props: { accountName: string }]
 }
 
 export class SACStateCacheFactory {
@@ -308,10 +329,10 @@ export namespace NSSACStateCacheFactory {
   export type CreateDTOProps = CreateDTO_SAC_Props & CreateDTOClusterProps
 }
 
-function mapStatusToPersona(status: AppAccountStatus): EPersonaState {
-  const mapping: Record<AppAccountStatus, EPersonaState> = {
-    offline: EPersonaState.Offline,
-    online: EPersonaState.Online,
+function mapStatusToPersona(status: AppAccountStatus): SteamUser.EPersonaState {
+  const mapping: Record<AppAccountStatus, SteamUser.EPersonaState> = {
+    offline: SteamUser.EPersonaState.Offline,
+    online: SteamUser.EPersonaState.Online,
   }
 
   return mapping[status]

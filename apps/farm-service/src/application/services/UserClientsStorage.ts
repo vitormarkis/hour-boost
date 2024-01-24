@@ -22,12 +22,12 @@ export class UserClientsStorage {
     this.logger.log("Appending refreshtoken cache listener on refreshToken event.")
     // mais correto seria deixar esse handler como fixo no evento de refreshToken
     // em vez de depender de ser o ultimo handler
-    sac.setLastHandler("refreshToken", async refreshToken => {
-      await this.sacStateCacheRepository.setRefreshToken(sac.accountName, {
+    sac.emitter.on("gotRefreshToken", async ({ accountName, userId, planId, refreshToken, username }) => {
+      await this.sacStateCacheRepository.setRefreshToken(accountName, {
         refreshToken,
-        userId: sac.userId,
-        username: sac.username,
-        planId: sac.planId,
+        userId,
+        username,
+        planId,
       })
       sac.logger.log("refreshtoken set in cache.")
     })

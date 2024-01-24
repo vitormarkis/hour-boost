@@ -1,3 +1,4 @@
+import { PlanInfinity, PlanUsage } from "core/entity"
 import { UserSession } from "../presenters/user-presenter"
 
 export interface UsersDAO {
@@ -5,6 +6,9 @@ export interface UsersDAO {
   getByID(userId: string): Promise<UserSession | null>
   getUsername(userId: string): Promise<{ username: string } | null>
   getPlanId(userId: string): Promise<string | null>
+  getUserInfoById(
+    userId: string
+  ): Promise<{ username: string; userId: string; plan: PlanUsage | PlanInfinity } | null>
 }
 
 export interface DatabaseSteamAccount {

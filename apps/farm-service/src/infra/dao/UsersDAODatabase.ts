@@ -3,16 +3,18 @@ import {
   DatabaseSteamAccount,
   GameSession,
   Persona,
+  PlanInfinity,
   PlanUsage,
   SteamAccountClientStateCacheRepository,
   SteamAccountSession,
   UserSession,
   UsersDAO,
 } from "core"
+import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 
-import { getCurrentPlanOrCreateOne } from "~/utils"
+import { getCurrentPlan, getCurrentPlanOrCreateOne } from "~/utils"
 
 export class UsersDAODatabase implements UsersDAO {
   constructor(
@@ -21,6 +23,30 @@ export class UsersDAODatabase implements UsersDAO {
     private readonly getUserSteamGamesUseCase: GetUserSteamGamesUseCase,
     private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository
   ) {}
+  async getUserInfoById(
+    userId: string
+  ): Promise<{ username: string; userId: string; plan: PlanUsage | PlanInfinity } | null> {
+    const foundUser = await this.prisma.user.findUnique({
+      where: { id_user: userId },
+      select: {
+        plan: {
+          include: {
+            usages: true,
+          },
+        },
+        id_user: true,
+        username: true,
+      },
+    })
+
+    return foundUser
+      ? {
+          plan: getCurrentPlanOrCreateOne(foundUser.plan, foundUser.id_user),
+          userId: foundUser.id_user,
+          username: foundUser.username,
+        }
+      : null
+  }
 
   async getPlanId(userId: string): Promise<string | null> {
     const foundUser = await this.prisma.user.findUnique({
@@ -127,6 +153,7 @@ export class UsersDAODatabase implements UsersDAO {
       plan:
         userPlan instanceof PlanUsage
           ? {
+              id_plan: userPlan.id_plan,
               autoRestarter: userPlan.autoRestarter,
               maxGamesAllowed: userPlan.maxGamesAllowed,
               maxSteamAccounts: userPlan.maxSteamAccounts,
@@ -136,6 +163,7 @@ export class UsersDAODatabase implements UsersDAO {
               farmUsedTime: farmUsedTime ?? 0,
             }
           : {
+              id_plan: userPlan.id_plan,
               autoRestarter: userPlan.autoRestarter,
               maxGamesAllowed: userPlan.maxGamesAllowed,
               maxSteamAccounts: userPlan.maxSteamAccounts,

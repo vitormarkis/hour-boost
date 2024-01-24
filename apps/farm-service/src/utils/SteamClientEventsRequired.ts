@@ -3,7 +3,7 @@ import { EventParameters } from "~/infra/services"
 import { EventParametersTimeout, FarmGamesEventsResolve, SingleEventResolver } from "~/types/EventsApp.types"
 
 type RequiredEventTimeoutNames = keyof (EventParameters & EventParametersTimeout)
-type EventPromises = Partial<Record<RequiredEventTimeoutNames, boolean>>
+export type EventPromises = Partial<Record<RequiredEventTimeoutNames, boolean>>
 
 export class SteamClientEventsRequired {
   constructor(
@@ -28,7 +28,7 @@ export class SteamClientEventsRequired {
   }
 
   getEventPromises(needEvent: EventPromises) {
-    const promises: Array<Promise<FarmGamesEventsResolve<any>>> = []
+    const promises: Array<Promise<FarmGamesEventsResolve<EventParameters & EventParametersTimeout>>> = []
 
     if (needEvent.loggedOn) {
       promises.push(this.createEventPromiseResolver("loggedOn"))
