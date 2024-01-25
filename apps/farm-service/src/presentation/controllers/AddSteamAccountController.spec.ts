@@ -7,9 +7,9 @@ import {
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
-import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
+import { AddSteamAccountUseCase } from "~/application/use-cases"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { AddSteamAccountController } from "~/presentation/controllers/"
+import { AddSteamAccountController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { SteamUserMockBuilder } from "~/utils/builders"
 

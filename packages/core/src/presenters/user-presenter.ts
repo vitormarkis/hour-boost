@@ -32,6 +32,7 @@ export interface SteamAccountSession extends Persona {
   farmingGames: number[]
   farmStartedAt: Date | null
   farmedTimeInSeconds: number
+  autoRelogin: boolean
   status: AppAccountStatus
 }
 export const appAccountStatusSchema = z.enum(["offline", "online"])

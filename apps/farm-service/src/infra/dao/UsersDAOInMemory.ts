@@ -67,6 +67,7 @@ export class UsersDAOInMemory implements UsersDAO {
         status: "online",
         accountName: sa.credentials.accountName,
         id_steamAccount: sa.id_steamAccount,
+        autoRelogin: sa.autoRelogin,
         farmedTimeInSeconds: foundUser.plan.usages.data.reduce((acc, item) => {
           return acc + item.amountTime
         }, 0),

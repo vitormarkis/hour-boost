@@ -82,6 +82,7 @@ export class UsersDAODatabase implements UsersDAO {
           select: {
             id_steamAccount: true,
             accountName: true,
+            autoRelogin: true,
           },
         },
       },
@@ -131,6 +132,7 @@ export class UsersDAODatabase implements UsersDAO {
           farmedTimeInSeconds,
           farmStartedAt: accountState?.farmStartedAt ? new Date(accountState.farmStartedAt) : null,
           status: accountState?.status ?? "offline",
+          autoRelogin: sa.autoRelogin,
           ...persona,
         })
       })

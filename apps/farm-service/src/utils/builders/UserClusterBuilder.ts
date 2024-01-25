@@ -1,4 +1,10 @@
-import { PlanInfinity, PlanRepository, PlanUsage, SteamAccountClientStateCacheRepository } from "core"
+import {
+  PlanInfinity,
+  PlanRepository,
+  PlanUsage,
+  SteamAccountClientStateCacheRepository,
+  SteamAccountsRepository,
+} from "core"
 import { FarmServiceBuilder } from "~/application/factories"
 import { UserSACsFarmingCluster } from "~/application/services"
 import { Publisher } from "~/infra/queue"
@@ -12,7 +18,8 @@ export class UserClusterBuilder implements Builder<UserSACsFarmingCluster> {
     private readonly planRepository: PlanRepository,
     private readonly emitterBuilder: EventEmitterBuilder,
     private readonly publisher: Publisher,
-    private readonly usageBuilder: UsageBuilder
+    private readonly usageBuilder: UsageBuilder,
+    private readonly steamAccountsRepository: SteamAccountsRepository
   ) {}
 
   create(username: string, plan: PlanUsage | PlanInfinity): UserSACsFarmingCluster {
@@ -26,6 +33,7 @@ export class UserClusterBuilder implements Builder<UserSACsFarmingCluster> {
       emitter: this.emitterBuilder.create(),
       publisher: this.publisher,
       usageBuilder: this.usageBuilder,
+      steamAccountsRepository: this.steamAccountsRepository,
     })
   }
 }

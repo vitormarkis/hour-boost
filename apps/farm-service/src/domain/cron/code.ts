@@ -1,11 +1,13 @@
 import { AddSteamAccount } from "core"
-import { connection } from "~/__tests__/connection"
 import { makeTestInstances, password, validSteamAccounts } from "~/__tests__/instances"
-import { AddSteamAccountUseCase, CreateUserUseCase } from "~/application/use-cases"
-import { RestoreAccountSessionUseCase } from "~/application/use-cases/RestoreAccountSessionUseCase"
-import { AutoReloginScheduler, ScheduleAutoRelogin } from "~/domain/cron/auto-relogin"
+import {
+  AddSteamAccountUseCase,
+  CreateUserUseCase,
+  ScheduleAutoReloginUseCase,
+} from "~/application/use-cases"
+import { RestoreAccountSessionUseCase } from "~/application/use-cases"
+import { AutoReloginScheduler } from "~/domain/cron"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { SteamUserMockBuilder } from "~/utils/builders"
 
 const i = makeTestInstances(
   {
@@ -53,7 +55,10 @@ async function main() {
   const sac = i.allUsersClientsStorage.getAccountClientOrThrow(s.me.userId, s.me.accountName)
   console.log("first sac status: ", sac.logged)
   console.log({ cronKeys: autoReloginScheduler.listCronsKeys() })
-  const scheduleAutoRelogin = new ScheduleAutoRelogin(autoReloginScheduler, restoreAccountSessionUseCase)
+  const scheduleAutoRelogin = new ScheduleAutoReloginUseCase(
+    autoReloginScheduler,
+    restoreAccountSessionUseCase
+  )
   const [errorScheduling] = await scheduleAutoRelogin.execute({
     accountName: s.me.accountName,
     intervalInSeconds: 3,

@@ -5,6 +5,7 @@ export type EventNames =
   | "user-complete-farm-session-usage"
   | "user-complete-farm-session-infinity"
   | "user-farmed"
+  | "error-occured-on-steam-client"
   | "user-complete-farm-session"
   | "STEAMCLIENT:add-more-games"
   | "STEAMCLIENT:paused-some-games"

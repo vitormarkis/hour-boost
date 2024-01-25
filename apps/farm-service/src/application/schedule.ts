@@ -1,4 +1,4 @@
-import { ScheduleAutoRelogin } from "~/domain/cron/auto-relogin"
+import { ScheduleAutoReloginUseCase } from "~/application/use-cases/ScheduleAutoReloginUseCase"
 import { fail, nice } from "~/utils/helpers"
 
 export async function scheduleVersale({
@@ -12,9 +12,12 @@ export async function scheduleVersale({
   restoreAccountSessionUseCase: any
   intervalInSeconds: number
 }) {
-  const scheduleAutoRelogin = new ScheduleAutoRelogin(autoReloginScheduler, restoreAccountSessionUseCase)
+  const scheduleAutoReloginUseCase = new ScheduleAutoReloginUseCase(
+    autoReloginScheduler,
+    restoreAccountSessionUseCase
+  )
 
-  const [error] = await scheduleAutoRelogin.execute({
+  const [error] = await scheduleAutoReloginUseCase.execute({
     accountName,
     intervalInSeconds,
   })

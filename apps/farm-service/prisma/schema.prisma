@@ -34,6 +34,7 @@ model SteamAccount {
   accountName     String   @unique
   password        String
   usage           Usage[]  @relation("steam_account_usages")
+  autoRelogin     Boolean  @default(false)
 
   @@map("steam_accounts")
 }

@@ -6,10 +6,14 @@ import {
   PlanUsage,
   SACStateCache,
   SteamAccountClientStateCacheRepository,
+  SteamAccountsRepository,
 } from "core"
+import { Command } from "ioredis"
+import { ErrorOccuredOnSteamClientCommand } from "~/application/commands"
 import { FarmServiceBuilder } from "~/application/factories"
 import { EventEmitter, FarmService, PauseFarmOnAccountUsage, SACList } from "~/application/services"
 import { SACStateCacheFactory, SteamAccountClient } from "~/application/services/steam"
+import { ScheduleAutoReloginUseCase } from "~/application/use-cases"
 import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
@@ -31,6 +35,7 @@ export class UserSACsFarmingCluster {
   private readonly logger: Logger
   private shouldPersistSession = true
   readonly emitter: EventEmitter<UserClusterEvents>
+  readonly steamAccountsRepository: SteamAccountsRepository
 
   constructor(props: UserSACsFarmingClusterProps) {
     this.farmService = props.farmService
@@ -42,6 +47,7 @@ export class UserSACsFarmingCluster {
     this.emitter = props.emitter
     this.publisher = props.publisher
     this.usageBuilder = props.usageBuilder
+    this.steamAccountsRepository = props.steamAccountsRepository
     this.logger = new Logger(`Cluster ~ ${this.username}`)
   }
 
@@ -91,10 +97,24 @@ export class UserSACsFarmingCluster {
         await this.sacStateCacheRepository.set(sac.accountName, sacStateCache)
         this.logger.log(`${sacStateCache.accountName} has set the cache successfully.`)
       }
+
       this.pauseFarmOnAccount({
         accountName: sac.accountName,
         killSession: !this.shouldPersistSession,
       })
+
+      const plan = await this.planRepository.getById(this.planId)
+      if (plan instanceof PlanInfinity) {
+        const steamAccount = await this.steamAccountsRepository.getByAccountName(sacStateCacheDTO.accountName)
+        if (!steamAccount || !steamAccount.autoRelogin) return
+        this.publisher.publish(
+          new ErrorOccuredOnSteamClientCommand({
+            when: new Date(),
+            accountName: sac.accountName,
+            intervalInSeconds: 60 * 5,
+          })
+        )
+      }
     })
 
     sac.emitter.on("access-denied", async ({ accountName }) => {
@@ -246,6 +266,7 @@ export type UserSACsFarmingClusterProps = {
   publisher: Publisher
   emitter: EventEmitter<UserClusterEvents>
   usageBuilder: UsageBuilder
+  steamAccountsRepository: SteamAccountsRepository
 }
 
 export type UserClusterEvents = {

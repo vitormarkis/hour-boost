@@ -17,7 +17,7 @@ import { SteamAccountClient } from "~/application/services/steam"
 import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
-import { AutoReloginScheduler } from "~/domain/cron/auto-relogin"
+import { AutoReloginScheduler } from "~/domain/cron/AutoReloginScheduler"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
 import {
@@ -82,18 +82,20 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     emitterBuilder,
   })
   const planRepository = new PlanRepositoryInMemory(usersMemory)
+  const steamAccountsRepository =
+    ci?.steamAccountsRepository ?? new SteamAccountsRepositoryInMemory(usersMemory, steamAccountsMemory)
   const userClusterBuilder = new UserClusterBuilder(
     farmServiceBuilder,
     sacStateCacheRepository,
     planRepository,
     emitterBuilder,
     publisher,
-    usageBuilder
+    usageBuilder,
+    steamAccountsRepository
   )
   const usersClusterStorage = new UsersSACsFarmingClusterStorage(userClusterBuilder)
   const usersRepository = new UsersRepositoryInMemory(usersMemory, steamAccountsMemory)
-  const steamAccountsRepository =
-    ci?.steamAccountsRepository ?? new SteamAccountsRepositoryInMemory(usersMemory, steamAccountsMemory)
+
   const usersDAO = new UsersDAOInMemory(usersMemory)
   const steamUserBuilder = ci?.steamUserBuilder ?? new SteamUserMockBuilder(validSteamAccounts)
   const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
@@ -149,6 +151,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
       }),
       id_steamAccount: id_steamAccount ?? idGenerator.makeID(),
       ownerId: userId,
+      autoRelogin: true,
     })
     user.addSteamAccount(steamAccount)
     await usersRepository.update(user)
