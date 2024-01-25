@@ -1,6 +1,5 @@
 import {
   ApplicationError,
-  DataOrError,
   DataOrFail,
   PlanInfinity,
   PlanUsage,
@@ -16,24 +15,27 @@ import { EventParameters } from "~/infra/services"
 import { EventParametersTimeout, FarmGamesEventsResolve } from "~/types/EventsApp.types"
 import { Logger } from "~/utils/Logger"
 import { LoginSteamWithCredentials } from "~/utils/LoginSteamWithCredentials"
-import { SteamClientEventsRequired } from "~/utils/SteamClientEventsRequired"
-import { nice, fail, GetTuple } from "~/utils/helpers"
+import { LoginSteamWithToken } from "~/utils/LoginSteamWithToken"
+import { EventPromises } from "~/utils/SteamClientEventsRequired"
+import { GetTuple, bad, nice } from "~/utils/helpers"
+
 const isNotFatalError = (error: Error & { eresult: SteamUser.EResult }) =>
   error ? [SteamUser.EResult.NoConnection, SteamUser.EResult.ConnectFailed].includes(error.eresult) : false
+
 type Payload = {
   accountName: string
 }
 
-export class CronResult<const TCode = string, const TStopCron = boolean> {
-  readonly stopCron: TStopCron
+export class ClientAppResult<const TCode = string, const TFatal = boolean> {
+  readonly fatal: TFatal
   readonly code: TCode
-  constructor(props: { stopCron: TStopCron; code: TCode }) {
-    this.stopCron = props.stopCron
+  constructor(props: { fatal: TFatal; code: TCode }) {
+    this.fatal = props.fatal
     this.code = props.code
   }
 }
-type ExecuteResponse = { stopCron: boolean; code: string }
-type ExecuteError = CronResult | ApplicationError
+type ExecuteResponse = ClientAppResult
+type ExecuteError = ClientAppResult | ApplicationError
 
 interface IRestoreAccountSessionUseCase {
   execute(payload: Payload): Promise<DataOrFail<ExecuteError, ExecuteResponse>>
@@ -41,6 +43,7 @@ interface IRestoreAccountSessionUseCase {
 
 export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCase {
   private readonly loginSteamWithCredentials = new LoginSteamWithCredentials()
+  private readonly loginSteamWithToken = new LoginSteamWithToken()
   private readonly logger = new Logger("restore-account-session-use-case")
 
   constructor(
@@ -55,7 +58,7 @@ export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCa
     const steamAccount = await this.steamAccountsRepository.getByAccountName(accountName)
 
     if (!steamAccount) {
-      return fail(
+      return bad(
         new ApplicationError(
           `Nenhuma conta da Steam foi encontrada com o nome [${accountName}].`,
           404,
@@ -66,7 +69,7 @@ export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCa
     }
 
     if (!steamAccount.ownerId) {
-      return fail(
+      return bad(
         new ApplicationError(
           "Essa conta não está vinculada a nenhum usuário.",
           undefined,
@@ -79,7 +82,7 @@ export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCa
     const foundUser = await this.usersDAO.getUserInfoById(steamAccount.ownerId)
 
     if (!foundUser) {
-      return fail(
+      return bad(
         new ApplicationError(
           `Usuário com id [${steamAccount.ownerId}] não foi encontrado.`,
           404,
@@ -93,9 +96,16 @@ export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCa
      * Talvez sac.isRequiringSteamGuard?
      */
 
+    const trackEvents: Partial<Record<keyof EventPromises, true>> = {
+      error: true,
+      timeout: true,
+      webSession: true,
+      loggedOn: true,
+    }
+
     let sac = this.allUsersClientsStorage.getAccountClient(foundUser.userId, accountName)
     if (sac && sac.logged) {
-      return nice({ stopCron: true, code: "ACCOUNT-IS-LOGGED-ALREADY" })
+      return nice({ fatal: true, code: "ACCOUNT-IS-LOGGED-ALREADY" } satisfies ExecuteResponse)
     }
 
     if (!sac) {
@@ -114,62 +124,56 @@ export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCa
        * Primeiro logar com refreshToken, se der erro, logar com credenciais
        */
 
-      const steamClientEventsRequired = new SteamClientEventsRequired(sac, 10)
-      sac.loginWithToken(foundSessionOnCache.refreshToken)
-      const sacClientsEvents = await Promise.race(
-        steamClientEventsRequired.getEventPromises({
-          error: true,
-          timeout: true,
-          webSession: true,
-          loggedOn: true,
-        })
-      )
+      const [errorLogginWithToken] = await this.loginSteamWithToken.execute({
+        sac,
+        token: foundSessionOnCache.refreshToken,
+        trackEvents,
+      })
 
-      this.logger.log({ loginWithTokenResponseType: sacClientsEvents.type })
-
-      if (["webSession", "loggedOn"].includes(sacClientsEvents.type)) {
+      if (!errorLogginWithToken) {
         const state = await this.steamAccountClientStateCacheRepository.get(accountName)
-        restoreSACSessionOnApplication({
+        const [errorRestoringOnApplication] = await restoreSACSessionOnApplication({
           plan: foundUser.plan,
           sac,
           state,
           username: foundUser.username,
           usersClusterStorage: this.usersSACsFarmingClusterStorage,
         })
+        if (errorRestoringOnApplication) {
+          const [error] = handleSteamClientError(errorRestoringOnApplication)
+          if (error) return bad(error)
+        }
 
-        return nice({ stopCron: true, code: "ACCOUNT-RELOGGED::TOKEN" })
+        return nice({ fatal: true, code: "ACCOUNT-RELOGGED::TOKEN" } satisfies ExecuteResponse)
       }
-
-      this.logger.log(
-        `wasn't able to connect using token for [${accountName}], trying to loggin with credentials`
-      )
     }
 
     const loginSteamWithCredentialsResult = await this.loginSteamWithCredentials.execute({
       sac,
       accountName,
       password: steamAccount.credentials.password,
-      trackEvents: {
-        loggedOn: true,
-        steamGuard: true,
-        timeout: true,
-        error: true,
-      },
+      trackEvents,
     })
 
     const state = await this.steamAccountClientStateCacheRepository.get(accountName)
-    const [errorRestoringSessionAcc] = restoreSessionAcc(loginSteamWithCredentialsResult)
+    const [errorLogginWithCredentials] = handleLoginSteamWithCredentialsResult(
+      loginSteamWithCredentialsResult
+    )
 
-    if (errorRestoringSessionAcc) return fail(errorRestoringSessionAcc)
-    restoreSACSessionOnApplication({
+    if (errorLogginWithCredentials) return bad(errorLogginWithCredentials)
+    const [errorRestoringOnApplication] = await restoreSACSessionOnApplication({
       plan: foundUser.plan,
       sac,
       state,
       username: foundUser.username,
       usersClusterStorage: this.usersSACsFarmingClusterStorage,
     })
+    if (errorRestoringOnApplication) {
+      const [error] = handleSteamClientError(errorRestoringOnApplication)
+      if (error) return bad(error)
+    }
     console.log("ACCOUNT-RELOGGED: didn't find session, logged with credentials")
-    return nice({ stopCron: true, code: "ACCOUNT-RELOGGED::CREDENTIALS" })
+    return nice({ fatal: true, code: "ACCOUNT-RELOGGED::CREDENTIALS" } satisfies ExecuteResponse)
   }
 }
 
@@ -181,7 +185,13 @@ type Props = {
   state: SACStateCacheDTO | null
 }
 
-export function restoreSACSessionOnApplication({ plan, sac, state, username, usersClusterStorage }: Props) {
+export async function restoreSACSessionOnApplication({
+  plan,
+  sac,
+  state,
+  username,
+  usersClusterStorage,
+}: Props) {
   const userCluster = usersClusterStorage.getOrAdd(username, plan)
   const isAccountFarming = userCluster.isAccountFarming(sac.accountName)
   if (!userCluster.hasSteamAccountClient(sac.accountName) && !isAccountFarming) {
@@ -200,7 +210,20 @@ export function restoreSACSessionOnApplication({ plan, sac, state, username, use
       planId: state.planId,
       sessionType: "CONTINUE-FROM-PREVIOUS",
     })
+
+    const error = await Promise.race([
+      new Promise<SACGenericError>(res => sac.client.once("error", res)),
+      new Promise<false>(res => setTimeout(() => res(false), 1000)),
+    ])
+    if (error) return bad(error)
   }
+  return nice()
+}
+
+restoreSACSessionOnApplication satisfies (...args: any[]) => Promise<DataOrFail<SACGenericError, undefined>>
+
+type SACGenericError = Error & {
+  eresult: SteamUser.EResult
 }
 
 // new RestoreAccountSessionUseCase().execute().then(res => {
@@ -208,17 +231,17 @@ export function restoreSACSessionOnApplication({ plan, sac, state, username, use
 //   if(error) return error
 // })
 
-const restoreSessionAcc = (
+const handleLoginSteamWithCredentialsResult = (
   loginSteamWithCredentialsResult: GetTuple<LoginSteamWithCredentials["execute"]>
 ) => {
   const [errorLoggin] = loginSteamWithCredentialsResult
   if (errorLoggin) {
     const { type } = errorLoggin.payload ?? {}
     if (type === "steamGuard") {
-      return fail(new CronResult({ code: "STEAM-GUARD", stopCron: true }))
+      return bad(new ClientAppResult({ code: "STEAM-GUARD", fatal: true } satisfies ExecuteResponse))
     }
     const [clientError] = handleSACClientError(errorLoggin.payload)
-    if (clientError) return fail(clientError)
+    if (clientError) return bad(clientError)
   }
   return nice(undefined)
 }
@@ -232,20 +255,29 @@ const handleSACClientError = (
   if (type === "error") {
     const [error] = args ?? []
     if (!error) {
-      return fail(new CronResult({ code: "UNKNOWN-CLIENT-ERROR", stopCron: true }))
+      return bad(new ClientAppResult({ code: "UNKNOWN-CLIENT-ERROR", fatal: true } satisfies ExecuteResponse))
     }
-    if (error.eresult === SteamUser.EResult.LoggedInElsewhere) {
-      return fail(new CronResult({ code: "OTHER-SESSION-STILL-ON", stopCron: false }))
-    }
-    if (isNotFatalError(error)) {
-      return fail(new CronResult({ code: "KNOWN-ERROR", stopCron: false }))
-    }
-    return fail(new CronResult({ code: "UNKNOWN-CLIENT-ERROR", stopCron: true }))
+    const [steamClientError] = handleSteamClientError(error)
+    if (steamClientError) return bad(steamClientError)
   }
 
   if (type === "timeout") {
-    return fail(new CronResult({ code: "TIMED-OUT", stopCron: false }))
+    return bad(new ClientAppResult({ code: "TIMED-OUT", fatal: false } satisfies ExecuteResponse))
   }
 
   return nice()
 }
+
+function handleSteamClientError(error: SACGenericError) {
+  if (error.eresult === SteamUser.EResult.LoggedInElsewhere) {
+    return bad(
+      new ClientAppResult({ code: "OTHER-SESSION-STILL-ON", fatal: false } satisfies ExecuteResponse)
+    )
+  }
+  if (isNotFatalError(error)) {
+    return bad(new ClientAppResult({ code: "KNOWN-ERROR", fatal: false } satisfies ExecuteResponse))
+  }
+  return bad(new ClientAppResult({ code: "UNKNOWN-CLIENT-ERROR", fatal: true } satisfies ExecuteResponse))
+}
+
+handleSteamClientError satisfies (...args: any[]) => DataOrFail<ClientAppResult>

@@ -45,6 +45,8 @@ export class SteamAccountClient extends LastHandler {
     this.logger = new Logger(this.accountName)
     this.status = "offline"
 
+    console.log("44: iniciando sac com status offline")
+
     this.client.on("loggedOn", (...args) => {
       this.emitter.emit("hasSession")
       this.getLastHandler("loggedOn")(...args)
@@ -214,8 +216,10 @@ export class SteamAccountClient extends LastHandler {
   }
 
   setStatus(status: AppAccountStatus): void {
+    console.log(`44: setStatus to [${status}]`)
     const persona = mapStatusToPersona(status)
     this.client.setPersona(persona)
+    // this.status = status
   }
 
   async getAccountGamesList(): Promise<DataOrError<AccountSteamGamesList>> {

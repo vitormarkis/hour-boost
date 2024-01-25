@@ -1,5 +1,5 @@
 import { ScheduleAutoReloginUseCase } from "~/application/use-cases/ScheduleAutoReloginUseCase"
-import { fail, nice } from "~/utils/helpers"
+import { bad, nice } from "~/utils/helpers"
 
 export async function scheduleVersale({
   intervalInSeconds,
@@ -21,7 +21,7 @@ export async function scheduleVersale({
     accountName,
     intervalInSeconds,
   })
-  if (error) return fail(error)
+  if (error) return bad(error)
 
   return nice(
     `Agendando um auto relogin para [${accountName}] para rodar num intervalo de ${intervalInSeconds} segundos.`

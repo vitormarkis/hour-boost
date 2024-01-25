@@ -6,29 +6,22 @@ import { nice, bad } from "~/utils/helpers"
 
 export type Payload = {
   sac: SteamAccountClient
-  accountName: string
-  password: string
+  token: string
   trackEvents: EventPromises
   timeoutInSeconds?: number
 }
 
-abstract class ILoginSteamWithCredentials {
-  abstract execute(payload: Payload): Promise<DataOrError<any>>
+abstract class ILoginSteamWithToken {
+  abstract execute(payload: Payload): Promise<DataOrError<boolean>>
 }
 
-export class LoginSteamWithCredentials implements ILoginSteamWithCredentials {
+export class LoginSteamWithToken implements ILoginSteamWithToken {
   constructor() {}
 
-  async execute({
-    sac,
-    accountName,
-    password,
-    timeoutInSeconds = EVENT_PROMISES_TIMEOUT_IN_SECONDS,
-    trackEvents,
-  }: Payload) {
+  async execute({ sac, token, timeoutInSeconds = EVENT_PROMISES_TIMEOUT_IN_SECONDS, trackEvents }: Payload) {
     const steamClientEventsRequired = new SteamClientEventsRequired(sac, timeoutInSeconds)
 
-    sac.login(accountName, password)
+    sac.loginWithToken(token)
 
     const eventsPromisesResolved = await Promise.race(steamClientEventsRequired.getEventPromises(trackEvents))
 

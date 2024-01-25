@@ -124,6 +124,8 @@ export class UsersDAODatabase implements UsersDAO {
             }, 0)
           : 0
 
+        console.log("44: usersDAO accountState.status", accountState?.status)
+
         return Promise.resolve({
           accountName: sa.accountName,
           games,

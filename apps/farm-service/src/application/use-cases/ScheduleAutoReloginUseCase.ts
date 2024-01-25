@@ -1,8 +1,8 @@
 import { ApplicationError, DataOrError } from "core"
-import { CronResult, RestoreAccountSessionUseCase } from "~/application/use-cases"
+import { ClientAppResult, RestoreAccountSessionUseCase } from "~/application/use-cases"
 import { AutoReloginScheduler } from "~/domain/cron"
 import { Logger } from "~/utils/Logger"
-import { fail, nice } from "~/utils/helpers"
+import { bad, nice } from "~/utils/helpers"
 
 export type ScheduleAutoReloginPayload = {
   accountName: string
@@ -23,7 +23,7 @@ export class ScheduleAutoReloginUseCase implements IScheduleAutoRelogin {
 
   async execute({ accountName, intervalInSeconds = 60 * 10 }: ScheduleAutoReloginPayload) {
     if (this.autoReloginScheduler.alreadyHasCron(accountName)) {
-      return fail(
+      return bad(
         new ApplicationError(
           "Account already has auto relogin scheduled.",
           403,
@@ -46,31 +46,37 @@ export class ScheduleAutoReloginUseCase implements IScheduleAutoRelogin {
         this.logger.log("stopping the cron. ", errorRestoringSession.code)
         this.autoReloginScheduler.stopCron(accountName)
 
-        if (errorRestoringSession instanceof CronResult) {
+        if (errorRestoringSession instanceof ClientAppResult) {
           switch (errorRestoringSession.code) {
             case "KNOWN-ERROR":
+              return
             case "OTHER-SESSION-STILL-ON":
+              return
             case "STEAM-GUARD":
+              return
             // 22: add code de pedir steam guard no cache
             case "UNKNOWN-CLIENT-ERROR":
+              return
+            case "TIMED-OUT":
+              return
           }
-          return
         }
         if (errorRestoringSession instanceof ApplicationError) {
           switch (errorRestoringSession.code) {
             case "ACCOUNT_NOT_ASSIGNED_TO_ANYONE":
+              return
             case "ACCOUNT_NOT_FOUND":
+              return
             case "USER_NOT_FOUND":
+              return
           }
-          return
         }
-        errorRestoringSession satisfies never
         return
       }
 
-      const { code, stopCron } = restoreSessionResult
+      const { code, fatal } = restoreSessionResult
 
-      if (stopCron) {
+      if (fatal) {
         this.logger.log("stopping the cron. ", code)
         this.autoReloginScheduler.stopCron(accountName)
       }

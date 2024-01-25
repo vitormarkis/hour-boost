@@ -1,6 +1,6 @@
 import { ApplicationError, DataOrError } from "core"
 import { Logger } from "~/utils/Logger"
-import { fail, nice } from "~/utils/helpers"
+import { bad, nice } from "~/utils/helpers"
 
 interface IAutoReloginScheduler {
   alreadyHasCron(key: string): boolean
@@ -30,7 +30,7 @@ export class AutoReloginScheduler implements IAutoReloginScheduler {
     this.logger.log(`cleaning cron for [${key}]`)
     const autoRelogin = this.autoRelogins.get(key)
     if (!autoRelogin) {
-      return fail(
+      return bad(
         new ApplicationError(
           "Tried to stop a cron that has never been added.",
           404,

@@ -86,7 +86,7 @@ describe("NOT MOBILE test suite", () => {
     expect(errorRestoringSession).toBeNull()
     if (errorRestoringSession) return
     expect(result.code).toBe("ACCOUNT-IS-LOGGED-ALREADY")
-    expect(result.stopCron).toBeTruthy()
+    expect(result.fatal).toBeTruthy()
   })
 
   test("should restore session successfully", async () => {
@@ -110,7 +110,7 @@ describe("NOT MOBILE test suite", () => {
     expect(errorRestoringSession).toBeNull()
     if (errorRestoringSession) return
     expect(result.code).toBe("ACCOUNT-RELOGGED::CREDENTIALS")
-    expect(result.stopCron).toBeTruthy()
+    expect(result.fatal).toBeTruthy()
   })
 
   test("should restore session with state successfully", async () => {
@@ -143,7 +143,7 @@ describe("NOT MOBILE test suite", () => {
     expect(errorRestoringSession).toBeNull()
     if (errorRestoringSession) return
     expect(result.code).toBe("ACCOUNT-RELOGGED::TOKEN")
-    expect(result.stopCron).toBeTruthy()
+    expect(result.fatal).toBeTruthy()
   })
 
   test("should not stop cron when other session is playing", async () => {

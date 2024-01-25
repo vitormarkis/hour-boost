@@ -17,7 +17,7 @@ import { ScheduleAutoReloginUseCase } from "~/application/use-cases"
 import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { nice, fail } from "~/utils/helpers"
+import { nice, bad } from "~/utils/helpers"
 
 export interface IUserSACsFarmingCluster {
   addSac(...args: any[]): DataOrError<{ userCluster: UserSACsFarmingCluster }>
@@ -62,7 +62,7 @@ export class UserSACsFarmingCluster {
 
   addSAC(sac: SteamAccountClient) {
     if (this.sacList.has(sac.accountName))
-      return fail(
+      return bad(
         new ApplicationError(
           "[SAC Cluster]: Attempt to add sac that already exists.",
           403,
@@ -85,6 +85,7 @@ export class UserSACsFarmingCluster {
 
     sac.emitter.on("interrupt", async sacStateCacheDTO => {
       if (this.shouldPersistSession) {
+        console.log(`44: persisting status as [${sacStateCacheDTO.status}]`)
         const sacStateCache = SACStateCacheFactory.createDTO({
           status: sacStateCacheDTO.status,
           accountName: sacStateCacheDTO.accountName,
@@ -104,14 +105,18 @@ export class UserSACsFarmingCluster {
       })
 
       const plan = await this.planRepository.getById(this.planId)
+      console.log("1/3 33: checking if it's gonna run auto-restart")
       if (plan instanceof PlanInfinity) {
+        console.log("2/3 33: plan is infinity")
         const steamAccount = await this.steamAccountsRepository.getByAccountName(sacStateCacheDTO.accountName)
         if (!steamAccount || !steamAccount.autoRelogin) return
+        console.log("3/3 33: plan has auto relogin, publishing auto relogin command")
         this.publisher.publish(
           new ErrorOccuredOnSteamClientCommand({
             when: new Date(),
             accountName: sac.accountName,
-            intervalInSeconds: 60 * 5,
+            intervalInSeconds: 20,
+            // intervalInSeconds: 60 * 5,
           })
         )
       }

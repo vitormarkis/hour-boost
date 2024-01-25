@@ -4,7 +4,7 @@ type PrettifySoft<T> = { [K in keyof T]: T[K] } & unknown
 type PrettifyOneLevel<T> = { [K in keyof T]: T[K] extends object ? PrettifySoft<T[K]> : T[K] } & unknown
 type PrettifyTwoLevel<T> = { [K in keyof T]: T[K] extends object ? PrettifyOneLevel<T[K]> : T[K] } & unknown
 
-export function fail<const T>(error: T) {
+export function bad<const T>(error: T) {
   return [error] as Mutable<[T]>
 }
 

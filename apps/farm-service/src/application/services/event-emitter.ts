@@ -23,6 +23,23 @@ export class EventEmitter<EventArgs extends EventsTuple = EventsTuple> {
     eventHandlers.push(handler)
   }
 
+  once<TEventName extends keyof EventArgs>(event: TEventName, handler: EventHandler<EventArgs[TEventName]>) {
+    const handlerTemp = (...args: EventArgs[TEventName]) => {
+      handler(...args)
+      this.off(event, handlerTemp)
+    }
+    this.on(event, handlerTemp)
+  }
+
+  off<TEventName extends keyof EventArgs>(event: TEventName, handler: EventHandler<EventArgs[TEventName]>) {
+    const eventHandlers = this.handlers[event] as EventHandlers<EventArgs[TEventName]>
+    if (eventHandlers) {
+      const index = eventHandlers.indexOf(handler)
+      if (index < 0) return
+      eventHandlers.splice(index, 1)
+    }
+  }
+
   emit<TEventName extends keyof EventArgs>(event: TEventName, ...args: EventArgs[TEventName]) {
     const eventHandlers = this.handlers[event]
     if (!eventHandlers) return
