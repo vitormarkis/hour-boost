@@ -8,6 +8,7 @@ import {
   RemoveSteamAccountUseCase,
 } from "~/application/use-cases"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
+import { ToggleAutoReloginUseCase } from "~/application/use-cases/ToggleAutoReloginUseCase"
 
 import {
   AddSteamAccountController,
@@ -17,6 +18,7 @@ import {
 } from "~/presentation/controllers"
 import { AddSteamGuardCodeController } from "~/presentation/controllers/AddSteamGuardCodeController"
 import { RemoveSteamAccountControllerController } from "~/presentation/controllers/RemoveSteamAccountController"
+import { ToggleAutoReloginController } from "~/presentation/controllers/ToggleAutoReloginController"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import {
   allUsersClientsStorage,
@@ -225,6 +227,51 @@ command_routerSteam.patch(
     }) satisfies () => Promise<HttpClient.Response<any>>
 
     const { status, json } = await promiseHandler(perform())
+    // const { status, json } = await promiseHandler(perform())
+    return json ? res.status(status).json(json) : res.status(status).end()
+  }
+)
+
+const toggleAutoReloginUseCase = new ToggleAutoReloginUseCase(planRepository, steamAccountsRepository)
+
+command_routerSteam.patch(
+  "/account/auto-relogin",
+  ClerkExpressRequireAuth(),
+  async (req: WithAuthProp<Request>, res: Response) => {
+    const toggleAutoReloginController = new ToggleAutoReloginController(toggleAutoReloginUseCase)
+
+    const inputValidation = z
+      .object({
+        accountName: z.string().min(1),
+        planId: z.string().min(1),
+      })
+      .safeParse(req.body)
+
+    if (!inputValidation.success) {
+      return res.status(400).json({
+        issues: inputValidation.error.issues,
+        code: "ERROR_ValidatingRequestBody",
+        validationMessage: inputValidation.error.message,
+        message: "Validação falhou.",
+      })
+    }
+
+    const { accountName, planId } = inputValidation.data
+
+    const { code, json, status } = await toggleAutoReloginController.handle({
+      accountName,
+      planId,
+      userId: req.auth.userId!,
+    })
+
+    if (code !== "SUCCESS") {
+      console.log(`[${code}] Attempt to PATCH "/account/auto-relogin" with`, {
+        accountName,
+        planId,
+        userId: req.auth.userId!,
+      })
+    }
+
     // const { status, json } = await promiseHandler(perform())
     return json ? res.status(status).json(json) : res.status(status).end()
   }

@@ -1,8 +1,12 @@
-export type Mutable<T> = { -readonly [P in keyof T]: T[P] }
+export type Mutable<T> = { -readonly [P in keyof T]: T[P] extends object ? Mutable<T[P]> : T[P] }
 type Prettify<T> = { [K in keyof T]: T[K] extends object ? Prettify<T[K]> : T[K] } & unknown
 type PrettifySoft<T> = { [K in keyof T]: T[K] } & unknown
 type PrettifyOneLevel<T> = { [K in keyof T]: T[K] extends object ? PrettifySoft<T[K]> : T[K] } & unknown
 type PrettifyTwoLevel<T> = { [K in keyof T]: T[K] extends object ? PrettifyOneLevel<T[K]> : T[K] } & unknown
+
+export function only<const T>(data: T) {
+  return data as PrettifyOneLevel<Mutable<T>>
+}
 
 export function bad<const T>(error: T) {
   return [error] as Mutable<[T]>
