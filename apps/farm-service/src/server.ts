@@ -52,6 +52,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 })
 
 const restoreUsersSessionsUseCase = new RestoreUsersSessionsUseCase(usersClusterStorage)
+const restoreAccountSessionsUseCase = new RestoreAccountSessionsUseCase(steamAccountsDAO, autoRestartCron)
 
 const scheduleAutoRestartUseCase = new ScheduleAutoRestartUseCase(autoRestarterScheduler, autoRestartCron)
 
@@ -59,14 +60,19 @@ async function main() {
   try {
     const users = await usersRepository.findMany()
     restoreUsersSessionsUseCase.execute({ users })
+    await restoreAccountSessionsUseCase.execute()
 
-    const [error] = await scheduleAutoRestartUseCase.execute({
-      accountName: "versalebackup",
-      intervalInSeconds: 15,
-    })
-    if (error) {
-      console.log({ errorAutoRestartingAccount: error })
-    }
+    // await restoreAccountSessionsUseCase.execute({
+    //   whitelistAccountNames: ["chapilson2"],
+    // })
+
+    // const [error] = await scheduleAutoRestartUseCase.execute({
+    //   accountName: "versalebackup",
+    //   intervalInSeconds: 15,
+    // })
+    // if (error) {
+    //   console.log({ errorAutoRestartingAccount: error })
+    // }
   } catch (error) {
     console.log("main error", error)
   }

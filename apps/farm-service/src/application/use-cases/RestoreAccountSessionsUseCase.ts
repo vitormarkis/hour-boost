@@ -24,7 +24,9 @@ export class RestoreAccountSessionsUseCase
   ) {}
 
   async execute({ whitelistAccountNames }: APayload = {} as APayload): AResponse {
-    const allAccountNameList = await this.steamAccountsDAO.listAccountNames()
+    const allAccountNameList = await this.steamAccountsDAO.listAccountNames({
+      filter: { onlyOwnedAccounts: true },
+    })
     const accountNameList = whitelistAccountNames
       ? allAccountNameList.filter(accName => whitelistAccountNames.includes(accName))
       : allAccountNameList
