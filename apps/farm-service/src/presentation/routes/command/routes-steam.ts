@@ -232,7 +232,12 @@ command_routerSteam.patch(
   }
 )
 
-const toggleAutoReloginUseCase = new ToggleAutoReloginUseCase(planRepository, steamAccountsRepository)
+const toggleAutoReloginUseCase = new ToggleAutoReloginUseCase(
+  allUsersClientsStorage,
+  planRepository,
+  steamAccountsRepository,
+  usersDAO
+)
 
 command_routerSteam.patch(
   "/account/auto-relogin",
@@ -243,7 +248,6 @@ command_routerSteam.patch(
     const inputValidation = z
       .object({
         accountName: z.string().min(1),
-        planId: z.string().min(1),
       })
       .safeParse(req.body)
 
@@ -256,18 +260,16 @@ command_routerSteam.patch(
       })
     }
 
-    const { accountName, planId } = inputValidation.data
+    const { accountName } = inputValidation.data
 
     const { code, json, status } = await toggleAutoReloginController.handle({
       accountName,
-      planId,
       userId: req.auth.userId!,
     })
 
     if (code !== "SUCCESS") {
       console.log(`[${code}] Attempt to PATCH "/account/auto-relogin" with`, {
         accountName,
-        planId,
         userId: req.auth.userId!,
       })
     }

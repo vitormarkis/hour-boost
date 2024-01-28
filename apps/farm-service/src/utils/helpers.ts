@@ -1,19 +1,23 @@
-export type Mutable<T> = { -readonly [P in keyof T]: T[P] extends object ? Mutable<T[P]> : T[P] }
-type Prettify<T> = { [K in keyof T]: T[K] extends object ? Prettify<T[K]> : T[K] } & unknown
-type PrettifySoft<T> = { [K in keyof T]: T[K] } & unknown
-type PrettifyOneLevel<T> = { [K in keyof T]: T[K] extends object ? PrettifySoft<T[K]> : T[K] } & unknown
-type PrettifyTwoLevel<T> = { [K in keyof T]: T[K] extends object ? PrettifyOneLevel<T[K]> : T[K] } & unknown
+export type Mutable<T> = { -readonly [P in keyof T]: T[P] extends object ? PrettifySoft<T[P]> : T[P] }
+export type Prettify<T> = { [K in keyof T]: T[K] extends object ? Prettify<T[K]> : T[K] } & unknown
+export type PrettifySoft<T> = { [K in keyof T]: T[K] } & unknown
+export type PrettifyOneLevel<T> = {
+  [K in keyof T]: T[K] extends object ? PrettifySoft<T[K]> : T[K]
+} & unknown
+export type PrettifyTwoLevel<T> = {
+  [K in keyof T]: T[K] extends object ? PrettifyOneLevel<T[K]> : T[K]
+} & unknown
 
 export function only<const T>(data: T) {
   return data as PrettifyOneLevel<Mutable<T>>
 }
 
 export function bad<const T>(error: T) {
-  return [error] as Mutable<[T]>
+  return [error] as [T]
 }
 
 export function nice<const T = undefined>(result?: T) {
-  return [null, result] as PrettifyOneLevel<Mutable<[null, T]>>
+  return [null, result] as [null, T]
 }
 
 export type GetError<T extends (...args: any[]) => any> = T extends (...args: any) => Promise<infer R>

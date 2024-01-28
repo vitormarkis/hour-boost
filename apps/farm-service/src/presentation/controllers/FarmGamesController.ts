@@ -56,6 +56,7 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
       userId,
       username: user.username,
       planId: user.plan.id_plan,
+      autoRestart: steamAccountDomain.autoRelogin,
     })
     if (!sac.logged) {
       const loginSteamClientAwaitEvents = new LoginSteamWithCredentials()

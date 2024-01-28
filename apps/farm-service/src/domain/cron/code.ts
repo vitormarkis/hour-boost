@@ -1,12 +1,14 @@
 import { AddSteamAccount } from "core"
 import { makeTestInstances, password, validSteamAccounts } from "~/__tests__/instances"
+import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import {
   AddSteamAccountUseCase,
   CreateUserUseCase,
-  ScheduleAutoReloginUseCase,
+  RestoreAccountConnectionUseCase,
+  ScheduleAutoRestartUseCase,
 } from "~/application/use-cases"
 import { RestoreAccountSessionUseCase } from "~/application/use-cases"
-import { AutoReloginScheduler } from "~/domain/cron"
+import { AutoRestarterScheduler } from "~/domain/cron/AutoRestarterScheduler"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 const i = makeTestInstances(
@@ -18,7 +20,7 @@ const i = makeTestInstances(
   // }
 )
 
-const autoReloginScheduler = new AutoReloginScheduler()
+const autoRestarterScheduler = new AutoRestarterScheduler()
 const createUser = new CreateUserUseCase(i.usersRepository, i.userAuthentication, i.usersClusterStorage)
 
 const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
@@ -28,13 +30,22 @@ const addSteamAccountUseCase = new AddSteamAccountUseCase(
   i.usersDAO,
   i.checkSteamAccountOwnerStatusUseCase
 )
-
 const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
-  i.steamAccountsRepository,
-  i.allUsersClientsStorage,
-  i.usersDAO,
   i.usersClusterStorage,
   i.sacStateCacheRepository
+)
+const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
+  i.allUsersClientsStorage,
+  i.usersClusterStorage,
+  i.sacStateCacheRepository
+)
+const autoRestartCron = new AutoRestartCron(
+  i.allUsersClientsStorage,
+  i.planRepository,
+  i.steamAccountsRepository,
+  restoreAccountConnectionUseCase,
+  restoreAccountSessionUseCase,
+  i.usersDAO
 )
 
 async function main() {
@@ -54,12 +65,9 @@ async function main() {
 
   const sac = i.allUsersClientsStorage.getAccountClientOrThrow(s.me.userId, s.me.accountName)
   console.log("first sac status: ", sac.logged)
-  console.log({ cronKeys: autoReloginScheduler.listCronsKeys() })
-  const scheduleAutoRelogin = new ScheduleAutoReloginUseCase(
-    autoReloginScheduler,
-    restoreAccountSessionUseCase
-  )
-  const [errorScheduling] = await scheduleAutoRelogin.execute({
+  console.log({ cronKeys: autoRestarterScheduler.listCronsKeys() })
+  const scheduleAutoRestartUseCase = new ScheduleAutoRestartUseCase(autoRestarterScheduler, autoRestartCron)
+  const [errorScheduling] = await scheduleAutoRestartUseCase.execute({
     accountName: s.me.accountName,
     intervalInSeconds: 3,
   })

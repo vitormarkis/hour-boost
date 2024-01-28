@@ -29,6 +29,10 @@ export class SteamAccount {
   disown() {
     this.ownerId = null
   }
+
+  toggleAutoRelogin() {
+    this.autoRelogin = !this.autoRelogin
+  }
 }
 
 type SteamAccountProps = {

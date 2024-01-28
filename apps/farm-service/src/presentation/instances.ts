@@ -10,16 +10,17 @@ import {
   RefreshPersonaStateUseCase,
   RestoreAccountSessionUseCase,
   FarmGamesUseCase,
-  ScheduleAutoReloginUseCase,
+  ScheduleAutoRestartUseCase,
+  RestoreAccountConnectionUseCase,
 } from "~/application/use-cases"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
-import { AutoReloginScheduler } from "~/domain/cron"
+import { AutoRestarterScheduler } from "~/domain/cron"
 import {
   LogSteamStartFarmHandler,
   LogSteamStopFarmHandler,
   StartFarmPlanHandler,
   PersistFarmSessionHandler,
-  ScheduleAutoReloginHandler,
+  ScheduleAutoRestartHandler,
 } from "~/domain/handler"
 import { UsersDAODatabase } from "~/infra/dao"
 import { prisma } from "~/infra/libs"
@@ -36,6 +37,9 @@ import { RefreshGamesUseCase } from "~/presentation/presenters"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { UserClusterBuilder } from "~/utils/builders"
+import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
+import { SteamAccountsDAODatabase } from "~/infra/dao/SteamAccountsDAODatabase"
+import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
 
 const httpProxy = process.env.PROXY_URL
 
@@ -58,7 +62,7 @@ export const steamUserBuilder = steamBuilder
 const usageBuilder = new UsageBuilder()
 export const publisher = new Publisher()
 export const emitterBuilder = new EventEmitterBuilder()
-export const autoReloginScheduler = new AutoReloginScheduler()
+export const autoRestarterScheduler = new AutoRestarterScheduler()
 export const planRepository = new PlanRepositoryDatabase(prisma)
 export const steamAccountsRepository = new SteamAccountsRepositoryDatabase(prisma)
 export const steamAccountClientStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
@@ -121,17 +125,34 @@ export const usersDAO = new UsersDAODatabase(
   getUserSteamGamesUseCase,
   steamAccountClientStateCacheRepository
 )
+export const steamAccountsDAO = new SteamAccountsDAODatabase(prisma)
 export const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
-  steamAccountsRepository,
-  allUsersClientsStorage,
-  usersDAO,
   usersClusterStorage,
   steamAccountClientStateCacheRepository
 )
 
-export const scheduleAutoReloginUseCase = new ScheduleAutoReloginUseCase(
-  autoReloginScheduler,
-  restoreAccountSessionUseCase
+export const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
+  allUsersClientsStorage,
+  usersClusterStorage,
+  steamAccountClientStateCacheRepository
+)
+
+export const autoRestartCron = new AutoRestartCron(
+  allUsersClientsStorage,
+  planRepository,
+  steamAccountsRepository,
+  restoreAccountConnectionUseCase,
+  restoreAccountSessionUseCase,
+  usersDAO
+)
+
+export const scheduleAutoRestartUseCase = new ScheduleAutoRestartUseCase(
+  autoRestarterScheduler,
+  autoRestartCron
+)
+
+export const retrieveSessionAccountsUseCase = new RetrieveSessionListUseCase(
+  steamAccountClientStateCacheRepository
 )
 
 publisher.register(new StartFarmPlanHandler())
@@ -141,5 +162,5 @@ publisher.register(new PersistFarmSessionHandler(planRepository, steamAccountCli
 
 publisher.register(new LogSteamStopFarmHandler())
 publisher.register(new LogSteamStartFarmHandler())
-publisher.register(new ScheduleAutoReloginHandler(scheduleAutoReloginUseCase))
+publisher.register(new ScheduleAutoRestartHandler(scheduleAutoRestartUseCase))
 // publisher.register(new LogUserCompleteFarmSessionHandler())

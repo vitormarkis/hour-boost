@@ -57,6 +57,7 @@ export class AddSteamAccountUseCase
       userId,
       username,
       planId,
+      autoRestart: false,
     })
 
     if (sac.logged) {

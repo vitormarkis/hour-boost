@@ -22,18 +22,8 @@ type SteamAccountListItemViewMobileProps = SteamAccountListItemViewProps
 export const SteamAccountListItemViewMobile = React.memo(
   React.forwardRef<React.ElementRef<"div">, SteamAccountListItemViewMobileProps>(
     function SteamAccountListItemViewMobileComponent({ handleClickFarmButton, actionText }, ref) {
-      const {
-        farmingTime,
-        maxGamesAllowed,
-        autoRestarter,
-        status,
-        header,
-        steamGuard,
-        mutations,
-        app,
-        isFarming,
-      } = useSteamAccountListItem()
-      const { accountName, games, id_steamAccount, profilePictureUrl, farmingGames, farmStartedAt } = app
+      const { header, steamGuard, mutations, app, isFarming } = useSteamAccountListItem()
+      const { accountName, profilePictureUrl, farmStartedAt } = app
       const user = useUser()
 
       const handleClickFarmButtonImpl = async () => {

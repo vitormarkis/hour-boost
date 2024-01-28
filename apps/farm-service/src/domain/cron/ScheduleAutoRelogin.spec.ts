@@ -1,22 +1,22 @@
 import { AddSteamAccount } from "core"
 import { connection } from "~/__tests__/connection"
 import {
-  makeTestInstances,
-  validSteamAccounts,
-  MakeTestInstancesProps,
   CustomInstances,
+  MakeTestInstancesProps,
+  makeTestInstances,
   password,
+  validSteamAccounts,
 } from "~/__tests__/instances"
+import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import {
   AddSteamAccountUseCase,
   CheckSteamAccountOwnerStatusUseCase,
-  ScheduleAutoReloginUseCase,
+  RestoreAccountConnectionUseCase,
+  ScheduleAutoRestartUseCase,
 } from "~/application/use-cases"
 import { RestoreAccountSessionUseCase } from "~/application/use-cases/RestoreAccountSessionUseCase"
-import { AutoReloginScheduler } from "~/domain/cron"
 
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { AddSteamAccountController } from "~/presentation/controllers"
 
 const log = console.log
 console.log = () => {}
@@ -25,26 +25,34 @@ let i = makeTestInstances({
   validSteamAccounts,
 })
 let meInstances = {}
-let scheduleAutoReloginUseCase: ScheduleAutoReloginUseCase
+let scheduleAutoRestartUseCase: ScheduleAutoRestartUseCase
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   meInstances = await i.createUser("me", { persistSteamAccounts: false })
 
   const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
-    i.steamAccountsRepository,
-    i.allUsersClientsStorage,
-    i.usersDAO,
     i.usersClusterStorage,
     i.sacStateCacheRepository
   )
-  scheduleAutoReloginUseCase = new ScheduleAutoReloginUseCase(
-    i.autoReloginScheduler,
-    restoreAccountSessionUseCase
+  const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
+    i.allUsersClientsStorage,
+    i.usersClusterStorage,
+    i.sacStateCacheRepository
   )
+  const autoRestartCron = new AutoRestartCron(
+    i.allUsersClientsStorage,
+    i.planRepository,
+    i.steamAccountsRepository,
+    restoreAccountConnectionUseCase,
+    restoreAccountSessionUseCase,
+    i.usersDAO
+  )
+
+  scheduleAutoRestartUseCase = new ScheduleAutoRestartUseCase(i.autoRestarterScheduler, autoRestartCron)
 }
 
-describe("ScheduleAutoReloginUseCase test suite", () => {
+describe("ScheduleAutoRestartUseCase test suite", () => {
   beforeEach(async () => {
     console.log = () => {}
     await setupInstances({
@@ -53,14 +61,14 @@ describe("ScheduleAutoReloginUseCase test suite", () => {
     console.log = log
   })
   test("should schedule a new auto relogin cron", async () => {
-    const [errorScheduling] = await scheduleAutoReloginUseCase.execute({ accountName: s.me.accountName })
+    const [errorScheduling] = await scheduleAutoRestartUseCase.execute({ accountName: s.me.accountName })
     expect(errorScheduling).toBe(null)
   })
 
   test("should error if there is already a cron for this account", async () => {
-    const [errorScheduling] = await scheduleAutoReloginUseCase.execute({ accountName: s.me.accountName })
+    const [errorScheduling] = await scheduleAutoRestartUseCase.execute({ accountName: s.me.accountName })
     expect(errorScheduling).toBe(null)
-    const [errorSchedulingForSecondTime] = await scheduleAutoReloginUseCase.execute({
+    const [errorSchedulingForSecondTime] = await scheduleAutoRestartUseCase.execute({
       accountName: s.me.accountName,
     })
     expect(errorSchedulingForSecondTime?.code).toBe("ALREADY-HAS-CRON")
@@ -91,14 +99,14 @@ describe("ScheduleAutoReloginUseCase test suite", () => {
     expect(sac.logged).toBe(false)
 
     console.log = log
-    const [errorScheduling] = await scheduleAutoReloginUseCase.execute({
+    const [errorScheduling] = await scheduleAutoRestartUseCase.execute({
       accountName: s.me.accountName,
       intervalInSeconds: 5,
     })
     expect(errorScheduling).toBe(null)
     expect(sac.logged).toBe(false)
     jest.advanceTimersByTime(1000 * 5)
-    await new Promise(res => setTimeout(res, 400))
+    await new Promise(res => setTimeout(res, 1000))
     expect(sac.logged).toBe(true)
   })
 
@@ -129,7 +137,7 @@ describe("ScheduleAutoReloginUseCase test suite", () => {
     expect(sac.logged).toBe(true)
     connection.emit("break", { relog: false })
     expect(sac.logged).toBe(false)
-    const [errorScheduling] = await scheduleAutoReloginUseCase.execute({
+    const [errorScheduling] = await scheduleAutoRestartUseCase.execute({
       accountName: s.me.accountName,
       intervalInSeconds: 5,
     })

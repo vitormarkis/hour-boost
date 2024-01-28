@@ -9,11 +9,19 @@ import {
   SteamAccountsRepository,
 } from "core"
 import { Command } from "ioredis"
+import SteamUser from "steam-user"
 import { ErrorOccuredOnSteamClientCommand } from "~/application/commands"
 import { FarmServiceBuilder } from "~/application/factories"
-import { EventEmitter, FarmService, PauseFarmOnAccountUsage, SACList } from "~/application/services"
+import {
+  EventEmitter,
+  FarmInfinityService,
+  FarmService,
+  FarmUsageService,
+  PauseFarmOnAccountUsage,
+  SACList,
+} from "~/application/services"
 import { SACStateCacheFactory, SteamAccountClient } from "~/application/services/steam"
-import { ScheduleAutoReloginUseCase } from "~/application/use-cases"
+import { EAppResults } from "~/application/use-cases"
 import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
@@ -21,10 +29,11 @@ import { nice, bad } from "~/utils/helpers"
 
 export interface IUserSACsFarmingCluster {
   addSac(...args: any[]): DataOrError<{ userCluster: UserSACsFarmingCluster }>
+  farmWithAccount(details: NSUserCluster.FarmWithAccount): Promise<DataOrError<null>>
 }
 export class UserSACsFarmingCluster {
   private readonly publisher: Publisher
-  farmService: FarmService
+  farmService: FarmUsageService | FarmInfinityService
   private readonly sacList: SACList = new SACList()
   private readonly username: string
   private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
@@ -83,9 +92,15 @@ export class UserSACsFarmingCluster {
       this.shouldPersistSession = false
     })
 
-    sac.emitter.on("interrupt", async sacStateCacheDTO => {
+    sac.emitter.on("hasSession", async () => {
+      this.shouldPersistSession = true
+    })
+
+    sac.emitter.on("interrupt", async (sacStateCacheDTO, error) => {
+      if (error.eresult === SteamUser.EResult.LoggedInElsewhere && !sac.autoRestart) {
+        this.shouldPersistSession = false
+      }
       if (this.shouldPersistSession) {
-        console.log(`44: persisting status as [${sacStateCacheDTO.status}]`)
         const sacStateCache = SACStateCacheFactory.createDTO({
           status: sacStateCacheDTO.status,
           accountName: sacStateCacheDTO.accountName,
@@ -105,18 +120,13 @@ export class UserSACsFarmingCluster {
       })
 
       const plan = await this.planRepository.getById(this.planId)
-      console.log("1/3 33: checking if it's gonna run auto-restart")
       if (plan instanceof PlanInfinity) {
-        console.log("2/3 33: plan is infinity")
         const steamAccount = await this.steamAccountsRepository.getByAccountName(sacStateCacheDTO.accountName)
         if (!steamAccount || !steamAccount.autoRelogin) return
-        console.log("3/3 33: plan has auto relogin, publishing auto relogin command")
         this.publisher.publish(
           new ErrorOccuredOnSteamClientCommand({
             when: new Date(),
             accountName: sac.accountName,
-            intervalInSeconds: 20,
-            // intervalInSeconds: 60 * 5,
           })
         )
       }
@@ -149,26 +159,31 @@ export class UserSACsFarmingCluster {
     return !!this.sacList.has(accountName)
   }
 
-  async farmWithAccount({
-    accountName,
-    gamesId,
-    planId,
-    sessionType,
-  }: NSUserCluster.FarmWithAccount): Promise<DataOrError<null>> {
+  async farmWithAccount({ accountName, gamesId, planId, sessionType }: NSUserCluster.FarmWithAccount) {
     try {
       const sac = this.sacList.get(accountName)
       if (!sac)
-        return [
+        return bad(
           new ApplicationError(
-            `[SAC Cluster.startFarm()]: Tried to start farm, but no SAC was found with name: ${accountName}. This account never logged on the application, or don't belong to the user ${this.username}.`
-          ),
-        ]
+            `[SAC Cluster.startFarm()]: Tried to start farm, but no SAC was found with name: ${accountName}. This account never logged on the application, or don't belong to the user ${this.username}.`,
+            404,
+            undefined,
+            EAppResults["SAC-NOT-FOUND"]
+          )
+        )
 
       if (!this.farmService.hasAccountsFarming()) {
         this.logger.log("SETANDO PRIMEIRO FARM")
         const plan = await this.planRepository.getById(planId)
         if (!plan) {
-          return [new ApplicationError(`NSTH: ID do plano não existe, contate o desenvolvedor. ${planId}`)]
+          return bad(
+            new ApplicationError(
+              `NSTH: ID do plano não existe, contate o desenvolvedor. ${planId}`,
+              400,
+              undefined,
+              EAppResults["PLAN-NOT-FOUND"]
+            )
+          )
         }
         this.updateFarmService(plan)
       }
@@ -177,13 +192,15 @@ export class UserSACsFarmingCluster {
         await this.notifyFirstTimeFarming(accountName)
       }
       await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId, planId, sac.username)
-      return this.farmWithAccountImpl(sac, accountName, gamesId)
+      const [errorFarming, result] = this.farmWithAccountImpl(sac, accountName, gamesId)
+      if (errorFarming) return bad(errorFarming)
+      return nice(result)
     } catch (error) {
       console.log({ "usersFarmingCluster.farmWithAccount.error": error })
       if (error instanceof Error) {
-        return [new ApplicationError(error.message)]
+        return bad(new ApplicationError(error.message, 400, undefined, "UNKNOWN_ERROR"))
       }
-      return [new ApplicationError("Erro desconhecido")]
+      return bad(new ApplicationError("Erro desconhecido", 400, undefined, "UNKNOWN_ERROR"))
     }
   }
 
@@ -202,18 +219,15 @@ export class UserSACsFarmingCluster {
     this.setFarmService(newFarmService)
   }
 
-  private farmWithAccountImpl(
-    sac: SteamAccountClient,
-    accountName: string,
-    gamesId: number[]
-  ): DataOrError<null> {
+  private farmWithAccountImpl(sac: SteamAccountClient, accountName: string, gamesId: number[]) {
     this.logger.log(`Appending account to farm on service: `, accountName)
     if (!this.isAccountFarming(accountName)) {
       const [error] = this.farmService.farmWithAccount(accountName)
-      if (error) return [error]
+      if (error) return bad(error)
     }
     sac.farmGames(gamesId)
-    return [null, null]
+    return nice(null)
+    // return [null, null]
   }
 
   private pauseFarmOnAccountImpl({
@@ -248,7 +262,7 @@ export class UserSACsFarmingCluster {
     return errorOrUsages
   }
 
-  setFarmService(newFarmService: FarmService) {
+  setFarmService(newFarmService: FarmUsageService | FarmInfinityService) {
     this.farmService = newFarmService
   }
 
@@ -262,7 +276,7 @@ export class UserSACsFarmingCluster {
 }
 
 export type UserSACsFarmingClusterProps = {
-  farmService: FarmService
+  farmService: FarmUsageService | FarmInfinityService
   username: string
   sacStateCacheRepository: SteamAccountClientStateCacheRepository
   planRepository: PlanRepository

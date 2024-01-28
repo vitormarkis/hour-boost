@@ -1,29 +1,20 @@
-import { ScheduleAutoReloginUseCase } from "~/application/use-cases/ScheduleAutoReloginUseCase"
+import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
+import { ScheduleAutoRestartUseCase } from "~/application/use-cases"
+import { AutoRestarterScheduler } from "~/domain/cron"
 import { bad, nice } from "~/utils/helpers"
 
 export async function scheduleVersale({
   intervalInSeconds,
-  autoReloginScheduler,
-  restoreAccountSessionUseCase,
+  autoRestarterScheduler,
+  autoRestartCron,
   accountName,
 }: {
   accountName: string
-  autoReloginScheduler: any
-  restoreAccountSessionUseCase: any
+  autoRestartCron: AutoRestartCron
+  autoRestarterScheduler: AutoRestarterScheduler
   intervalInSeconds: number
 }) {
-  const scheduleAutoReloginUseCase = new ScheduleAutoReloginUseCase(
-    autoReloginScheduler,
-    restoreAccountSessionUseCase
-  )
-
-  const [error] = await scheduleAutoReloginUseCase.execute({
-    accountName,
-    intervalInSeconds,
-  })
-  if (error) return bad(error)
-
   return nice(
-    `Agendando um auto relogin para [${accountName}] para rodar num intervalo de ${intervalInSeconds} segundos.`
+    `Agendando um auto restarter para [${accountName}] para rodar num intervalo de ${intervalInSeconds} segundos.`
   )
 }

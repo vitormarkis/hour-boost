@@ -6,9 +6,11 @@ import {
   NSFarmService,
   PauseFarmOnAccountUsage,
 } from "~/application/services/FarmService"
+import { EAppResults } from "~/application/use-cases"
 import { getUsageAmountTimeFromDateRange } from "~/domain/utils/getUsageAmountTimeFromDateRange"
 import { Publisher } from "~/infra/queue"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
+import { bad, nice } from "~/utils/helpers"
 
 export type FarmInfinityAccountStatus = {
   accountName: string
@@ -140,12 +142,12 @@ export class FarmInfinityService extends FarmService {
     return [null, accountStatus]
   }
 
-  farmWithAccountImpl(accountName: string): DataOrError<null> {
+  farmWithAccountImpl(accountName: string) {
     this.farmingAccounts.set(accountName, {
       accountName,
       startedAt: new Date(),
     })
-    return [null, null]
+    return nice(null)
   }
 
   private getAccount(accountName: string): FarmInfinityAccountStatus | null {
@@ -165,21 +167,28 @@ export class FarmInfinityService extends FarmService {
     )
   }
 
-  protected startFarm(): DataOrError<null> {
-    return [new ApplicationError("Method not implemented.", 400)]
+  protected startFarm() {
+    return nice(null)
   }
 
   protected startFarmImpl(): void {
     console.log(`${this.username} starting farming`)
   }
 
-  farmWithAccount(accountName: string): DataOrError<null> {
+  farmWithAccount(accountName: string) {
     if (this.isAccountAdded(accountName)) {
-      return [new ApplicationError("Essa conta já está farmando.")]
+      return bad(
+        new ApplicationError(
+          "Essa conta já está farmando.",
+          400,
+          undefined,
+          EAppResults["ACCOUNT-ALREADY-FARMING"]
+        )
+      )
     } else {
       this.farmWithAccountImpl(accountName)
     }
-    return [null, null]
+    return nice(null)
   }
 
   isAccountFarming(accountName: string): boolean {

@@ -10,12 +10,11 @@ import React from "react"
 const SteamAccountList = React.memo(SteamAccountListComp)
 
 export type DashboardSteamAccountsListProps = React.ComponentPropsWithoutRef<"section"> & {}
-
 export const DashboardSteamAccountsList = React.forwardRef<
   React.ElementRef<"section">,
   DashboardSteamAccountsListProps
 >(function DashboardSteamAccountsListComponent({ className, ...props }, ref) {
-  const user = useUser()
+  const { hasAccounts, plan, steamAccounts } = useUser()
 
   return (
     <section
@@ -23,9 +22,9 @@ export const DashboardSteamAccountsList = React.forwardRef<
       className={cn("flex flex-col gap-16 mdx:gap-2 mdx:p-2", className)}
       ref={ref}
     >
-      {user.hasAccounts() ? (
+      {hasAccounts() ? (
         <>
-          {user.steamAccounts.map((app, index) => (
+          {steamAccounts.map((app, index) => (
             <ZustandSteamAccountStoreProvider
               key={app.id_steamAccount}
               initialState={{
@@ -33,16 +32,17 @@ export const DashboardSteamAccountsList = React.forwardRef<
                 stageFarmingGames_list: app.farmingGames,
                 urgent: false, // desnecessario
                 modalOpen_desktop: false,
+                autoRelogin: app.autoRelogin,
               }}
               contextInfo={{
-                planMaxGamesAllowed: user.plan.maxGamesAllowed,
+                planMaxGamesAllowed: plan.maxGamesAllowed,
               }}
             >
               <SteamAccountList
                 key={app.id_steamAccount}
                 app={app}
                 status={{
-                  maxGamesAllowed: user.plan.maxGamesAllowed,
+                  maxGamesAllowed: plan.maxGamesAllowed,
                   header: index === 0,
                 }}
               />

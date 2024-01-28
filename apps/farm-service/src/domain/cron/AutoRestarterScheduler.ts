@@ -2,34 +2,34 @@ import { ApplicationError, DataOrError } from "core"
 import { Logger } from "~/utils/Logger"
 import { bad, nice } from "~/utils/helpers"
 
-interface IAutoReloginScheduler {
+interface IAutoRestarterScheduler {
   alreadyHasCron(key: string): boolean
   stopCron(key: string): DataOrError<undefined>
   addCron(key: string, cron: NodeJS.Timeout): void
 }
 
-export class AutoReloginScheduler implements IAutoReloginScheduler {
-  private autoRelogins: Map<string, NodeJS.Timeout> = new Map()
-  private readonly logger = new Logger("AutoReloginScheduler")
+export class AutoRestarterScheduler implements IAutoRestarterScheduler {
+  private autoRestarts: Map<string, NodeJS.Timeout> = new Map()
+  private readonly logger = new Logger("AutoRestartScheduler")
 
   constructor() {}
   listCronsKeys() {
-    return Array.from(this.autoRelogins.keys())
+    return Array.from(this.autoRestarts.keys())
   }
 
   addCron(key: string, cron: NodeJS.Timeout): void {
     this.logger.log("adding cron for this key", key)
-    this.autoRelogins.set(key, cron.unref())
+    this.autoRestarts.set(key, cron.unref())
   }
 
   alreadyHasCron(key: string): boolean {
-    return this.autoRelogins.has(key)
+    return this.autoRestarts.has(key)
   }
 
   stopCron(key: string) {
     this.logger.log(`cleaning cron for [${key}]`)
-    const autoRelogin = this.autoRelogins.get(key)
-    if (!autoRelogin) {
+    const autoRestart = this.autoRestarts.get(key)
+    if (!autoRestart) {
       return bad(
         new ApplicationError(
           "Tried to stop a cron that has never been added.",
@@ -39,12 +39,12 @@ export class AutoReloginScheduler implements IAutoReloginScheduler {
         )
       )
     }
-    clearInterval(autoRelogin)
-    this.autoRelogins.delete(key)
+    clearInterval(autoRestart)
+    this.autoRestarts.delete(key)
     return nice()
   }
 }
 
-// new ScheduleAutoRelogin().execute().then(res => {
+// new ScheduleAutoRestart().execute().then(res => {
 //   const [error, result] = res
 // })

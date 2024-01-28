@@ -15,12 +15,13 @@ export class AllUsersClientsStorage {
     private readonly planRepository: PlanRepository
   ) {}
 
-  private generateSAC({ accountName, userId, username, planId }: AddUserProps) {
+  private generateSAC({ accountName, userId, username, planId, autoRestart }: AddUserProps) {
     return this.sacBuilder.create({
       accountName,
       userId,
       username,
       planId,
+      autoRestart,
     })
   }
 
@@ -33,7 +34,13 @@ export class AllUsersClientsStorage {
     )
   }
 
-  getOrAddSteamAccount({ accountName, userId, username, planId }: AddUserProps): SteamAccountClient {
+  getOrAddSteamAccount({
+    accountName,
+    userId,
+    username,
+    planId,
+    autoRestart,
+  }: AddUserProps): SteamAccountClient {
     const userClients = this.get(userId)
     const userRegistered = !!userClients
     const foundSac = userClients?.getAccountClient(accountName)
@@ -43,14 +50,14 @@ export class AllUsersClientsStorage {
       return this.addSteamAccount(
         username,
         userId,
-        this.generateSAC({ accountName, userId, username, planId })
+        this.generateSAC({ accountName, userId, username, planId, autoRestart })
       )
     }
     if (!userHasAccount) {
       return this.addSteamAccount(
         username,
         userId,
-        this.generateSAC({ accountName, userId, username, planId })
+        this.generateSAC({ accountName, userId, username, planId, autoRestart })
       )
     }
     return foundSac
@@ -61,6 +68,7 @@ export class AllUsersClientsStorage {
     userId,
     username,
     planId,
+    autoRestart,
   }: AddUserProps): [sac: SteamAccountClient, unsub: () => void] {
     const unsub = () => this.removeSteamAccount(userId, accountName)
     const userClients = this.get(userId)
@@ -72,7 +80,7 @@ export class AllUsersClientsStorage {
       const sac = this.addSteamAccount(
         username,
         userId,
-        this.generateSAC({ accountName, userId, username, planId })
+        this.generateSAC({ accountName, userId, username, planId, autoRestart })
       )
       return [sac, unsub]
     }
@@ -80,7 +88,7 @@ export class AllUsersClientsStorage {
       const sac = this.addSteamAccount(
         username,
         userId,
-        this.generateSAC({ accountName, userId, username, planId })
+        this.generateSAC({ accountName, userId, username, planId, autoRestart })
       )
       return [sac, unsub]
     }
@@ -113,8 +121,14 @@ export class AllUsersClientsStorage {
     return steamAccountClient
   }
 
-  addSteamAccountFrom0({ accountName, userId, username, planId }: AddUserProps): SteamAccountClient {
-    const sac = this.sacBuilder.create({ accountName, userId, username, planId })
+  addSteamAccountFrom0({
+    accountName,
+    userId,
+    username,
+    planId,
+    autoRestart,
+  }: AddUserProps): SteamAccountClient {
+    const sac = this.sacBuilder.create({ accountName, userId, username, planId, autoRestart })
     this.addSteamAccount(username, userId, sac)
     return sac
   }
@@ -174,4 +188,5 @@ export type AddUserProps = {
   username: string
   accountName: string
   planId: string
+  autoRestart: boolean
 }

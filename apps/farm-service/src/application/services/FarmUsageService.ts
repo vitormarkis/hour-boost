@@ -10,6 +10,7 @@ import {
 } from "~/application/services/FarmService"
 import { Publisher } from "~/infra/queue"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
+import { bad, nice } from "~/utils/helpers"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
 
@@ -85,9 +86,9 @@ export class FarmUsageService extends FarmService {
     return res
   }
 
-  farmWithAccount(accountName: string): DataOrError<null> {
+  farmWithAccount(accountName: string) {
     const [error] = this.farmWithAccountImpl(accountName)
-    if (error) return [error]
+    if (error) return bad(error)
 
     console.log(`farm-service: is ${accountName} added? `, this.isAccountAdded(accountName))
     if (!this.isAccountAdded(accountName)) {
@@ -97,7 +98,7 @@ export class FarmUsageService extends FarmService {
     }
     if (this.isAccountAdded(accountName)) this.resumeFarming(accountName)
     else this.appendAccount(accountName)
-    return [null, null]
+    return nice(null)
   }
 
   protected appendAccount(accountName: string) {
@@ -166,7 +167,7 @@ export class FarmUsageService extends FarmService {
     return !!(acc?.status === "FARMING")
   }
 
-  pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
+  pauseFarmOnAccountSync(accountName: string, killSession?: boolean): DataOrError<PauseFarmOnAccountUsage> {
     if (this.getActiveFarmingAccountsAmount() === 1) {
       const usages = this.stopFarmSync()
       return [null, { type: "STOP-ALL", usages, accountNameList: this.getFarmingAccountsNameList() }]
@@ -210,17 +211,17 @@ export class FarmUsageService extends FarmService {
     return Array.from(this.accountsFarming.keys())
   }
 
-  startFarm(): DataOrError<null> {
+  startFarm() {
     this.status = "FARMING"
     if (this.usageLeft <= 0) {
-      return [
+      return bad(
         new ApplicationError(
           "Seu plano não possui mais uso disponível.",
           403,
           { accountName: this.username },
           "PLAN_MAX_USAGE_EXCEEDED"
-        ),
-      ]
+        )
+      )
     }
     this.farmingInterval = setInterval(() => {
       const allAccountsFarmedTotalAmount = this.FARMING_GAP * this.getActiveFarmingAccountsAmount()
@@ -244,7 +245,7 @@ export class FarmUsageService extends FarmService {
       })
     )
 
-    return [null, null]
+    return nice(null)
   }
 
   getUsageLeft() {
@@ -259,7 +260,7 @@ export class FarmUsageService extends FarmService {
     return accountStatus
   }
 
-  farmWithAccountImpl(accountName: string): DataOrError<null> {
+  farmWithAccountImpl(accountName: string) {
     if (this.getActiveFarmingAccountsAmount() === 0) {
       this.publisher.publish(
         new UserHasStartFarmingCommand({
@@ -270,7 +271,7 @@ export class FarmUsageService extends FarmService {
       )
       return this.startFarm()
     }
-    return [null, null]
+    return nice(null)
   }
 
   private addUsageToAccount(usageAmount: number) {

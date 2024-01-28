@@ -17,6 +17,7 @@ import { SteamAccountListItemViewDesktop } from "./desktop"
 import { useHandlers } from "./hooks/useHandlers"
 import { SteamAccountListItemViewMobile } from "./mobile"
 import { SteamAccountAppProps, SteamAccountListItemViewProps, SteamAccountStatusProps } from "./types"
+import { useToggleAutoReloginMutation } from "@/components/molecules/ToggleAutoRelogin/mutation"
 
 export function SteamAccountList({
   app,
@@ -26,6 +27,7 @@ export function SteamAccountList({
   app: SteamAccountAppProps
 }) {
   const [status, setStatusState] = useState<AppAccountStatus>(app.status)
+  const [autoRelogin, setAutoRelogin] = useState(app.autoRelogin)
   const { getToken } = useAuth()
   const getAPI = async () => {
     api.defaults.headers["Authorization"] = `Bearer ${await getToken()}`
@@ -49,6 +51,7 @@ export function SteamAccountList({
   const urgent = useSteamAccountStore(state => state.urgent)
   const setUrgent = useSteamAccountStore(state => state.setUrgent)
   const openModal_desktop = useSteamAccountStore(state => state.openModal_desktop)
+  const toggleAutoRelogin = useSteamAccountStore(state => state.toggleAutoRelogin)
 
   const handlers = useHandlers({
     farmGames,
@@ -63,15 +66,27 @@ export function SteamAccountList({
   }, [app.farmingGames.length])
 
   const hasUsagePlanLeft = React.useCallback(() => {
-    console.log({
-      plan: user.plan,
-      farmUsedTime: planIsUsage(user.plan) ? user.plan.farmUsedTime : "Not usage plan",
-      maxUsageTime: planIsUsage(user.plan) ? user.plan.maxUsageTime : "Not usage plan",
-    })
     if (!planIsUsage(user.plan)) return true
     return user.plan.farmUsedTime < user.plan.maxUsageTime
   }, [app.farmedTimeInSeconds])
 
+  /**
+   * Toggle Auto Relogin
+   */
+  const toggleAutoReloginMutation = useToggleAutoReloginMutation(getAPI)
+
+  const handleToggleAutoRelogin = React.useCallback(async () => {
+    toggleAutoRelogin()
+    const [undesired, result] = await toggleAutoReloginMutation.mutateAsync({
+      accountName: app.accountName,
+    })
+    if (undesired) return
+    return result
+  }, [toggleAutoReloginMutation, app.accountName])
+
+  /**
+   * Farm Games
+   */
   const handleClickFarmButton = React.useCallback(async (): Promise<
     DataOrMessage<{ list: number[]; games: GameSession[] } | Message, IntentionCodes>
   > => {
@@ -79,7 +94,6 @@ export function SteamAccountList({
       const { dataOrMessage } = await handlers.handleStopFarm(app.accountName)
       const [undesired] = dataOrMessage
       if (undesired) return [undesired]
-      // if (undesired) return toast[undesired.type](undesired.message)
       return [null, new Message("Farm pausado.", "info")]
     }
     if (!stageFarmingGames_hasGamesOnTheList()) {
@@ -87,22 +101,16 @@ export function SteamAccountList({
       openModal_desktop()
 
       return [new Message("Escolha alguns jogos primeiro.", "info")]
-      // toast.info("Você precisa escolher alguns jogos primeiro.")
-      // farm on save true
     }
     if (!app.games) {
       return [
         new Message("Nenhum jogo foi encontrado na sua conta, atualize seus jogos ou a página.", "error"),
       ]
-      // toast.error("Nenhum jogo foi encontrado na sua conta, atualize seus jogos ou a página.")
     }
     const { dataOrMessage } = await handlers.handleFarmGames(app.accountName, stageFarmingGames_list, user.id)
     const [undesired] = dataOrMessage
     if (undesired) return [undesired]
     return [null, { list: stageFarmingGames_list, games: app.games }]
-    // onError(staging)
-    // if (undesired) return showToastFarmGamesResult(undesired)
-    // showToastFarmingGame(stagingFarmGames.list, games)
   }, [
     handlers.handleStopFarm,
     app.accountName,
@@ -130,12 +138,14 @@ export function SteamAccountList({
   const value: ISteamAccountListItemContext = useMemo(
     () => ({
       handleChangeStatus,
+      handleToggleAutoRelogin,
       ...statusProps,
       mutations: {
         farmGames,
         refreshGames,
         stopFarm,
         changeAccountStatus,
+        toggleAutoRelogin: toggleAutoReloginMutation,
       },
       isFarming,
       hasUsagePlanLeft,

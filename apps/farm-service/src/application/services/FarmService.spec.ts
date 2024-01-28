@@ -16,6 +16,7 @@ import {
   PauseFarmOnAccountUsage,
 } from "~/application/services/FarmService"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
+import { nice } from "~/utils/helpers"
 
 const log = console.log
 console.log = () => {}
@@ -130,9 +131,9 @@ class FarmServiceImpl extends FarmService {
   hasAccountsFarming(): boolean {
     return this.getActiveFarmingAccountsAmount() > 0
   }
-  farmWithAccount(accountName: string): DataOrError<null> {
+  farmWithAccount(accountName: string) {
     this.farmWithAccountImpl(accountName)
-    return [null, null]
+    return nice(null)
   }
   pauseFarmOnAccount(accountName: string): DataOrError<null> {
     const account = this.accountsFarming.get(accountName)

@@ -10,12 +10,12 @@ export class ErrorOccuredOnSteamClientCommand implements Command {
   constructor(props: ErrorOccuredOnSteamClientCommandProps) {
     this.when = props.when
     this.accountName = props.accountName
-    this.intervalInSeconds = props.intervalInSeconds
+    this.intervalInSeconds = props.intervalInSeconds ?? 60 * 5
   }
 }
 
 interface ErrorOccuredOnSteamClientCommandProps {
   when: Date
   accountName: string
-  intervalInSeconds: number
+  intervalInSeconds?: number
 }

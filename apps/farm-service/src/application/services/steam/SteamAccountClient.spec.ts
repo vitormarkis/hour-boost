@@ -54,6 +54,7 @@ test("should ", async () => {
       username: "vitor",
       accountName: "account",
       planId: "",
+      autoRestart: false,
     },
   })
   sac.farmGames([322, 123])

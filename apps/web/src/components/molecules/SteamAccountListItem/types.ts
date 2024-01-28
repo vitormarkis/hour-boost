@@ -3,7 +3,6 @@ import { DataOrMessage, Message } from "@/util/DataOrMessage"
 import { GameSession, SteamAccountSession } from "core"
 
 export type SteamAccountStatusLiveProps = {
-  autoRestarter?: boolean
   steamGuard?: boolean
   farmingTime: number
 }

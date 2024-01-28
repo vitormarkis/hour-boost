@@ -9,6 +9,7 @@ export interface StoreSteamAccountItemStateAPI {
   stageFarmingGames_list: number[]
   urgent: boolean
   modalOpen_desktop: boolean
+  autoRelogin: boolean
 }
 
 interface StoreSteamAccountItemMethods {
@@ -22,6 +23,7 @@ interface StoreSteamAccountItemMethods {
   setModalOpen_desktop(isOpening: boolean): void
   closeModal_desktop(): void
   openModal_desktop(): void
+  toggleAutoRelogin(): void
 }
 
 interface StoreSteamAccountItem extends StoreSteamAccountItemMethods, StoreSteamAccountItemStateAPI {}
@@ -84,6 +86,8 @@ const createStoreSteamAccountItem = (
         closeModal_desktop: () => set(state => void (state.modalOpen_desktop = false)),
         openModal_desktop: () => set(state => void (state.modalOpen_desktop = true)),
         setModalOpen_desktop: isOpening => set(state => void (state.modalOpen_desktop = isOpening)),
+        toggleAutoRelogin: () => set(state => void (state.autoRelogin = !state.autoRelogin)),
+        autoRelogin: initialState.autoRelogin,
       }))
     )
   )

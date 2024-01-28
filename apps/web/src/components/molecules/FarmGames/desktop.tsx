@@ -3,7 +3,6 @@ import { IconJoystick } from "@/components/icons/IconJoystick"
 import { useFarmGames } from "@/components/molecules/FarmGames/context"
 import { local_useSteamAccountListItem } from "@/components/molecules/FarmGames/controller"
 import { GameItem } from "@/components/molecules/GameItem"
-import { useSteamAccountListItem } from "@/components/molecules/SteamAccountListItem/context"
 import { useSteamAccountStore } from "@/components/molecules/SteamAccountListItem/store/useSteamAccountStore"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,14 +16,15 @@ import {
 } from "@/components/ui/sheet"
 import { useUser } from "@/contexts/UserContext"
 import React from "react"
+
 // export function ChooseFarmingGamesDesktop({ children }: React.PropsWithChildren) {
 export function ChooseFarmingGamesDesktop() {
   const { helpers } = useFarmGames()
   const maxGamesAllowed = useUser(u => u.plan.maxGamesAllowed)
-  const { app } = useSteamAccountListItem()
   const local = local_useSteamAccountListItem.farmGames()
   const modalOpen_desktop = useSteamAccountStore(state => state.modalOpen_desktop)
   const setModalOpen_desktop = useSteamAccountStore(state => state.setModalOpen_desktop)
+  const stageFarmingGames_list = useSteamAccountStore(state => state.stageFarmingGames_list)
 
   return (
     <Sheet
@@ -35,7 +35,7 @@ export function ChooseFarmingGamesDesktop() {
         <button className="flex h-full items-center px-6 group hover:bg-slate-700 transition-all duration-300">
           <div className="flex flex-col items-center">
             <span className="uppercase text-sm pb-1">
-              {app.farmingGames.length}/{maxGamesAllowed}
+              {stageFarmingGames_list.length}/{maxGamesAllowed}
             </span>
             <div className="flex items-center gap-1 h-6 ">
               <IconJoystick className="transition-all duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />

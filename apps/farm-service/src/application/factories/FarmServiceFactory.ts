@@ -12,7 +12,11 @@ export class FarmServiceBuilder implements Builder<FarmService> {
     this.emitterBuilder = props.emitterBuilder
   }
 
-  create(username: string, plan: PlanUsage | PlanInfinity, now: Date): FarmService {
+  create(
+    username: string,
+    plan: PlanUsage | PlanInfinity,
+    now: Date
+  ): FarmUsageService | FarmInfinityService {
     if (plan.type === "INFINITY")
       return new FarmInfinityService(this.publisher, plan as PlanInfinity, username, new Date())
     if (plan.type === "USAGE")

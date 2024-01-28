@@ -3,8 +3,15 @@ import { SteamAccount, SteamAccountCredentials, SteamAccountsRepository } from "
 
 export class SteamAccountsRepositoryDatabase implements SteamAccountsRepository {
   constructor(private readonly prisma: PrismaClient) {}
-  save(steamAccount: SteamAccount): Promise<void> {
-    throw new Error("Method not implemented.")
+
+  async save(steamAccount: SteamAccount): Promise<void> {
+    await this.prisma.steamAccount.update({
+      where: { id_steamAccount: steamAccount.id_steamAccount },
+      data: {
+        autoRelogin: steamAccount.autoRelogin,
+        owner_id: steamAccount.ownerId,
+      },
+    })
   }
 
   async getByAccountName(accountName: string): Promise<SteamAccount | null> {

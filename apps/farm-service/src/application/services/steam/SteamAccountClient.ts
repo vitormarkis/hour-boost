@@ -14,6 +14,7 @@ import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
+import { SACGenericError } from "~/application/use-cases"
 import { getHeaderImageByGameId } from "~/consts"
 import { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
@@ -32,6 +33,7 @@ export class SteamAccountClient extends LastHandler {
   gamesPlaying: number[] = []
   accountName: string
   ownershipCached = false
+  autoRestart: boolean
 
   constructor({ instances, props }: SteamAccountClientProps) {
     super()
@@ -41,11 +43,10 @@ export class SteamAccountClient extends LastHandler {
     this.publisher = instances.publisher
     this.planId = props.planId
     this.emitter = instances.emitter
+    this.autoRestart = props.autoRestart
     this.accountName = props.accountName
     this.logger = new Logger(this.accountName)
     this.status = "offline"
-
-    console.log("44: iniciando sac com status offline")
 
     this.client.on("loggedOn", (...args) => {
       this.emitter.emit("hasSession")
@@ -93,6 +94,7 @@ export class SteamAccountClient extends LastHandler {
     })
 
     this.client.on("error", (...args) => {
+      const [error] = args
       this.changeInnerStatusToNotLogged()
       appendFile(
         "logs/sac-errors.txt",
@@ -100,11 +102,10 @@ export class SteamAccountClient extends LastHandler {
         () => {}
       )
       this.logger.log("error.", { eresult: args[0].eresult })
-      this.emitter.emit("interrupt", this.createStateDTO())
+      this.emitter.emit("interrupt", this.createStateDTO(), error)
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
 
-      const [error] = args
       if (error.eresult === SteamUser.EResult.LoggedInElsewhere) {
         this.emitter.emit("logged-somewhere-else")
       }
@@ -114,13 +115,14 @@ export class SteamAccountClient extends LastHandler {
     })
 
     this.client.on("disconnected", (...args) => {
+      const [error] = args
       appendFile(
         "logs/sac-disconnected.txt",
         `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(args)} \r\n`,
         () => {}
       )
       this.changeInnerStatusToNotLogged()
-      this.emitter.emit("interrupt", this.createStateDTO())
+      this.emitter.emit("interrupt", this.createStateDTO(), { eresult: error })
       this.logger.log("disconnected.", ...args)
       this.getLastHandler("disconnected")(...args)
       this.setLastArguments("disconnected", args)
@@ -164,6 +166,11 @@ export class SteamAccountClient extends LastHandler {
       username: this.username,
       status: this.status,
     }
+  }
+
+  setAutoRestart(on: boolean) {
+    if (this.autoRestart === on) return
+    this.autoRestart = on
   }
 
   getGamesPlaying() {
@@ -216,10 +223,9 @@ export class SteamAccountClient extends LastHandler {
   }
 
   setStatus(status: AppAccountStatus): void {
-    console.log(`44: setStatus to [${status}]`)
     const persona = mapStatusToPersona(status)
     this.client.setPersona(persona)
-    // this.status = status
+    this.status = status
   }
 
   async getAccountGamesList(): Promise<DataOrError<AccountSteamGamesList>> {
@@ -279,6 +285,7 @@ type SteamAccountClientProps = {
     client: SteamUser
     accountName: string
     planId: string
+    autoRestart: boolean
   }
   instances: {
     publisher: Publisher
@@ -292,7 +299,7 @@ export type OnEventReturn = {
 }
 
 export type SteamApplicationEvents = {
-  interrupt: [createCacheStateDTO: NSSACStateCacheFactory.CreateDTO_SAC_Props]
+  interrupt: [createCacheStateDTO: NSSACStateCacheFactory.CreateDTO_SAC_Props, error: { eresult: number }]
   hasSession: []
   "relog-with-state": [sacStateCache: SACStateCacheDTO]
   relog: []

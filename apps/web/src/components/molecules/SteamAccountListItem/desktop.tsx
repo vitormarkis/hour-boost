@@ -18,6 +18,7 @@ import twc from "tailwindcss/colors"
 import { ButtonAddNewAccount } from "./components"
 import { useSteamAccountListItem } from "./context"
 import { SteamAccountListItemViewProps } from "./types"
+import { ToggleAutoRelogin } from "@/components/molecules/ToggleAutoRelogin/controller"
 
 type SteamAccountListItemViewDesktopProps = SteamAccountListItemViewProps
 
@@ -189,7 +190,7 @@ export const SteamAccountListItemViewDesktop = React.memo(
                     <span>auto-restarter</span>
                   </div>
                 )}
-                <Switch size="1.25rem" />
+                <ToggleAutoRelogin />
               </div>
             ) : null}
             <button className="flex items-center h-full px-4 hover:bg-slate-700 transition-all duration-300">

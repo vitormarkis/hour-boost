@@ -2,12 +2,13 @@ import { LooseAuthProp } from "@clerk/clerk-sdk-node"
 import cors from "cors"
 import "dotenv/config"
 import express, { Application, NextFunction, Request, Response } from "express"
+import { ScheduleAutoRestartUseCase } from "~/application/use-cases"
 import { RestoreAccountSessionsUseCase } from "~/application/use-cases/RestoreAccountSessionsUseCase"
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
 import {
-  allUsersClientsStorage,
-  planRepository,
-  steamAccountClientStateCacheRepository,
+  autoRestartCron,
+  autoRestarterScheduler,
+  steamAccountsDAO,
   usersClusterStorage,
   usersRepository,
 } from "~/presentation/instances"
@@ -51,18 +52,21 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 })
 
 const restoreUsersSessionsUseCase = new RestoreUsersSessionsUseCase(usersClusterStorage)
-const restoreAccountSessionsUseCase = new RestoreAccountSessionsUseCase(
-  steamAccountClientStateCacheRepository,
-  planRepository,
-  allUsersClientsStorage,
-  usersClusterStorage
-)
+
+const scheduleAutoRestartUseCase = new ScheduleAutoRestartUseCase(autoRestarterScheduler, autoRestartCron)
 
 async function main() {
   try {
     const users = await usersRepository.findMany()
     restoreUsersSessionsUseCase.execute({ users })
-    await restoreAccountSessionsUseCase.execute()
+
+    const [error] = await scheduleAutoRestartUseCase.execute({
+      accountName: "versalebackup",
+      intervalInSeconds: 15,
+    })
+    if (error) {
+      console.log({ errorAutoRestartingAccount: error })
+    }
   } catch (error) {
     console.log("main error", error)
   }

@@ -1,5 +1,7 @@
-import { PlanRepository, SteamAccountClientStateCacheRepository, UseCase } from "core"
+import { PlanRepository, SteamAccountClientStateCacheRepository, SteamAccountsDAO, UseCase } from "core"
+import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
 import { Logger } from "~/utils/Logger"
 
 export namespace RestoreAccountSessionsUseCaseHandle {
@@ -17,82 +19,72 @@ export class RestoreAccountSessionsUseCase
   logger = new Logger("Restore-Account-Session")
 
   constructor(
-    private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository,
-    private readonly planRepository: PlanRepository,
-    private readonly allUsersClientsStorage: AllUsersClientsStorage,
-    private readonly usersClusterStorage: UsersSACsFarmingClusterStorage
+    private readonly steamAccountsDAO: SteamAccountsDAO,
+    private readonly autoRestartCron: AutoRestartCron
   ) {}
 
   async execute({ whitelistAccountNames }: APayload = {} as APayload): AResponse {
-    const allLoggedUsersKeys = await this.steamAccountClientStateCacheRepository.getUsersRefreshToken()
-    const loggedUsersKeys = whitelistAccountNames
-      ? allLoggedUsersKeys.filter(k => {
-          const [accountName] = k.split(":")
-          return whitelistAccountNames.includes(accountName)
-        })
-      : allLoggedUsersKeys
+    const allAccountNameList = await this.steamAccountsDAO.listAccountNames()
+    const accountNameList = whitelistAccountNames
+      ? allAccountNameList.filter(accName => whitelistAccountNames.includes(accName))
+      : allAccountNameList
+
     this.logger.log({
-      allLoggedUsersKeys,
-      loggedUsersKeys,
+      allAccountNameList,
+      accountNameList,
     })
-    this.logger.log("got accounts keys ", loggedUsersKeys)
-    const sessionsSchema = loggedUsersKeys.reduce((acc, key) => {
-      const [accountName] = key.split(":")
-      acc.push({
+
+    const sessionRestartPromises = accountNameList.map(async accountName => {
+      const [errorAutoRestart] = await this.autoRestartCron.run({
         accountName,
-        key,
+        forceRestoreSessionOnApplication: true,
       })
-      return acc
-    }, [] as RestoreSessionSchema[])
-    const sessionsPromises = sessionsSchema.map(async ({ accountName }) => {
-      const foundRefreshToken = await this.steamAccountClientStateCacheRepository.getRefreshToken(accountName)
-      if (!foundRefreshToken) return null
-
-      return {
-        accountName,
-        ...foundRefreshToken,
+      if (errorAutoRestart) {
+        console.log(`error restoring session [${accountName}]: `, errorAutoRestart)
       }
     })
-    const sessions = await Promise.all(sessionsPromises)
-    this.logger.log(
-      "got refresh tokens for each account ",
-      sessions.map(s => s?.accountName)
-    )
-    for (const session of sessions) {
-      if (!session) continue
-      const { accountName, refreshToken, userId, username, planId } = session
-      const plan = await this.planRepository.getById(planId)
-      if (!plan) {
-        console.log(
-          `[NSTH]: Plano não encontrado com id [${planId}]; username: [${username}]; accountName: [${accountName}]`
-        )
-        continue
-      }
-      const state = await this.steamAccountClientStateCacheRepository.get(accountName)
-      const sac = this.allUsersClientsStorage.addSteamAccountFrom0({ accountName, userId, username, planId })
-      const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
-      const [error] = userCluster.addSAC(sac)
 
-      if (state) sac.setStatus(state.status)
+    await Promise.all(sessionRestartPromises)
 
-      if (state && state.isFarming) {
-        userCluster.farmWithAccount({
-          accountName: state.accountName,
-          gamesId: state.gamesPlaying,
-          planId: state.planId,
-          sessionType: "CONTINUE-FROM-PREVIOUS",
-        })
-      }
-      this.logger.log(`Restoring session for account [${accountName}].`)
-      sac.loginWithToken(refreshToken)
-    }
+    // for (const session of sessions) {
+    //   if (!session) continue
+    //   const { accountName, refreshToken, userId, username, planId } = session
+    //   const plan = await this.planRepository.getById(planId)
+    //   if (!plan) {
+    //     console.log(
+    //       `[NSTH]: Plano não encontrado com id [${planId}]; username: [${username}]; accountName: [${accountName}]`
+    //     )
+    //     continue
+    //   }
+    //   const [autoRestart, state] = await Promise.all([
+    //     this.steamAccountsDAO.getAutoRestartInfo(accountName),
+    //     this.steamAccountClientStateCacheRepository.get(accountName),
+    //   ])
+    //   const sac = this.allUsersClientsStorage.addSteamAccountFrom0({
+    //     accountName,
+    //     userId,
+    //     username,
+    //     planId,
+    //     autoRestart,
+    //   })
+    //   const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
+    //   const [error] = userCluster.addSAC(sac)
+
+    //   if (state) sac.setStatus(state.status)
+
+    //   if (state && state.isFarming) {
+    //     userCluster.farmWithAccount({
+    //       accountName: state.accountName,
+    //       gamesId: state.gamesPlaying,
+    //       planId: state.planId,
+    //       sessionType: "CONTINUE-FROM-PREVIOUS",
+    //     })
+    //   }
+    //   this.logger.log(`Restoring session for account [${accountName}].`)
+    //   sac.loginWithToken(refreshToken)
+    // }
   }
 }
 
 type APayload = RestoreAccountSessionsUseCaseHandle.Payload
 type AResponse = Promise<RestoreAccountSessionsUseCaseHandle.Response>
-
-interface RestoreSessionSchema {
-  accountName: string
-  key: string
-}

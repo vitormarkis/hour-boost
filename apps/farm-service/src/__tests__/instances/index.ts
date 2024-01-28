@@ -17,7 +17,7 @@ import { SteamAccountClient } from "~/application/services/steam"
 import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
-import { AutoReloginScheduler } from "~/domain/cron/AutoReloginScheduler"
+import { AutoRestarterScheduler } from "~/domain/cron"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
 import {
@@ -68,7 +68,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   let redis: Redis = {} as Redis
   // redis = new Redis()
 
-  const autoReloginScheduler = new AutoReloginScheduler()
+  const autoRestarterScheduler = new AutoRestarterScheduler()
   const idGenerator = new IDGeneratorUUID()
   const publisher = new Publisher()
   const steamAccountsMemory = new SteamAccountsInMemory()
@@ -182,7 +182,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   }
 
   return {
-    autoReloginScheduler,
+    autoRestarterScheduler,
     usersMemory,
     steamAccountsMemory,
     publisher,
@@ -245,12 +245,14 @@ class UserInstancesBuilder implements IUserInstancesBuilder {
       userId,
       username,
       planId: user.plan.id_plan,
+      autoRestart: false,
     })
     const sac2 = this.allUsersClientsStorage.addSteamAccountFrom0({
       accountName: accountName2,
       userId,
       username,
       planId: user.plan.id_plan,
+      autoRestart: false,
     })
     user.addSteamAccount(steamAccount)
     return {

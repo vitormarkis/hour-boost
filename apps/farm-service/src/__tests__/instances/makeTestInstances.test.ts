@@ -21,6 +21,7 @@ test("should create NOT mobile steam user mock ", async () => {
     userId: "userid",
     username: "username",
     planId: "",
+    autoRestart: false,
   })
   const sacClientEmitterSPY = jest.spyOn(sac.client, "emit")
   sac.login("accountname", "pass")
@@ -42,6 +43,7 @@ test("should create MOBILE steam user mock ", async () => {
     userId: "userid",
     username: "username",
     planId: "",
+    autoRestart: false,
   })
   const sacClientEmitterSPY = jest.spyOn(sac.client, "emit")
   sac.login("accountname", "pass")
