@@ -34,6 +34,10 @@ export class AllUsersClientsStorage {
     )
   }
 
+  listUsersKeys() {
+    return Array.from(this.users.keys())
+  }
+
   getOrAddSteamAccount({
     accountName,
     userId,

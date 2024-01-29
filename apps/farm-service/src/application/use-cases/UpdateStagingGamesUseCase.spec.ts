@@ -19,6 +19,7 @@ import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 const log = console.log
 console.log = () => {}
 
+let autoRestartCron: AutoRestartCron
 let i = makeTestInstances({
   validSteamAccounts,
 })
@@ -37,7 +38,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.usersClusterStorage,
     i.sacStateCacheRepository
   )
-  const autoRestartCron = new AutoRestartCron(
+  autoRestartCron = new AutoRestartCron(
     i.allUsersClientsStorage,
     i.planRepository,
     i.steamAccountsRepository,
@@ -45,10 +46,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     restoreAccountSessionUseCase,
     i.usersDAO
   )
-
-  await autoRestartCron.run({
-    accountName: s.me.accountName,
-  })
 }
 
 beforeEach(async () => {
@@ -59,15 +56,20 @@ beforeEach(async () => {
 
 describe("UpdateStagingGamesUseCase test suite", () => {
   test("should update the staging games", async () => {
-    const stagingGamesListService = new StagingGamesListService()
+    await restoreAccountSession(s.me.accountName)
+
+    const stagingGamesListService = new StagingGamesListService(i.sacStateCacheBuilder)
     const updateStagingGamesUseCase = new UpdateStagingGamesUseCase(
       stagingGamesListService,
       i.usersClusterStorage,
       i.usersRepository,
-      i.sacStateCacheRepository
+      i.sacStateCacheRepository,
+      i.allUsersClientsStorage
     )
-
+    console.log = log
+    console.log({ accountStates: Array.from(i.sacCacheInMemory.state.keys()) })
     const SACStateCache = await i.sacStateCacheRepository.get(s.me.accountName)
+    expect(SACStateCache).not.toBeNull()
     expect(SACStateCache?.gamesStaging).toStrictEqual([])
 
     const [error, result] = await updateStagingGamesUseCase.execute({
@@ -100,12 +102,15 @@ describe("UpdateStagingGamesUseCase test suite", () => {
   })
 
   test("should error if user stage more game than his plan allows", async () => {
-    const stagingGamesListService = new StagingGamesListService()
+    await restoreAccountSession(s.me.accountName)
+
+    const stagingGamesListService = new StagingGamesListService(i.sacStateCacheBuilder)
     const updateStagingGamesUseCase = new UpdateStagingGamesUseCase(
       stagingGamesListService,
       i.usersClusterStorage,
       i.usersRepository,
-      i.sacStateCacheRepository
+      i.sacStateCacheRepository,
+      i.allUsersClientsStorage
     )
 
     const [error, result] = await updateStagingGamesUseCase.execute({
@@ -114,7 +119,14 @@ describe("UpdateStagingGamesUseCase test suite", () => {
       userId: s.me.userId,
     })
 
-    expect(error?.code).toBe("STAGE-MORE-GAMES-THAN-PLAN-ALLOWS")
+    expect(error?.code).toBe("[Staging-Games-List-Service]:STAGE-MORE-GAMES-THAN-PLAN-ALLOWS")
     expect(result).toBeUndefined()
   })
 })
+
+async function restoreAccountSession(accountName: string) {
+  await autoRestartCron.run({
+    accountName,
+    forceRestoreSessionOnApplication: true,
+  })
+}

@@ -8,6 +8,7 @@ import {
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
+import { PlanBuilder } from "~/application/factories/PlanFactory"
 import {
   AddSteamAccountUseCase,
   CheckSteamAccountOwnerStatusUseCase,
@@ -48,6 +49,9 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     restoreAccountSessionUseCase,
     i.usersDAO
   )
+
+  const plan = new PlanBuilder(s.me.userId).infinity().diamond()
+  await i.changeUserPlan(plan)
 
   scheduleAutoRestartUseCase = new ScheduleAutoRestartUseCase(i.autoRestarterScheduler, autoRestartCron)
 }

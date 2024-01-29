@@ -136,7 +136,8 @@ const updateStagingGamesUseCase = new UpdateStagingGamesUseCase(
   stagingGamesListService,
   usersClusterStorage,
   usersRepository,
-  steamAccountClientStateCacheRepository
+  steamAccountClientStateCacheRepository,
+  allUsersClientsStorage
 )
 
 command_routerSteam.put(

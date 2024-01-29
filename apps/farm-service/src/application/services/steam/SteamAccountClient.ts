@@ -7,7 +7,6 @@ import {
   Fail,
   GameSession,
   IRefreshToken,
-  SACStateCache,
   SACStateCacheDTO,
   SteamAccountPersonaState,
 } from "core"
@@ -16,11 +15,11 @@ import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
-import { SACGenericError } from "~/application/use-cases"
 import { getHeaderImageByGameId } from "~/consts"
 import { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
 import { Logger } from "~/utils/Logger"
+import { StateCachePayloadSAC } from "~/utils/builders/SACStateCacheBuilder"
 import { Prettify, bad, nice } from "~/utils/helpers"
 
 export class SteamAccountClient extends LastHandler {
@@ -106,7 +105,7 @@ export class SteamAccountClient extends LastHandler {
         () => {}
       )
       this.logger.log("error.", { eresult: args[0].eresult })
-      this.emitter.emit("interrupt", this.createStateDTO(), error)
+      this.emitter.emit("interrupt", this.getInnerState(), error)
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
 
@@ -126,7 +125,7 @@ export class SteamAccountClient extends LastHandler {
         () => {}
       )
       this.changeInnerStatusToNotLogged()
-      this.emitter.emit("interrupt", this.createStateDTO(), { eresult: error })
+      this.emitter.emit("interrupt", this.getInnerState(), { eresult: error })
       this.logger.log("disconnected.", ...args)
       this.getLastHandler("disconnected")(...args)
       this.setLastArguments("disconnected", args)
@@ -165,12 +164,11 @@ export class SteamAccountClient extends LastHandler {
     this.gamesStaging = newGameList
   }
 
-  createStateDTO(): Prettify<NSSACStateCacheFactory.CreateDTO_SAC_Props> {
+  getInnerState(): Prettify<StateCachePayloadSAC> {
     return {
       accountName: this.accountName,
       gamesPlaying: this.gamesPlaying,
       gamesStaging: this.gamesStaging,
-      isFarming: this.isFarming(),
       planId: this.planId,
       username: this.username,
       status: this.status,
@@ -332,7 +330,7 @@ export type OnEventReturn = {
 }
 
 export type SteamApplicationEvents = {
-  interrupt: [createCacheStateDTO: NSSACStateCacheFactory.CreateDTO_SAC_Props, error: { eresult: number }]
+  interrupt: [stateCachePayloadSAC: StateCachePayloadSAC, error: { eresult: number }]
   hasSession: []
   "relog-with-state": [sacStateCache: SACStateCacheDTO]
   relog: []

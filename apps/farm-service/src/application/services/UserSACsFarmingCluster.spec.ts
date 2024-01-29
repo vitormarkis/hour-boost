@@ -1,3 +1,4 @@
+import { SACStateCacheDTO } from "core"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import {
@@ -10,6 +11,7 @@ import {
 import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { NSSACStateCacheFactory } from "~/application/services/steam"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
+import { StateCachePayloadSAC } from "~/utils/builders/SACStateCacheBuilder"
 
 const log = console.log
 console.log = () => {}
@@ -96,11 +98,10 @@ test("should stop farming once interrupt occurs", async () => {
   expect(sacClientCalls[0]).toStrictEqual(["error", { eresult: SteamUser.EResult.NoConnection }])
 
   const sacEmitterCalls = sacEmitterSPY.mock.calls
-  const sacState: NSSACStateCacheFactory.CreateDTO_SAC_Props = {
+  const sacState = {
     accountName: "paco",
     gamesPlaying: [100],
     gamesStaging: [],
-    isFarming: true,
     planId: meInstances.me.plan.id_plan,
     username: s.me.username,
     status: "offline",
@@ -239,11 +240,10 @@ test("should start farm again when relog with state happens", async () => {
   expect(sacClientCalls[1]).toStrictEqual(["webSession"])
 
   const sacEmitterCalls = sacEmitterSPY.mock.calls
-  const sacState: NSSACStateCacheFactory.CreateDTO_SAC_Props = {
+  const sacState: StateCachePayloadSAC = {
     accountName: "paco",
     gamesPlaying: [100],
     gamesStaging: [],
-    isFarming: true,
     planId: meInstances.me.plan.id_plan,
     username: s.me.username,
     status: "offline",
@@ -261,8 +261,9 @@ test("should start farm again when relog with state happens", async () => {
     "relog-with-state",
     {
       ...sacState,
+      isFarming: true,
       farmStartedAt: new Date("2024-01-10T10:00:00.000Z").getTime(),
-    },
+    } satisfies SACStateCacheDTO,
   ]) // agora ja possui valor quando foi parado
   expect(pauseFarmOnAccountSPY).toHaveBeenCalledTimes(1) // 1
   expect(meCluster.getAccountsStatus()).toStrictEqual({

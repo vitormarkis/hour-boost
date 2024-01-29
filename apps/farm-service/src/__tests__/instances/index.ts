@@ -27,6 +27,7 @@ import {
   UsersInMemory,
   UsersRepositoryInMemory,
 } from "~/infra/repository"
+import { SACCacheInMemory } from "~/infra/repository/SACCacheInMemory"
 import { SteamAccountsInMemory } from "~/infra/repository/SteamAccountsInMemory"
 import {
   TestUserProperties,
@@ -35,6 +36,7 @@ import {
   testUsers,
 } from "~/infra/services/UserAuthenticationInMemory"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
+import { SACStateCacheBuilder } from "~/utils/builders/SACStateCacheBuilder"
 import { SteamUserMockBuilder } from "~/utils/builders/SteamMockBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
@@ -73,8 +75,10 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const publisher = new Publisher()
   const steamAccountsMemory = new SteamAccountsInMemory()
   const usersMemory = new UsersInMemory()
-  const sacStateCacheRepository = new SteamAccountClientStateCacheInMemory()
+  const sacCacheInMemory = new SACCacheInMemory()
+  const sacStateCacheRepository = new SteamAccountClientStateCacheInMemory(sacCacheInMemory)
   const usageBuilder = new UsageBuilder()
+  const sacStateCacheBuilder = new SACStateCacheBuilder()
   // const sacStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
   const emitterBuilder = new EventEmitterBuilder()
   const farmServiceBuilder = new FarmServiceBuilder({
@@ -185,6 +189,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     autoRestarterScheduler,
     usersMemory,
     steamAccountsMemory,
+    sacCacheInMemory,
     publisher,
     usersClusterStorage,
     allUsersClientsStorage,
@@ -192,6 +197,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     userClusterBuilder,
     emitterBuilder,
     usageBuilder,
+    sacStateCacheBuilder,
     sacBuilder,
     usersDAO,
     usersRepository,

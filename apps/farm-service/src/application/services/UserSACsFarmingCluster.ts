@@ -24,19 +24,13 @@ import { SteamAccountClient } from "~/application/services/steam"
 import { EAppResults } from "~/application/use-cases"
 import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
+import { StateCachePayloadFarmService } from "~/utils/builders/SACStateCacheBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { bad, nice } from "~/utils/helpers"
+import { Prettify, bad, nice } from "~/utils/helpers"
 
 export interface IUserSACsFarmingCluster {
   addSAC(...args: any[]): DataOrError<{ userCluster: UserSACsFarmingCluster }>
   farmWithAccount(details: NSUserCluster.FarmWithAccount): Promise<DataOrFail<Fail>>
-  updateStagingGames(...args: any[]): DataOrFail<
-    Fail,
-    {
-      sac: SteamAccountClient
-      getStateCache(): SACStateCache
-    }
-  >
 }
 export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
   private readonly publisher: Publisher
@@ -47,7 +41,6 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
   private readonly planRepository: PlanRepository
   private readonly farmServiceFactory: FarmServiceBuilder
   private readonly planId: string
-  private readonly usageBuilder: UsageBuilder
   private readonly logger: Logger
   private shouldPersistSession = true
   readonly emitter: EventEmitter<UserClusterEvents>
@@ -62,13 +55,12 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     this.planId = props.planId
     this.emitter = props.emitter
     this.publisher = props.publisher
-    this.usageBuilder = props.usageBuilder
     this.steamAccountsRepository = props.steamAccountsRepository
     this.logger = new Logger(`Cluster ~ ${this.username}`)
   }
 
   getStateCache(sac: SteamAccountClient) {
-    const sacStateCacheDTO = sac.createStateDTO()
+    const sacStateCacheDTO = sac.getInnerState()
     const sacStateCache = new SACStateCache(
       sacStateCacheDTO.gamesPlaying,
       sacStateCacheDTO.gamesStaging,
@@ -149,26 +141,10 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     })
   }
 
-  updateStagingGames(accountName: string, newGameList: number[]) {
-    const sac = this.sacList.get(accountName)
-    if (!sac) {
-      const fail = new Fail({
-        code: EAppResults["SAC-NOT-FOUND"],
-        httpStatus: 404,
-        payload: {
-          givenAccountName: accountName,
-          sacsInCluster: this.sacList.listSACs(),
-        },
-      })
-      return bad(fail)
+  getInnerState(): Prettify<StateCachePayloadFarmService> {
+    return {
+      farmStartedAt: this.farmService.startedAt,
     }
-
-    sac.updateStagingGames(newGameList)
-
-    return nice({
-      sac,
-      getStateCache: () => this.getStateCache(sac),
-    })
   }
 
   getAccountsStatus() {

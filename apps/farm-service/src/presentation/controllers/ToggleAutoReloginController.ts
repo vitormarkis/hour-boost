@@ -22,14 +22,14 @@ export class ToggleAutoReloginController implements IToggleAutoReloginController
     })
 
     if (error) {
-      if (error.code === "PLAN_DOES_NOT_SUPPORT_AUTO_RELOGIN") {
+      if (error.code === "PLAN-DOES-NOT-SUPPORT-AUTO-RELOGIN") {
         return only({
           json: { message: "Seu plano não permite o uso do auto-relogin." },
           status: 403,
           code: error.code,
         })
       }
-      if (error.code === "PLAN_NOT_FOUND") {
+      if (error.code === "PLAN-NOT-FOUND") {
         return only({ json: { message: "Plano não encontrado." }, status: 404, code: error.code })
       }
       if (error.code === "STEAM_ACCOUNT_NOT_FOUND") {
@@ -53,7 +53,7 @@ export class ToggleAutoReloginController implements IToggleAutoReloginController
           code: error.code,
         })
       }
-      if (error.code === "SAC_NOT_FOUND") {
+      if (error.code === "SAC-NOT-FOUND") {
         return only({
           json: { message: "Erro interno, tente novamente mais tarde." },
           status: 400,

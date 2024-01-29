@@ -1,6 +1,10 @@
 import { DataOrFail, Fail, PlanRepository, SteamAccountsRepository, UsersDAO } from "core"
 import { AllUsersClientsStorage } from "~/application/services"
-import { RestoreAccountConnectionUseCase, RestoreAccountSessionUseCase } from "~/application/use-cases"
+import {
+  EAppResults,
+  RestoreAccountConnectionUseCase,
+  RestoreAccountSessionUseCase,
+} from "~/application/use-cases"
 import { FailGeneric } from "~/types/EventsApp.types"
 import { bad, nice } from "~/utils/helpers"
 
@@ -30,20 +34,33 @@ export class AutoRestartCron implements IAutoRestartCron {
   async run({ accountName, forceRestoreSessionOnApplication }: AutoRestartCronPayload) {
     const steamAccount = await this.steamAccountsRepository.getByAccountName(accountName)
     if (!steamAccount) {
-      return bad(new Fail({ code: "STEAM_ACCOUNT_NOT_FOUND", payload: { steamAccount, accountName } }))
+      return bad(
+        new Fail({ code: EAppResults["STEAM-ACCOUNT-NOT-FOUND"], payload: { steamAccount, accountName } })
+      )
     }
     if (!steamAccount.ownerId) {
-      return bad(new Fail({ code: "STEAM_ACCOUNT_IS_NOT_OWNED", payload: { steamAccount } }))
+      return bad(new Fail({ code: EAppResults["STEAM-ACCOUNT-IS-NOT-OWNED"], payload: { steamAccount } }))
     }
 
     const user = await this.usersDAO.getByID(steamAccount.ownerId)
     if (!user) {
-      return bad(new Fail({ code: "USER_NOT_FOUND", payload: { user } }))
+      return bad(new Fail({ code: EAppResults["USER-NOT-FOUND"], payload: { user } }))
     }
 
     const plan = await this.planRepository.getById(user.plan.id_plan)
     if (!plan) {
-      return bad(new Fail({ code: "PLAN_NOT_FOUND", payload: { planId: user.plan.id_plan } }))
+      return bad(new Fail({ code: EAppResults["PLAN-NOT-FOUND"], payload: { planId: user.plan.id_plan } }))
+    }
+    if (!forceRestoreSessionOnApplication && !plan.autoRestarter) {
+      return bad(
+        new Fail({
+          code: EAppResults["PLAN-DOES-NOT-SUPPORT-AUTO-RELOGIN"],
+          payload: {
+            planName: plan.name,
+            planType: plan.type,
+          },
+        })
+      )
     }
 
     let sac = this.allUsersClientsStorage.getAccountClient(steamAccount.ownerId, accountName)
@@ -114,3 +131,8 @@ class AutoRestartResult<const TCode = string, const TFatal = boolean, const TDat
     public data: TData
   ) {}
 }
+
+// new AutoRestartCron().run().then(res => {
+//   const [error, data] = res
+//   error?.code === ""
+// })

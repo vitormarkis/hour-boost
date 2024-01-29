@@ -12,6 +12,8 @@ interface IUsersSACsFarmingClusterStorage {
 }
 
 export class UsersSACsFarmingClusterStorage implements IUsersSACsFarmingClusterStorage {
+  private readonly codify = <const T extends string = string>(moduleCode: T) =>
+    `[Users-Cluster-Storage]:${moduleCode}` as const
   usersCluster: Map<Username, UserSACsFarmingCluster> = new Map()
 
   constructor(private readonly userClusterBuilder: UserClusterBuilder) {}
@@ -27,7 +29,7 @@ export class UsersSACsFarmingClusterStorage implements IUsersSACsFarmingClusterS
     if (foundUserCluster) return nice(foundUserCluster)
     return bad(
       new Fail({
-        code: EAppResults["CLUSTER-NOT-FOUND"],
+        code: this.codify(EAppResults["CLUSTER-NOT-FOUND"]),
         httpStatus: 404,
         payload: {
           givenUsername: username,

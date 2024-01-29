@@ -41,6 +41,7 @@ import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import { SteamAccountsDAODatabase } from "~/infra/dao/SteamAccountsDAODatabase"
 import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
 import { StagingGamesListService } from "~/domain/services"
+import { SACStateCacheBuilder } from "~/utils/builders/SACStateCacheBuilder"
 
 const httpProxy = process.env.PROXY_URL
 
@@ -72,6 +73,7 @@ export const usersRepository = new UsersRepositoryDatabase(prisma)
 export const idGenerator = new IDGeneratorUUID()
 
 export const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
+export const sacStateCacheBuilder = new SACStateCacheBuilder()
 
 export const farmServiceBuilder = new FarmServiceBuilder({
   publisher,
@@ -156,7 +158,7 @@ export const retrieveSessionAccountsUseCase = new RetrieveSessionListUseCase(
   steamAccountClientStateCacheRepository
 )
 
-export const stagingGamesListService = new StagingGamesListService()
+export const stagingGamesListService = new StagingGamesListService(sacStateCacheBuilder)
 
 publisher.register(new StartFarmPlanHandler())
 publisher.register(new PersistFarmSessionHandler(planRepository, steamAccountClientStateCacheRepository))

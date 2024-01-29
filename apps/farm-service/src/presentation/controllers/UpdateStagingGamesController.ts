@@ -24,7 +24,7 @@ export class UpdateStagingGamesController implements IUpdateStagingGamesControll
     })
 
     if (error) {
-      if (error.code === "STAGE-MORE-GAMES-THAN-PLAN-ALLOWS") {
+      if (error.code === "[Staging-Games-List-Service]:STAGE-MORE-GAMES-THAN-PLAN-ALLOWS") {
         return only({
           json: {
             message:

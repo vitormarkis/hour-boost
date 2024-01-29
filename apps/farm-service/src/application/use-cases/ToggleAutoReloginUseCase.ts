@@ -1,5 +1,6 @@
 import { DataOrFail, PlanRepository, SteamAccountsRepository, UsersDAO } from "core"
 import { AllUsersClientsStorage } from "~/application/services"
+import { EAppResults } from "~/application/use-cases/RestoreAccountSessionUseCase"
 import { bad, nice } from "~/utils/helpers"
 
 export type ToggleAutoReloginUseCasePayload = {
@@ -24,7 +25,7 @@ export class ToggleAutoReloginUseCase implements IToggleAutoReloginUseCase {
   async execute({ accountName, userId }: ToggleAutoReloginUseCasePayload) {
     const sac = this.allUsersClientsStorage.getAccountClient(userId, accountName)
     if (!sac) {
-      return bad({ code: "SAC_NOT_FOUND" })
+      return bad({ code: EAppResults["SAC-NOT-FOUND"] })
     }
     const planId = await this.usersDAO.getPlanId(userId)
     if (!planId) {
@@ -33,11 +34,11 @@ export class ToggleAutoReloginUseCase implements IToggleAutoReloginUseCase {
 
     const plan = await this.planRepository.getById(planId)
     if (!plan) {
-      return bad({ code: "PLAN_NOT_FOUND" })
+      return bad({ code: EAppResults["PLAN-NOT-FOUND"] })
     }
 
     if (!plan.autoRestarter) {
-      return bad({ code: "PLAN_DOES_NOT_SUPPORT_AUTO_RELOGIN" })
+      return bad({ code: EAppResults["PLAN-DOES-NOT-SUPPORT-AUTO-RELOGIN"] })
     }
 
     const steamAccount = await this.steamAccountsRepository.getByAccountName(accountName)

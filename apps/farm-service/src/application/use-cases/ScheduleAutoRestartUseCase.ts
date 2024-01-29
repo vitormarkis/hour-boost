@@ -9,6 +9,7 @@ import { bad, nice } from "~/utils/helpers"
 export type ScheduleAutoRestartPayload = {
   accountName: string
   intervalInSeconds?: number
+  forceRestoreSessionOnApplication?: boolean
 }
 
 interface IScheduleRestartRelogin {
@@ -26,6 +27,7 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
   async execute({
     accountName,
     intervalInSeconds = AUTO_RESTARTER_INTERVAL_IN_SECONDS,
+    forceRestoreSessionOnApplication,
   }: ScheduleAutoRestartPayload) {
     this.logger.log(`Scheduling a cron for [${accountName}] to run every ${intervalInSeconds} seconds.`)
     const hasCronAlready = this.autoRestarterScheduler.alreadyHasCron(accountName)
@@ -34,6 +36,7 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
     const interval = setInterval(async () => {
       const [errorWhileRestarting, result] = await this.autoRestartCron.run({
         accountName,
+        forceRestoreSessionOnApplication,
       })
 
       appendFile(
@@ -45,20 +48,20 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
         this.autoRestarterScheduler.stopCron(accountName)
         this.logger.log(`dismissing cron for account [${accountName}]`)
 
-        if (errorWhileRestarting.code === "PLAN_NOT_FOUND") {
+        if (errorWhileRestarting.code === "PLAN-NOT-FOUND") {
           errorWhileRestarting
           this.logger.log(`plano não encontrado com id [${errorWhileRestarting.payload}]`)
           return
         }
-        if (errorWhileRestarting.code === "STEAM_ACCOUNT_IS_NOT_OWNED") {
+        if (errorWhileRestarting.code === "STEAM-ACCOUNT-IS-NOT-OWNED") {
           this.logger.log(`steam account não não tinha dono {${accountName}}`)
           return
         }
-        if (errorWhileRestarting.code === "STEAM_ACCOUNT_NOT_FOUND") {
+        if (errorWhileRestarting.code === "STEAM-ACCOUNT-NOT-FOUND") {
           this.logger.log(`steam account não foi encontrada {${accountName}}`)
           return
         }
-        if (errorWhileRestarting.code === "USER_NOT_FOUND") {
+        if (errorWhileRestarting.code === "USER-NOT-FOUND") {
           this.logger.log(`usuario não encontrado com id [${errorWhileRestarting.payload.user}]`)
           return
         }

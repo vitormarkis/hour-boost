@@ -8,14 +8,16 @@ import {
   SteamAccountClientStateCacheRepository,
   SteamAccountPersonaState,
 } from "core"
+import { SACCacheInMemory } from "~/infra/repository/SACCacheInMemory"
 import { Logger } from "~/utils/Logger"
 
 export class SteamAccountClientStateCacheInMemory implements SteamAccountClientStateCacheRepository {
-  private readonly state: Map<string, SACStateCacheDTO> = new Map()
-  private readonly games: Map<string, AccountSteamGamesList> = new Map()
-  private readonly refreshTokens: Map<string, IRefreshToken> = new Map()
-  private readonly personas: Map<string, SteamAccountPersonaState> = new Map()
-  private readonly logger = new Logger("sac-cache-in-memory")
+  protected readonly logger = new Logger("sac-cache-in-memory")
+  data: SACCacheInMemory
+
+  constructor(database: SACCacheInMemory) {
+    this.data = database
+  }
 
   async setStagingGames(accountName: string, gamesId: number[]): Promise<void> {
     throw new Error("Method not implemented.")
@@ -25,10 +27,10 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
     accountName,
     status,
   }: NSSteamAccountClientStateCacheRepository.SetStatusProps): Promise<void> {
-    let foundState = this.state.get(accountName)
+    let foundState = this.data.state.get(accountName)
     if (!foundState) return
     foundState.status = status
-    this.state.set(accountName, foundState)
+    this.data.state.set(accountName, foundState)
   }
 
   async startFarm({
@@ -36,37 +38,37 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
     when,
     initSession,
   }: NSSteamAccountClientStateCacheRepository.StartFarmProps): Promise<void> {
-    let foundState = this.state.get(accountName)
+    let foundState = this.data.state.get(accountName)
     if (!foundState) return
     if (initSession) {
       foundState.farmStartedAt = when.getTime()
     }
     this.logger.log("starting the farm: ", foundState)
-    this.state.set(accountName, foundState)
+    this.data.state.set(accountName, foundState)
   }
 
   async deleteAllEntriesFromAccount(accountName: string): Promise<void> {
-    this.state.delete(accountName)
-    this.refreshTokens.delete(accountName)
+    this.data.state.delete(accountName)
+    this.data.refreshTokens.delete(accountName)
   }
 
   async getPersona(accountName: string): Promise<SteamAccountPersonaState | null> {
-    const persona = this.personas.get(accountName)
+    const persona = this.data.personas.get(accountName)
     return Promise.resolve(persona ?? null)
   }
 
   async setPersona(accountName: string, persona: SteamAccountPersonaState): Promise<void> {
-    this.personas.set(accountName, persona)
+    this.data.personas.set(accountName, persona)
   }
 
   async setRefreshToken(accountName: string, refreshToken: IRefreshToken): Promise<void> {
-    this.refreshTokens.set(accountName, refreshToken)
+    this.data.refreshTokens.set(accountName, refreshToken)
   }
   async getRefreshToken(accountName: string): Promise<IRefreshToken | null> {
-    return this.refreshTokens.get(accountName) ?? null
+    return this.data.refreshTokens.get(accountName) ?? null
   }
   async getUsersRefreshToken(): Promise<string[]> {
-    const keys = Array.from(this.refreshTokens.keys())
+    const keys = Array.from(this.data.refreshTokens.keys())
     return keys.map(key => `${key}:refreshToken`)
   }
 
@@ -74,7 +76,7 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
     const foundState = await this.get(accountName)
     if (!foundState) {
       console.log(`No cache found for ${accountName}, setting initial state.`)
-      this.state.set(accountName, {
+      this.data.state.set(accountName, {
         accountName,
         gamesPlaying: [],
         gamesStaging: [],
@@ -88,17 +90,17 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
   }
 
   async stopFarm(accountName: string): Promise<void> {
-    let foundState = this.state.get(accountName)
+    let foundState = this.data.state.get(accountName)
     if (!foundState) return
     foundState.gamesPlaying = []
     foundState.isFarming = false
     foundState.farmStartedAt = null
     this.logger.log("stopping the farm: ", foundState)
-    this.state.set(accountName, foundState)
+    this.data.state.set(accountName, foundState)
   }
 
   async setPlayingGames(accountName: string, gamesId: number[]): Promise<void> {
-    const prev = this.state.get(accountName)
+    const prev = this.data.state.get(accountName)
     if (!prev) {
       return
     }
@@ -112,31 +114,31 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
       prev.farmStartedAt ? new Date(prev.farmStartedAt) : null,
       prev.status
     )
-    this.state.set(accountName, sacStateCache.toJSON())
+    this.data.state.set(accountName, sacStateCache.toJSON())
   }
 
   async setAccountGames(accountName: string, games: AccountSteamGamesList): Promise<void> {
-    this.games.set(`${accountName}:games`, games)
+    this.data.games.set(`${accountName}:games`, games)
   }
 
   async getAccountGames(accountName: string): Promise<AccountSteamGamesList | null> {
-    return this.games.get(`${accountName}:games`) ?? null
+    return this.data.games.get(`${accountName}:games`) ?? null
   }
 
   async get(accountName: string): Promise<SACStateCacheDTO | null> {
-    return this.state.get(accountName) ?? null
+    return this.data.state.get(accountName) ?? null
   }
 
   async delete(accountName: string): Promise<void> {
-    this.state.delete(accountName)
+    this.data.state.delete(accountName)
   }
 
   async set(accountName: string, sacStateCache: SACStateCacheDTO): Promise<SACStateCacheDTO> {
-    this.state.set(accountName, sacStateCache)
+    this.data.state.set(accountName, sacStateCache)
     return sacStateCache
   }
 
   async flushAll(): Promise<void> {
-    this.state.clear()
+    this.data.state.clear()
   }
 }
