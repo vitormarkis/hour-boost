@@ -21,7 +21,7 @@ import { AddSteamGuardCodeController } from "~/presentation/controllers/AddSteam
 import { RemoveSteamAccountControllerController } from "~/presentation/controllers/RemoveSteamAccountController"
 import { ToggleAutoReloginController } from "~/presentation/controllers/ToggleAutoReloginController"
 import { UpdateStagingGamesController } from "~/presentation/controllers/UpdateStagingGamesController"
-import { promiseHandler } from "~/presentation/controllers/promiseHandler"
+import { promiseHandler, promiseHandlerBroad } from "~/presentation/controllers/promiseHandler"
 import {
   allUsersClientsStorage,
   checkSteamAccountOwnerStatusUseCase,
@@ -144,7 +144,7 @@ command_routerSteam.put(
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
     const updateStagingGamesController = new UpdateStagingGamesController(updateStagingGamesUseCase)
-    const { code, json, status } = await promiseHandler(
+    const { code, json, status } = await promiseHandlerBroad(
       updateStagingGamesController.handle({
         accountName: req.body.accountName,
         newGameList: req.body.newGameList,
@@ -153,7 +153,8 @@ command_routerSteam.put(
     )
 
     if (code !== "SUCCESS") {
-      console.log(`[${code}] Attempt to PATCH "/account/auto-relogin" with`, {
+      console.log(`[${code}] Attempt to PATCH "/farm/staging/list" with`, {
+        newGameList: req.body.newGameList,
         accountName: req.body.accountName,
         userId: req.auth.userId!,
       })

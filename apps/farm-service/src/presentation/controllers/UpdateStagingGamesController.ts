@@ -12,6 +12,7 @@ interface IUpdateStagingGamesController {
   handle(...args: any[]): Promise<HttpClient.Response & { code: string }>
 }
 
+const moduleName = "UpdateStagingGamesController"
 export class UpdateStagingGamesController implements IUpdateStagingGamesController {
   constructor(private readonly updateStagingGamesUseCase: UpdateStagingGamesUseCase) {}
 
@@ -33,10 +34,15 @@ export class UpdateStagingGamesController implements IUpdateStagingGamesControll
           code: error.code,
         })
       }
+
+      console.log({
+        [`error-updating-staging-games-${accountName}`]: error,
+      })
+
       return only({
         json: { message: "Erro ao tentar atualizar staging games." },
         status: 400,
-        code: "UNKNOWN",
+        code: `[${moduleName}]::${error.code}`,
       })
     }
 
