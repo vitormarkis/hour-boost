@@ -24,6 +24,7 @@ import { UpdateStagingGamesController } from "~/presentation/controllers/UpdateS
 import { promiseHandler, promiseHandlerBroad } from "~/presentation/controllers/promiseHandler"
 import {
   allUsersClientsStorage,
+  autoRestarterScheduler,
   checkSteamAccountOwnerStatusUseCase,
   farmGamesUseCase,
   idGenerator,
@@ -44,7 +45,8 @@ const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
   allUsersClientsStorage,
   steamAccountClientStateCacheRepository,
   usersClusterStorage,
-  planRepository
+  planRepository,
+  autoRestarterScheduler
 )
 
 export const command_routerSteam: Router = Router()

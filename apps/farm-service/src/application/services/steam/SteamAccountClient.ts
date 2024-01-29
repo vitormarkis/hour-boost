@@ -117,6 +117,15 @@ export class SteamAccountClient extends LastHandler {
       }
     })
 
+    this.client.on("playingState", (...args) => {
+      const [blocked, appId, ...rest] = args
+      console.log("44: playingState >>", {
+        blocked,
+        appId,
+        ...rest,
+      })
+    })
+
     this.client.on("disconnected", (...args) => {
       const [error] = args
       appendFile(
