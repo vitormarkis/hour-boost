@@ -127,6 +127,7 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
           new ErrorOccuredOnSteamClientCommand({
             when: new Date(),
             accountName: sac.accountName,
+            errorEResult: error.eresult,
           })
         )
       }

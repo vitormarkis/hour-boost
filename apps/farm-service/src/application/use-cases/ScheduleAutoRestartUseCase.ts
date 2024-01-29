@@ -8,7 +8,7 @@ import { bad, nice } from "~/utils/helpers"
 
 export type ScheduleAutoRestartPayload = {
   accountName: string
-  intervalInSeconds?: number
+  intervalInSeconds: number
   forceRestoreSessionOnApplication?: boolean
 }
 
@@ -26,7 +26,7 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
 
   async execute({
     accountName,
-    intervalInSeconds = AUTO_RESTARTER_INTERVAL_IN_SECONDS,
+    intervalInSeconds,
     forceRestoreSessionOnApplication,
   }: ScheduleAutoRestartPayload) {
     this.logger.log(`Scheduling a cron for [${accountName}] to run every ${intervalInSeconds} seconds.`)

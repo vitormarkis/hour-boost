@@ -65,15 +65,22 @@ describe("ScheduleAutoRestartUseCase test suite", () => {
     console.log = log
   })
   test("should schedule a new auto relogin cron", async () => {
-    const [errorScheduling] = await scheduleAutoRestartUseCase.execute({ accountName: s.me.accountName })
+    const [errorScheduling] = await scheduleAutoRestartUseCase.execute({
+      accountName: s.me.accountName,
+      intervalInSeconds: 5,
+    })
     expect(errorScheduling).toBe(null)
   })
 
   test("should error if there is already a cron for this account", async () => {
-    const [errorScheduling] = await scheduleAutoRestartUseCase.execute({ accountName: s.me.accountName })
+    const [errorScheduling] = await scheduleAutoRestartUseCase.execute({
+      accountName: s.me.accountName,
+      intervalInSeconds: 5,
+    })
     expect(errorScheduling).toBe(null)
     const [errorSchedulingForSecondTime] = await scheduleAutoRestartUseCase.execute({
       accountName: s.me.accountName,
+      intervalInSeconds: 5,
     })
     expect(errorSchedulingForSecondTime?.code).toBe("ALREADY-HAS-CRON")
   })

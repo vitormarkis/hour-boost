@@ -1,9 +1,14 @@
 import { AccountGames } from "core"
+import SteamUser from "steam-user"
 
 export const EVENT_PROMISES_TIMEOUT_IN_SECONDS = 30
 
 // export const AUTO_RESTARTER_INTERVAL_IN_SECONDS = 15
 export const AUTO_RESTARTER_INTERVAL_IN_SECONDS = 60 * 5
+
+export const CLIENT_ERRORS_THAT_SHOULD_SCHEDULE_AUTO_RESTARTER: SteamUser.EResult[] = [
+  SteamUser.EResult.LoggedInElsewhere,
+]
 
 export const getHeaderImageByGameId = (gameId: number) =>
   `https://cdn.akamai.steamstatic.com/steam/apps/${gameId}/header.jpg?t=${gameId}`
