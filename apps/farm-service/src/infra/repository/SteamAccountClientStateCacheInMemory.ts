@@ -11,6 +11,16 @@ import {
 import { Logger } from "~/utils/Logger"
 
 export class SteamAccountClientStateCacheInMemory implements SteamAccountClientStateCacheRepository {
+  private readonly state: Map<string, SACStateCacheDTO> = new Map()
+  private readonly games: Map<string, AccountSteamGamesList> = new Map()
+  private readonly refreshTokens: Map<string, IRefreshToken> = new Map()
+  private readonly personas: Map<string, SteamAccountPersonaState> = new Map()
+  private readonly logger = new Logger("sac-cache-in-memory")
+
+  async setStagingGames(accountName: string, gamesId: number[]): Promise<void> {
+    throw new Error("Method not implemented.")
+  }
+
   async setStatus({
     accountName,
     status,
@@ -20,11 +30,6 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
     foundState.status = status
     this.state.set(accountName, foundState)
   }
-  private readonly state: Map<string, SACStateCacheDTO> = new Map()
-  private readonly games: Map<string, AccountSteamGamesList> = new Map()
-  private readonly refreshTokens: Map<string, IRefreshToken> = new Map()
-  private readonly personas: Map<string, SteamAccountPersonaState> = new Map()
-  private readonly logger = new Logger("sac-cache-in-memory")
 
   async startFarm({
     accountName,
@@ -72,6 +77,7 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
       this.state.set(accountName, {
         accountName,
         gamesPlaying: [],
+        gamesStaging: [],
         isFarming: false,
         planId,
         username,
@@ -98,6 +104,7 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
     }
 
     const sacStateCache = new SACStateCache(
+      gamesId,
       gamesId,
       accountName,
       prev.planId,

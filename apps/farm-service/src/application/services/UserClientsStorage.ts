@@ -1,4 +1,9 @@
-import { ApplicationError, PlanRepository, SteamAccountClientStateCacheRepository } from "core"
+import {
+  AppAccountStatus,
+  ApplicationError,
+  PlanRepository,
+  SteamAccountClientStateCacheRepository,
+} from "core"
 import { SteamAccountClient } from "~/application/services/steam"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { Logger } from "~/utils/Logger"
@@ -108,10 +113,23 @@ export class UserClientsStorage {
   }
 
   getAccountsStatus() {
-    const accountStatus = {} as Record<string, { farming: boolean }>
+    const accountStatus = {} as Record<
+      string,
+      {
+        farming: boolean
+        logged: boolean
+        gamesPlaying: number[]
+        gamesStaging: number[]
+        status: AppAccountStatus
+      }
+    >
     this.steamAccountClients.forEach((client, accountName) => {
       accountStatus[accountName] = {
         farming: client.isFarming(),
+        logged: client.logged,
+        gamesPlaying: client.gamesPlaying,
+        gamesStaging: client.gamesStaging,
+        status: client.status,
       }
     })
     return accountStatus

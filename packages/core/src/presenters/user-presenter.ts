@@ -30,6 +30,7 @@ export interface SteamAccountSession extends Persona {
   accountName: string
   games: GameSession[] | null
   farmingGames: number[]
+  stagingGames: number[]
   farmStartedAt: Date | null
   farmedTimeInSeconds: number
   autoRelogin: boolean

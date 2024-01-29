@@ -18,6 +18,7 @@ import { useHandlers } from "./hooks/useHandlers"
 import { SteamAccountListItemViewMobile } from "./mobile"
 import { SteamAccountAppProps, SteamAccountListItemViewProps, SteamAccountStatusProps } from "./types"
 import { useToggleAutoReloginMutation } from "@/components/molecules/ToggleAutoRelogin/mutation"
+import { useUpdateStagingGames } from "@/components/molecules/UpdateStagingGames"
 
 export function SteamAccountList({
   app,
@@ -40,6 +41,7 @@ export function SteamAccountList({
   const stopFarm = useStopFarmMutation(getAPI)
   const farmGames = useFarmGamesMutation(getAPI)
   const changeAccountStatus = useChangeAccountStatus(getAPI)
+  const updateStagingGames = useUpdateStagingGames(getAPI)
 
   const isLessDesktop = useMediaQuery("(max-width: 896px)")
   const user = useUser()
@@ -146,6 +148,7 @@ export function SteamAccountList({
         stopFarm,
         changeAccountStatus,
         toggleAutoRelogin: toggleAutoReloginMutation,
+        updateStagingGames,
       },
       isFarming,
       hasUsagePlanLeft,

@@ -1,4 +1,5 @@
 import { Command } from "~/application/commands"
+import { AUTO_RESTARTER_INTERVAL_IN_SECONDS } from "~/consts"
 import { EventNames } from "~/infra/queue"
 
 export class ErrorOccuredOnSteamClientCommand implements Command {
@@ -10,7 +11,7 @@ export class ErrorOccuredOnSteamClientCommand implements Command {
   constructor(props: ErrorOccuredOnSteamClientCommandProps) {
     this.when = props.when
     this.accountName = props.accountName
-    this.intervalInSeconds = props.intervalInSeconds ?? 60 * 5
+    this.intervalInSeconds = props.intervalInSeconds ?? AUTO_RESTARTER_INTERVAL_IN_SECONDS
   }
 }
 

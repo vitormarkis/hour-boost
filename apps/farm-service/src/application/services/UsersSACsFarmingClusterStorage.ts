@@ -1,10 +1,17 @@
-import { ApplicationError, DataOrError, PlanInfinity, PlanUsage } from "core"
+import { ApplicationError, DataOrError, DataOrFail, Fail, PlanInfinity, PlanUsage } from "core"
 import { UserSACsFarmingCluster } from "~/application/services"
+import { EAppResults } from "~/application/use-cases"
+import { FailGeneric } from "~/types/EventsApp.types"
 import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
+import { bad, nice } from "~/utils/helpers"
 
 type Username = string
 
-export class UsersSACsFarmingClusterStorage {
+interface IUsersSACsFarmingClusterStorage {
+  get(username: string): DataOrFail<FailGeneric, UserSACsFarmingCluster>
+}
+
+export class UsersSACsFarmingClusterStorage implements IUsersSACsFarmingClusterStorage {
   usersCluster: Map<Username, UserSACsFarmingCluster> = new Map()
 
   constructor(private readonly userClusterBuilder: UserClusterBuilder) {}
@@ -15,11 +22,19 @@ export class UsersSACsFarmingClusterStorage {
     }
   }
 
-  get(username: string): DataOrError<UserSACsFarmingCluster> {
+  get(username: string) {
     const foundUserCluster = this.usersCluster.get(username)
-    if (!foundUserCluster)
-      return [new ApplicationError(`Nenhum cluster encontrado para o usuário [${username}].`)]
-    return [null, foundUserCluster]
+    if (foundUserCluster) return nice(foundUserCluster)
+    return bad(
+      new Fail({
+        code: EAppResults["CLUSTER-NOT-FOUND"],
+        httpStatus: 404,
+        payload: {
+          givenUsername: username,
+          clusters: Array.from(this.usersCluster.keys()),
+        },
+      })
+    )
   }
 
   getOrThrow(username: string) {

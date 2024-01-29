@@ -10,6 +10,7 @@ export interface SteamAccountClientStateCacheRepository {
   setRefreshToken(accountName: string, refreshToken: IRefreshToken): Promise<void>
   getRefreshToken(accountName: string): Promise<IRefreshToken | null>
   setPlayingGames(accountName: string, gamesId: number[], planId: string, username: string): Promise<void>
+  setStagingGames(accountName: string, gamesId: number[]): Promise<void>
   init(props: InitProps): Promise<void>
   getUsersRefreshToken(): Promise<string[]>
   flushAll(): Promise<void>
@@ -55,6 +56,7 @@ export interface IRefreshToken {
 export class SACStateCache {
   constructor(
     readonly gamesPlaying: number[],
+    public gamesStaging: number[],
     readonly accountName: string,
     readonly planId: string,
     readonly username: string,
@@ -65,9 +67,14 @@ export class SACStateCache {
     return this.gamesPlaying.length > 0
   }
 
+  updateStagingGames(newGameList: number[]) {
+    this.gamesStaging = newGameList
+  }
+
   toJSON(): SACStateCacheDTO {
     return {
       gamesPlaying: this.gamesPlaying,
+      gamesStaging: this.gamesStaging,
       accountName: this.accountName,
       isFarming: this.isFarming(),
       planId: this.planId,
@@ -80,6 +87,7 @@ export class SACStateCache {
 
 export interface SACStateCacheDTO {
   gamesPlaying: number[]
+  gamesStaging: number[]
   accountName: string
   isFarming: boolean
   username: string

@@ -14,7 +14,7 @@ export class SteamClientEventsRequired {
   createEventPromiseResolver<K extends keyof EventParameters>(eventName: K) {
     return new Promise<SingleEventResolver<EventParameters, K>>(res => {
       if (eventName === "loggedOn") console.log("createEventPromiseResolver.setting lastHandler")
-      this.sac.setLastHandler(eventName, (...args) => res({ type: eventName, args }))
+      this.sac.setLastHandler(eventName, (...args) => res(new SingleEventResolver({ type: eventName, args })))
       // this.sac.client.on(eventName, (...args) => res({ type: eventName, args }))
     })
   }

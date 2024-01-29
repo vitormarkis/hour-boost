@@ -34,6 +34,7 @@ test("should write a ME cache and retrieves it", async () => {
     i.sacStateCacheRepository.set("markis", {
       accountName: "markis",
       gamesPlaying: [],
+      gamesStaging: [],
       isFarming: false,
       planId: meInstances.me.plan.id_plan,
       username: s.me.username,
@@ -46,6 +47,7 @@ test("should write a ME cache and retrieves it", async () => {
   expect(cache).toStrictEqual({
     accountName: "markis",
     gamesPlaying: [],
+    gamesStaging: [],
     isFarming: false,
     farmStartedAt: null,
     planId: meInstances.me.plan.id_plan,

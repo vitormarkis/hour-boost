@@ -21,7 +21,19 @@ export class LoginSteamWithToken implements ILoginSteamWithToken {
   async execute({ sac, token, timeoutInSeconds = EVENT_PROMISES_TIMEOUT_IN_SECONDS, trackEvents }: Payload) {
     const steamClientEventsRequired = new SteamClientEventsRequired(sac, timeoutInSeconds)
 
-    sac.loginWithToken(token)
+    const [errorLogginWithToken] = sac.loginWithToken(token)
+    if (errorLogginWithToken) {
+      console.log("66: ", { errorLogginWithToken })
+      return bad(
+        new ApplicationError(
+          "Não foi possível fazer login na conta da steam, tente novamente mais tarde.",
+          errorLogginWithToken.httpStatus,
+          undefined,
+          errorLogginWithToken.code,
+          errorLogginWithToken.payload
+        )
+      )
+    }
 
     const eventsPromisesResolved = await Promise.race(steamClientEventsRequired.getEventPromises(trackEvents))
 

@@ -28,7 +28,19 @@ export class LoginSteamWithCredentials implements ILoginSteamWithCredentials {
   }: Payload) {
     const steamClientEventsRequired = new SteamClientEventsRequired(sac, timeoutInSeconds)
 
-    sac.login(accountName, password)
+    const [errorLogginWithCredentials] = sac.login(accountName, password)
+    if (errorLogginWithCredentials) {
+      console.log("66: ", { errorLogginWithCredentials })
+      return bad(
+        new ApplicationError(
+          "Não foi possível fazer login na conta da steam, tente novamente mais tarde.",
+          errorLogginWithCredentials.httpStatus,
+          undefined,
+          errorLogginWithCredentials.code,
+          errorLogginWithCredentials.payload
+        )
+      )
+    }
 
     const eventsPromisesResolved = await Promise.race(steamClientEventsRequired.getEventPromises(trackEvents))
 

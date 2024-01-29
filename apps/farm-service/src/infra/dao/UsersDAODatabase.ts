@@ -10,11 +10,10 @@ import {
   UserSession,
   UsersDAO,
 } from "core"
-import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 
-import { getCurrentPlan, getCurrentPlanOrCreateOne } from "~/utils"
+import { getCurrentPlanOrCreateOne } from "~/utils"
 
 export class UsersDAODatabase implements UsersDAO {
   constructor(
@@ -52,12 +51,6 @@ export class UsersDAODatabase implements UsersDAO {
     const foundUser = await this.prisma.user.findUnique({
       where: { id_user: userId },
       select: { plan: true },
-    })
-
-    console.log({
-      userId,
-      foundUser,
-      planId: foundUser?.plan?.id_plan ?? "not found",
     })
 
     return foundUser?.plan?.id_plan ?? null
@@ -129,6 +122,7 @@ export class UsersDAODatabase implements UsersDAO {
           games,
           id_steamAccount: sa.id_steamAccount,
           farmingGames: accountState?.gamesPlaying ?? [],
+          stagingGames: accountState?.gamesStaging ?? [],
           farmedTimeInSeconds,
           farmStartedAt: accountState?.farmStartedAt ? new Date(accountState.farmStartedAt) : null,
           status: accountState?.status ?? "offline",

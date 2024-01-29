@@ -12,4 +12,5 @@ export type ChooseFarmingGamesHelpers = {
   handleUpdateStagingGames(): void
   handleActionButton(): Promise<void>
   handleAddGameToFarmStaging(gameId: number): void
+  clearLocalStagingFarmList(): void
 }

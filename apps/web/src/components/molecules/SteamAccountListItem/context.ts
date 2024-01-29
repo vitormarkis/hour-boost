@@ -13,6 +13,7 @@ import React from "react"
 import { SteamAccountAppProps, SteamAccountStatusLiveProps, SteamAccountStatusProps } from "./types"
 import { ToggleAutoReloginMutationResult } from "@/components/molecules/ToggleAutoRelogin/mutation"
 import { ToggleAutoReloginPayload } from "@/components/molecules/ToggleAutoRelogin/controller"
+import { UpdateStagingGamesMutationResult } from "@/components/molecules/UpdateStagingGames"
 
 export interface ISteamAccountListItemContext extends SteamAccountStatusProps, SteamAccountStatusLiveProps {
   app: SteamAccountAppProps
@@ -27,6 +28,7 @@ export interface ISteamAccountListItemContext extends SteamAccountStatusProps, S
     farmGames: MutationFarmGames
     changeAccountStatus: MutationChangeAccountStatus
     toggleAutoRelogin: ToggleAutoReloginMutationResult
+    updateStagingGames: UpdateStagingGamesMutationResult
     // toggleAutoRelogin: MutationToggleAutoRelogin
   }
   handlers: HHandlers

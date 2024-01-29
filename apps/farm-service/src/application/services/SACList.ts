@@ -3,6 +3,10 @@ import { SteamAccountClient } from "~/application/services/steam"
 export class SACList {
   list: Map<string, SteamAccountClient> = new Map()
 
+  listSACs() {
+    return Array.from(this.list.keys())
+  }
+
   has(accountName: string) {
     return this.list.has(accountName)
   }

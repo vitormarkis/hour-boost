@@ -1,6 +1,7 @@
 import { DataOrFail, Fail, PlanRepository, SteamAccountsRepository, UsersDAO } from "core"
 import { AllUsersClientsStorage } from "~/application/services"
 import { RestoreAccountConnectionUseCase, RestoreAccountSessionUseCase } from "~/application/use-cases"
+import { FailGeneric } from "~/types/EventsApp.types"
 import { bad, nice } from "~/utils/helpers"
 
 export type AutoRestartCronPayload = {
@@ -9,7 +10,7 @@ export type AutoRestartCronPayload = {
 }
 
 interface IAutoRestartCron {
-  run(...args: any[]): Promise<DataOrFail<Fail, AutoRestartResult>>
+  run(...args: any[]): Promise<DataOrFail<FailGeneric, AutoRestartResult>>
 }
 
 /**
@@ -84,12 +85,14 @@ export class AutoRestartCron implements IAutoRestartCron {
     })
 
     if (errorRestoringSession) {
-      if ("fatal" in errorRestoringSession.payload) {
-        return nice(
-          new AutoRestartResult("ERROR_RESTORING_SESSION", errorRestoringSession.payload.fatal, {
-            error: errorRestoringSession,
-          })
-        )
+      if (errorRestoringSession.payload) {
+        if ("fatal" in errorRestoringSession.payload) {
+          return nice(
+            new AutoRestartResult("ERROR_RESTORING_SESSION", errorRestoringSession.payload.fatal, {
+              error: errorRestoringSession,
+            })
+          )
+        }
       }
       return bad(
         new Fail({
@@ -104,7 +107,7 @@ export class AutoRestartCron implements IAutoRestartCron {
   }
 }
 
-class AutoRestartResult<const TCode = string, const TData = any, const TFatal = boolean> {
+class AutoRestartResult<const TCode = string, const TFatal = boolean, const TData = any> {
   constructor(
     public code: TCode,
     public fatal: TFatal,

@@ -22,6 +22,13 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
   constructor(private readonly redis: Redis) {
     this.logger = new Logger(`State Redis`)
   }
+
+  async setStagingGames(accountName: string, gamesId: number[]): Promise<void> {
+    const key = this.KEY_STATE(accountName)
+    const values = JSON.stringify(gamesId)
+    await this.redis.call("JSON.SET", key, "$.gamesStaging", values)
+  }
+
   async setStatus({
     accountName,
     status,
@@ -84,6 +91,7 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
       await this.set(accountName, {
         accountName,
         gamesPlaying: [],
+        gamesStaging: [],
         isFarming: false,
         planId,
         username,

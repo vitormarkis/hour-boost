@@ -99,6 +99,7 @@ test("should stop farming once interrupt occurs", async () => {
   const sacState: NSSACStateCacheFactory.CreateDTO_SAC_Props = {
     accountName: "paco",
     gamesPlaying: [100],
+    gamesStaging: [],
     isFarming: true,
     planId: meInstances.me.plan.id_plan,
     username: s.me.username,
@@ -241,6 +242,7 @@ test("should start farm again when relog with state happens", async () => {
   const sacState: NSSACStateCacheFactory.CreateDTO_SAC_Props = {
     accountName: "paco",
     gamesPlaying: [100],
+    gamesStaging: [],
     isFarming: true,
     planId: meInstances.me.plan.id_plan,
     username: s.me.username,

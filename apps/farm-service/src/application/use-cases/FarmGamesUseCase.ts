@@ -1,39 +1,44 @@
-import { ApplicationError, DataOrError, PlanInfinity, PlanUsage } from "core"
+import { ApplicationError, DataOrFail, Fail, PlanInfinity, PlanUsage } from "core"
 import { NSUserCluster, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
+import { EAppResults } from "~/application/use-cases/RestoreAccountSessionUseCase"
+import { bad, nice } from "~/utils/helpers"
 
-export class FarmGamesUseCase {
-  constructor(private readonly usersClusterStorage: UsersSACsFarmingClusterStorage) {}
+abstract class IFarmGamesUseCase {
+  abstract execute(...args: any[]): Promise<DataOrFail<Fail>>
+}
 
-  async execute({
-    username,
-    plan,
-    accountName,
-    sac,
-    gamesId,
-    planId,
-    sessionType,
-  }: FarmGamesUseCaseProps): Promise<DataOrError<null>> {
+export class FarmGamesUseCase extends IFarmGamesUseCase {
+  constructor(private readonly usersClusterStorage: UsersSACsFarmingClusterStorage) {
+    super()
+  }
+
+  async execute({ username, plan, accountName, sac, gamesId, planId, sessionType }: FarmGamesUseCaseProps) {
     try {
       // const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
       const [error, userCluster] = this.usersClusterStorage.get(username)
-      if (error) return [error]
+      if (error) return bad(error)
       const isAccountFarming = userCluster.isAccountFarming(accountName)
       if (!userCluster.hasSteamAccountClient(accountName) && !isAccountFarming) {
         userCluster.addSAC(sac)
       }
-      return userCluster.farmWithAccount({
+      const [errorFarmingWithAccount, result] = await userCluster.farmWithAccount({
         accountName,
         gamesId,
         planId,
         sessionType,
       })
+      if (errorFarmingWithAccount) return bad(errorFarmingWithAccount)
+      return nice(result)
     } catch (error) {
       console.log({ "FarmGamesUseCase.execute.error": error })
-      if (error instanceof Error) {
-        return [new ApplicationError(error.message)]
-      }
-      return [new ApplicationError("Erro desconhecido")]
+      return bad(
+        new Fail({
+          code: EAppResults["UNKNOWN-ERROR"],
+          payload: error as Error,
+          httpStatus: 400,
+        })
+      )
     }
   }
 }

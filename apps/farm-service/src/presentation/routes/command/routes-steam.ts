@@ -6,6 +6,7 @@ import {
   AddSteamAccountUseCase,
   ChangeAccountStatusUseCase,
   RemoveSteamAccountUseCase,
+  UpdateStagingGamesUseCase,
 } from "~/application/use-cases"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
 import { ToggleAutoReloginUseCase } from "~/application/use-cases/ToggleAutoReloginUseCase"
@@ -19,6 +20,7 @@ import {
 import { AddSteamGuardCodeController } from "~/presentation/controllers/AddSteamGuardCodeController"
 import { RemoveSteamAccountControllerController } from "~/presentation/controllers/RemoveSteamAccountController"
 import { ToggleAutoReloginController } from "~/presentation/controllers/ToggleAutoReloginController"
+import { UpdateStagingGamesController } from "~/presentation/controllers/UpdateStagingGamesController"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import {
   allUsersClientsStorage,
@@ -27,6 +29,7 @@ import {
   idGenerator,
   planRepository,
   publisher,
+  stagingGamesListService,
   steamAccountClientStateCacheRepository,
   steamAccountsRepository,
   usersClusterStorage,
@@ -126,6 +129,37 @@ command_routerSteam.post(
     )
 
     return json ? res.status(status).json(json) : res.status(status).end()
+  }
+)
+
+const updateStagingGamesUseCase = new UpdateStagingGamesUseCase(
+  stagingGamesListService,
+  usersClusterStorage,
+  usersRepository,
+  steamAccountClientStateCacheRepository
+)
+
+command_routerSteam.put(
+  "/farm/staging/list",
+  ClerkExpressRequireAuth(),
+  async (req: WithAuthProp<Request>, res: Response) => {
+    const updateStagingGamesController = new UpdateStagingGamesController(updateStagingGamesUseCase)
+    const { code, json, status } = await promiseHandler(
+      updateStagingGamesController.handle({
+        accountName: req.body.accountName,
+        newGameList: req.body.newGameList,
+        userId: req.auth.userId!,
+      })
+    )
+
+    if (code !== "SUCCESS") {
+      console.log(`[${code}] Attempt to PATCH "/account/auto-relogin" with`, {
+        accountName: req.body.accountName,
+        userId: req.auth.userId!,
+      })
+    }
+
+    return json ? res.status(status).json({ ...json, code }) : res.status(status).end()
   }
 )
 

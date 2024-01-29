@@ -66,17 +66,33 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
       [s.me.userId]: {
         [s.me.accountName]: {
           farming: true,
+          gamesPlaying: [109230],
+          gamesStaging: [],
+          logged: true,
+          status: "offline",
         },
         [s.me.accountName2]: {
           farming: true,
+          gamesPlaying: [109230],
+          gamesStaging: [],
+          logged: true,
+          status: "offline",
         },
       },
       [s.friend.userId]: {
         [s.friend.accountName]: {
           farming: true,
+          gamesPlaying: [109230],
+          gamesStaging: [],
+          logged: true,
+          status: "offline",
         },
         [s.friend.accountName2]: {
           farming: false,
+          gamesPlaying: [],
+          gamesStaging: [],
+          logged: false,
+          status: "offline",
         },
       },
     })
@@ -107,17 +123,33 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
         [s.me.userId]: {
           [s.me.accountName]: {
             farming: false,
+            gamesPlaying: [],
+            gamesStaging: [],
+            logged: true,
+            status: "offline",
           },
           [s.me.accountName2]: {
             farming: false,
+            gamesPlaying: [],
+            gamesStaging: [],
+            logged: true,
+            status: "offline",
           },
         },
         [s.friend.userId]: {
           [s.friend.accountName]: {
             farming: false,
+            gamesPlaying: [],
+            gamesStaging: [],
+            logged: true,
+            status: "offline",
           },
           [s.friend.accountName2]: {
             farming: false,
+            gamesPlaying: [],
+            gamesStaging: [],
+            logged: false,
+            status: "offline",
           },
         },
       })

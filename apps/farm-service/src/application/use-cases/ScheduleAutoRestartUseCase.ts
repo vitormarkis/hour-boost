@@ -1,6 +1,7 @@
-import { DataOrError, DataOrFail, Fail } from "core"
+import { DataOrFail, Fail } from "core"
 import { appendFile } from "fs"
 import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
+import { AUTO_RESTARTER_INTERVAL_IN_SECONDS } from "~/consts"
 import { AutoRestarterScheduler } from "~/domain/cron"
 import { Logger } from "~/utils/Logger"
 import { bad, nice } from "~/utils/helpers"
@@ -22,7 +23,10 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
     private readonly autoRestartCron: AutoRestartCron
   ) {}
 
-  async execute({ accountName, intervalInSeconds = 60 * 10 }: ScheduleAutoRestartPayload) {
+  async execute({
+    accountName,
+    intervalInSeconds = AUTO_RESTARTER_INTERVAL_IN_SECONDS,
+  }: ScheduleAutoRestartPayload) {
     this.logger.log(`Scheduling a cron for [${accountName}] to run every ${intervalInSeconds} seconds.`)
     const hasCronAlready = this.autoRestarterScheduler.alreadyHasCron(accountName)
     if (hasCronAlready) return bad(new Fail({ code: "ALREADY-HAS-CRON" }))
@@ -42,7 +46,8 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
         this.logger.log(`dismissing cron for account [${accountName}]`)
 
         if (errorWhileRestarting.code === "PLAN_NOT_FOUND") {
-          this.logger.log(`plano não encontrado com id [${errorWhileRestarting.payload.planId}]`)
+          errorWhileRestarting
+          this.logger.log(`plano não encontrado com id [${errorWhileRestarting.payload}]`)
           return
         }
         if (errorWhileRestarting.code === "STEAM_ACCOUNT_IS_NOT_OWNED") {

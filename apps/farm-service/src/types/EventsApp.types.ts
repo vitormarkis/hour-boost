@@ -1,3 +1,4 @@
+import { Fail } from "core"
 import { EventParameters } from "~/infra/services"
 
 export type EventMapperGeneric = Record<string, any[]>
@@ -10,9 +11,17 @@ export type FarmGamesEventsResolve<EventMapper extends EventMapperGeneric> = {
   [K in keyof EventMapper]: SingleEventResolver<EventMapper, K>
 }[keyof EventMapper]
 
-export type SingleEventResolver<EventMapper extends EventMapperGeneric, K extends keyof EventMapper> = {
+export class SingleEventResolver<
+  EventMapper extends EventMapperGeneric = EventMapperGeneric,
+  K extends keyof EventMapper = keyof EventMapper,
+> {
   type: K
   args: EventMapper[K]
+
+  constructor(props: { type: K; args: EventMapper[K] }) {
+    this.type = props.type as K
+    this.args = props.args as EventMapper[K]
+  }
 }
 
 export type FarmGamesEventsTimeoutResolve<EventMapper extends EventMapperGeneric = EventParametersTimeout> = {
@@ -25,3 +34,5 @@ export type FarmGamesEventsTimeoutResolve<EventMapper extends EventMapperGeneric
 export type EventParametersTimeout = {
   timeout: []
 }
+
+export type FailGeneric = Fail<string, number, undefined | Record<string, any>>

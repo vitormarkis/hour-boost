@@ -73,6 +73,7 @@ export class UsersDAOInMemory implements UsersDAO {
         }, 0),
         games: null,
         profilePictureUrl: null,
+        stagingGames: [],
         farmingGames: [],
         farmStartedAt: null,
       })),

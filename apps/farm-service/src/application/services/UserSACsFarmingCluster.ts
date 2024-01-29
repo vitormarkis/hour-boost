@@ -1,6 +1,8 @@
 import {
   ApplicationError,
   DataOrError,
+  DataOrFail,
+  Fail,
   PlanInfinity,
   PlanRepository,
   PlanUsage,
@@ -8,30 +10,35 @@ import {
   SteamAccountClientStateCacheRepository,
   SteamAccountsRepository,
 } from "core"
-import { Command } from "ioredis"
 import SteamUser from "steam-user"
 import { ErrorOccuredOnSteamClientCommand } from "~/application/commands"
 import { FarmServiceBuilder } from "~/application/factories"
 import {
   EventEmitter,
   FarmInfinityService,
-  FarmService,
   FarmUsageService,
   PauseFarmOnAccountUsage,
   SACList,
 } from "~/application/services"
-import { SACStateCacheFactory, SteamAccountClient } from "~/application/services/steam"
+import { SteamAccountClient } from "~/application/services/steam"
 import { EAppResults } from "~/application/use-cases"
 import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { nice, bad } from "~/utils/helpers"
+import { bad, nice } from "~/utils/helpers"
 
 export interface IUserSACsFarmingCluster {
-  addSac(...args: any[]): DataOrError<{ userCluster: UserSACsFarmingCluster }>
-  farmWithAccount(details: NSUserCluster.FarmWithAccount): Promise<DataOrError<null>>
+  addSAC(...args: any[]): DataOrError<{ userCluster: UserSACsFarmingCluster }>
+  farmWithAccount(details: NSUserCluster.FarmWithAccount): Promise<DataOrFail<Fail>>
+  updateStagingGames(...args: any[]): DataOrFail<
+    Fail,
+    {
+      sac: SteamAccountClient
+      getStateCache(): SACStateCache
+    }
+  >
 }
-export class UserSACsFarmingCluster {
+export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
   private readonly publisher: Publisher
   farmService: FarmUsageService | FarmInfinityService
   private readonly sacList: SACList = new SACList()
@@ -60,13 +67,22 @@ export class UserSACsFarmingCluster {
     this.logger = new Logger(`Cluster ~ ${this.username}`)
   }
 
-  getAccountsStatus() {
-    return this.farmService.getAccountsStatus()
+  getStateCache(sac: SteamAccountClient) {
+    const sacStateCacheDTO = sac.createStateDTO()
+    const sacStateCache = new SACStateCache(
+      sacStateCacheDTO.gamesPlaying,
+      sacStateCacheDTO.gamesStaging,
+      sacStateCacheDTO.accountName,
+      sacStateCacheDTO.planId,
+      sacStateCacheDTO.username,
+      this.farmService.startedAt,
+      sacStateCacheDTO.status
+    )
+    return sacStateCache
   }
 
-  stopFarmAllAccounts(props: { killSession: boolean }) {
-    this.sacList.stopFarmAllAccounts()
-    this.farmService.stopFarmAllAccounts(props)
+  getStateCacheDTO(sac: SteamAccountClient) {
+    return this.getStateCache(sac).toJSON()
   }
 
   addSAC(sac: SteamAccountClient) {
@@ -101,15 +117,7 @@ export class UserSACsFarmingCluster {
         this.shouldPersistSession = false
       }
       if (this.shouldPersistSession) {
-        const sacStateCache = SACStateCacheFactory.createDTO({
-          status: sacStateCacheDTO.status,
-          accountName: sacStateCacheDTO.accountName,
-          gamesPlaying: sacStateCacheDTO.gamesPlaying,
-          isFarming: sacStateCacheDTO.isFarming,
-          planId: sacStateCacheDTO.planId,
-          username: sacStateCacheDTO.username,
-          farmStartedAt: this.farmService.startedAt,
-        })
+        const sacStateCache = this.getStateCacheDTO(sac)
         await this.sacStateCacheRepository.set(sac.accountName, sacStateCache)
         this.logger.log(`${sacStateCache.accountName} has set the cache successfully.`)
       }
@@ -141,6 +149,37 @@ export class UserSACsFarmingCluster {
     })
   }
 
+  updateStagingGames(accountName: string, newGameList: number[]) {
+    const sac = this.sacList.get(accountName)
+    if (!sac) {
+      const fail = new Fail({
+        code: EAppResults["SAC-NOT-FOUND"],
+        httpStatus: 404,
+        payload: {
+          givenAccountName: accountName,
+          sacsInCluster: this.sacList.listSACs(),
+        },
+      })
+      return bad(fail)
+    }
+
+    sac.updateStagingGames(newGameList)
+
+    return nice({
+      sac,
+      getStateCache: () => this.getStateCache(sac),
+    })
+  }
+
+  getAccountsStatus() {
+    return this.farmService.getAccountsStatus()
+  }
+
+  stopFarmAllAccounts(props: { killSession: boolean }) {
+    this.sacList.stopFarmAllAccounts()
+    this.farmService.stopFarmAllAccounts(props)
+  }
+
   updateState({ gamesPlaying, accountName }: SACStateCache) {
     // const sac = this.sacList.get(accountName)
   }
@@ -162,28 +201,13 @@ export class UserSACsFarmingCluster {
   async farmWithAccount({ accountName, gamesId, planId, sessionType }: NSUserCluster.FarmWithAccount) {
     try {
       const sac = this.sacList.get(accountName)
-      if (!sac)
-        return bad(
-          new ApplicationError(
-            `[SAC Cluster.startFarm()]: Tried to start farm, but no SAC was found with name: ${accountName}. This account never logged on the application, or don't belong to the user ${this.username}.`,
-            404,
-            undefined,
-            EAppResults["SAC-NOT-FOUND"]
-          )
-        )
+      if (!sac) return bad(new Fail({ httpStatus: 404, code: EAppResults["SAC-NOT-FOUND"] }))
 
       if (!this.farmService.hasAccountsFarming()) {
         this.logger.log("SETANDO PRIMEIRO FARM")
         const plan = await this.planRepository.getById(planId)
         if (!plan) {
-          return bad(
-            new ApplicationError(
-              `NSTH: ID do plano não existe, contate o desenvolvedor. ${planId}`,
-              400,
-              undefined,
-              EAppResults["PLAN-NOT-FOUND"]
-            )
-          )
+          return bad(new Fail({ code: EAppResults["PLAN-NOT-FOUND"], httpStatus: 404 }))
         }
         this.updateFarmService(plan)
       }
@@ -193,14 +217,22 @@ export class UserSACsFarmingCluster {
       }
       await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId, planId, sac.username)
       const [errorFarming, result] = this.farmWithAccountImpl(sac, accountName, gamesId)
-      if (errorFarming) return bad(errorFarming)
+      if (errorFarming)
+        return bad(
+          new Fail({
+            code: errorFarming.code ?? EAppResults["UNKNOWN-ERROR"],
+            httpStatus: errorFarming.status,
+            payload: errorFarming.payload,
+          })
+        )
       return nice(result)
     } catch (error) {
-      console.log({ "usersFarmingCluster.farmWithAccount.error": error })
-      if (error instanceof Error) {
-        return bad(new ApplicationError(error.message, 400, undefined, "UNKNOWN_ERROR"))
-      }
-      return bad(new ApplicationError("Erro desconhecido", 400, undefined, "UNKNOWN_ERROR"))
+      return bad(
+        new Fail({
+          code: EAppResults["UNKNOWN-ERROR"],
+          payload: error instanceof Error ? error : undefined,
+        })
+      )
     }
   }
 

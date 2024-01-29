@@ -4,8 +4,10 @@ import {
   AppAccountStatus,
   ApplicationError,
   DataOrError,
+  Fail,
   GameSession,
   IRefreshToken,
+  SACStateCache,
   SACStateCacheDTO,
   SteamAccountPersonaState,
 } from "core"
@@ -19,6 +21,7 @@ import { getHeaderImageByGameId } from "~/consts"
 import { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
 import { Logger } from "~/utils/Logger"
+import { Prettify, bad, nice } from "~/utils/helpers"
 
 export class SteamAccountClient extends LastHandler {
   private readonly publisher: Publisher
@@ -31,6 +34,7 @@ export class SteamAccountClient extends LastHandler {
   planId: string
   logged = false
   gamesPlaying: number[] = []
+  gamesStaging: number[] = []
   accountName: string
   ownershipCached = false
   autoRestart: boolean
@@ -157,10 +161,15 @@ export class SteamAccountClient extends LastHandler {
     })
   }
 
-  private createStateDTO(): NSSACStateCacheFactory.CreateDTO_SAC_Props {
+  updateStagingGames(newGameList: number[]) {
+    this.gamesStaging = newGameList
+  }
+
+  createStateDTO(): Prettify<NSSACStateCacheFactory.CreateDTO_SAC_Props> {
     return {
       accountName: this.accountName,
       gamesPlaying: this.gamesPlaying,
+      gamesStaging: this.gamesStaging,
       isFarming: this.isFarming(),
       planId: this.planId,
       username: this.username,
@@ -186,11 +195,41 @@ export class SteamAccountClient extends LastHandler {
   }
 
   login(accountName: string, password: string, authCode?: string) {
-    this.client.logOn({
-      accountName,
-      password,
-      authCode,
-    })
+    try {
+      this.client.logOn({
+        accountName,
+        password,
+        authCode,
+      })
+      return nice()
+    } catch (e) {
+      console.log("ERROR_TRYING_TO_LOGIN_IN_STEAM_CLIENT::CREDENTIALS", e)
+      return bad(
+        new Fail({
+          code: "ERROR_TRYING_TO_LOGIN_IN_STEAM_CLIENT::CREDENTIALS",
+          httpStatus: 400,
+          payload: e as Error,
+        })
+      )
+    }
+  }
+
+  loginWithToken(refreshToken: string) {
+    try {
+      this.client.logOn({
+        refreshToken,
+      })
+      return nice()
+    } catch (e) {
+      console.log("ERROR_TRYING_TO_LOGIN_IN_STEAM_CLIENT::TOKEN", e)
+      return bad(
+        new Fail({
+          code: "ERROR_TRYING_TO_LOGIN_IN_STEAM_CLIENT::TOKEN",
+          httpStatus: 400,
+          payload: e as Error,
+        })
+      )
+    }
   }
 
   changeInnerStatusToNotLogged() {
@@ -258,12 +297,6 @@ export class SteamAccountClient extends LastHandler {
 
     return Promise.resolve([null, personaState])
   }
-
-  loginWithToken(refreshToken: string) {
-    this.client.logOn({
-      refreshToken,
-    })
-  }
 }
 
 function getUserFarmIntention(gamesID: number[], currentFarmingGames: number[]) {
@@ -314,6 +347,7 @@ export class SACStateCacheFactory {
     return {
       accountName: props.accountName,
       gamesPlaying: props.gamesPlaying,
+      gamesStaging: props.gamesStaging,
       isFarming: props.isFarming,
       planId: props.planId,
       username: props.username,
@@ -327,6 +361,7 @@ export namespace NSSACStateCacheFactory {
   export type CreateDTO_SAC_Props = {
     accountName: string
     gamesPlaying: number[]
+    gamesStaging: number[]
     isFarming: boolean
     planId: string
     username: string

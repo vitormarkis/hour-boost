@@ -25,11 +25,12 @@ export type ChooseFarmingGamesDesktopProps = {
 export const ChooseFarmingGames = React.memo(
   React.forwardRef<React.ElementRef<typeof ChooseFarmingGamesDesktop>, ChooseFarmingGamesDesktopProps>(
     function ChooseFarmingGamesDesktopComponent(_, ref) {
-      const { isFarming, accountName, refreshGames, handlers, app } =
+      const { isFarming, accountName, refreshGames, handlers, app, mutations } =
         local_useSteamAccountListItem.controller()
       const isLessDesktop = useMediaQuery("(max-width: 896px)")
       const stageFarmingGames_update = useSteamAccountStore(state => state.stageFarmingGames_update)
       const localStagingFarm_list = useSteamAccountStore(state => state.localStagingFarm_list)
+      const localStagingFarm_set = useSteamAccountStore(state => state.localStagingFarm_set)
       const closeModal_desktop = useSteamAccountStore(state => state.closeModal_desktop)
       const stageFarmingGames_hasGamesOnTheList = useSteamAccountStore(
         state => state.stageFarmingGames_hasGamesOnTheList
@@ -43,6 +44,11 @@ export const ChooseFarmingGames = React.memo(
       const handleUpdateStagingGames = () => {}
 
       const handleActionButton = React.useCallback(async () => {
+        const [errorUpdatingStagingGames] = await mutations.updateStagingGames.mutateAsync({
+          accountName: app.accountName,
+          newGameList: localStagingFarm_list,
+        })
+        if (errorUpdatingStagingGames) return
         stageFarmingGames_update()
 
         const getFarmGamesPromise = () => {
@@ -95,12 +101,17 @@ export const ChooseFarmingGames = React.memo(
         [stageFarmingGames_handleAddGameToFarmStaging]
       )
 
+      const clearLocalStagingFarmList = React.useCallback(() => {
+        localStagingFarm_set([])
+      }, [])
+
       const helpers: ChooseFarmingGamesHelpers = {
         handleRefreshGames,
         handleStopFarm,
         handleUpdateStagingGames,
         handleActionButton,
         handleAddGameToFarmStaging,
+        clearLocalStagingFarmList,
       }
 
       return (

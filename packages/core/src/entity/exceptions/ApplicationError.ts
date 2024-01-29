@@ -43,18 +43,27 @@ const mason = () => {
 
 export class Fail<
   const TCode extends string = string,
-  const TPayload extends Record<string, any> | undefined = Record<string, any>,
   const THTTPStatus = number,
+  const TPayload extends Record<string, any> | undefined = Record<string, any> | undefined,
 > extends Error {
+  // payload: TPayload extends Record<string, any> ? TPayload : undefined
   payload: TPayload
   code: TCode
   httpStatus?: THTTPStatus
 
-  constructor(props: { code: TCode; payload?: TPayload; httpStatus?: THTTPStatus }) {
-    super(props.code)
-    this.code = props.code as TCode
-    this.payload = props.payload as TPayload
-    this.httpStatus = props.httpStatus
+  constructor({
+    code,
+    httpStatus,
+    payload = undefined,
+  }: {
+    code: TCode
+    payload?: TPayload
+    httpStatus?: THTTPStatus
+  }) {
+    super(code)
+    this.code = code as TCode
+    this.payload = payload as TPayload
+    this.httpStatus = httpStatus
   }
 }
 

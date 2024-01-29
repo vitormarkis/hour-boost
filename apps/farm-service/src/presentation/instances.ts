@@ -40,6 +40,7 @@ import { UserClusterBuilder } from "~/utils/builders"
 import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import { SteamAccountsDAODatabase } from "~/infra/dao/SteamAccountsDAODatabase"
 import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
+import { StagingGamesListService } from "~/domain/services"
 
 const httpProxy = process.env.PROXY_URL
 
@@ -154,6 +155,8 @@ export const scheduleAutoRestartUseCase = new ScheduleAutoRestartUseCase(
 export const retrieveSessionAccountsUseCase = new RetrieveSessionListUseCase(
   steamAccountClientStateCacheRepository
 )
+
+export const stagingGamesListService = new StagingGamesListService()
 
 publisher.register(new StartFarmPlanHandler())
 publisher.register(new PersistFarmSessionHandler(planRepository, steamAccountClientStateCacheRepository))

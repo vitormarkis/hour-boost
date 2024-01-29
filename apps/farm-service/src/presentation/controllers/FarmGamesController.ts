@@ -6,15 +6,15 @@ import {
   SteamAccountClientStateCacheRepository,
   UsersRepository,
 } from "core"
+import SteamUser from "steam-user"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
-import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { Publisher } from "~/infra/queue"
+import { SingleEventResolver } from "~/types/EventsApp.types"
 import { areTwoArraysEqual, makeRes } from "~/utils"
 import { LoginSteamWithCredentials } from "~/utils/LoginSteamWithCredentials"
-import { SteamClientEventsRequired } from "~/utils/SteamClientEventsRequired"
-import { GetError, GetResult, GetTuple } from "~/utils/helpers"
+import { GetResult, GetTuple } from "~/utils/helpers"
 
 export namespace FarmGamesHandle {
   export type Payload = {
@@ -97,7 +97,12 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
       sessionType: "NEW",
     })
 
-    if (error) throw error
+    if (error) {
+      if (error.code === "PLAN_MAX_USAGE_EXCEEDED") {
+        return makeRes(403, "Seu plano não possui mais uso disponível.")
+      }
+      throw error
+    }
 
     return makeRes(200, "Iniciando farm.")
   }
@@ -107,36 +112,39 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
     sac: SteamAccountClient
   ): [HttpClient.Response<any>] | [undefined, GetResult<LoginSteamWithCredentials["execute"]>] {
     if (errorExecuting) {
-      if (errorExecuting.payload?.type === "steamGuard") {
-        const [domain, setCode] = errorExecuting.payload?.args
-        sac.setManualHandler("steamGuard", code => setCode(code))
-        return [
-          makeRes(
-            202,
-            `Steam Guard requerido. Enviando para ${domain ? `e-mail com final ${domain}` : `seu celular.`}`
-          ),
-        ]
-      }
-
-      if (errorExecuting.payload?.type === "error") {
-        const [error] = errorExecuting.payload?.args
-        if (error.eresult === 18)
+      if (errorExecuting.payload instanceof SingleEventResolver) {
+        if (errorExecuting.payload.type === "steamGuard") {
+          const [domain, setCode] = errorExecuting.payload.args
+          sac.setManualHandler("steamGuard", code => setCode(code))
           return [
             makeRes(
-              404,
-              "Steam Account não existe no banco de dados da Steam, delete essa conta e crie novamente.",
-              error
+              202,
+              `Steam Guard requerido. Enviando para ${domain ? `e-mail com final ${domain}` : `seu celular.`}`
             ),
           ]
-        if (error.eresult === 5) {
-          return [makeRes(403, "Conta ou senha incorretas.", error)]
         }
-        return [
-          makeRes(400, "Aconteceu algum erro no client da Steam.", {
-            eresult: error.eresult,
-          }),
-        ]
+
+        if (errorExecuting.payload.type === "error") {
+          const [error] = errorExecuting.payload.args
+          if (error.eresult === SteamUser.EResult.AccountNotFound)
+            return [
+              makeRes(
+                404,
+                "Steam Account não existe no banco de dados da Steam, delete essa conta e crie novamente.",
+                error
+              ),
+            ]
+          if (error.eresult === SteamUser.EResult.InvalidPassword) {
+            return [makeRes(403, "Conta ou senha incorretas.", error)]
+          }
+          return [
+            makeRes(400, "Aconteceu algum erro no client da Steam.", {
+              eresult: error.eresult,
+            }),
+          ]
+        }
       }
+
       throw new ApplicationError("Algo de inesperado aconteceu.")
     }
     return [undefined, result]

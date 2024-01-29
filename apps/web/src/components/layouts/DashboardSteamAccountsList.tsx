@@ -28,8 +28,8 @@ export const DashboardSteamAccountsList = React.forwardRef<
             <ZustandSteamAccountStoreProvider
               key={app.id_steamAccount}
               initialState={{
-                localStagingFarm_list: app.farmingGames,
-                stageFarmingGames_list: app.farmingGames,
+                localStagingFarm_list: app.stagingGames,
+                stageFarmingGames_list: app.stagingGames,
                 urgent: false, // desnecessario
                 modalOpen_desktop: false,
                 autoRelogin: app.autoRelogin,

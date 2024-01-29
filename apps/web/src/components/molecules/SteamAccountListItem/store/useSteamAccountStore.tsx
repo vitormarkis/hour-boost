@@ -43,7 +43,7 @@ const createStoreSteamAccountItem = (
       immer((set, get) => ({
         ...initialState,
         localStagingFarm_set(newList) {
-          set(state => (state.localStagingFarm_list = newList))
+          set(state => void (state.localStagingFarm_list = newList))
         },
         stageFarmingGames_update() {
           set(state => ({

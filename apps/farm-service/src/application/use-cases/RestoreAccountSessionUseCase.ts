@@ -11,6 +11,7 @@ import {
 import { UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { SACGenericError, handleSteamClientError } from "~/application/use-cases"
+import { FailGeneric } from "~/types/EventsApp.types"
 import { Prettify, bad, nice } from "~/utils/helpers"
 
 type Payload = {
@@ -21,8 +22,10 @@ type Payload = {
 }
 
 interface IRestoreAccountSessionUseCase {
-  execute(payload: Payload): Promise<DataOrFail<Fail, any>>
+  execute(payload: Payload): Promise<DataOrFail<FailGeneric, any>>
 }
+
+const moduleName = "[RestoreAccountSessionUseCase]"
 
 /**
  * Já possui SAC ativo, logado ou não, e quer
@@ -48,27 +51,28 @@ export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCa
     })
 
     if (!errorRestoringOnApplication) {
-      return nice(new Fail({ code: EAppResults["SESSION-RESTORED"] }))
+      return nice({ code: EAppResults["SESSION-RESTORED"] })
     }
 
-    if (errorRestoringOnApplication instanceof ApplicationError) {
+    if (errorRestoringOnApplication) {
+      if (errorRestoringOnApplication.code === "UNKNOWN-CLIENT-ERROR") {
+        const error = handleSteamClientError(errorRestoringOnApplication.payload)
+        if (error) {
+          return bad(new Fail({ code: error.code, payload: error }))
+        }
+      }
       if (errorRestoringOnApplication.code === "PLAN_MAX_USAGE_EXCEEDED") {
-        console.log(`[restore-session::${accountName}] uso máximo do plano excedido.`)
+        console.log(`[${moduleName}::${accountName}] uso máximo do plano excedido.`)
       }
       return bad(
         new Fail({
-          code: errorRestoringOnApplication.code ?? "UNKNOWN_ERROR",
+          code: `${moduleName}::${errorRestoringOnApplication.code ?? "UNKNOWN_ERROR"}`,
           payload: errorRestoringOnApplication,
         })
       )
     }
 
-    const [error] = handleSteamClientError(errorRestoringOnApplication)
-
-    if (error) {
-      return bad(new Fail({ code: error.code, payload: error }))
-    }
-    return bad(new Fail({ code: EAppResults["UNKNOWN-CLIENT-ERROR"] }))
+    return bad(new Fail({ code: EAppResults["UNKNOWN-APPLICATION-ERROR"] }))
   }
 }
 
@@ -100,19 +104,12 @@ export async function restoreSACSessionOnApplication({
     }
   }
 
-  console.log("44: ", {
-    hasState: !!state,
-    isFarming: state?.isFarming,
-    shouldRestoreGames,
-  })
-
   if (state) sac.setStatus(state.status)
 
   if (state && state.isFarming && !shouldRestoreGames) {
     console.log("55: found state, was farming, but since sac.autorestart was off, didn't start farming")
   }
   if (state && state.isFarming && shouldRestoreGames) {
-    console.log("44: attempting to restore farm")
     const [errorFarmWithAccount] = await userCluster.farmWithAccount({
       accountName: state.accountName,
       gamesId: state.gamesPlaying,
@@ -120,27 +117,41 @@ export async function restoreSACSessionOnApplication({
       sessionType: EAppResults["CONTINUE-FROM-PREVIOUS"],
     })
 
-    console.log("44:", { errorFarmWithAccount })
     if (errorFarmWithAccount) {
-      return bad(errorFarmWithAccount)
+      return bad(
+        new Fail({
+          code: errorFarmWithAccount.code,
+        })
+      )
     }
 
     const error = await Promise.race([
       new Promise<SACGenericError>(res => sac.client.once("error", res)),
       new Promise<false>(res => setTimeout(() => res(false), 1000)),
     ])
-    if (error) return bad(error)
+    if (error)
+      return bad(
+        new Fail({
+          code: EAppResults["UNKNOWN-CLIENT-ERROR"],
+          httpStatus: 400,
+          payload: error,
+        })
+      )
   }
   return nice()
 }
 
-restoreSACSessionOnApplication satisfies (
-  ...args: any[]
-) => Promise<DataOrFail<SACGenericError | ApplicationError, undefined>>
+restoreSACSessionOnApplication satisfies (...args: any[]) => Promise<DataOrFail<Fail>>
+
+// restoreSACSessionOnApplication().then(res => {
+//   const [error] = res
+
+//   if(error?.code === "[RestoreAccountSessionUseCase]::ACCOUNT-ALREADY-FARMING") return
+//   if(error?.code === "[RestoreAccountSessionUseCase]::SAC-NOT-FOUND") return
+// })
 
 // new RestoreAccountSessionUseCase().execute().then(res => {
 //   const [error, result] = res
-//   if(error) return error
 // })
 
 const EAppResultsRaw = {
@@ -150,6 +161,12 @@ const EAppResultsRaw = {
   "SAC-NOT-FOUND": "SAC-NOT-FOUND",
   "PLAN-NOT-FOUND": "PLAN-NOT-FOUND",
   "ACCOUNT-ALREADY-FARMING": "ACCOUNT-ALREADY-FARMING",
+  "PLAN-NOT-FOUND-VIA-USER-ID": "PLAN-NOT-FOUND-VIA-USER-ID",
+  "USERNAME-NOT-FOUND-VIA-USER-ID": "USERNAME-NOT-FOUND-VIA-USER-ID",
+  "USER-NOT-FOUND": "USER-NOT-FOUND",
+  "CLUSTER-NOT-FOUND": "CLUSTER-NOT-FOUND",
+  "UNKNOWN-ERROR": "UNKNOWN-ERROR",
+  "UNKNOWN-APPLICATION-ERROR": "UNKNOWN-APPLICATION-ERROR",
 } as const
 
 export const EAppResults = EAppResultsRaw as Prettify<Mutable<typeof EAppResultsRaw>>

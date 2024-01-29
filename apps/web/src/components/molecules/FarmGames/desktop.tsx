@@ -3,6 +3,7 @@ import { IconJoystick } from "@/components/icons/IconJoystick"
 import { useFarmGames } from "@/components/molecules/FarmGames/context"
 import { local_useSteamAccountListItem } from "@/components/molecules/FarmGames/controller"
 import { GameItem } from "@/components/molecules/GameItem"
+import { useSteamAccountListItem } from "@/components/molecules/SteamAccountListItem/context"
 import { useSteamAccountStore } from "@/components/molecules/SteamAccountListItem/store/useSteamAccountStore"
 import { Button } from "@/components/ui/button"
 import {
@@ -25,6 +26,10 @@ export function ChooseFarmingGamesDesktop() {
   const modalOpen_desktop = useSteamAccountStore(state => state.modalOpen_desktop)
   const setModalOpen_desktop = useSteamAccountStore(state => state.setModalOpen_desktop)
   const stageFarmingGames_list = useSteamAccountStore(state => state.stageFarmingGames_list)
+  const { mutations } = useSteamAccountListItem()
+
+  const actionSavingState =
+    local.farmGames.isPending || local.stopFarm.isPending || mutations.updateStagingGames.isPending
 
   return (
     <Sheet
@@ -54,7 +59,7 @@ export function ChooseFarmingGamesDesktop() {
         </SheetHeader>
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
           <Button
-            onClick={helpers.handleStopFarm}
+            onClick={() => helpers.clearLocalStagingFarmList()}
             className="flex-1 "
           >
             <span>Limpar farm</span>
@@ -92,10 +97,10 @@ export function ChooseFarmingGamesDesktop() {
           <Button
             className="flex-1 relative disabled:opacity-70 z-40"
             onClick={helpers.handleActionButton}
-            disabled={local.farmGames.isPending || local.stopFarm.isPending}
+            disabled={actionSavingState}
           >
-            <span>{local.farmGames.isPending || local.stopFarm.isPending ? "Salvando" : "Salvar"}</span>
-            {(local.farmGames.isPending || local.stopFarm.isPending) && (
+            <span>{actionSavingState ? "Salvando" : "Salvar"}</span>
+            {actionSavingState && (
               <div className="absolute top-1/2 -translate-y-1/2 right-4">
                 <IconArrowClockwise className="w-4 h-4 animate-spin" />
               </div>

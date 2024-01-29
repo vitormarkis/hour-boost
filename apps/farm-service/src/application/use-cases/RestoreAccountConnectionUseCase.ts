@@ -10,12 +10,12 @@ import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/applic
 import { SteamAccountClient } from "~/application/services/steam"
 import { restoreSACSessionOnApplication } from "~/application/use-cases/RestoreAccountSessionUseCase"
 import { EventParameters } from "~/infra/services"
-import { EventParametersTimeout, FarmGamesEventsResolve } from "~/types/EventsApp.types"
+import { EventParametersTimeout, FarmGamesEventsResolve, SingleEventResolver } from "~/types/EventsApp.types"
 import { Logger } from "~/utils/Logger"
 import { LoginSteamWithCredentials } from "~/utils/LoginSteamWithCredentials"
 import { LoginSteamWithToken } from "~/utils/LoginSteamWithToken"
 import { EventPromises } from "~/utils/SteamClientEventsRequired"
-import { GetTuple, bad, nice } from "~/utils/helpers"
+import { GetTuple, bad, nice, only } from "~/utils/helpers"
 
 export type RestoreAccountConnectionUseCasePayload = {
   steamAccount: {
@@ -168,12 +168,15 @@ const handleLoginSteamWithCredentialsResult = (
 ) => {
   const [errorLoggin] = loginSteamWithCredentialsResult
   if (errorLoggin) {
-    const { type } = errorLoggin.payload ?? {}
-    if (type === "steamGuard") {
-      return bad(new ClientAppResult({ code: "STEAM-GUARD", fatal: true }))
+    if (errorLoggin.payload instanceof SingleEventResolver) {
+      const { type } = errorLoggin.payload
+      if (type === "steamGuard") {
+        return bad(new ClientAppResult({ code: "STEAM-GUARD", fatal: true }))
+      }
+      const [clientError] = handleSACClientError(errorLoggin.payload)
+      if (clientError) return bad(clientError)
     }
-    const [clientError] = handleSACClientError(errorLoggin.payload)
-    if (clientError) return bad(clientError)
+    return bad(errorLoggin)
   }
   return nice(undefined)
 }
@@ -189,7 +192,7 @@ const handleSACClientError = (
     if (!error) {
       return bad(new ClientAppResult({ code: "UNKNOWN-CLIENT-ERROR", fatal: true }))
     }
-    const [steamClientError] = handleSteamClientError(error)
+    const steamClientError = handleSteamClientError(error)
     if (steamClientError) return bad(steamClientError)
   }
 
@@ -209,12 +212,12 @@ const isNotFatalError = (error: SACGenericError) =>
 
 export function handleSteamClientError(error: SACGenericError) {
   if (error.eresult === SteamUser.EResult.LoggedInElsewhere) {
-    return bad(new ClientAppResult({ code: "OTHER-SESSION-STILL-ON", fatal: false }))
+    return only(new ClientAppResult({ code: "OTHER-SESSION-STILL-ON", fatal: false }))
   }
   if (isNotFatalError(error)) {
-    return bad(new ClientAppResult({ code: "KNOWN-ERROR", fatal: false }))
+    return only(new ClientAppResult({ code: "KNOWN-ERROR", fatal: false }))
   }
-  return bad(new ClientAppResult({ code: "UNKNOWN-CLIENT-ERROR", fatal: true }))
+  return only(new ClientAppResult({ code: "UNKNOWN-CLIENT-ERROR", fatal: true }))
 }
 
-handleSteamClientError satisfies (...args: any[]) => DataOrFail<ClientAppResult>
+handleSteamClientError satisfies (...args: any[]) => ClientAppResult

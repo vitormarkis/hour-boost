@@ -69,7 +69,7 @@ async function main() {
   const scheduleAutoRestartUseCase = new ScheduleAutoRestartUseCase(autoRestarterScheduler, autoRestartCron)
   const [errorScheduling] = await scheduleAutoRestartUseCase.execute({
     accountName: s.me.accountName,
-    intervalInSeconds: 3,
+    intervalInSeconds: 15,
   })
   if (errorScheduling) {
     console.log({ msg: errorScheduling.message, code: errorScheduling.code })
