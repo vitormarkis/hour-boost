@@ -16,6 +16,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useUser } from "@/contexts/UserContext"
 import { useFarmGames } from "./context"
 import { local_useSteamAccountListItem } from "./controller"
+import { Input } from "@/components/ui/input"
+import { IconMagnifying } from "@/components/icons/IconMagnifying"
 
 export function DrawerChooseFarmingGamesView() {
   const { helpers } = useFarmGames()
@@ -26,6 +28,8 @@ export function DrawerChooseFarmingGamesView() {
   const setModalOpen_desktop = useSteamAccountStore(state => state.setModalOpen_desktop)
   const localStagingFarm_hasGame = useSteamAccountStore(state => state.localStagingFarm_hasGame)
   const closeModal_desktop = useSteamAccountStore(state => state.closeModal_desktop)
+  const filterInputLocalStaging = useSteamAccountStore(state => state.filterInputLocalStaging)
+  const filterInputLocalStaging_set = useSteamAccountStore(state => state.filterInputLocalStaging_set)
 
   return (
     <Drawer
@@ -52,12 +56,22 @@ export function DrawerChooseFarmingGamesView() {
         <DrawerHeader className="py-6 px-4">
           <DrawerTitle>{local.accountName} - Seus jogos</DrawerTitle>
           <DrawerDescription>Selecione os jogos que queira farmar e clique em salvar.</DrawerDescription>
+          <label className="flex flex-col relative">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <IconMagnifying className="w-4 h-4 text-slate-500" />
+            </div>
+            <Input
+              placeholder="Filtre jogos"
+              value={filterInputLocalStaging}
+              onChange={e => filterInputLocalStaging_set(e.target.value)}
+            />
+          </label>
         </DrawerHeader>
         <main className="flex-1 overflow-y-scroll">
           <ScrollArea className="h-[65vh] rounded-sm px-2">
             <div className="flex flex-col gap-2">
-              {local.games ? (
-                local.games.map(game => (
+              {helpers.gameList ? (
+                helpers.gameList.map(game => (
                   <GameItem
                     height="9rem"
                     key={game.id}

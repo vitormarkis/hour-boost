@@ -10,12 +10,13 @@ import { IMG_USER_PLACEHOLDER } from "@/consts"
 import { cn } from "@/lib/utils"
 import { Message } from "@/util/DataOrMessage"
 import { showToastFarmingGame } from "@/util/toaster"
-import { useUser } from "@clerk/clerk-react"
 import React, { CSSProperties } from "react"
 import { toast } from "sonner"
 import { ButtonAddNewAccount } from "./components"
 import { useSteamAccountListItem } from "./context"
 import { SteamAccountListItemViewProps } from "./types"
+import { useUser } from "@/contexts/UserContext"
+import { ToggleAutoRelogin } from "@/components/molecules/ToggleAutoRelogin/controller"
 
 type SteamAccountListItemViewMobileProps = SteamAccountListItemViewProps
 
@@ -24,7 +25,7 @@ export const SteamAccountListItemViewMobile = React.memo(
     function SteamAccountListItemViewMobileComponent({ handleClickFarmButton, actionText }, ref) {
       const { header, steamGuard, mutations, app, isFarming } = useSteamAccountListItem()
       const { accountName, profilePictureUrl, farmStartedAt } = app
-      const user = useUser()
+      const plan = useUser(u => u.plan)
 
       const handleClickFarmButtonImpl = async () => {
         const [undesired, payload] = await handleClickFarmButton()
@@ -149,7 +150,7 @@ export const SteamAccountListItemViewMobile = React.memo(
             <li className="flex items-center  min-h-[2.25rem]">
               <span className="pr-3 w-[var(--propertiesWidth)]">Auto restart:</span>
               <div className="flex flex-col justify-center h-full leading-none">
-                <Switch size="1.25rem" />
+                {plan.autoRestarter ? <ToggleAutoRelogin /> : null}
               </div>
             </li>
           </ul>

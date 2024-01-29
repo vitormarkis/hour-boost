@@ -10,6 +10,7 @@ export interface StoreSteamAccountItemStateAPI {
   urgent: boolean
   modalOpen_desktop: boolean
   autoRelogin: boolean
+  filterInputLocalStaging: string
 }
 
 interface StoreSteamAccountItemMethods {
@@ -24,6 +25,7 @@ interface StoreSteamAccountItemMethods {
   closeModal_desktop(): void
   openModal_desktop(): void
   toggleAutoRelogin(): void
+  filterInputLocalStaging_set(newValue: string): void
 }
 
 interface StoreSteamAccountItem extends StoreSteamAccountItemMethods, StoreSteamAccountItemStateAPI {}
@@ -88,6 +90,9 @@ const createStoreSteamAccountItem = (
         setModalOpen_desktop: isOpening => set(state => void (state.modalOpen_desktop = isOpening)),
         toggleAutoRelogin: () => set(state => void (state.autoRelogin = !state.autoRelogin)),
         autoRelogin: initialState.autoRelogin,
+        filterInputLocalStaging_set: newValue =>
+          set(state => void (state.filterInputLocalStaging = newValue)),
+        filterInputLocalStaging: "",
       }))
     )
   )

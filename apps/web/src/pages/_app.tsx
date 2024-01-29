@@ -39,7 +39,10 @@ export default function App({ Component, pageProps }: AppProps) {
           </main>
           {isLessDesktop && <Toaster position="top-center" />}
           {!isLessDesktop && <Toaster position="bottom-left" />}
-          <ReactQueryDevtools initialIsOpen={false} />
+          <ReactQueryDevtools
+            initialIsOpen={false}
+            buttonPosition="bottom-left"
+          />
         </QueryClientProvider>
       </ThemeProvider>
     </ClerkProvider>

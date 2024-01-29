@@ -32,6 +32,7 @@ export const ChooseFarmingGames = React.memo(
       const localStagingFarm_list = useSteamAccountStore(state => state.localStagingFarm_list)
       const localStagingFarm_set = useSteamAccountStore(state => state.localStagingFarm_set)
       const closeModal_desktop = useSteamAccountStore(state => state.closeModal_desktop)
+      const filterInputLocalStaging = useSteamAccountStore(state => state.filterInputLocalStaging)
       const stageFarmingGames_hasGamesOnTheList = useSteamAccountStore(
         state => state.stageFarmingGames_hasGamesOnTheList
       )
@@ -105,6 +106,19 @@ export const ChooseFarmingGames = React.memo(
         localStagingFarm_set([])
       }, [])
 
+      const gameList = React.useMemo(() => {
+        if (!app.games) return null
+        if (filterInputLocalStaging.length === 0) return app.games
+        return app.games.filter(game =>
+          game.name.toLowerCase().includes(filterInputLocalStaging.toLowerCase())
+        )
+      }, [filterInputLocalStaging, app.games])
+
+      const actionSavingState =
+        mutations.farmGames.isPending ||
+        mutations.stopFarm.isPending ||
+        mutations.updateStagingGames.isPending
+
       const helpers: ChooseFarmingGamesHelpers = {
         handleRefreshGames,
         handleStopFarm,
@@ -112,6 +126,8 @@ export const ChooseFarmingGames = React.memo(
         handleActionButton,
         handleAddGameToFarmStaging,
         clearLocalStagingFarmList,
+        actionSavingState,
+        gameList,
       }
 
       return (

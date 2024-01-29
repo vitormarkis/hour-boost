@@ -1,3 +1,5 @@
+import { GameSession } from "core"
+
 export type IntentionCodes =
   | "STEAM_GUARD_REQUIRED"
   | "SUCCESS"
@@ -13,4 +15,6 @@ export type ChooseFarmingGamesHelpers = {
   handleActionButton(): Promise<void>
   handleAddGameToFarmStaging(gameId: number): void
   clearLocalStagingFarmList(): void
+  gameList: GameSession[] | null
+  actionSavingState: boolean
 }

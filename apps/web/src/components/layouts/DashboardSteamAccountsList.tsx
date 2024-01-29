@@ -33,6 +33,7 @@ export const DashboardSteamAccountsList = React.forwardRef<
                 urgent: false, // desnecessario
                 modalOpen_desktop: false,
                 autoRelogin: app.autoRelogin,
+                filterInputLocalStaging: "", // desnecessario
               }}
               contextInfo={{
                 planMaxGamesAllowed: plan.maxGamesAllowed,
