@@ -26,7 +26,6 @@ import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
 import { StateCachePayloadFarmService } from "~/utils/builders/SACStateCacheBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { env } from "~/utils/env"
 import { Prettify, bad, nice } from "~/utils/helpers"
 
 export interface IUserSACsFarmingCluster {
@@ -233,7 +232,7 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     // const errorTryingToFarm = false
     const errorTryingToFarm = await Promise.race([
       new Promise<SACGenericError>(res => sac.client.once("error", res)),
-      new Promise<false>(res => setTimeout(() => res(false), env.isTestMode() ? 0 : 400).unref()),
+      new Promise<false>(res => setTimeout(() => res(false), process.env.NODE_ENV === "TEST" ? 0 : 400).unref()),
     ])
 
     if (errorTryingToFarm) {

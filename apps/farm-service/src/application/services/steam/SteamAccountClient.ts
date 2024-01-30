@@ -20,7 +20,6 @@ import { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
 import { Logger } from "~/utils/Logger"
 import { StateCachePayloadSAC } from "~/utils/builders/SACStateCacheBuilder"
-import { env } from "~/utils/env"
 import { Prettify, bad, nice } from "~/utils/helpers"
 
 export class SteamAccountClient extends LastHandler {
@@ -141,7 +140,7 @@ export class SteamAccountClient extends LastHandler {
       this.setLastArguments("disconnected", args)
     })
 
-    if (env.isDEVMode()) {
+    if (process.env.NODE_ENV === "DEV") {
       connection.on("break", ({ relog = true, replaceRefreshToken = false } = {}) => {
         this.logger.log(`Emitting noConnection error of user ${this.accountName} for the cluster.`)
         this.client.emit("error", { eresult: SteamUser.EResult.NoConnection })
