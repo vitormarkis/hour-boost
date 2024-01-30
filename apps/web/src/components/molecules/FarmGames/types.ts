@@ -11,7 +11,6 @@ export type IntentionCodes =
 export type ChooseFarmingGamesHelpers = {
   handleStopFarm(): void
   handleRefreshGames(): void
-  handleUpdateStagingGames(): void
   handleActionButton(): Promise<void>
   handleAddGameToFarmStaging(gameId: number): void
   clearLocalStagingFarmList(): void

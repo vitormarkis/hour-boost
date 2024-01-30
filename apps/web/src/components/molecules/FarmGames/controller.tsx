@@ -42,8 +42,6 @@ export const ChooseFarmingGames = React.memo(
       )
       const user = useUser()
 
-      const handleUpdateStagingGames = () => {}
-
       const handleActionButton = React.useCallback(async () => {
         const [errorUpdatingStagingGames] = await mutations.updateStagingGames.mutateAsync({
           accountName: app.accountName,
@@ -122,7 +120,6 @@ export const ChooseFarmingGames = React.memo(
       const helpers: ChooseFarmingGamesHelpers = {
         handleRefreshGames,
         handleStopFarm,
-        handleUpdateStagingGames,
         handleActionButton,
         handleAddGameToFarmStaging,
         clearLocalStagingFarmList,

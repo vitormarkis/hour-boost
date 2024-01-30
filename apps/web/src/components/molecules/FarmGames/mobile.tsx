@@ -26,11 +26,11 @@ export function DrawerChooseFarmingGamesView() {
   const local = local_useSteamAccountListItem.farmGames()
   const maxGamesAllowed = useUser(u => u.plan.maxGamesAllowed)
   const modalOpen_desktop = useSteamAccountStore(state => state.modalOpen_desktop)
-  const { app } = useSteamAccountListItem()
   const setModalOpen_desktop = useSteamAccountStore(state => state.setModalOpen_desktop)
   const localStagingFarm_hasGame = useSteamAccountStore(state => state.localStagingFarm_hasGame)
   const closeModal_desktop = useSteamAccountStore(state => state.closeModal_desktop)
   const filterInputLocalStaging = useSteamAccountStore(state => state.filterInputLocalStaging)
+  const stageFarmingGames_list = useSteamAccountStore(state => state.stageFarmingGames_list)
   const filterInputLocalStaging_set = useSteamAccountStore(state => state.filterInputLocalStaging_set)
 
   return (
@@ -44,7 +44,7 @@ export function DrawerChooseFarmingGamesView() {
             <strong className="pb-0.5">Jogos</strong>
             <div className="flex items-center gap-2 h-6 ">
               <span className="uppercase text-sm">
-                {app.stagingGames.length}/{maxGamesAllowed}
+                {stageFarmingGames_list.length}/{maxGamesAllowed}
               </span>
               <IconJoystick className="transition-[background-color] duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />
               <span className="transition-[background-color] duration-300 text-slate-500 group-hover:text-white">
