@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { ThemeProvider } from "next-themes"
 import type { AppProps } from "next/app"
+import { Analytics } from "@vercel/analytics/react"
 
 const queryClient = new QueryClient()
 
@@ -36,6 +37,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <QueryClientProvider client={queryClient}>
           <main className={cn(barlow.className, barlow.variable)}>
             <Component {...pageProps} />
+            <Analytics />
           </main>
           {isLessDesktop && <Toaster position="top-center" />}
           {!isLessDesktop && <Toaster position="bottom-left" />}
