@@ -73,7 +73,7 @@ export class UserClientsStorage {
           username,
           sessionType: "CONTINUE-FROM-PREVIOUS",
         })
-        if (error?.code === "PLAN_MAX_USAGE_EXCEEDED") {
+        if (error?.code === "[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED") {
           console.log(`Parando farm na conta ${accountName}.`)
           await this.sacStateCacheRepository.stopFarm(accountName)
         }

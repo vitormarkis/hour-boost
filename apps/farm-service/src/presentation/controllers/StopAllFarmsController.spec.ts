@@ -36,10 +36,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   stopAllFarmsController = new StopAllFarmsController(stopAllFarmsUseCase)
   farmGamesController = new FarmGamesController({
     allUsersClientsStorage: i.allUsersClientsStorage,
-    planRepository: i.planRepository,
-    publisher: i.publisher,
-    sacStateCacheRepository: i.sacStateCacheRepository,
-    usersClusterStorage: i.usersClusterStorage,
     usersRepository: i.usersRepository,
     farmGamesUseCase: i.farmGamesUseCase,
   })

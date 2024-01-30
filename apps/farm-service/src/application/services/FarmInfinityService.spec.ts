@@ -38,12 +38,8 @@ test("should ", async () => {
 
   const farmGamesController = new FarmGamesController({
     allUsersClientsStorage: i.allUsersClientsStorage,
-    farmGamesUseCase,
-    planRepository: i.planRepository,
-    publisher: i.publisher,
-    sacStateCacheRepository: i.sacStateCacheRepository,
-    usersClusterStorage: i.usersClusterStorage,
     usersRepository: i.usersRepository,
+    farmGamesUseCase: i.farmGamesUseCase,
   })
 
   const { status, json } = await promiseHandler(

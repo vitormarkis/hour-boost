@@ -27,10 +27,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   meInstances = await i.createUser("me")
   farmGamesController = new FarmGamesController({
     allUsersClientsStorage: i.allUsersClientsStorage,
-    planRepository: i.planRepository,
-    publisher: i.publisher,
-    sacStateCacheRepository: i.sacStateCacheRepository,
-    usersClusterStorage: i.usersClusterStorage,
     usersRepository: i.usersRepository,
     farmGamesUseCase: i.farmGamesUseCase,
   })

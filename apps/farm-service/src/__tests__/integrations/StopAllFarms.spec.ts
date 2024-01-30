@@ -32,10 +32,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   await i.addSteamAccount(s.me.userId, s.me.accountName2, password)
   farmGamesController = new FarmGamesController({
     allUsersClientsStorage: i.allUsersClientsStorage,
-    planRepository: i.planRepository,
-    publisher: i.publisher,
-    sacStateCacheRepository: i.sacStateCacheRepository,
-    usersClusterStorage: i.usersClusterStorage,
     usersRepository: i.usersRepository,
     farmGamesUseCase: i.farmGamesUseCase,
   })

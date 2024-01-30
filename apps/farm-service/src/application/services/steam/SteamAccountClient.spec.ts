@@ -90,7 +90,7 @@ test("should await promise, call hasSession resolver once user logged in", async
 
 test("should await promise, call interrupt resolver once connection is break", async () => {
   console.log("starting last one")
-  jest.useFakeTimers({ doNotFake: ["setImmediate"] })
+  jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
   const sac = meInstances.meSAC
   const userCluster = i.usersClusterStorage.getOrAdd(s.me.username, meInstances.me.plan)
   let xs = 0

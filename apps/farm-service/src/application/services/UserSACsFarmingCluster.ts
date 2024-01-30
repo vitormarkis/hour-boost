@@ -21,11 +21,12 @@ import {
   SACList,
 } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
-import { EAppResults } from "~/application/use-cases"
+import { EAppResults, SACGenericError } from "~/application/use-cases"
 import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
 import { StateCachePayloadFarmService } from "~/utils/builders/SACStateCacheBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
+import { env } from "~/utils/env"
 import { Prettify, bad, nice } from "~/utils/helpers"
 
 export interface IUserSACsFarmingCluster {
@@ -193,15 +194,8 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
         await this.notifyFirstTimeFarming(accountName)
       }
       await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId, planId, sac.username)
-      const [errorFarming, result] = this.farmWithAccountImpl(sac, accountName, gamesId)
-      if (errorFarming)
-        return bad(
-          new Fail({
-            code: errorFarming.code ?? EAppResults["UNKNOWN-ERROR"],
-            httpStatus: errorFarming.status,
-            payload: errorFarming.payload,
-          })
-        )
+      const [errorFarming, result] = await this.farmWithAccountImpl(sac, accountName, gamesId)
+      if (errorFarming) return bad(errorFarming)
       return nice(result)
     } catch (error) {
       return bad(
@@ -228,15 +222,32 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     this.setFarmService(newFarmService)
   }
 
-  private farmWithAccountImpl(sac: SteamAccountClient, accountName: string, gamesId: number[]) {
+  private async farmWithAccountImpl(sac: SteamAccountClient, accountName: string, gamesId: number[]) {
     this.logger.log(`Appending account to farm on service: `, accountName)
     if (!this.isAccountFarming(accountName)) {
-      const [error] = this.farmService.farmWithAccount(accountName)
-      if (error) return bad(error)
+      const [cantFarm] = this.farmService.checkIfCanFarm()
+      if (cantFarm) return bad(cantFarm)
     }
+
     sac.farmGames(gamesId)
+    // const errorTryingToFarm = false
+    const errorTryingToFarm = await Promise.race([
+      new Promise<SACGenericError>(res => sac.client.once("error", res)),
+      new Promise<false>(res => setTimeout(() => res(false), env.isTestMode() ? 0 : 400).unref()),
+    ])
+
+    if (errorTryingToFarm) {
+      const fail = new Fail({
+        code: `cluster.farmWithAccount()::${EAppResults["UNKNOWN-CLIENT-ERROR"]}`,
+        httpStatus: 400,
+        payload: errorTryingToFarm,
+      })
+      return bad(fail)
+    }
+
+    const [error] = this.farmService.farmWithAccount(accountName)
+    if (error) return bad(error)
     return nice(null)
-    // return [null, null]
   }
 
   private pauseFarmOnAccountImpl({

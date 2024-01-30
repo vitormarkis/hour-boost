@@ -27,7 +27,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 }
 
 beforeEach(async () => {
-  jest.useFakeTimers({ doNotFake: ["setImmediate"] })
+  jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
   await setupInstances({
     validSteamAccounts,
   })
@@ -199,7 +199,7 @@ describe("FarmUsageService test suite", () => {
     const farmService = getFarmService(meInstances.me)
 
     const [error] = farmService.farmWithAccount(s.me.accountName)
-    expect(error?.message).toBe("Seu plano não possui mais uso disponível.")
+    expect(error?.code).toBe("[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED")
   })
 
   // test("should throw when plan infinity attemps to use the service", async () => {

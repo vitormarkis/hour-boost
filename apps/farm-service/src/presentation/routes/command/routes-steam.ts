@@ -113,12 +113,8 @@ command_routerSteam.post(
   async (req: WithAuthProp<Request>, res: Response) => {
     const startFarmController = new FarmGamesController({
       allUsersClientsStorage,
-      publisher,
-      sacStateCacheRepository: steamAccountClientStateCacheRepository,
-      usersClusterStorage,
-      usersRepository,
-      planRepository,
       farmGamesUseCase,
+      usersRepository,
     })
     const { json, status } = await promiseHandler(
       startFarmController.handle({

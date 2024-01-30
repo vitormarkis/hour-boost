@@ -1,6 +1,6 @@
 const log = console.log
 
-import { DataOrError, PlanType, Usage } from "core"
+import { DataOrError, DataOrFail, Fail, PlanType, Usage } from "core"
 import { FarmServiceStatus } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 
@@ -32,13 +32,15 @@ export abstract class FarmService {
 
   abstract getAccountsStatus(): AccountStatusList
 
+  abstract checkIfCanFarm(): DataOrFail<Fail>
+
   abstract getActiveFarmingAccountsAmount(): number
   abstract getFarmingAccounts(): DataOrError<NSFarmService.GetFarmingAccounts>
   abstract isAccountFarming(accountName: string): boolean
   abstract isAccountAdded(accountName: string): boolean
   abstract hasAccountsFarming(): boolean
-  abstract farmWithAccount(accountName: string): DataOrError<null>
-  abstract farmWithAccountImpl(accountName: string): DataOrError<null>
+  abstract farmWithAccount(accountName: string): DataOrFail<Fail>
+  abstract farmWithAccountImpl(accountName: string): DataOrFail<Fail>
 
   getServiceStatus() {
     return this.status
@@ -54,7 +56,7 @@ export abstract class FarmService {
   ): void
 
   protected abstract getFarmingAccountsNameList(): string[]
-  protected abstract startFarm(): DataOrError<null>
+  protected abstract startFarm(): DataOrFail<Fail>
   protected abstract stopFarm(killSession: boolean): void
   protected abstract stopFarmSync(): Usage[]
   abstract pauseFarmOnAccount(accountName: string, killSession: boolean): DataOrError<null>

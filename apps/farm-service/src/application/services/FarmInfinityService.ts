@@ -1,4 +1,4 @@
-import { ApplicationError, DataOrError, PlanInfinity, PlanType, Usage } from "core"
+import { ApplicationError, DataOrError, DataOrFail, Fail, PlanInfinity, PlanType, Usage } from "core"
 import { UserCompleteFarmSessionCommand } from "~/application/commands"
 import {
   AccountStatusList,
@@ -18,6 +18,9 @@ export type FarmInfinityAccountStatus = {
 }
 
 export class FarmInfinityService extends FarmService {
+  private readonly codify = <const T extends string = string>(moduleCode: T) =>
+    `[FarmInfinityService]:${moduleCode}` as const
+
   readonly usageBuilder = new UsageBuilder()
   protected readonly farmingAccounts = new Map<string, FarmInfinityAccountStatus>()
   type: PlanType = "INFINITY"
@@ -167,6 +170,10 @@ export class FarmInfinityService extends FarmService {
     )
   }
 
+  checkIfCanFarm() {
+    return nice()
+  }
+
   protected startFarm() {
     return nice(null)
   }
@@ -176,14 +183,19 @@ export class FarmInfinityService extends FarmService {
   }
 
   farmWithAccount(accountName: string) {
+    const [cantFarm] = this.checkIfCanFarm()
+    if (cantFarm) return bad(cantFarm)
+
     if (this.isAccountAdded(accountName)) {
       return bad(
-        new ApplicationError(
-          "Essa conta já está farmando.",
-          400,
-          undefined,
-          EAppResults["ACCOUNT-ALREADY-FARMING"]
-        )
+        new Fail({
+          code: this.codify(EAppResults["ACCOUNT-ALREADY-FARMING"]),
+          httpStatus: 403,
+          payload: {
+            givenAccountName: accountName,
+            farmingAccounts: this.getFarmingAccountsNameList(),
+          },
+        })
       )
     } else {
       this.farmWithAccountImpl(accountName)

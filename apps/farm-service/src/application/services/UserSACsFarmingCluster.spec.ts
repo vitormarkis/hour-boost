@@ -27,7 +27,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 }
 
 beforeEach(async () => {
-  jest.useFakeTimers({ doNotFake: ["setImmediate", "nextTick"] })
+  jest.useFakeTimers({ doNotFake: ["setImmediate", "nextTick", "setTimeout"] })
   await setupInstances({
     validSteamAccounts,
   })
@@ -60,7 +60,7 @@ test("should store StateCache DTO with as farming with one game", async () => {
 })
 
 test("should stop farming once interrupt occurs", async () => {
-  jest.useFakeTimers({ doNotFake: ["setImmediate"] })
+  jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
 
   const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
   let xs = 0
@@ -157,7 +157,7 @@ test("should get back farming once has session again", async () => {
 test("should check if account is farming properly", async () => {
   const plan = new PlanBuilder(s.me.userId).infinity().diamond()
   await i.changeUserPlan(plan)
-  jest.useFakeTimers().setSystemTime(new Date("2024-01-10T10:00:00.000Z"))
+  jest.useFakeTimers({ doNotFake: ["setTimeout"] }).setSystemTime(new Date("2024-01-10T10:00:00.000Z"))
   const meCluster = i.usersClusterStorage.getOrAdd(s.me.username, meInstances.me.plan)
   const sac = meInstances.meSAC
   meCluster.addSAC(sac)
@@ -209,7 +209,7 @@ test("should check if account is farming properly", async () => {
 test("should start farm again when relog with state happens", async () => {
   i = makeTestInstances({ validSteamAccounts })
   meInstances = await i.createUser("me")
-  jest.useFakeTimers({ doNotFake: ["setImmediate", "nextTick"] })
+  jest.useFakeTimers({ doNotFake: ["setImmediate", "nextTick", "setTimeout"] })
 
   console.log = log
   i.allUsersClientsStorage.flushAllAccounts()

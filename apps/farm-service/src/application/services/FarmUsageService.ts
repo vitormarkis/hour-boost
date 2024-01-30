@@ -1,4 +1,4 @@
-import { ApplicationError, DataOrError, PlanType, PlanUsage, Usage } from "core"
+import { ApplicationError, DataOrError, DataOrFail, Fail, PlanType, PlanUsage, Usage } from "core"
 
 import { UserCompleteFarmSessionCommand, UserHasStartFarmingCommand } from "~/application/commands"
 import { EventEmitter, UserClusterEvents } from "~/application/services"
@@ -8,6 +8,7 @@ import {
   NSFarmService,
   PauseFarmOnAccountUsage,
 } from "~/application/services/FarmService"
+import { EAppResults } from "~/application/use-cases"
 import { Publisher } from "~/infra/queue"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { bad, nice } from "~/utils/helpers"
@@ -25,6 +26,9 @@ export type FarmingAccountDetailsWithAccountName = FarmingAccountDetails & {
 }
 
 export class FarmUsageService extends FarmService {
+  private readonly codify = <const T extends string = string>(moduleCode: T) =>
+    `[FarmUsageService]:${moduleCode}` as const
+
   readonly accountsFarming = new Map<string, FarmingAccountDetails>()
   type: PlanType = "USAGE"
   private FARMING_GAP = FARMING_INTERVAL_IN_SECONDS
@@ -211,18 +215,28 @@ export class FarmUsageService extends FarmService {
     return Array.from(this.accountsFarming.keys())
   }
 
-  startFarm() {
-    this.status = "FARMING"
+  checkIfCanFarm() {
     if (this.usageLeft <= 0) {
       return bad(
-        new ApplicationError(
-          "Seu plano não possui mais uso disponível.",
-          403,
-          { accountName: this.username },
-          "PLAN_MAX_USAGE_EXCEEDED"
-        )
+        new Fail({
+          code: this.codify(EAppResults["PLAN-MAX-USAGE-EXCEEDED"]),
+          httpStatus: 403,
+          payload: {
+            usageLeft: this.getUsageLeft(),
+            currentUsage: this.getUsageLeft(),
+          },
+        })
       )
     }
+
+    return nice()
+  }
+
+  startFarm() {
+    this.status = "FARMING"
+    const [cantFarm] = this.checkIfCanFarm()
+    if (cantFarm) return bad(cantFarm)
+
     this.farmingInterval = setInterval(() => {
       const allAccountsFarmedTotalAmount = this.FARMING_GAP * this.getActiveFarmingAccountsAmount()
       const individualAccountFarmedAmount = this.FARMING_GAP

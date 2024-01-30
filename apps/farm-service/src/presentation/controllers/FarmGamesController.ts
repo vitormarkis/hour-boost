@@ -1,16 +1,8 @@
-import {
-  ApplicationError,
-  Controller,
-  HttpClient,
-  PlanRepository,
-  SteamAccountClientStateCacheRepository,
-  UsersRepository,
-} from "core"
+import { ApplicationError, HttpClient, UsersRepository } from "core"
 import SteamUser from "steam-user"
-import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { AllUsersClientsStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
-import { Publisher } from "~/infra/queue"
 import { SingleEventResolver } from "~/types/EventsApp.types"
 import { areTwoArraysEqual, makeRes } from "~/utils"
 import { LoginSteamWithCredentials } from "~/utils/LoginSteamWithCredentials"
@@ -26,24 +18,22 @@ export namespace FarmGamesHandle {
   export type Response = { message: string }
 }
 
-export class FarmGamesController implements Controller<FarmGamesHandle.Payload, FarmGamesHandle.Response> {
-  private readonly publisher: Publisher
+abstract class IFarmGamesController {
+  abstract handle(...args: any[]): Promise<HttpClient.Response>
+}
+
+export class FarmGamesController implements IFarmGamesController {
   private readonly usersRepository: UsersRepository
   private readonly allUsersClientsStorage: AllUsersClientsStorage
-  private readonly usersClusterStorage: UsersSACsFarmingClusterStorage
-  private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
   private readonly farmGamesUseCase: FarmGamesUseCase
 
   constructor(props: FarmGamesControllerProps) {
-    this.publisher = props.publisher
     this.usersRepository = props.usersRepository
     this.allUsersClientsStorage = props.allUsersClientsStorage
-    this.usersClusterStorage = props.usersClusterStorage
-    this.sacStateCacheRepository = props.sacStateCacheRepository
     this.farmGamesUseCase = props.farmGamesUseCase
   }
 
-  async handle({ payload }: APayload): AResponse {
+  async handle({ payload }: APayload) {
     const { accountName, gamesID, userId } = payload
     const user = await this.usersRepository.getByID(userId)
     if (!user) throw new ApplicationError("Usuário não encontrado.", 404)
@@ -98,10 +88,20 @@ export class FarmGamesController implements Controller<FarmGamesHandle.Payload, 
     })
 
     if (error) {
-      if (error.code === "PLAN_MAX_USAGE_EXCEEDED") {
+      if (error.code === "[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED") {
         return makeRes(403, "Seu plano não possui mais uso disponível.")
       }
-      throw error
+      if (error.code === "[FarmInfinityService]:ACCOUNT-ALREADY-FARMING") {
+        return makeRes(403, "Essa conta já está farmando.")
+      }
+      return {
+        json: {
+          message: "Aconteceu um erro ao inicar o farm.",
+          code: error.code,
+        },
+        status: error.httpStatus ?? 500,
+        // code: error.code,
+      }
     }
 
     return makeRes(200, "Iniciando farm.")
@@ -155,11 +155,7 @@ type APayload = HttpClient.Request<FarmGamesHandle.Payload>
 type AResponse = Promise<HttpClient.Response<FarmGamesHandle.Response>>
 
 type FarmGamesControllerProps = {
-  publisher: Publisher
   usersRepository: UsersRepository
   allUsersClientsStorage: AllUsersClientsStorage
-  sacStateCacheRepository: SteamAccountClientStateCacheRepository
-  usersClusterStorage: UsersSACsFarmingClusterStorage
-  planRepository: PlanRepository
   farmGamesUseCase: FarmGamesUseCase
 }

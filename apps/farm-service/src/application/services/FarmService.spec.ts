@@ -1,6 +1,6 @@
 let farmService: FarmService
 
-import { ApplicationError, DataOrError, PlanType, Usage } from "core"
+import { ApplicationError, DataOrError, DataOrFail, Fail, PlanType, Usage } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
@@ -103,6 +103,9 @@ describe("FarmService test suite", () => {
 })
 
 class FarmServiceImpl extends FarmService {
+  checkIfCanFarm() {
+    return nice()
+  }
   protected getFarmingAccountsNameList(): string[] {
     return []
   }
@@ -166,7 +169,7 @@ class FarmServiceImpl extends FarmService {
   }
   protected publishCompleteFarmSession(): void {}
 
-  farmWithAccountImpl(accountName: string): DataOrError<null> {
+  farmWithAccountImpl(accountName: string) {
     if (this.accountsFarming.size === 0) {
       this.status = "FARMING"
     }
@@ -174,13 +177,13 @@ class FarmServiceImpl extends FarmService {
       status: "FARMING",
       usageAmountInSeconds: 0,
     })
-    return [null, null]
+    return nice()
   }
 
   type: PlanType = "USAGE"
-  protected startFarm(): DataOrError<null> {
+  protected startFarm() {
     this.status = "FARMING"
-    return [null, null]
+    return nice()
   }
   protected stopFarm(): void {
     for (const [_, acc] of this.accountsFarming) {

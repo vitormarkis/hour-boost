@@ -1,3 +1,4 @@
+import { env } from "~/utils/env"
 import { LooseAuthProp } from "@clerk/clerk-sdk-node"
 import cors from "cors"
 import "dotenv/config"
@@ -27,6 +28,7 @@ import {
   query_routerSteam,
   query_routerUser,
 } from "~/presentation/routes/query"
+env
 
 const app: Application = express()
 app.use(

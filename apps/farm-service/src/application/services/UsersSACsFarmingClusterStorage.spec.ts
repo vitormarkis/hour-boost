@@ -27,7 +27,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 }
 
 beforeEach(async () => {
-  jest.useFakeTimers()
+  jest.useFakeTimers({ doNotFake: ["setTimeout"] })
   await setupInstances({
     validSteamAccounts,
   })

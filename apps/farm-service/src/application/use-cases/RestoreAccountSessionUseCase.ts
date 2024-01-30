@@ -61,8 +61,19 @@ export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCa
           return bad(new Fail({ code: error.code, payload: error }))
         }
       }
-      if (errorRestoringOnApplication.code === "PLAN_MAX_USAGE_EXCEEDED") {
+      if (errorRestoringOnApplication.code === "[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED") {
         console.log(`[${moduleName}::${accountName}] uso máximo do plano excedido.`)
+      }
+      if (errorRestoringOnApplication.code === "cluster.farmWithAccount()::UNKNOWN-CLIENT-ERROR") {
+        const fail = new Fail({
+          code: errorRestoringOnApplication.code,
+          httpStatus: 400,
+          payload: errorRestoringOnApplication.payload,
+        })
+        if (fail.code === "cluster.farmWithAccount()::UNKNOWN-CLIENT-ERROR") {
+          fail.payload
+        }
+        return bad(fail)
       }
       return bad(
         new Fail({
@@ -132,14 +143,14 @@ export async function restoreSACSessionOnApplication({
       new Promise<SACGenericError>(res => sac.client.once("error", res)),
       new Promise<false>(res => setTimeout(() => res(false), 1000)),
     ])
-    if (error)
-      return bad(
-        new Fail({
-          code: EAppResults["UNKNOWN-CLIENT-ERROR"],
-          httpStatus: 400,
-          payload: error,
-        })
-      )
+    if (error) {
+      const fail = new Fail({
+        code: EAppResults["UNKNOWN-CLIENT-ERROR"],
+        httpStatus: 400,
+        payload: error,
+      })
+      return bad(fail)
+    }
   }
   return nice()
 }
@@ -173,6 +184,7 @@ const EAppResultsRaw = {
   "PLAN-DOES-NOT-SUPPORT-AUTO-RELOGIN": "PLAN-DOES-NOT-SUPPORT-AUTO-RELOGIN",
   "STEAM-ACCOUNT-IS-NOT-OWNED": "STEAM-ACCOUNT-IS-NOT-OWNED",
   "STEAM-ACCOUNT-NOT-FOUND": "STEAM-ACCOUNT-NOT-FOUND",
+  "PLAN-MAX-USAGE-EXCEEDED": "PLAN-MAX-USAGE-EXCEEDED",
 } as const
 
 export const EAppResults = EAppResultsRaw as Prettify<Mutable<typeof EAppResultsRaw>>
