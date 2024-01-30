@@ -18,6 +18,8 @@ import { useFarmGames } from "./context"
 import { local_useSteamAccountListItem } from "./controller"
 import { Input } from "@/components/ui/input"
 import { IconMagnifying } from "@/components/icons/IconMagnifying"
+import { IconBroom } from "@/components/icons/IconBroom"
+import { ButtonSmall, ButtonSmallIcon } from "./desktop"
 
 export function DrawerChooseFarmingGamesView() {
   const { helpers } = useFarmGames()
@@ -42,7 +44,7 @@ export function DrawerChooseFarmingGamesView() {
             <strong className="pb-0.5">Jogos</strong>
             <div className="flex items-center gap-2 h-6 ">
               <span className="uppercase text-sm">
-                {app.farmingGames.length}/{maxGamesAllowed}
+                {app.stagingGames.length}/{maxGamesAllowed}
               </span>
               <IconJoystick className="transition-[background-color] duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />
               <span className="transition-[background-color] duration-300 text-slate-500 group-hover:text-white">
@@ -53,7 +55,7 @@ export function DrawerChooseFarmingGamesView() {
         </button>
       </DrawerTrigger>
       <DrawerContent>
-        <DrawerHeader className="py-6 px-4">
+        <DrawerHeader className="px-2">
           <DrawerTitle>{local.accountName} - Seus jogos</DrawerTitle>
           <DrawerDescription>Selecione os jogos que queira farmar e clique em salvar.</DrawerDescription>
           <label className="flex flex-col relative">
@@ -66,14 +68,40 @@ export function DrawerChooseFarmingGamesView() {
               onChange={e => filterInputLocalStaging_set(e.target.value)}
             />
           </label>
+          <div className="flex flex-wrap gap-2 pt-2">
+            <ButtonSmall
+              className="pr-4 pl-2"
+              onClick={() => helpers.clearLocalStagingFarmList()}
+            >
+              <ButtonSmallIcon>
+                <IconBroom />
+              </ButtonSmallIcon>
+              <span>Resetar</span>
+            </ButtonSmall>
+            <ButtonSmall
+              className="pr-4 pl-2 ml-auto"
+              onClick={helpers.handleRefreshGames}
+              disabled={local.refreshGames.isPending}
+            >
+              <ButtonSmallIcon>
+                <IconArrowClockwise />
+              </ButtonSmallIcon>
+              <span>{local.refreshGames.isPending ? "Atualizando" : "Atualizar"}</span>
+              {/* {local.refreshGames.isPending && (
+              <div className="absolute top-1/2 -translate-y-1/2 right-4">
+                <IconArrowClockwise className="w-4 h-4 animate-spin" />
+              </div>
+            )} */}
+            </ButtonSmall>
+          </div>
         </DrawerHeader>
         <main className="flex-1 overflow-y-scroll">
-          <ScrollArea className="h-[65vh] rounded-sm px-2">
+          <ScrollArea className="h-[45vh] rounded-sm px-2">
             <div className="flex flex-col gap-2">
               {helpers.gameList ? (
                 helpers.gameList.map(game => (
                   <GameItem
-                    height="9rem"
+                    height="7rem"
                     key={game.id}
                     game={game}
                     handleFarmGame={() => helpers.handleAddGameToFarmStaging(game.id)}
@@ -97,10 +125,10 @@ export function DrawerChooseFarmingGamesView() {
           <Button
             className="h-12 flex-1 rounded-sm relative z-40"
             onClick={helpers.handleActionButton}
-            disabled={local.farmGames.isPending || local.stopFarm.isPending}
+            disabled={helpers.actionSavingState}
           >
-            <span>{local.farmGames.isPending || local.stopFarm.isPending ? "Salvando" : "Salvar"}</span>
-            {(local.farmGames.isPending || local.stopFarm.isPending) && (
+            <span>{helpers.actionSavingState ? "Salvando" : "Salvar"}</span>
+            {helpers.actionSavingState && (
               <div className="absolute top-1/2 -translate-y-1/2 right-4">
                 <IconArrowClockwise className="w-4 h-4 animate-spin" />
               </div>

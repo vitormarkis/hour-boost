@@ -17,13 +17,16 @@ import { useSteamAccountListItem } from "./context"
 import { SteamAccountListItemViewProps } from "./types"
 import { useUser } from "@/contexts/UserContext"
 import { ToggleAutoRelogin } from "@/components/molecules/ToggleAutoRelogin/controller"
+import { MenuDropdownChangeAccountStatus } from "@/components/molecules/ChangeAccountStatus/components"
+import twc from "tailwindcss/colors"
+import { IconSpinner } from "@/components/icons/IconSpinner"
 
 type SteamAccountListItemViewMobileProps = SteamAccountListItemViewProps
 
 export const SteamAccountListItemViewMobile = React.memo(
   React.forwardRef<React.ElementRef<"div">, SteamAccountListItemViewMobileProps>(
     function SteamAccountListItemViewMobileComponent({ handleClickFarmButton, actionText }, ref) {
-      const { header, steamGuard, mutations, app, isFarming } = useSteamAccountListItem()
+      const { header, steamGuard, mutations, app, isFarming, status } = useSteamAccountListItem()
       const { accountName, profilePictureUrl, farmStartedAt } = app
       const plan = useUser(u => u.plan)
 
@@ -34,9 +37,6 @@ export const SteamAccountListItemViewMobile = React.memo(
         const { games, list } = payload
         showToastFarmingGame(list, games)
       }
-
-      const farmedTimeSince = getFarmedTimeSince(app.farmedTimeInSeconds)
-      const accountHasEverFarmed = app.farmedTimeInSeconds > 0
 
       return (
         <div
@@ -62,9 +62,37 @@ export const SteamAccountListItemViewMobile = React.memo(
             </div>
             <div className="leading-none flex flex-col grow">
               <strong className="text-lg">{accountName}</strong>
-              <div className="text-xs">
+              <div className="text-xs flex">
                 <span>Status: </span>
-                <span className="text-slate-500">Offline</span>
+                <MenuDropdownChangeAccountStatus>
+                  <button
+                    disabled={mutations.changeAccountStatus.isPending}
+                    className="disabled:cursor-not-allowed focus:outline-none flex items-center translate-y-[1px]"
+                  >
+                    <div
+                      className={cn(
+                        "h-1 w-1 rounded-full mr-1.5 bg-slate-500 ml-2",
+                        status === "online" && "bg-green-500"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "text-slate-300 select-none cursor-pointer hover:underline pr-2 -translate-y-[2px]",
+                        status === "offline" && "text-slate-500"
+                      )}
+                    >
+                      {status}
+                    </span>
+                    {mutations.changeAccountStatus.isPending && (
+                      <div className="-translate-y-[1px]">
+                        <IconSpinner
+                          color={twc.blue["500"]}
+                          className="h-3 w-3"
+                        />
+                      </div>
+                    )}
+                  </button>
+                </MenuDropdownChangeAccountStatus>
               </div>
             </div>
             <div className="flex items-center">
@@ -90,7 +118,7 @@ export const SteamAccountListItemViewMobile = React.memo(
             className="flex flex-col pt-3 px-4 gap-1"
             style={
               {
-                "--propertiesWidth": "7.2rem",
+                "--propertiesWidth": "8.5rem",
               } as CSSProperties
             }
           >
@@ -127,23 +155,19 @@ export const SteamAccountListItemViewMobile = React.memo(
               </div>
             </li>
             <li className="flex items-center  min-h-[2.25rem]">
-              <span className="pr-3 w-[var(--propertiesWidth)]">Horas ganhas:</span>
+              <span className="pr-3 w-[var(--propertiesWidth)] whitespace-nowrap">Horas farmadas</span>
 
               <div className="flex flex-col justify-center h-full leading-none">
-                <div className="flex gap-2 relative tabular-nums">
-                  <strong
-                    className={cn(
-                      "leading-none font-medium whitespace-nowrap",
-                      !accountHasEverFarmed && "text-slate-500"
-                    )}
-                  >
-                    {accountHasEverFarmed ? farmedTimeSince.highlightTime : "0 horas"}
-                  </strong>
-                  {farmedTimeSince.secondaryTime.length ? (
-                    <span className="pt-0.5 leading-none text-sm text-slate-500 whitespace-nowrap">
-                      {farmedTimeSince.secondaryTime}
-                    </span>
-                  ) : null}
+                <div className="flex relative tabular-nums">
+                  <div className="flex gap-1 leading-none font-medium whitespace-nowrap">
+                    {(app.farmedTimeInSeconds / 60 / 60).toFixed(2)}
+                    <span className="pl-1 text-slate-600">horas</span>
+                  </div>
+                  {/* <div className="absolute top-full">
+              <span className="pt-0.5 leading-none text-xs text-slate-500 whitespace-nowrap">
+                {farmedTimeSince.secondaryTime}
+              </span>
+            </div> */}
                 </div>
               </div>
             </li>

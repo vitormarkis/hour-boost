@@ -179,7 +179,7 @@ export const ButtonSmall = React.forwardRef<React.ElementRef<"button">, ButtonSm
   }
 )
 
-const ButtonSmallIcon: React.FC<PropsWithChildren> = ({ children }) => (
+export const ButtonSmallIcon: React.FC<PropsWithChildren> = ({ children }) => (
   <Slot className="w-3 h-3 fill-white">{children}</Slot>
 )
 
