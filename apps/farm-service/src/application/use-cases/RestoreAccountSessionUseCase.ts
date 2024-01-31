@@ -120,9 +120,6 @@ export async function restoreSACSessionOnApplication({
     sac.updateStagingGames(state.gamesStaging)
   }
 
-  if (state && state.isFarming && !shouldRestoreGames) {
-    console.log("55: found state, was farming, but since sac.autorestart was off, didn't start farming")
-  }
   if (state && state.isFarming && shouldRestoreGames) {
     const [errorFarmWithAccount] = await userCluster.farmWithAccount({
       accountName: state.accountName,

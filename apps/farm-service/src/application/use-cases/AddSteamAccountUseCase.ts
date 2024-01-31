@@ -52,7 +52,7 @@ export class AddSteamAccountUseCase
     if (accountOwnerStatus === "OWNED_BY_USER")
       return [new ApplicationError("Você já possui essa conta cadastrada.")]
 
-    const sac = this.allUsersClientsStorage.getOrAddSteamAccount({
+    const [sac, removeSAC] = this.allUsersClientsStorage.getOrAddSteamAccountUnsub({
       accountName,
       userId,
       username,
@@ -90,8 +90,15 @@ export class AddSteamAccountUseCase
     )
     console.log("Never resolving OUT")
 
+    const failConnectingToClient = !["loggedOn", "steamGuard"].includes(eventsPromisesResolved.type)
+    if (failConnectingToClient) {
+      removeSAC()
+      // throw new Error(`removing sac, suposed to be null, ${eventsPromisesResolved.type}`)
+    }
+
     if (eventsPromisesResolved.type === "steamGuard") {
       const [domain, setCode] = eventsPromisesResolved.args
+      const sac = this.allUsersClientsStorage.getAccountClient(userId, accountName)!
       this.allUsersClientsStorage.addSteamAccount(username, userId, sac)
       sac.setManualHandler("steamGuard", code => setCode(code))
       return [

@@ -7,6 +7,7 @@ import {
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
+import { SteamAccountClient } from "~/application/services/steam"
 import { AddSteamAccountUseCase } from "~/application/use-cases"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { AddSteamAccountController } from "~/presentation/controllers"
@@ -94,6 +95,31 @@ describe("AddSteamAccountController test suite", () => {
         })
       )
       expect(status).toBe(404)
+    })
+
+    test("should remove SAC of memory in case client error", async () => {
+      const dbMe = await i.usersRepository.getByID(s.me.userId)
+      expect(dbMe!.steamAccounts.data).toHaveLength(0)
+      const { status, json } = await promiseHandler(
+        sut.handle({
+          payload: {
+            accountName: "random_user",
+            password: "xx",
+            userId: s.me.userId,
+          },
+        })
+      )
+      const dbMe2 = await i.usersRepository.getByID(s.me.userId)
+      expect(dbMe2!.steamAccounts.data).toHaveLength(0)
+      expect(json).toStrictEqual(
+        expect.objectContaining({
+          message: "Steam Account não existe no banco de dados da Steam, delete essa conta e crie novamente.",
+        })
+      )
+      expect(status).toBe(404)
+
+      const foundSac = i.allUsersClientsStorage.getAccountClient(s.me.userId, "random_user")
+      expect(foundSac).toBeNull()
     })
 
     describe("plan diamond test suite", () => {
@@ -224,6 +250,33 @@ describe("AddSteamAccountController test suite", () => {
         message: "Steam Guard requerido. Enviando para seu celular.",
       })
       expect(status).toBe(202)
+    })
+
+    test("should NOT remove SAC of memory in case client error is steam guard", async () => {
+      console.log = log
+      const dbMe = await i.usersRepository.getByID(s.me.userId)
+      expect(dbMe!.steamAccounts.data).toHaveLength(0)
+      const { status, json } = await promiseHandler(
+        sut.handle({
+          payload: {
+            accountName: s.me.accountName,
+            password,
+            userId: s.me.userId,
+          },
+        })
+      )
+      const dbMe2 = await i.usersRepository.getByID(s.me.userId)
+      expect(dbMe2!.steamAccounts.data).toHaveLength(0)
+      expect(json).toStrictEqual(
+        expect.objectContaining({
+          message: "Steam Guard requerido. Enviando para seu celular.",
+        })
+      )
+      expect(status).toBe(202)
+
+      const foundSac = i.allUsersClientsStorage.getAccountClient(s.me.userId, s.me.accountName)
+      console.log({ foundSac })
+      expect(foundSac).toBeInstanceOf(SteamAccountClient)
     })
   })
 })
