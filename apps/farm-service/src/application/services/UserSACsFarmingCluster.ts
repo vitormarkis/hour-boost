@@ -16,6 +16,7 @@ import { FarmServiceBuilder } from "~/application/factories"
 import {
   EventEmitter,
   FarmInfinityService,
+  FarmService,
   FarmUsageService,
   PauseFarmOnAccountUsage,
   SACList,
@@ -31,10 +32,12 @@ import { Prettify, bad, nice } from "~/utils/helpers"
 export interface IUserSACsFarmingCluster {
   addSAC(...args: any[]): DataOrError<{ userCluster: UserSACsFarmingCluster }>
   farmWithAccount(details: NSUserCluster.FarmWithAccount): Promise<DataOrFail<Fail>>
+  farmService: FarmService
 }
+
 export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
   private readonly publisher: Publisher
-  farmService: FarmUsageService | FarmInfinityService
+  farmService: FarmUsageService | FarmInfinityService 
   private readonly sacList: SACList = new SACList()
   private readonly username: string
   private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository

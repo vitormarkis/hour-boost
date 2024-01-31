@@ -1,3 +1,4 @@
+import { IconChevron } from "@/components/icons/IconChevron"
 import { HeaderStructure } from "@/components/layouts/Header/header-structure"
 import { MenuDropdownUserHeader } from "@/components/molecules/menu-dropdown-user-header"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -25,13 +26,29 @@ export const HeaderDashboard = React.forwardRef<
       className={cn("gap-8", className)}
       ref={ref}
     >
-      <div className="flex-1 h-full flex gap-4 items-center"></div>
-      <div className="h-full flex gap-4 items-center">
+      <div className="flex-1 h-full flex gap-4 items-center">
+        <div className="shrink-0 flex items-center">
+          <img
+            src="logo.png"
+            alt=""
+            className="h-[1.7rem]"
+          />
+        </div>
+      </div>
+      <div className="flex-1 h-full flex gap-4 items-center justify-end">
+        <div className="hidden sm:flex">
+          <span className="font-medium text-white text-sm">{user.username}</span>
+        </div>
         <MenuDropdownUserHeader>
-          <Avatar className="h-7 w-7">
-            <AvatarImage src={user.profilePic} />
-            <AvatarFallback>{userInitials}</AvatarFallback>
-          </Avatar>
+          <div className="flex items-center h-9 px-1 hover:bg-slate-800 cursor-pointer rounded-sm">
+            <Avatar className="h-7 w-7 rounded-sm">
+              <AvatarImage src={user.profilePic} />
+              <AvatarFallback>{userInitials}</AvatarFallback>
+            </Avatar>
+            <div className="flex items-center justify-center ml-0.5">
+              <IconChevron className="size-3.5 text-slate-400" />
+            </div>
+          </div>
         </MenuDropdownUserHeader>
       </div>
     </HeaderStructure>

@@ -155,7 +155,7 @@ export const SteamAccountListItemViewMobile = React.memo(
               </div>
             </li>
             <li className="flex items-center  min-h-[2.25rem]">
-              <span className="pr-3 w-[var(--propertiesWidth)] whitespace-nowrap">Horas farmadas</span>
+              <span className="pr-3 w-[var(--propertiesWidth)] whitespace-nowrap">Horas farmadas:</span>
 
               <div className="flex flex-col justify-center h-full leading-none">
                 <div className="flex relative tabular-nums">

@@ -1,6 +1,7 @@
 import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
 import { IconBroom } from "@/components/icons/IconBroom"
 import { IconJoystick } from "@/components/icons/IconJoystick"
+import { IconMagnifying } from "@/components/icons/IconMagnifying"
 import { useFarmGames } from "@/components/molecules/FarmGames/context"
 import { local_useSteamAccountListItem } from "@/components/molecules/FarmGames/controller"
 import { GameItem } from "@/components/molecules/GameItem"
@@ -15,38 +16,24 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { useUser } from "@/contexts/UserContext"
 import { Slot } from "@radix-ui/react-slot"
 import React, { PropsWithChildren } from "react"
-import { IconMagnifying } from "@/components/icons/IconMagnifying"
 
 // export function ChooseFarmingGamesDesktop({ children }: React.PropsWithChildren) {
 export function ChooseFarmingGamesDesktop() {
   const { helpers } = useFarmGames()
-  const maxGamesAllowed = useUser(u => u.plan.maxGamesAllowed)
   const local = local_useSteamAccountListItem.farmGames()
   const modalOpen_desktop = useSteamAccountStore(state => state.modalOpen_desktop)
-  const setModalOpen_desktop = useSteamAccountStore(state => state.setModalOpen_desktop)
-  const stageFarmingGames_list = useSteamAccountStore(state => state.stageFarmingGames_list)
-  const filterInputLocalStaging = useSteamAccountStore(state => state.filterInputLocalStaging)
-  const filterInputLocalStaging_set = useSteamAccountStore(state => state.filterInputLocalStaging_set)
-
-  const setUrgent = useSteamAccountStore(state => state.setUrgent)
 
   return (
     <Sheet
       open={modalOpen_desktop}
-      onOpenChange={isOpen => {
-        if (!isOpen) setUrgent(false)
-        setModalOpen_desktop(isOpen)
-      }}
+      onOpenChange={helpers.onOpenChange}
     >
       <SheetTrigger asChild>
         <button className="flex h-full items-center px-6 group hover:bg-slate-700 transition-all duration-300">
           <div className="flex flex-col items-center">
-            <span className="uppercase text-sm pb-1">
-              {stageFarmingGames_list.length}/{maxGamesAllowed}
-            </span>
+            <span className="uppercase text-sm pb-1">{helpers.gamesStaging}</span>
             <div className="flex items-center gap-1 h-6 ">
               <IconJoystick className="transition-all duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />
               <span className="transition-all duration-300 text-slate-500 group-hover:text-white">+</span>
@@ -69,8 +56,7 @@ export function ChooseFarmingGamesDesktop() {
                 </div>
                 <Input
                   placeholder="Filtre jogos"
-                  value={filterInputLocalStaging}
-                  onChange={e => filterInputLocalStaging_set(e.target.value)}
+                  {...helpers.handleFilterInput}
                 />
               </label>
             </SheetHeader>
@@ -99,6 +85,9 @@ export function ChooseFarmingGamesDesktop() {
               </div>
             )} */}
               </ButtonSmall>
+              <div className="pl-1 tabular-nums grid">
+                <span className="text-slate-500 text-sm">{helpers.localStagingSelectedGames}</span>
+              </div>
             </div>
             <main className="flex-1 overflow-y-scroll pb-14 mt-4 h-[calc(100%_-_8rem)]">
               <div className="flex flex-col gap-2 overflow-y-hidden">

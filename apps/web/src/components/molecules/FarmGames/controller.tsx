@@ -6,7 +6,7 @@ import { useUser } from "@/contexts/UserContext"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { showToastFarmGamesResult, showToastFarmingGame } from "@/util/toaster"
 import { GameSession } from "core"
-import React from "react"
+import React, { ChangeEvent } from "react"
 import { toast } from "sonner"
 import { ChooseFarmingGamesDesktop } from "./desktop"
 import { DrawerChooseFarmingGamesView } from "./mobile"
@@ -117,6 +117,39 @@ export const ChooseFarmingGames = React.memo(
         mutations.stopFarm.isPending ||
         mutations.updateStagingGames.isPending
 
+      const setModalOpen_desktop = useSteamAccountStore(state => state.setModalOpen_desktop)
+      const filterInputLocalStaging_set = useSteamAccountStore(state => state.filterInputLocalStaging_set)
+      const setUrgent = useSteamAccountStore(state => state.setUrgent)
+
+      const maxGamesAllowed = useUser(u => u.plan.maxGamesAllowed)
+      const stageFarmingGames_list = useSteamAccountStore(state => state.stageFarmingGames_list)
+
+      const gamesStaging = React.useMemo(() => {
+        return `${stageFarmingGames_list.length}/${maxGamesAllowed}`
+      }, [stageFarmingGames_list, maxGamesAllowed])
+
+      const localStagingSelectedGames = React.useMemo(() => {
+        return `${localStagingFarm_list.length}/${maxGamesAllowed}`
+      }, [localStagingFarm_list, maxGamesAllowed])
+
+      const onOpenChange = React.useCallback(
+        (isOpen: boolean) => {
+          if (!isOpen) {
+            setUrgent(false)
+            filterInputLocalStaging_set("")
+          }
+          setModalOpen_desktop(isOpen)
+        },
+        [setUrgent, filterInputLocalStaging_set, setModalOpen_desktop]
+      )
+
+      const handleFilterInput_onChange = React.useCallback(
+        (e: ChangeEvent<HTMLInputElement>) => {
+          filterInputLocalStaging_set(e.target.value)
+        },
+        [filterInputLocalStaging_set]
+      )
+
       const helpers: ChooseFarmingGamesHelpers = {
         handleRefreshGames,
         handleStopFarm,
@@ -125,6 +158,13 @@ export const ChooseFarmingGames = React.memo(
         clearLocalStagingFarmList,
         actionSavingState,
         gameList,
+        onOpenChange,
+        gamesStaging,
+        handleFilterInput: {
+          onChange: handleFilterInput_onChange,
+          value: filterInputLocalStaging,
+        },
+        localStagingSelectedGames,
       }
 
       return (

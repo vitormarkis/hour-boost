@@ -22,7 +22,7 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
     <header
       {...props}
       className={cn(
-        "relative py-3 z-40 flex h-14 items-center border-b border-white/10 bg-black/30 backdrop-blur-sm",
+        "relative z-40 flex h-14 items-center border-b border-white/10 bg-black/30 backdrop-blur-sm",
         className
       )}
       ref={ref}

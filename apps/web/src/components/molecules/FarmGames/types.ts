@@ -1,4 +1,5 @@
 import { GameSession } from "core"
+import { ChangeEvent, ComponentProps } from "react"
 
 export type IntentionCodes =
   | "STEAM_GUARD_REQUIRED"
@@ -16,4 +17,11 @@ export type ChooseFarmingGamesHelpers = {
   clearLocalStagingFarmList(): void
   gameList: GameSession[] | null
   actionSavingState: boolean
+  onOpenChange(isOpen: boolean): void
+  gamesStaging: string
+  handleFilterInput: {
+    value: string
+    onChange(e: ChangeEvent<HTMLInputElement>): void
+  }
+  localStagingSelectedGames: string
 }
