@@ -4,7 +4,7 @@ import { useSteamAccountStore } from "@/components/molecules/SteamAccountListIte
 import { IntentionCodes as IntentionCodes_StopFarm } from "@/components/molecules/StopFarm/types"
 import { IUserContext } from "@/contexts/UserContext"
 import { StopFarmMutationResult } from "@/mutations"
-import { QUERY_KEYS } from "@/mutations/queryKeys"
+import { ECacheKeys } from "@/mutations/queryKeys"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { QueryClient } from "@tanstack/react-query"
 import React from "react"
@@ -33,7 +33,7 @@ export function useHandlers({ stopFarm, queryClient, userId, farmGames, user }: 
           dataOrMessage: [undesired],
         })
       }
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user_session(userId) })
+      queryClient.invalidateQueries({ queryKey: ECacheKeys.user_session(userId) })
       // stagingFarmGames.clear()
       return Promise.resolve({
         dataOrMessage: [null, success],

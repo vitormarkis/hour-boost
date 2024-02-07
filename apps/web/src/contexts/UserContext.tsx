@@ -1,10 +1,11 @@
 import { Helper } from "@/contexts/UserContext.helper"
 import { api } from "@/lib/axios"
-import { QUERY_KEYS } from "@/mutations/queryKeys"
+import { ECacheKeys } from "@/mutations/queryKeys"
 import { useAuth } from "@clerk/clerk-react"
 import { useQuery } from "@tanstack/react-query"
 import { GameSession, Persona, SteamAccountSession, UserSession } from "core"
 import React, { createContext, useContext, useState } from "react"
+import { useUserSession, useUserSessionQuery } from "./query/useUserSession"
 
 export interface IUserContext extends UserSession, UserMethods {}
 export namespace NSUserMethods {
@@ -35,23 +36,22 @@ export function UserProvider({ serverUser, children }: IUserProviderProps) {
   const [user, setUser] = useState(userToSession(serverUser))
   const { getToken } = useAuth()
 
+  const getAPI = async () => {
+    api.defaults.headers["Authorization"] = `Bearer ${await getToken()}`
+    return api
+  }
+
   function update(newUser: UserSession) {
     setUser(oldUser => new Helper(oldUser).udpate(newUser))
   }
 
-  useQuery<UserSession>({
-    queryKey: QUERY_KEYS.user_session(user.id),
-    queryFn: async () => {
-      const token = await getToken()
-      const { data: user } = await api.get<UserSession>("/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      console.log("Queried User, and update the internal state")
-      update(user)
-      return user
-    },
+  useUserSessionQuery({
+    getAPI,
     initialData: user,
-    refetchOnWindowFocus: false,
+    userId: user.id,
+    onSuccess(updatedUser) {
+      update(updatedUser)
+    },
   })
 
   return (

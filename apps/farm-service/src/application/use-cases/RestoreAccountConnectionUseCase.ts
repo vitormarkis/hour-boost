@@ -178,7 +178,7 @@ const handleLoginSteamWithCredentialsResult = (
     }
     return bad(errorLoggin)
   }
-  return nice(undefined)
+  return nice()
 }
 
 const handleSACClientError = (
