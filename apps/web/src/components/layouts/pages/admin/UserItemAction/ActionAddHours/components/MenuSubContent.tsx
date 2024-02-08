@@ -2,46 +2,84 @@ import { IconPlus } from "@/components/icons/IconPlus"
 import { DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
-import React, { useState } from "react"
+import React, { useReducer, useState } from "react"
 import { Pieces } from "../../components/MenuSubContentPieces"
 import { useUserAdminItem } from "../../context"
 import { Hours, Minutes } from "../value-objects"
+import { IconSpinner } from "@/components/icons/IconSpinner"
+import twc from "tailwindcss/colors"
+import { isMutationPending } from "../../ActionSetGamesLimit/components/MenuSubContent"
+import { ECacheKeys } from "@/mutations/queryKeys"
+import { HoverCard } from "../../components"
+import { useAuth } from "@clerk/clerk-react"
+import { api } from "@/lib/axios"
+import { useUserAdminActionAddHours } from "../mutation"
+import { toast } from "sonner"
+import { secondsToHoursAndMinutes } from "@/lib/secondsToHoursAndMinutes"
 
 export type ActionAddHoursMenuSubContentProps = React.ComponentPropsWithoutRef<
   typeof DropdownMenuSubContent
 > & {
-  children: React.ReactNode
-  setValue: (value: number) => void
+  children?: React.ReactNode | null
 }
 
 export const ActionAddHoursMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuSubContent>,
   ActionAddHoursMenuSubContentProps
->(function ActionAddHoursMenuSubContentComponent({ setValue, children, ...props }, ref) {
+>(function ActionAddHoursMenuSubContentComponent({ children, ...props }, ref) {
   const [isSure, setIsSure] = useState(false)
   // const maxUsageTime = useUserAdminStore(state => state.maxUsageTime)
   const maxUsageTime = useUserAdminItem(state => state.plan.maxUsageTime)
-  const [hours, setHours] = useState("0")
+  const userId = useUserAdminItem(user => user.id_user)
+  const planId = useUserAdminItem(state => state.plan.id_plan)
+  const [hours, setHours] = useState("2")
   const [minutes, setMinutes] = useState("30")
+  const finalHoursInSeconds = parseInt(hours) * 60 * 60 + parseInt(minutes) * 60
 
-  const user = useUser()
+  const mutationAddHours = useUserAdminActionAddHours()
 
-  const handleClick = () => {
-    setIsSure(true)
+  const isPending = isMutationPending(ECacheKeys.addHours)
+
+  const { hours: currentHours, minutes: currentMinutes } = secondsToHoursAndMinutes(maxUsageTime)
+  const shouldDisplayCurrentMinutes = currentMinutes > 0
+
+  const handleClick = async () => {
+    if (!isSure && finalHoursInSeconds === 0) return
+    setIsSure(s => !s)
 
     if (isSure) {
+      mutationAddHours.mutate(
+        {
+          hoursAddingInSeconds: finalHoursInSeconds,
+          planId,
+          userId,
+        },
+        {
+          onSuccess([undesired, message]) {
+            if (undesired) {
+              toast[undesired.type](undesired.message)
+              return
+            }
+            toast.success(message)
+          },
+        }
+      )
     }
   }
 
   const handleHoursOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const valueUnparsed = parseInt(e.target.value)
+    const value = e.target.value
+    if (!/^\d+$/.test(value) && value !== "") return
+    const valueUnparsed = value === "" ? 0 : parseInt(e.target.value)
     const [error, hours] = Hours.create(valueUnparsed)
     if (error) return
     setHours(hours.getValue())
   }
 
   const handleMinutesOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const valueUnparsed = parseInt(e.target.value)
+    const value = e.target.value
+    if (!/^\d+$/.test(value) && value !== "") return
+    const valueUnparsed = value === "" ? 0 : parseInt(e.target.value)
     const [error, minutes] = Minutes.create(valueUnparsed)
     if (error) return
     setMinutes(minutes.getValue())
@@ -56,26 +94,48 @@ export const ActionAddHoursMenuSubContent = React.forwardRef<
       <Pieces.Header>
         <Pieces.HeaderTitle>Tempo restante:</Pieces.HeaderTitle>
         <Pieces.HeaderSubjectAmount className="text-white font-medium pl-2">
-          {(maxUsageTime / 3600).toFixed(2)} horas
+          <span>{currentHours}h</span>
+          {shouldDisplayCurrentMinutes && <span> {currentMinutes}m</span>}
         </Pieces.HeaderSubjectAmount>
       </Pieces.Header>
       <Pieces.Footer>
         <Pieces.Input
-          type="number"
-          value={hours}
+          className="w-12"
+          value={hours.toString().padStart(2, "0")}
           onChange={handleHoursOnChange}
         />
+        <span className="pl-1 pr-2">h</span>
         <Pieces.Input
-          type="number"
-          value={minutes}
+          className="w-12"
+          value={minutes.toString().padStart(2, "0")}
           onChange={handleMinutesOnChange}
         />
-        {!isSure && (
-          <ActionAddHoursMenuSubContentTrigger onClick={handleClick}>
-            <IconPlus className="size-3 text-white" />
-          </ActionAddHoursMenuSubContentTrigger>
+        <span className="pl-1 pr-2">min</span>
+
+        {isPending && (
+          <Pieces.Loading>
+            <IconSpinner
+              color={twc.slate["200"]}
+              className="size-3 animate-pulse"
+            />
+          </Pieces.Loading>
         )}
-        {isSure && children}
+        {!isPending && (
+          <Pieces.Trigger onClick={handleClick}>
+            {!isSure && <IconPlus className="size-3 text-white" />}
+            {isSure && children}
+            <HoverCard data-open={isSure}>
+              <p>- Máximo de horas -</p>
+              <p className="tabular-nums text-sm/none py-1 px-2 rounded-md bg-accent border border-accent-500 mt-1">
+                De <strong>{maxUsageTime}</strong> horas para <strong>{hours}</strong> horas{" "}
+                {minutes !== "00" && `e ${minutes} minutos`}
+              </p>
+              <span className="text-xs text-slate-500 mt-1">
+                Tem certeza que deseja fazer essa alteração?
+              </span>
+            </HoverCard>
+          </Pieces.Trigger>
+        )}
       </Pieces.Footer>
     </Pieces.Container>
   )

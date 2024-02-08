@@ -3,4 +3,5 @@ export const ECacheKeys = {
   "USER-ADMIN-ITEM-LIST": ["USER-ADMIN-ITEM-LIST"],
   setGames: ["SET-GAMES"],
   setAccounts: ["SET-ACCOUNTS"],
+  addHours: ["ADD-HOURS"],
 }

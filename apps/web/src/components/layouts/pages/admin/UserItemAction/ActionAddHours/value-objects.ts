@@ -17,7 +17,7 @@ export class Hours {
   private constructor(readonly value: number) {}
 
   static create(hours: number) {
-    if (hours < 0 || hours > 24) {
+    if (hours < 0 || hours >= 100) {
       return [new Error("Invalid hour.")] as const
     }
     return [undefined, new Hours(hours)] as const

@@ -19,6 +19,7 @@ const USERS = [
       maxGamesAllowed: 32,
       maxSteamAccounts: 1,
       maxUsageTime: 3600 * 6,
+      id_plan: "102f5f6d-42d6-4433-ae72-189e2a43a885",
     },
   },
   {
@@ -30,6 +31,7 @@ const USERS = [
       maxGamesAllowed: 1,
       maxSteamAccounts: 2,
       maxUsageTime: 7200,
+      id_plan: "5c39e8da-6519-4ac1-85a5-1dd2b146310c",
     },
   },
   {
@@ -41,6 +43,7 @@ const USERS = [
       maxGamesAllowed: 1,
       maxSteamAccounts: 2,
       maxUsageTime: 7200,
+      id_plan: "6db79cee-2f1c-4fff-a08a-9437a35daeed",
     },
   },
   {
@@ -52,6 +55,7 @@ const USERS = [
       maxGamesAllowed: 1,
       maxSteamAccounts: 2,
       maxUsageTime: 7200,
+      id_plan: "f6a9727b-f226-4021-abdb-f38446305980",
     },
   },
 ]

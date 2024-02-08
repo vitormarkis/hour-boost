@@ -1,14 +1,13 @@
-import React, { useState } from "react"
-import { cn } from "@/lib/utils"
+import { IconLike } from "@/components/icons/IconLike"
 import {
   DropdownMenuGroup,
   DropdownMenuPortal,
   DropdownMenuSub,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
-import { IconLike } from "@/components/icons/IconLike"
-import { ActionAddHoursMenuSubContent, ActionAddHoursMenuSubContentTrigger } from "./MenuSubContent"
-import { CommandTrigger } from "../promise"
+import { cn } from "@/lib/utils"
+import React from "react"
+import { ActionAddHoursMenuSubContent } from "./MenuSubContent"
 
 export type ActionAddHoursMenuSubTriggerProps = React.ComponentPropsWithoutRef<
   typeof DropdownMenuSubTrigger
@@ -20,8 +19,6 @@ export const ActionAddHoursMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuSubTrigger>,
   ActionAddHoursMenuSubTriggerProps
 >(function ActionAddHoursMenuSubTriggerComponent({ children, className, ...props }, ref) {
-  const [value, setValue] = useState<number | undefined>()
-
   return (
     <DropdownMenuGroup>
       <DropdownMenuSub>
@@ -33,12 +30,8 @@ export const ActionAddHoursMenuSubTrigger = React.forwardRef<
           {children}
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
-          <ActionAddHoursMenuSubContent setValue={value => setValue(value)}>
-            <CommandTrigger value={value ?? 0}>
-              <ActionAddHoursMenuSubContentTrigger className="hover:bg-accent">
-                <IconLike className="size-3 text-white" />
-              </ActionAddHoursMenuSubContentTrigger>
-            </CommandTrigger>
+          <ActionAddHoursMenuSubContent>
+            <IconLike className="size-3 text-white" />
           </ActionAddHoursMenuSubContent>
         </DropdownMenuPortal>
       </DropdownMenuSub>

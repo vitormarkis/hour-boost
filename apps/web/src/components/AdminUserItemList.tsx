@@ -39,7 +39,7 @@ function UserAdminItemList({ user }: UserAdminItemListProps) {
             </div>
             <div className="pl-4 h-full grid place-items-center">
               <UserItemActionMenuDropdown>
-                <button className="flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                <button className="flex items-center gap-2 h-full pl-8 pr-6 text-sm hover:bg-slate-800/50">
                   <span>Ações</span>
                   <IconChevron className="size-3" />
                 </button>

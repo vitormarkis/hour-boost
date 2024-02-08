@@ -24,26 +24,14 @@ import { useUserAdminActionSetGames } from "../mutation"
 
 export type ActionSetGamesLimitMenuSubContentProps = React.ComponentPropsWithoutRef<
   typeof DropdownMenuSubContent
-> & {
-  render: React.FC<{ isSure: boolean; setIsSure: React.Dispatch<React.SetStateAction<boolean>> }>
-}
+> & {}
 
 export const ActionSetGamesLimitMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuSubContent>,
   ActionSetGamesLimitMenuSubContentProps
->(function ActionSetGamesLimitMenuSubContentComponent({ render, ...props }, ref) {
+>(function ActionSetGamesLimitMenuSubContentComponent({ children, ...props }, ref) {
   const userId = useUserAdminItem(state => state.id_user)
   const maxGamesAllowed = useUserAdminItem(state => state.plan.maxGamesAllowed)
-  // const { data: user } = useQuery<UserAdminPanelSession>({
-  //   queryKey: [...ECacheKeys["USER-ADMIN-ITEM-LIST"], userId],
-  //   staleTime: Infinity,
-  //   refetchOnWindowFocus: false,
-  // })
-  // if (!user) {
-  //   console.log({ subContent_user: user })
-  //   throw new Error("No user found")
-  // }
-  // const { maxGamesAllowed } = user.plan
 
   const { getToken } = useAuth()
   const getAPI = async () => {
@@ -52,9 +40,6 @@ export const ActionSetGamesLimitMenuSubContent = React.forwardRef<
   }
   const mutationSetGames = useUserAdminActionSetGames(getAPI)
 
-  // const maxGamesAllowed = useUserAdminStore(state => state.maxGamesAllowed)
-  // const userId = useUserAdminStore(state => state.userId)
-  // const handleSetGamesLimit = useUserAdminStore(state => state.setGamesLimit_handle)
   const [isSure, setIsSure] = useState(false)
   const [inputValueMaxGamesLimit, setInputValueMaxGamesLimit] = useState(maxGamesAllowed)
   const isDirty = maxGamesAllowed !== inputValueMaxGamesLimit
@@ -136,7 +121,7 @@ export const ActionSetGamesLimitMenuSubContent = React.forwardRef<
         {!isPending && (
           <Pieces.Trigger onClick={handleClick}>
             {!isSure && <IconPlus className="size-3 text-white" />}
-            {isSure && render({ isSure, setIsSure })}
+            {isSure && children}
             <HoverCard data-open={isSure}>
               <p>- Máximo de jogos -</p>
               <p className="tabular-nums text-sm/none py-1 px-2 rounded-md bg-accent border border-accent-500 mt-1">

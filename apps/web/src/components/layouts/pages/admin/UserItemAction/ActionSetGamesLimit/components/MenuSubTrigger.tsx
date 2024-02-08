@@ -30,10 +30,9 @@ export const ActionSetGamesLimitMenuSubTrigger = React.forwardRef<
           {children}
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
-          <ActionSetGamesLimitMenuSubContent
-            className="overflow-visible"
-            render={() => <IconLike className="size-3 text-white" />}
-          />
+          <ActionSetGamesLimitMenuSubContent className="overflow-visible">
+            <IconLike className="size-3 text-white" />
+          </ActionSetGamesLimitMenuSubContent>
         </DropdownMenuPortal>
       </DropdownMenuSub>
     </DropdownMenuGroup>
