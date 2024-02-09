@@ -10,17 +10,21 @@ import { useUserAdminItem } from "../context"
 
 export type UserItemActionMenuDropdownProps = React.ComponentPropsWithoutRef<"div"> & {
   children: React.ReactNode
+  preventDefault?: boolean
 }
 
 export const UserItemActionMenuDropdown = React.forwardRef<
   React.ElementRef<"div">,
   UserItemActionMenuDropdownProps
->(function UserItemActionMenuDropdownComponent({ children, className, ...props }, ref) {
+>(function UserItemActionMenuDropdownComponent(
+  { children, preventDefault = false, className, ...props },
+  ref
+) {
   const planType = useUserAdminItem(user => user.plan.type)
   const planIsUsage = planType === "USAGE"
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={preventDefault ? false : undefined}>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent
         {...props}

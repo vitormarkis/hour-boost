@@ -4,4 +4,5 @@ export const ECacheKeys = {
   setGames: ["SET-GAMES"],
   setAccounts: ["SET-ACCOUNTS"],
   addHours: ["ADD-HOURS"],
+  banUser: ["BAN-USER"],
 }

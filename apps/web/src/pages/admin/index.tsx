@@ -1,4 +1,4 @@
-import { UserAdminItemList } from "@/components/AdminUserItemList"
+import { UserAdminItemList } from "@/components/layouts/pages/admin/components/AdminUserItemList"
 import { HeaderDashboard } from "@/components/layouts/Header/header-dashboard"
 import { ECacheKeys } from "@/mutations/queryKeys"
 import { useQuery } from "@tanstack/react-query"
@@ -9,6 +9,7 @@ import {
   PlanSession,
   PlanUsage,
   PlanUsageSession,
+  StatusName,
 } from "core"
 
 const USERS: UserAdminPanelSession[] = [
@@ -16,6 +17,7 @@ const USERS: UserAdminPanelSession[] = [
     id_user: "33ede51a-6f05-4ee5-969b-334f8c49e2c3",
     username: "josevitor",
     profilePicture: "https://avatars.githubusercontent.com/u/121525239?v=4",
+    status: "ACTIVE",
     plan: {
       maxGamesAllowed: 32,
       maxSteamAccounts: 1,
@@ -72,6 +74,7 @@ const USERS: UserAdminPanelSession[] = [
       type: "USAGE",
     } satisfies PlanUsageSession,
     purchases: [],
+    status: "ACTIVE",
   },
   {
     id_user: "21f8e4d7-0b05-4af3-8cd1-11f1ce3455ff2",
@@ -88,6 +91,7 @@ const USERS: UserAdminPanelSession[] = [
       type: "USAGE",
     } satisfies PlanUsageSession,
     purchases: [],
+    status: "ACTIVE",
   },
   {
     id_user: "21f8e4d7-0b05-4af3-8cd1-11f1ce3455ff1",
@@ -104,6 +108,7 @@ const USERS: UserAdminPanelSession[] = [
       type: "USAGE",
     } satisfies PlanUsageSession,
     purchases: [],
+    status: "ACTIVE",
   },
 ]
 
@@ -113,6 +118,7 @@ export type UserAdminPanelSession = {
   profilePicture: string
   plan: PlanUsageSession | PlanInfinitySession
   purchases: PurchaseSession[]
+  status: StatusName
 }
 export type PurchaseSession = {
   id_Purchase: string
