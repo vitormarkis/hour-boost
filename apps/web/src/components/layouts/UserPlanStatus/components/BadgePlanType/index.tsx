@@ -1,6 +1,6 @@
 import { VariantProps, cva } from "class-variance-authority"
 
-export const badgePlanTypeVariants = cva("border py-0 5 px-2 shadow-md", {
+export const badgePlanTypeVariants = cva("border py-0 5 shadow-md", {
   variants: {
     name: {
       DIAMOND: "bg-sky-600 border-sky-500 text-sky-100 shadow-sky-800/60",
@@ -8,19 +8,26 @@ export const badgePlanTypeVariants = cva("border py-0 5 px-2 shadow-md", {
       GUEST: "bg-zinc-600 border-neutral-600 text-zinc-100 shadow-black-800/60",
       SILVER: "bg-neutral-100 border-white text-neutral-600 shadow-white/20",
     },
+    size: {
+      regular: "px-2",
+      sm: "px-2 text-sm",
+    },
   },
-  defaultVariants: {},
+  defaultVariants: {
+    size: "regular",
+  },
 })
 
 export function BadgePlanType({
   className,
+  size,
   name,
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof badgePlanTypeVariants>) {
   return (
     <div
       {...props}
-      className={badgePlanTypeVariants({ name, className })}
+      className={badgePlanTypeVariants({ size, name, className })}
     />
   )
 }

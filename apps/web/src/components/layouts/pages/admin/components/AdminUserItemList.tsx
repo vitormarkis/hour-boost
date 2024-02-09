@@ -15,6 +15,8 @@ import { IconUserCycle } from "@/components/icons/IconUserCycle"
 import { useMutationState } from "@tanstack/react-query"
 import { ECacheKeys } from "@/mutations/queryKeys"
 import { isMutationPending } from "../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
+import { BadgePlanType } from "@/components/layouts/UserPlanStatus/components"
+import { getPlanName } from "@/util/getPlanName"
 
 export type UserAdminItemListProps = {
   user: UserAdminPanelSession
@@ -25,6 +27,8 @@ function UserAdminItemList({ user }: UserAdminItemListProps) {
 
   const isUnbanningUser = isMutationPending(ECacheKeys.unbanUser(user.id_user))
 
+  const planName = getPlanName(user.plan.name)
+
   return (
     <UserAdminItemProvider value={user}>
       <Accordion
@@ -33,26 +37,33 @@ function UserAdminItemList({ user }: UserAdminItemListProps) {
       >
         <AccordionItem value="item-1">
           <div className="h-14 flex items-center bg-black/10 hover:bg-slate-900/50 cursor-pointer">
-            <div className="h-14 w-14 relative">
-              <img
-                src={user.profilePicture}
-                // alt={`${user.username}'s profile picture.`}
-                className={cn("h-full w-full absolute inset-0", isBanned && "opacity-50")}
-              />
-              <div className="inset-0 bg-black" />
-              {isBanned && (
-                <span className="flex items-center h-4 text-2xs px-1 bg-red-500 absolute left-0 top-0 -translate-y-1/2 -translate-x-2 z-30">
-                  banido
-                </span>
-              )}
+            <div className="h-14 w-14 grid place-items-center">
+              <div className="h-[3.25rem] w-[3.25rem] grid place-items-center">
+                <div className="h-12 w-12 relative shadow-lg shadow-black/50 rounded overflow-hidden">
+                  <img
+                    src={user.profilePicture}
+                    // alt={`${user.username}'s profile picture.`}
+                    className={cn("h-full w-full absolute inset-0", isBanned && "opacity-50")}
+                  />
+                  <div className="inset-0 bg-black" />
+                  {isBanned && (
+                    <span className="flex items-center h-4 text-2xs px-1 bg-red-500 absolute left-0 top-0 -translate-y-1/2 -translate-x-2 z-30">
+                      banido
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="pl-4 w-[13rem]">
               <strong className={cn("font-medium", isBanned && "text-slate-500")}>{user.username}</strong>
             </div>
             <div className="pl-4">
-              <div className="h-5 rounded flex items-center bg-sky-500 px-2">
-                <span className="font-medium text-xs text-white">{user.plan.name}</span>
-              </div>
+              <BadgePlanType
+                size="sm"
+                name={user.plan.name}
+              >
+                {planName}
+              </BadgePlanType>
             </div>
             <div className="pl-4 h-full grid place-items-center">
               <UserItemActionMenuDropdown preventDefault={isBanned}>
