@@ -1,17 +1,4 @@
 import { VariantProps, cva } from "class-variance-authority"
-import { PlanAllNames } from "core"
-import { PropsWithChildren } from "react"
-
-export function getPlanName(planName: PlanAllNames): string {
-  const planNamesMapper: Record<PlanAllNames, string> = {
-    DIAMOND: "Diamante",
-    GOLD: "Ouro",
-    GUEST: "Convidado",
-    SILVER: "Prata",
-  }
-
-  return planNamesMapper[planName]
-}
 
 export const badgePlanTypeVariants = cva("border py-0 5 px-2 shadow-md", {
   variants: {
@@ -26,8 +13,14 @@ export const badgePlanTypeVariants = cva("border py-0 5 px-2 shadow-md", {
 })
 
 export function BadgePlanType({
-  children,
+  className,
   name,
-}: PropsWithChildren & VariantProps<typeof badgePlanTypeVariants>) {
-  return <div className={badgePlanTypeVariants({ name })}>{children}</div>
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof badgePlanTypeVariants>) {
+  return (
+    <div
+      {...props}
+      className={badgePlanTypeVariants({ name, className })}
+    />
+  )
 }

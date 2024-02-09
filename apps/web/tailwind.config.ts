@@ -12,6 +12,9 @@ const config: Config = {
       },
     },
     extend: {
+      fontSize: {
+        "2xs": "0.625rem",
+      },
       screens: {
         xs: "480px",
         // => @media (min-width: 480px) { ... }

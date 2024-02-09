@@ -5,7 +5,8 @@ import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
 import { planIsUsage } from "@/util/thisPlanIsUsage"
 import React from "react"
-import { BadgePlanInfo, BadgePlanType, getPlanName } from "./components"
+import { BadgePlanInfo, BadgePlanType } from "./components"
+import { getPlanName } from "@/util/getPlanName"
 
 export function UserPlanStatus() {
   const { plan, steamAccounts } = useUser()

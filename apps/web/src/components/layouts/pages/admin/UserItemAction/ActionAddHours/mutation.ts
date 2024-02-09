@@ -9,6 +9,7 @@ import { UserAdminPanelSession } from "@/pages/admin"
 import { produce } from "immer"
 import { api } from "@/lib/axios"
 import { useAuth } from "@clerk/clerk-react"
+import { planIsUsage } from "@/util/thisPlanIsUsage"
 
 export function useUserAdminActionAddHours() {
   const queryClient = useQueryClient()
@@ -21,7 +22,9 @@ export function useUserAdminActionAddHours() {
       queryClient.setQueryData<UserAdminPanelSession[]>(ECacheKeys["USER-ADMIN-ITEM-LIST"], users => {
         return produce(users, users => {
           const user = users!.find(u => u.id_user === variables.userId)!
-          user.plan.maxUsageTime += variables.hoursAddingInSeconds
+          if (planIsUsage(user.plan)) {
+            user.plan.maxUsageTime += variables.hoursAddingInSeconds
+          }
         })
       })
     },

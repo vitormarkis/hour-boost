@@ -8,6 +8,7 @@ import { IconUserX } from "./icons/IconUserX"
 import { UserItemActionMenuDropdown } from "./layouts/pages/admin/UserItemAction/MenuDropdown"
 import { UserAdminItemProvider } from "./layouts/pages/admin/UserItemAction/context"
 import _ from "lodash"
+import { ModalSeeUserPurchases } from "./layouts/pages/admin/UserPurchases"
 
 export type UserAdminItemListProps = {
   user: UserAdminPanelSession
@@ -47,9 +48,11 @@ function UserAdminItemList({ user }: UserAdminItemListProps) {
             </div>
             <div className="h-full flex ml-auto">
               <div className="pl-4 h-full flex">
-                <button className="flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
-                  <IconCircleDollar className="size-5" />
-                </button>
+                <ModalSeeUserPurchases>
+                  <button className="flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                    <IconCircleDollar className="size-5" />
+                  </button>
+                </ModalSeeUserPurchases>
                 <button className="flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
                   <IconUserMinus className="size-5" />
                 </button>

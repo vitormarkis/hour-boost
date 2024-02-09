@@ -1,21 +1,19 @@
 import { IconPlus } from "@/components/icons/IconPlus"
-import { DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
-import { useUser } from "@/contexts/UserContext"
-import { cn } from "@/lib/utils"
-import React, { useReducer, useState } from "react"
-import { Pieces } from "../../components/MenuSubContentPieces"
-import { useUserAdminItem } from "../../context"
-import { Hours, Minutes } from "../value-objects"
 import { IconSpinner } from "@/components/icons/IconSpinner"
+import { DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
+import { secondsToHoursAndMinutes } from "@/lib/secondsToHoursAndMinutes"
+import { cn } from "@/lib/utils"
+import { ECacheKeys } from "@/mutations/queryKeys"
+import React, { useState } from "react"
+import { toast } from "sonner"
 import twc from "tailwindcss/colors"
 import { isMutationPending } from "../../ActionSetGamesLimit/components/MenuSubContent"
-import { ECacheKeys } from "@/mutations/queryKeys"
 import { HoverCard } from "../../components"
-import { useAuth } from "@clerk/clerk-react"
-import { api } from "@/lib/axios"
+import { Pieces } from "../../components/MenuSubContentPieces"
+import { useUserAdminItem } from "../../context"
 import { useUserAdminActionAddHours } from "../mutation"
-import { toast } from "sonner"
-import { secondsToHoursAndMinutes } from "@/lib/secondsToHoursAndMinutes"
+import { Hours, Minutes } from "../value-objects"
+import { PlanUsageSession } from "core"
 
 export type ActionAddHoursMenuSubContentProps = React.ComponentPropsWithoutRef<
   typeof DropdownMenuSubContent
@@ -29,7 +27,7 @@ export const ActionAddHoursMenuSubContent = React.forwardRef<
 >(function ActionAddHoursMenuSubContentComponent({ children, ...props }, ref) {
   const [isSure, setIsSure] = useState(false)
   // const maxUsageTime = useUserAdminStore(state => state.maxUsageTime)
-  const maxUsageTime = useUserAdminItem(state => state.plan.maxUsageTime)
+  const maxUsageTime = useUserAdminItem(state => (state.plan as PlanUsageSession).maxUsageTime)
   const userId = useUserAdminItem(user => user.id_user)
   const planId = useUserAdminItem(state => state.plan.id_plan)
   const [hours, setHours] = useState("2")
