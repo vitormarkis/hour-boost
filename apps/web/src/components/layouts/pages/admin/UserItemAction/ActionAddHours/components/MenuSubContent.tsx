@@ -39,6 +39,9 @@ export const ActionAddHoursMenuSubContent = React.forwardRef<
   const isPending = isMutationPending(ECacheKeys.addHours)
 
   const { hours: currentHours, minutes: currentMinutes } = secondsToHoursAndMinutes(maxUsageTime)
+  const { hours: finalHours, minutes: finalMinutes } = secondsToHoursAndMinutes(
+    finalHoursInSeconds + maxUsageTime
+  )
   const shouldDisplayCurrentMinutes = currentMinutes > 0
 
   const handleClick = async () => {
@@ -125,8 +128,14 @@ export const ActionAddHoursMenuSubContent = React.forwardRef<
             <HoverCard data-open={isSure}>
               <p>- Máximo de horas -</p>
               <p className="tabular-nums text-sm/none py-1 px-2 rounded-md bg-accent border border-accent-500 mt-1">
-                De <strong>{maxUsageTime}</strong> horas para <strong>{hours}</strong> horas{" "}
-                {minutes !== "00" && `e ${minutes} minutos`}
+                De{" "}
+                <strong>
+                  {currentHours} horas {currentMinutes > 0 && `e ${currentMinutes} minutos`}{" "}
+                </strong>
+                para{" "}
+                <strong>
+                  {finalHours} horas {finalMinutes > 0 && `e ${finalMinutes} minutos`}
+                </strong>
               </p>
               <span className="text-xs text-slate-500 mt-1">
                 Tem certeza que deseja fazer essa alteração?

@@ -21,7 +21,7 @@ export async function httpUserAdminActionAddHours(
       return {
         status: 200,
         data: {
-          message: `Você adicionou ${hoursAddingInSeconds / 60 / 60} horas a mais no plano.`,
+          message: `Você adicionou ${(hoursAddingInSeconds / 60 / 60).toFixed(2)} horas a mais no plano.`,
         },
       }
     })()

@@ -1,9 +1,9 @@
+import { cn } from "@/lib/utils"
 import { ComponentProps } from "react"
 import { twc } from "react-twc"
 
-const HoverCardTWC = twc.div`
+const HoverCardTWC = twc.div`${cn(`
   absolute left-1/2 -translate-x-1/2 top-[calc(100%_+_0.5rem)] w-48 py-1.5 px-1.5 border bg-slate-900 border-slate-800 text-sm flex flex-col items-center
-
   data-[open=false]:scale-95
   data-[open=false]:opacity-0
   data-[open=false]:invisible
@@ -12,7 +12,7 @@ const HoverCardTWC = twc.div`
   data-[open=true]:visible
   transition-all
   duration-300
-`
+`)}`
 
 export const HoverCard: React.FC<ComponentProps<typeof HoverCardTWC>> = props => {
   return (

@@ -2,7 +2,7 @@ import { DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { Input as RootInput } from "@/components/ui/input"
 import { twc } from "react-twc"
 
-const Container = twc(DropdownMenuSubContent)`min-w-sm p-0 w-full`
+const Container = twc(DropdownMenuSubContent)`min-w-sm p-0 w-full overflow-visible`
 
 const Header = twc.header`flex items-center text-slate-400 pt-2 px-2`
 

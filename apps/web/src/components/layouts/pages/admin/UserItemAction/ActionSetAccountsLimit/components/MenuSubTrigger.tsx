@@ -31,10 +31,7 @@ export const ActionSetAccountsLimitMenuSubTrigger = React.forwardRef<
           {children}
         </DropdownMenuSubTrigger>
         <DropdownMenuPortal>
-          <ActionSetAccountsLimitMenuSubContent
-            className="overflow-visible"
-            render={() => <IconLike className="size-3 text-white" />}
-          />
+          <ActionSetAccountsLimitMenuSubContent render={() => <IconLike className="size-3 text-white" />} />
         </DropdownMenuPortal>
       </DropdownMenuSub>
     </DropdownMenuGroup>
