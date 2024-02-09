@@ -5,11 +5,16 @@ import { UserAdminPanelSession } from "@/pages/admin"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion"
 import _ from "lodash"
 import { memo } from "react"
-import { AlertDialogBanUser } from "../UserBan/components/alert-dialog"
+import { AlertDialogBanUser } from "../BanUser/components/alert-dialog"
 import { UserItemActionMenuDropdown } from "../UserItemAction/MenuDropdown"
 import { UserAdminItemProvider } from "../UserItemAction/context"
 import { ModalSeeUserPurchases } from "../UserPurchases"
 import { cn } from "@/lib/utils"
+import { AlertDialogUnbanUser } from "../UnbanUser/components/alert-dialog"
+import { IconUserCycle } from "@/components/icons/IconUserCycle"
+import { useMutationState } from "@tanstack/react-query"
+import { ECacheKeys } from "@/mutations/queryKeys"
+import { isMutationPending } from "../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
 
 export type UserAdminItemListProps = {
   user: UserAdminPanelSession
@@ -17,6 +22,8 @@ export type UserAdminItemListProps = {
 
 function UserAdminItemList({ user }: UserAdminItemListProps) {
   const isBanned = user.status === "BANNED"
+
+  const isUnbanningUser = isMutationPending(ECacheKeys.unbanUser(user.id_user))
 
   return (
     <UserAdminItemProvider value={user}>
@@ -61,15 +68,26 @@ function UserAdminItemList({ user }: UserAdminItemListProps) {
             <div className="h-full flex ml-auto">
               <div className="pl-4 h-full flex">
                 <ModalSeeUserPurchases>
-                  <button className="flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                  <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
                     <IconCircleDollar className="size-5" />
                   </button>
                 </ModalSeeUserPurchases>
-                <AlertDialogBanUser>
-                  <button className="flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
-                    <IconUserX className="size-5" />
-                  </button>
-                </AlertDialogBanUser>
+                {!isBanned && (
+                  <AlertDialogBanUser>
+                    <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                      <IconUserX className="size-5" />
+                    </button>
+                  </AlertDialogBanUser>
+                )}
+                {isBanned && (
+                  <AlertDialogUnbanUser>
+                    <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                      <IconUserCycle
+                        className={cn("size-6 text-emerald-300", isUnbanningUser && "animate-spin")}
+                      />
+                    </button>
+                  </AlertDialogUnbanUser>
+                )}
                 {/* <button className="flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
                   <IconUserMinus className="size-5" />
                 </button> */}

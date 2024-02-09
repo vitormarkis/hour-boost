@@ -18,6 +18,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useUserAdminActionBanUser } from "../mutation"
 import { toast } from "sonner"
+import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
+import { isMutationPending } from "../../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
+import { ECacheKeys } from "@/mutations/queryKeys"
 
 export type AlertDialogBanUserProps = React.ComponentPropsWithoutRef<typeof AlertDialogContent> & {
   children: React.ReactNode
@@ -27,12 +30,14 @@ export const AlertDialogBanUser = React.forwardRef<
   React.ElementRef<typeof AlertDialogContent>,
   AlertDialogBanUserProps
 >(function AlertDialogBanUserComponent({ children, className, ...props }, ref) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const username = useUserAdminItem(user => user.username)
   const userId = useUserAdminItem(user => user.id_user)
   const [input, setInput] = useState("")
   const hasTypedHourboost = input === "HOURBOOST"
 
-  const banUserMutation = useUserAdminActionBanUser()
+  const banUserMutation = useUserAdminActionBanUser({ userId })
+  const isBanningUser = isMutationPending(ECacheKeys.banUser(userId))
 
   const handleBanUser = () => {
     banUserMutation.mutate(
@@ -47,6 +52,7 @@ export const AlertDialogBanUser = React.forwardRef<
             return
           }
 
+          setIsDialogOpen(false)
           toast.success(message)
         },
       }
@@ -54,7 +60,10 @@ export const AlertDialogBanUser = React.forwardRef<
   }
 
   return (
-    <AlertDialog>
+    <AlertDialog
+      open={isDialogOpen}
+      onOpenChange={setIsDialogOpen}
+    >
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent
         {...props}
@@ -64,7 +73,7 @@ export const AlertDialogBanUser = React.forwardRef<
         <AlertDialogHeader>
           <AlertDialogTitle>Banir {username}</AlertDialogTitle>
           <AlertDialogDescription>
-            Para banir {username} por tempo indeterminado, escreva <Accent>HOURBOOST</Accent> e clique em
+            Para banir {username} por tempo indeterminado, digite <Accent>HOURBOOST</Accent> e clique em
             confirmar.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -76,15 +85,19 @@ export const AlertDialogBanUser = React.forwardRef<
           />
         </div>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction asChild>
-            <Button
-              disabled={!hasTypedHourboost}
-              onClick={handleBanUser}
-            >
-              Confrmar
-            </Button>
-          </AlertDialogAction>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <Button
+            disabled={!hasTypedHourboost || isBanningUser}
+            onClick={handleBanUser}
+            className="relative px-12"
+          >
+            <span>Confirmar</span>
+            {isBanningUser && (
+              <div className="absolute top-1/2 -translate-y-1/2 right-4">
+                <IconArrowClockwise className="w-4 h-4 animate-spin" />
+              </div>
+            )}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

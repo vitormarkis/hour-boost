@@ -1,6 +1,6 @@
 import { ECacheKeys } from "@/mutations/queryKeys"
-import { UserAdminActionBanUserPayload } from "./controller"
-import { httpUserAdminActionBanUser } from "./httpRequest"
+import { UserAdminActionUnbanUserPayload } from "./controller"
+import { httpUserAdminActionUnbanUser } from "./httpRequest"
 import { IntentionCodes } from "./types"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { DefaultError, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -11,25 +11,29 @@ import { api } from "@/lib/axios"
 import { useAuth } from "@clerk/clerk-react"
 import { planIsUsage } from "@/util/thisPlanIsUsage"
 
-export function useUserAdminActionBanUser() {
+type UseUserAdminActionUnbanUserProps = {
+  userId: string
+}
+
+export function useUserAdminActionUnbanUser({ userId }: UseUserAdminActionUnbanUserProps) {
   const queryClient = useQueryClient()
   const { getAPI } = useGetAPI()
 
-  return useMutation<DataOrMessage<string, IntentionCodes>, DefaultError, UserAdminActionBanUserPayload>({
-    mutationKey: ECacheKeys.banUser,
-    mutationFn: async (...args) => httpUserAdminActionBanUser(...args, getAPI),
+  return useMutation<DataOrMessage<string, IntentionCodes>, DefaultError, UserAdminActionUnbanUserPayload>({
+    mutationKey: ECacheKeys.unbanUser(userId),
+    mutationFn: async (...args) => httpUserAdminActionUnbanUser(...args, getAPI),
     onSuccess(_, variables) {
       queryClient.setQueryData<UserAdminPanelSession[]>(ECacheKeys["USER-ADMIN-ITEM-LIST"], users => {
         return produce(users, users => {
           const user = users!.find(u => u.id_user === variables.userId)!
-          user.status = "BANNED"
+          user.status = "ACTIVE"
         })
       })
     },
   })
 }
 
-export type UserAdminActionBanUserResult = ReturnType<typeof useUserAdminActionBanUser>
+export type UserAdminActionUnbanUserResult = ReturnType<typeof useUserAdminActionUnbanUser>
 
 export function useGetAPI() {
   const { getToken } = useAuth()
