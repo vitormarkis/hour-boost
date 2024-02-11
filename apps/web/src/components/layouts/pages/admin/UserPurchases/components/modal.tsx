@@ -1,5 +1,3 @@
-import React, { CSSProperties } from "react"
-import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -8,9 +6,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { useUserAdminItem } from "../../UserItemAction/context"
-import { PurchaseItem } from "./purchase-item"
+import { cn } from "@/lib/utils"
+import React, { CSSProperties } from "react"
+import { useUserAdminItemId } from "../../UserItemAction/context"
+import { useUserAdminListItem } from "../../hooks/useUserAdminListItem"
 import { NoPurchasesYet } from "./no-purchases-yet"
+import { PurchaseItem } from "./purchase-item"
 import { PurchaseListHeader } from "./purchase-list-header"
 
 const columnsWidth = {
@@ -29,8 +30,9 @@ export const ModalSeeUserPurchases = React.forwardRef<
   React.ElementRef<typeof DialogContent>,
   ModalSeeUserPurchasesProps
 >(function ModalSeeUserPurchasesComponent({ children, className, ...props }, ref) {
-  const username = useUserAdminItem(user => user.username)
-  const purchases = useUserAdminItem(user => user.purchases)
+  const userId = useUserAdminItemId()
+  const username = useUserAdminListItem(userId, user => user.username)
+  const purchases = useUserAdminListItem(userId, user => user.purchases)
 
   return (
     <Dialog>

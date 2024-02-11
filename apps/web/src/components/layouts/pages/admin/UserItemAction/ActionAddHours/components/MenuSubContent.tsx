@@ -4,16 +4,17 @@ import { DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
 import { secondsToHoursAndMinutes } from "@/lib/secondsToHoursAndMinutes"
 import { cn } from "@/lib/utils"
 import { ECacheKeys } from "@/mutations/queryKeys"
+import { PlanUsageSession } from "core"
 import React, { useState } from "react"
 import { toast } from "sonner"
 import twc from "tailwindcss/colors"
+import { useUserAdminListItem } from "../../../hooks/useUserAdminListItem"
 import { isMutationPending } from "../../ActionSetGamesLimit/components/MenuSubContent"
 import { HoverCard } from "../../components"
 import { Pieces } from "../../components/MenuSubContentPieces"
-import { useUserAdminItem } from "../../context"
+import { useUserAdminItemId } from "../../context"
 import { useUserAdminActionAddHours } from "../mutation"
 import { Hours, Minutes } from "../value-objects"
-import { PlanUsageSession } from "core"
 
 export type ActionAddHoursMenuSubContentProps = React.ComponentPropsWithoutRef<
   typeof DropdownMenuSubContent
@@ -27,9 +28,10 @@ export const ActionAddHoursMenuSubContent = React.forwardRef<
 >(function ActionAddHoursMenuSubContentComponent({ children, ...props }, ref) {
   const [isSure, setIsSure] = useState(false)
   // const maxUsageTime = useUserAdminStore(state => state.maxUsageTime)
-  const maxUsageTime = useUserAdminItem(state => (state.plan as PlanUsageSession).maxUsageTime)
-  const userId = useUserAdminItem(user => user.id_user)
-  const planId = useUserAdminItem(state => state.plan.id_plan)
+  const userId = useUserAdminItemId()
+  const planId = useUserAdminListItem(userId, user => user.plan.id_plan)
+  const maxUsageTime = useUserAdminListItem(userId, user => (user.plan as PlanUsageSession).maxUsageTime)
+
   const [hours, setHours] = useState("2")
   const [minutes, setMinutes] = useState("30")
   const finalHoursInSeconds = parseInt(hours) * 60 * 60 + parseInt(minutes) * 60

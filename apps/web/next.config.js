@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["core"],
+  images: {
+    domains: ["cdn.akamai.steamstatic.com"],
+  },
   // typescript: {
   //   ignoreBuildErrors: true,
   // },

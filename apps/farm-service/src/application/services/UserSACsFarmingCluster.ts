@@ -23,6 +23,7 @@ import {
 } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { EAppResults, SACGenericError } from "~/application/use-cases"
+import { CLIENT_ERRORS_THAT_SHOULD_SCHEDULE_AUTO_RESTARTER } from "~/consts"
 import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
 import { StateCachePayloadFarmService } from "~/utils/builders/SACStateCacheBuilder"
@@ -108,7 +109,7 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     })
 
     sac.emitter.on("interrupt", async (sacStateCacheDTO, error) => {
-      if (error.eresult === SteamUser.EResult.LoggedInElsewhere && !sac.autoRestart) {
+      if (!sac.autoRestart && CLIENT_ERRORS_THAT_SHOULD_SCHEDULE_AUTO_RESTARTER.includes(error.eresult)) {
         this.shouldPersistSession = false
       }
       if (this.shouldPersistSession) {

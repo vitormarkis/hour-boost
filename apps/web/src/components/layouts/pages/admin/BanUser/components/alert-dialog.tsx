@@ -12,7 +12,6 @@ import {
 
 import React, { useState } from "react"
 import { cn } from "@/lib/utils"
-import { useUserAdminItem } from "../../UserItemAction/context"
 import { twc } from "react-twc"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -21,6 +20,12 @@ import { toast } from "sonner"
 import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
 import { isMutationPending } from "../../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
 import { ECacheKeys } from "@/mutations/queryKeys"
+import { useUserAdminListItem } from "../../hooks/useUserAdminListItem"
+import { useUserAdminItemId } from "../../UserItemAction/context"
+import { atom, useAtom, useSetAtom } from "jotai"
+
+const inputAtom = atom("")
+const hasTypedHourboostAtom = atom(get => get(inputAtom) === "HOURBOOST")
 
 export type AlertDialogBanUserProps = React.ComponentPropsWithoutRef<typeof AlertDialogContent> & {
   children: React.ReactNode
@@ -31,33 +36,9 @@ export const AlertDialogBanUser = React.forwardRef<
   AlertDialogBanUserProps
 >(function AlertDialogBanUserComponent({ children, className, ...props }, ref) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const username = useUserAdminItem(user => user.username)
-  const userId = useUserAdminItem(user => user.id_user)
-  const [input, setInput] = useState("")
-  const hasTypedHourboost = input === "HOURBOOST"
-
-  const banUserMutation = useUserAdminActionBanUser({ userId })
-  const isBanningUser = isMutationPending(ECacheKeys.banUser(userId))
-
-  const handleBanUser = () => {
-    banUserMutation.mutate(
-      {
-        userId,
-        username,
-      },
-      {
-        onSuccess([undesired, message]) {
-          if (undesired) {
-            toast[undesired.type](undesired.message)
-            return
-          }
-
-          setIsDialogOpen(false)
-          toast.success(message)
-        },
-      }
-    )
-  }
+  const userId = useUserAdminItemId()
+  const username = useUserAdminListItem(userId, user => user.username)
+  const closeModal = React.useCallback(() => setIsDialogOpen(false), [])
 
   return (
     <AlertDialog
@@ -78,26 +59,11 @@ export const AlertDialogBanUser = React.forwardRef<
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div>
-          <Input
-            placeholder="HOURBOOST"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-          />
+          <InputBanUser placeholder="HOURBOOST" />
         </div>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <Button
-            disabled={!hasTypedHourboost || isBanningUser}
-            onClick={handleBanUser}
-            className="relative px-12"
-          >
-            <span>Confirmar</span>
-            {isBanningUser && (
-              <div className="absolute top-1/2 -translate-y-1/2 right-4">
-                <IconArrowClockwise className="w-4 h-4 animate-spin" />
-              </div>
-            )}
-          </Button>
+          <ConfirmButton onSuccess={closeModal} />
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -107,3 +73,80 @@ export const AlertDialogBanUser = React.forwardRef<
 AlertDialogBanUser.displayName = "AlertDialogBanUser"
 
 const Accent = twc.span`inline-flex items-center text-xs/none h-4 rounded-sm px-2 bg-accent text-white font-semibold`
+
+export type ConfirmButtonProps = React.ComponentPropsWithoutRef<typeof Button> & {
+  onSuccess(): void
+}
+
+export const ConfirmButton = React.forwardRef<React.ElementRef<typeof Button>, ConfirmButtonProps>(
+  function ConfirmButtonComponent({ onSuccess, className, ...props }, ref) {
+    const setInput = useSetAtom(inputAtom)
+    const [hasTypedHourboost] = useAtom(hasTypedHourboostAtom)
+    const userId = useUserAdminItemId()
+    const username = useUserAdminListItem(userId, user => user.username)
+    const banUserMutation = useUserAdminActionBanUser({ userId })
+    const isBanningUser = isMutationPending(ECacheKeys.banUser(userId))
+
+    const handleBanUser = () => {
+      console.log("rodou")
+
+      banUserMutation.mutate(
+        {
+          userId,
+          username,
+        },
+        {
+          onSuccess([undesired, message]) {
+            if (undesired) {
+              toast[undesired.type](undesired.message)
+              return
+            }
+
+            onSuccess()
+            setInput("")
+            toast.success(message)
+          },
+        }
+      )
+    }
+
+    return (
+      <Button
+        {...props}
+        className={cn("relative px-12", className)}
+        disabled={!hasTypedHourboost || isBanningUser}
+        onClick={handleBanUser}
+        ref={ref}
+      >
+        <span>Confirmar</span>
+        {isBanningUser && (
+          <div className="absolute top-1/2 -translate-y-1/2 right-4">
+            <IconArrowClockwise className="w-4 h-4 animate-spin" />
+          </div>
+        )}
+      </Button>
+    )
+  }
+)
+
+ConfirmButton.displayName = "ConfirmButton"
+
+export type InputBanUserProps = React.ComponentPropsWithoutRef<typeof Input> & {}
+
+export const InputBanUser = React.forwardRef<React.ElementRef<typeof Input>, InputBanUserProps>(
+  function InputBanUserComponent({ className, ...props }, ref) {
+    const [input, setInput] = useAtom(inputAtom)
+
+    return (
+      <Input
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        className={cn("", className)}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+
+InputBanUser.displayName = "InputBanUser"

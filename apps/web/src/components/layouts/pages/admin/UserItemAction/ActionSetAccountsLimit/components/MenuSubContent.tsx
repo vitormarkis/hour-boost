@@ -1,10 +1,15 @@
 import { IconPlus } from "@/components/icons/IconPlus"
 import { IconSpinner } from "@/components/icons/IconSpinner"
-import { useUserAdminItem } from "@/components/layouts/pages/admin/UserItemAction/context"
+import { useUserAdminItemId } from "@/components/layouts/pages/admin/UserItemAction/context"
 import { DropdownMenuSubContent } from "@/components/ui/dropdown-menu"
-import { useIsMutating } from "@tanstack/react-query"
+import { api } from "@/lib/axios"
+import { ECacheKeys } from "@/mutations/queryKeys"
+import { useAuth } from "@clerk/clerk-react"
 import React, { useState } from "react"
+import { toast } from "sonner"
 import twc from "tailwindcss/colors"
+import { useUserAdminListItem } from "../../../hooks/useUserAdminListItem"
+import { isMutationPending } from "../../ActionSetGamesLimit/components/MenuSubContent"
 import {
   ActionSelect,
   ActionSelectContent,
@@ -15,11 +20,6 @@ import {
   Pieces,
 } from "../../components"
 import { useUserAdminActionSetAccounts } from "../mutation"
-import { useAuth } from "@clerk/clerk-react"
-import { api } from "@/lib/axios"
-import { toast } from "sonner"
-import { ECacheKeys } from "@/mutations/queryKeys"
-import { isMutationPending } from "../../ActionSetGamesLimit/components/MenuSubContent"
 
 export type ActionSetAccountsLimitMenuSubContentProps = React.ComponentPropsWithoutRef<
   typeof DropdownMenuSubContent
@@ -31,9 +31,8 @@ export const ActionSetAccountsLimitMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuSubContent>,
   ActionSetAccountsLimitMenuSubContentProps
 >(function ActionSetAccountsLimitMenuSubContentComponent({ render, ...props }, ref) {
-  const maxSteamAccounts = useUserAdminItem(state => state.plan.maxSteamAccounts)
-  const userId = useUserAdminItem(state => state.id_user)
-  // const handleSetAccounts = useUserAdminItem(state => state.setAccounts_handle)
+  const userId = useUserAdminItemId()
+  const maxSteamAccounts = useUserAdminListItem(userId, user => user.plan.maxSteamAccounts)
   const [isSure, setIsSure] = useState(false)
   const [inputValueMaxAccounts, setInputValueMaxAccounts] = useState(maxSteamAccounts)
   const isDirty = maxSteamAccounts !== inputValueMaxAccounts

@@ -19,8 +19,9 @@ import {
   HoverCard,
   Pieces,
 } from "../../components"
-import { useUserAdminItem } from "../../context"
+import { useUserAdminItemId } from "../../context"
 import { useUserAdminActionSetGames } from "../mutation"
+import { useUserAdminListItem } from "../../../hooks/useUserAdminListItem"
 
 export type ActionSetGamesLimitMenuSubContentProps = React.ComponentPropsWithoutRef<
   typeof DropdownMenuSubContent
@@ -30,8 +31,8 @@ export const ActionSetGamesLimitMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuSubContent>,
   ActionSetGamesLimitMenuSubContentProps
 >(function ActionSetGamesLimitMenuSubContentComponent({ children, ...props }, ref) {
-  const userId = useUserAdminItem(state => state.id_user)
-  const maxGamesAllowed = useUserAdminItem(state => state.plan.maxGamesAllowed)
+  const userId = useUserAdminItemId()
+  const maxGamesAllowed = useUserAdminListItem(userId, user => user.plan.maxGamesAllowed)
 
   const { getToken } = useAuth()
   const getAPI = async () => {
@@ -63,7 +64,6 @@ export const ActionSetGamesLimitMenuSubContent = React.forwardRef<
               return
             }
             toast.success(message)
-            console.log(`games set to [${newGamesLimit}]`)
           },
         }
       )

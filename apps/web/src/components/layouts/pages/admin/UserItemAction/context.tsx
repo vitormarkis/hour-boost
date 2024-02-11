@@ -1,20 +1,21 @@
-import { UserAdminPanelSession } from "@/pages/admin"
 import React from "react"
 import { createContext, useContextSelector } from "use-context-selector"
 
-export interface IUserAdminItemProviderProps {
-  value: UserAdminPanelSession
+export interface IUserAdminIdProviderProps {
+  userId: string
   children: React.ReactNode
 }
 
-type CUserAdminPanelSession = UserAdminPanelSession | null
+type CUserAdminPanelSession = string | null
 
 export const UserAdminItemContext = createContext<CUserAdminPanelSession>(null)
 
-export function UserAdminItemProvider(props: IUserAdminItemProviderProps) {
-  return <UserAdminItemContext.Provider {...props} />
+export function UserAdminIdProvider({ children, userId }: IUserAdminIdProviderProps) {
+  return <UserAdminItemContext.Provider value={userId}>{children}</UserAdminItemContext.Provider>
 }
 
-export function useUserAdminItem<Selected>(selector: (user: UserAdminPanelSession) => Selected) {
-  return useContextSelector<CUserAdminPanelSession, Selected>(UserAdminItemContext, selector)
+export function useUserAdminItemId() {
+  const userIdContext = useContextSelector(UserAdminItemContext, id => id)
+  if (!userIdContext) throw new Error("admin userId ooc")
+  return userIdContext
 }

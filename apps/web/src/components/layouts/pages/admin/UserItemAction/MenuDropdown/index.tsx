@@ -6,7 +6,8 @@ import React from "react"
 import { ActionAddHoursMenuSubTrigger } from "../ActionAddHours/components/MenuSubTrigger"
 import { ActionSetAccountsLimitMenuSubTrigger } from "../ActionSetAccountsLimit/components/MenuSubTrigger"
 import { ActionSetGamesLimitMenuSubTrigger } from "../ActionSetGamesLimit/components/MenuSubTrigger"
-import { useUserAdminItem } from "../context"
+import { useUserAdminListItem } from "../../hooks/useUserAdminListItem"
+import { useUserAdminItemId } from "../context"
 
 export type UserItemActionMenuDropdownProps = React.ComponentPropsWithoutRef<"div"> & {
   children: React.ReactNode
@@ -20,7 +21,8 @@ export const UserItemActionMenuDropdown = React.forwardRef<
   { children, preventDefault = false, className, ...props },
   ref
 ) {
-  const planType = useUserAdminItem(user => user.plan.type)
+  const userId = useUserAdminItemId()
+  const planType = useUserAdminListItem(userId, user => user.plan.type)
   const planIsUsage = planType === "USAGE"
 
   return (

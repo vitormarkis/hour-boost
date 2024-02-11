@@ -12,12 +12,13 @@ import {
 
 import React, { useState } from "react"
 import { cn } from "@/lib/utils"
-import { useUserAdminItem } from "../../UserItemAction/context"
+import { useUserAdminItemId } from "../../UserItemAction/context"
 import { twc } from "react-twc"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useUserAdminActionUnbanUser } from "../mutation"
 import { toast } from "sonner"
+import { useUserAdminListItem } from "../../hooks/useUserAdminListItem"
 
 export type AlertDialogUnbanUserProps = React.ComponentPropsWithoutRef<typeof AlertDialogContent> & {
   children: React.ReactNode
@@ -27,8 +28,8 @@ export const AlertDialogUnbanUser = React.forwardRef<
   React.ElementRef<typeof AlertDialogContent>,
   AlertDialogUnbanUserProps
 >(function AlertDialogUnbanUserComponent({ children, className, ...props }, ref) {
-  const username = useUserAdminItem(user => user.username)
-  const userId = useUserAdminItem(user => user.id_user)
+  const userId = useUserAdminItemId()
+  const username = useUserAdminListItem(userId, user => user.username)
   const [input, setInput] = useState("")
   const hasTypedDesbanir = input === "DESBANIR"
 

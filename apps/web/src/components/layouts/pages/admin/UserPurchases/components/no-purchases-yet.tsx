@@ -1,12 +1,14 @@
-import React from "react"
 import { cn } from "@/lib/utils"
-import { useUserAdminItem } from "../../UserItemAction/context"
+import React from "react"
+import { useUserAdminItemId } from "../../UserItemAction/context"
+import { useUserAdminListItem } from "../../hooks/useUserAdminListItem"
 
 export type NoPurchasesYetProps = React.ComponentPropsWithoutRef<"div"> & {}
 
 export const NoPurchasesYet = React.forwardRef<React.ElementRef<"div">, NoPurchasesYetProps>(
   function NoPurchasesYetComponent({ className, ...props }, ref) {
-    const username = useUserAdminItem(user => user.username)
+    const userId = useUserAdminItemId()
+    const username = useUserAdminListItem(userId, user => user.username)
 
     return (
       <h3

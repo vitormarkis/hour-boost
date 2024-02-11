@@ -8,6 +8,7 @@ export const AUTO_RESTARTER_INTERVAL_IN_SECONDS = 60 * 5
 
 export const CLIENT_ERRORS_THAT_SHOULD_SCHEDULE_AUTO_RESTARTER: SteamUser.EResult[] = [
   SteamUser.EResult.LoggedInElsewhere,
+  SteamUser.EResult.NoConnection
 ]
 
 export const getHeaderImageByGameId = (gameId: number) =>

@@ -34,6 +34,7 @@
     "axios": "^1.6.0",
     "core": "workspace:*",
     "immer": "^10.0.3",
+    "jotai": "^2.6.4",
     "lodash": "^4.17.21",
     "next-themes": "^0.2.1",
     "react-hook-form": "^7.48.1",
