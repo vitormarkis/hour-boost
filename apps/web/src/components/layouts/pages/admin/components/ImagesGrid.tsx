@@ -1,17 +1,27 @@
+import { ImagesGridMany } from "./ImagesGridMany"
+import { ImagesGridNoSource } from "./ImagesGridNoSource"
+import { ImagesGridOne } from "./ImagesGridOne"
+import { ImagesGridSome } from "./ImagesGridSome"
 import React from "react"
 import { cn } from "@/lib/utils"
-import { IconJoystick } from "@/components/icons/IconJoystick"
-import Image from "next/image"
 
-export type ImagesGridProps = React.ComponentPropsWithoutRef<"div"> & {
+type ImagesGridContentProps = {
   source: string[]
 }
 
-export const ImagesGrid = React.forwardRef<React.ElementRef<"div">, ImagesGridProps>(
-  function ImagesGridComponent({ source, className, ...props }, ref) {
-    const [game1, game2, game3, game4, ...rest] = source
-    const restAmount = rest.length
+export function ImagesGridContent({ source }: ImagesGridContentProps) {
+  if (source.length >= 5) return <ImagesGridMany source={source} />
+  if (source.length >= 2) return <ImagesGridSome source={source} />
+  if (source.length > 0) return <ImagesGridOne source={source} />
+  return <ImagesGridNoSource />
+}
 
+export type ImagesGridProps = React.ComponentPropsWithoutRef<"div"> & {
+  children: React.ReactNode
+}
+
+export const ImagesGrid = React.forwardRef<React.ElementRef<"div">, ImagesGridProps>(
+  function ImagesGridComponent({ children, className, ...props }, ref) {
     return (
       <div
         {...props}
@@ -19,44 +29,7 @@ export const ImagesGrid = React.forwardRef<React.ElementRef<"div">, ImagesGridPr
         ref={ref}
       >
         <div className="h-[--container-height] items-center [--padding:0.5rem] pr-[calc(var(--padding)/2)] pl-[--padding] flex">
-          <div className="flex items-center pr-2">
-            <IconJoystick className="size-4 fill-slate-600 group-hover:fill-white transition-all duration-150" />
-          </div>
-          <div className="h-[calc(var(--container-height)_-_var(--padding))] flex">
-            <div className="flex flex-col h-full w-12">
-              <div className="flex-1 relative overflow-hidden">
-                <Image
-                  quality={30}
-                  src={game1}
-                  fill
-                  alt=""
-                />
-              </div>
-              <div className="flex-1 relative overflow-hidden">
-                <Image
-                  quality={30}
-                  src={game2}
-                  fill
-                  alt=""
-                />
-              </div>
-            </div>
-            <div className="flex flex-col h-full w-12">
-              <div className="flex-1 relative overflow-hidden">
-                <Image
-                  quality={30}
-                  src={game3}
-                  fill
-                  alt=""
-                />
-              </div>
-              <div className="flex-1 relative overflow-hidden">
-                <div className="absolute inset-0 h-full w-full bg-slate-900 group-hover:bg-slate-700 flex items-center justify-center">
-                  <span className="text-2xs text-slate-300 group-hover:text-white">+ {restAmount}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div className="flex items-center pr-2">{children}</div>
         </div>
       </div>
     )
@@ -64,3 +37,39 @@ export const ImagesGrid = React.forwardRef<React.ElementRef<"div">, ImagesGridPr
 )
 
 ImagesGrid.displayName = "ImagesGrid"
+
+export type ImagesGridGamesContainerProps = React.ComponentPropsWithoutRef<"div"> & {}
+
+export const ImagesGridGamesContainer = React.forwardRef<
+  React.ElementRef<"div">,
+  ImagesGridGamesContainerProps
+>(function ImagesGridGamesContainerComponent({ className, ...props }, ref) {
+  return (
+    <div
+      {...props}
+      className={cn(
+        "h-[calc(var(--container-height)_-_var(--padding))] flex [--games-container-width:3rem]",
+        className
+      )}
+      ref={ref}
+    />
+  )
+})
+
+ImagesGridGamesContainer.displayName = "ImagesGridGamesContainer"
+
+export type ImagesGridIconWrapperProps = React.ComponentPropsWithoutRef<"div"> & {}
+
+export const ImagesGridIconWrapper = React.forwardRef<React.ElementRef<"div">, ImagesGridIconWrapperProps>(
+  function ImagesGridIconWrapperComponent({ className, ...props }, ref) {
+    return (
+      <div
+        {...props}
+        className={cn("flex items-center pr-2", className)}
+        ref={ref}
+      />
+    )
+  }
+)
+
+ImagesGridIconWrapper.displayName = "ImagesGridIconWrapper"

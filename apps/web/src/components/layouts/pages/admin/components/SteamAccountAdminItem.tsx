@@ -1,10 +1,12 @@
 import React from "react"
 import { cn } from "@/lib/utils"
 import { SteamAccountSession } from "core"
-import { ImagesGrid } from "./ImagesGrid"
+import { ImagesGrid, ImagesGridContent, ImagesGridIconWrapper } from "./ImagesGrid"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
 import { useUserAdminListItem } from "../hooks/useUserAdminListItem"
 import { useUserAdminItemId } from "../UserItemAction/context"
+import { IconJoystick } from "@/components/icons/IconJoystick"
+import { IconScrollText } from "@/components/icons/IconScrollText"
 
 export type SteamAccountAdminItemProps = React.ComponentPropsWithoutRef<"div"> & {
   steamAccountId: string
@@ -24,12 +26,15 @@ export const SteamAccountAdminItem = React.forwardRef<React.ElementRef<"div">, S
       [userId]
     )
 
-    const { accountName, profilePictureUrl, farmingGames, games } = useSteamAccountAdminItem(sa => ({
-      profilePictureUrl: sa.profilePictureUrl,
-      accountName: sa.accountName,
-      games: sa.games,
-      farmingGames: sa.farmingGames,
-    }))
+    const { accountName, profilePictureUrl, farmingGames, games, stagingGames } = useSteamAccountAdminItem(
+      sa => ({
+        profilePictureUrl: sa.profilePictureUrl,
+        accountName: sa.accountName,
+        games: sa.games,
+        farmingGames: sa.farmingGames,
+        stagingGames: sa.stagingGames,
+      })
+    )
 
     return (
       <div
@@ -54,7 +59,24 @@ export const SteamAccountAdminItem = React.forwardRef<React.ElementRef<"div">, S
             <span className="text-sm text-slate-300">{accountName}</span>
           </div>
           <div className="px-2">
-            <ImagesGrid source={games!.filter(game => farmingGames.includes(game.id)).map(g => g.imageUrl)} />
+            <ImagesGrid>
+              <ImagesGridIconWrapper>
+                <IconScrollText className="size-4 text-slate-600 group-hover:fill-white transition-all duration-150" />
+              </ImagesGridIconWrapper>
+              <ImagesGridContent
+                source={games!.filter(game => stagingGames.includes(game.id)).map(g => g.imageUrl)}
+              />
+            </ImagesGrid>
+          </div>
+          <div className="px-2">
+            <ImagesGrid>
+              <ImagesGridIconWrapper>
+                <IconJoystick className="size-4 fill-slate-600 group-hover:fill-white transition-all duration-150" />
+              </ImagesGridIconWrapper>
+              <ImagesGridContent
+                source={games!.filter(game => farmingGames.includes(game.id)).map(g => g.imageUrl)}
+              />
+            </ImagesGrid>
           </div>
         </div>
       </div>

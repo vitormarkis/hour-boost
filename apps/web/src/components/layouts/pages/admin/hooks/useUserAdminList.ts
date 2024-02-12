@@ -31,7 +31,7 @@ function getUsersAdminList() {
           accountName: "chapilson2",
           autoRelogin: false,
           farmedTimeInSeconds: 62736,
-          farmingGames: [10, 130, 20, 30, 40, 50, 60, 70, 730],
+          farmingGames: [10, 130, 30],
           farmStartedAt: new Date(1706741221314),
           profilePictureUrl:
             "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/0a/0a1a2e5126ab9ffe32d3132884d910a2c7421e5f_medium.jpg",

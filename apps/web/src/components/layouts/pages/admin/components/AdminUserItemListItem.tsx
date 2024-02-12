@@ -4,19 +4,19 @@ import { IconUserCycle } from "@/components/icons/IconUserCycle"
 import { IconUserX } from "@/components/icons/IconUserX"
 import { BadgePlanType } from "@/components/layouts/UserPlanStatus/components"
 import { cn } from "@/lib/utils"
-import { ECacheKeys } from "@/mutations/queryKeys"
 import { getPlanName } from "@/util/getPlanName"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion"
 import React from "react"
 import { AlertDialogBanUser } from "../BanUser/components/alert-dialog"
 import { AlertDialogUnbanUser } from "../UnbanUser/components/alert-dialog"
-import { isMutationPending } from "../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
 import { UserItemActionMenuDropdown } from "../UserItemAction/MenuDropdown"
 import { UserAdminIdProvider, useUserAdminItemId } from "../UserItemAction/context"
 import { ModalSeeUserPurchases } from "../UserPurchases"
 import { useUserAdminListItem } from "../hooks/useUserAdminListItem"
 import { AdminUserItemProfilePicture } from "./AdminUserItemProfilePicture"
 import { SteamAccountAdminList } from "./SteamAccountAdminList"
+import { isMutationPending } from "../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
+import { ECacheKeys } from "@/mutations/queryKeys"
 
 export type UserAdminItemListItemProps = {
   userId: string
@@ -26,8 +26,6 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
   const planNameDomain = useUserAdminListItem(userId, user => user.plan.name)
   const status = useUserAdminListItem(userId, user => user.status)
   const isBanned = React.useMemo(() => status === "BANNED", [status])
-  const isUnbanningUser = false
-  // const isUnbanningUser = isMutationPending(ECacheKeys.unbanUser(userId))
 
   const planName = getPlanName(planNameDomain)
 
@@ -74,9 +72,7 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
                 {isBanned && (
                   <AlertDialogUnbanUser>
                     <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
-                      <IconUserCycle
-                        className={cn("size-6 text-emerald-300", isUnbanningUser && "animate-spin")}
-                      />
+                      <IconUnbanning />
                     </button>
                   </AlertDialogUnbanUser>
                 )}
@@ -96,6 +92,20 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
 }
 
 UserAdminItemListItem.displayName = "UserAdminItemListItem"
+
+export type IconUnbanningProps = React.ComponentPropsWithoutRef<typeof IconUserCycle> & {}
+
+export const IconUnbanning: React.FC<IconUnbanningProps> = ({ className, ...props }) => {
+  const userId = useUserAdminItemId()
+  const isUnbanningUser = isMutationPending(ECacheKeys.unbanUser(userId))
+
+  return (
+    <IconUserCycle
+      {...props}
+      className={cn("size-6 text-emerald-300", isUnbanningUser && "animate-spin", className)}
+    />
+  )
+}
 
 export type AdminUserItemUsernameProps = React.ComponentPropsWithoutRef<"strong"> & {}
 
