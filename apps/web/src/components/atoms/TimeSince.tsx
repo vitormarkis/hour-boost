@@ -10,7 +10,10 @@ export function useTimeSince(date: Date) {
     const interval = setInterval(() => {
       const now = new Date()
       const differenceInMilliseconds = now.getTime() - date.getTime()
-      setTimeSince(differenceInMilliseconds)
+      setTimeSince(timeSince => {
+        if (timeSince > 1000 * 60 * 60) clearInterval(interval)
+        return differenceInMilliseconds
+      })
     }, 1000)
 
     return () => clearInterval(interval)

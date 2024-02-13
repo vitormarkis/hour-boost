@@ -5,8 +5,8 @@ import { IconUserX } from "@/components/icons/IconUserX"
 import { BadgePlanType } from "@/components/layouts/UserPlanStatus/components"
 import { cn } from "@/lib/utils"
 import { getPlanName } from "@/util/getPlanName"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@radix-ui/react-accordion"
-import React from "react"
+import { Accordion, AccordionContent, AccordionItem } from "@/components/ui/accordion"
+import React, { CSSProperties } from "react"
 import { AlertDialogBanUser } from "../BanUser/components/alert-dialog"
 import { AlertDialogUnbanUser } from "../UnbanUser/components/alert-dialog"
 import { UserItemActionMenuDropdown } from "../UserItemAction/MenuDropdown"
@@ -17,6 +17,10 @@ import { AdminUserItemProfilePicture } from "./AdminUserItemProfilePicture"
 import { SteamAccountAdminList } from "./SteamAccountAdminList"
 import { isMutationPending } from "../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
 import { ECacheKeys } from "@/mutations/queryKeys"
+import { SteamAccountAdminListHeader } from "./SteamAccountAdminListHeader"
+import { AccordionTrigger } from "@radix-ui/react-accordion"
+import { getRoleName } from "@/util/getUserRoleName"
+import { tv, VariantProps } from "tailwind-variants"
 
 export type UserAdminItemListItemProps = {
   userId: string
@@ -31,62 +35,82 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
 
   return (
     <UserAdminIdProvider userId={userId}>
-      <Accordion type="multiple">
-        <AccordionItem value={userId}>
-          <div className="h-20 flex items-center bg-black/10 hover:bg-slate-900/50 cursor-pointer">
-            <AdminUserItemProfilePicture />
-            <div className="pl-4 w-[13rem] shrink-0">
-              <AdminUserItemUsername />
-            </div>
-            <div className="px-4">
-              <div className="w-20 flex justify-center">
-                <BadgePlanType name={planNameDomain}>{planName}</BadgePlanType>
-              </div>
-            </div>
-            <div className="pl-4 h-full grid place-items-center">
-              <UserItemActionMenuDropdown preventDefault={isBanned}>
-                <button
-                  disabled={isBanned}
-                  className="flex items-center gap-2 h-full pl-8 pr-6 text-sm hover:bg-slate-800/50 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  <span>Ações</span>
-                  <IconChevron className="size-3" />
-                </button>
-              </UserItemActionMenuDropdown>
-            </div>
-            <AccordionTrigger className="bg-slate-900 h-full w-full" />
-            <div className="h-full flex ml-auto">
-              <div className="h-full flex">
-                <ModalSeeUserPurchases>
-                  <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
-                    <IconCircleDollar className="size-5" />
-                  </button>
-                </ModalSeeUserPurchases>
-                {!isBanned && (
-                  <AlertDialogBanUser>
-                    <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
-                      <IconUserX className="size-5" />
-                    </button>
-                  </AlertDialogBanUser>
-                )}
-                {isBanned && (
-                  <AlertDialogUnbanUser>
-                    <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
-                      <IconUnbanning />
-                    </button>
-                  </AlertDialogUnbanUser>
-                )}
-                {/* <button className="flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
-                  <IconUserMinus className="size-5" />
-                </button> */}
-              </div>
+      <AccordionItem
+        removeBorderOnClosed
+        value={userId}
+      >
+        <div className="[--user-item-height:4.2rem] h-[--user-item-height] flex items-center bg-black/10 hover:bg-slate-900/50 cursor-pointer">
+          <AdminUserItemProfilePicture />
+          <div className="pl-4 w-[13rem] shrink-0 flex flex-col">
+            <AdminUserItemUsername />
+            <AdminUserItemRole />
+          </div>
+          <div className="px-4">
+            <div className="w-20 flex justify-center">
+              <BadgePlanType
+                size="sm"
+                name={planNameDomain}
+              >
+                {planName}
+              </BadgePlanType>
             </div>
           </div>
-          <AccordionContent className="[--container-height:3rem]">
-            <SteamAccountAdminList />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          <div className="pl-4 h-full grid place-items-center">
+            <UserItemActionMenuDropdown preventDefault={isBanned}>
+              <button
+                disabled={isBanned}
+                className="flex items-center gap-2 h-full pl-8 pr-6 hover:bg-slate-800/50 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <span>Ações</span>
+                <IconChevron className="size-3" />
+              </button>
+            </UserItemActionMenuDropdown>
+          </div>
+          <AccordionTrigger className="h-full w-full" />
+          <div className="h-full flex ml-auto">
+            <div className="h-full flex">
+              <ModalSeeUserPurchases>
+                <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                  <IconCircleDollar className="size-5" />
+                </button>
+              </ModalSeeUserPurchases>
+              {!isBanned && (
+                <AlertDialogBanUser>
+                  <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                    <IconUserX className="size-5" />
+                  </button>
+                </AlertDialogBanUser>
+              )}
+              {isBanned && (
+                <AlertDialogUnbanUser>
+                  <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                    <IconUnbanning />
+                  </button>
+                </AlertDialogUnbanUser>
+              )}
+              {/* <button className="flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                  <IconUserMinus className="size-5" />
+                </button> */}
+            </div>
+          </div>
+        </div>
+        <AccordionContent
+          className="border-b border-slate-900 pb-2 relative"
+          style={
+            {
+              "--container-height": "2.75rem",
+              "--sa-padding-left": "2rem",
+              "--sa-profile-pic-size": "10rem",
+              "--sa-name-width": "10rem",
+              "--sa-farm-since-width": "9rem",
+              "--sa-farmed-time-width": "9rem",
+              "--sa-games-width": "10rem",
+            } as CSSProperties
+          }
+        >
+          <SteamAccountAdminList />
+        </AccordionContent>
+      </AccordionItem>
     </UserAdminIdProvider>
   )
 }
@@ -129,3 +153,35 @@ export const AdminUserItemUsername = React.forwardRef<React.ElementRef<"strong">
 )
 
 AdminUserItemUsername.displayName = "AdminUserItemUsername"
+
+export const AdminUserItemListItemRoleVariants = tv({
+  base: "px-1 py-[0.1875rem] text-2xs/none border font-medium grid place-items-center w-fit rounded-sm",
+  variants: {
+    role: {
+      USER: "border-slate-800 bg-slate-900 text-slate-500",
+      ADMIN: "border-green-500 bg-green-400/40 text-green-300",
+    },
+  },
+})
+
+export type AdminUserItemRoleProps = React.ComponentPropsWithoutRef<"span"> &
+  VariantProps<typeof AdminUserItemListItemRoleVariants> & {}
+
+export const AdminUserItemRole = React.forwardRef<React.ElementRef<"span">, AdminUserItemRoleProps>(
+  function AdminUserItemRoleComponent({ className, ...props }, ref) {
+    const userId = useUserAdminItemId()
+    const role = useUserAdminListItem(userId, user => user.role)
+
+    return (
+      <span
+        {...props}
+        className={AdminUserItemListItemRoleVariants({ role, className })}
+        ref={ref}
+      >
+        {getRoleName(role)}
+      </span>
+    )
+  }
+)
+
+AdminUserItemRole.displayName = "AdminUserItemRole"

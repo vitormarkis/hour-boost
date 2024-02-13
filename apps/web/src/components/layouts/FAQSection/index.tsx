@@ -3,6 +3,7 @@ import { TitleSection } from "@/components/atoms/TitleSection"
 import { cn } from "@/lib/utils"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { FAQData } from "@/components/layouts/FAQSection/FAQData"
+import { ChevronDown } from "lucide-react"
 
 export type FAQSectionProps = React.ComponentPropsWithoutRef<"section"> & {}
 
@@ -23,11 +24,19 @@ export const FAQSection = React.forwardRef<React.ElementRef<"section">, FAQSecti
               <Accordion type="multiple">
                 {FAQData.map(faq => (
                   <AccordionItem
+                    huedBorder
+                    colorScheme="default"
                     key={faq.question.replace(/\s+/g, " ").trim()}
                     value={faq.question.replace(/\s+/g, " ").trim()}
                   >
-                    <AccordionTrigger>{faq.question}</AccordionTrigger>
-                    <AccordionContent>{faq.answer}</AccordionContent>
+                    <AccordionTrigger>
+                      {faq.question}
+                      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {faq.answer}
+                      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                    </AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>

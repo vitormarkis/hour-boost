@@ -4,10 +4,15 @@ import { UserPlanStatus } from "@/components/layouts/UserPlanStatus/component"
 import { UserProvider } from "@/contexts/UserContext"
 import { api } from "@/lib/axios"
 import { UserSession } from "core"
-import { GetServerSideProps } from "next"
+import { GetServerSideProps, GetServerSidePropsContext, PreviewData } from "next"
 import Head from "next/head"
+import { ParsedUrlQuery } from "querystring"
 
-export const getServerSideProps: GetServerSideProps = async ctx => {
+type getUserPropsProps = {
+  ctx: GetServerSidePropsContext<ParsedUrlQuery, PreviewData>
+}
+
+export async function getUserProps({ ctx }: getUserPropsProps) {
   const { data: user } = await api.get<UserSession | null>("/me", {
     headers: ctx.req.headers as Record<string, string>,
   })
@@ -26,6 +31,11 @@ export const getServerSideProps: GetServerSideProps = async ctx => {
       user,
     } as UserSessionParams,
   }
+}
+
+export const getServerSideProps: GetServerSideProps = async ctx => {
+  const userProps = await getUserProps({ ctx })
+  return userProps
 }
 
 type UserSessionParams = {

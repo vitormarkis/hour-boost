@@ -17,11 +17,11 @@ export const AdminUserItemProfilePicture = React.forwardRef<
   return (
     <div
       {...props}
-      className={cn("h-20 w-20 grid place-items-center", className)}
+      className={cn("size-[--user-item-height] grid place-items-center", className)}
       ref={ref}
     >
-      <div className="h-[4.75rem] w-[4.75rem] relative grid place-items-center">
-        <div className="h-[4.5rem] w-[4.5rem] relative shadow-lg shadow-black/50 rounded overflow-hidden">
+      <div className="size-[calc(var(--user-item-height)_-_0.25rem)] relative grid place-items-center">
+        <div className="size-[calc(var(--user-item-height)_-_0.5rem)] relative shadow-lg shadow-black/50 rounded overflow-hidden">
           <img
             src={profilePicture}
             // alt={`${user.username}'s profile picture.`}

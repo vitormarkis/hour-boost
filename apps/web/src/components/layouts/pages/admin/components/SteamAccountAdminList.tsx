@@ -2,6 +2,8 @@ import React from "react"
 import { useUserAdminItemId } from "../UserItemAction/context"
 import { useUserAdminListItem } from "../hooks/useUserAdminListItem"
 import { SteamAccountAdminItem } from "./SteamAccountAdminItem"
+import { SteamAccountAdminListHeader } from "./SteamAccountAdminListHeader"
+import { SteamAccountAdminNoSteamAccounts } from "./SteamAccountAdminNoSteamAccounts"
 
 type SteamAccountAdminListProps = {}
 
@@ -11,12 +13,23 @@ function SteamAccountAdminList({}: SteamAccountAdminListProps) {
     user.steamAccounts.map(sa => sa.id_steamAccount)
   )
 
-  return steamAccountsIdList.map(id => (
-    <SteamAccountAdminItem
-      key={id}
-      steamAccountId={id}
-    />
-  ))
+  if (steamAccountsIdList.length === 0) {
+    return <SteamAccountAdminNoSteamAccounts />
+  }
+  const isUserBanned = useUserAdminListItem(userId, user => user.status) === "BANNED"
+
+  return (
+    <>
+      {isUserBanned && <div className="absolute inset-0 bg-black/10 z-50 cursor-not-allowed" />}
+      <SteamAccountAdminListHeader />
+      {steamAccountsIdList.map(id => (
+        <SteamAccountAdminItem
+          key={id}
+          steamAccountId={id}
+        />
+      ))}
+    </>
+  )
 }
 
 const memoSteamAccountAdminList = React.memo(SteamAccountAdminList)

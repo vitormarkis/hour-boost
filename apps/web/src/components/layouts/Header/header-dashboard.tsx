@@ -20,6 +20,11 @@ export const HeaderDashboard = React.forwardRef<
   const user = useUser()
   const userInitials = getUserInitials(user)
 
+  console.log({
+    user,
+    userInitials,
+  })
+
   return (
     <HeaderStructure
       {...props}

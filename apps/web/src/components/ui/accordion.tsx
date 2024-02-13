@@ -12,21 +12,39 @@ const Accordion = AccordionPrimitive.Root
 const AccordionItem = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item> & {
-    colorScheme?: keyof typeof buttonPrimaryHueThemes
+    removeBorderOnClosed?: boolean
+  } & (
+      | {
+          huedBorder?: true
+          colorScheme: keyof typeof buttonPrimaryHueThemes
+        }
+      | {
+          huedBorder?: false | undefined
+        }
+    )
+>(({ style, children, className, removeBorderOnClosed = false, ...props }, ref) => {
+  function getStyleHued() {
+    if (!props.huedBorder) return style
+    const [appleHue, bananaHue] = buttonPrimaryHueThemes[props.colorScheme]
+    const hues = Object.entries({ appleHue, bananaHue })
+    return cssVariables(hues, style)
   }
->(({ colorScheme = "default", style, children, className, ...props }, ref) => {
-  const [appleHue, bananaHue] = buttonPrimaryHueThemes[colorScheme]
-  const hues = Object.entries({ appleHue, bananaHue })
+
   return (
     <AccordionPrimitive.Item
       ref={ref}
-      className={cn("relative", className, st.shadowEffect)}
+      className={cn(
+        "relative",
+        className,
+        st.shadowEffect,
+        removeBorderOnClosed && "[&[data-state='closed']_i]:hidden"
+      )}
       {...props}
     >
       {children}
       <i
         className={cn("absolute h-[1px] top-full right-0 left-0")}
-        style={cssVariables(hues, style)}
+        style={getStyleHued()}
       />
     </AccordionPrimitive.Item>
   )
@@ -47,7 +65,6 @@ const AccordionTrigger = React.forwardRef<
       {...props}
     >
       {children}
-      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ))
