@@ -34,12 +34,10 @@ export class AutoRestartCron implements IAutoRestartCron {
   async run({ accountName, forceRestoreSessionOnApplication }: AutoRestartCronPayload) {
     const steamAccount = await this.steamAccountsRepository.getByAccountName(accountName)
     if (!steamAccount) {
-      return bad(
-        new Fail({ code: EAppResults["STEAM-ACCOUNT-NOT-FOUND"], payload: { steamAccount, accountName } })
-      )
+      return bad(Fail.create(EAppResults["STEAM-ACCOUNT-NOT-FOUND"], 404, { steamAccount, accountName }))
     }
     if (!steamAccount.ownerId) {
-      return bad(new Fail({ code: EAppResults["STEAM-ACCOUNT-IS-NOT-OWNED"], payload: { steamAccount } }))
+      return bad(Fail.create(EAppResults["STEAM-ACCOUNT-IS-NOT-OWNED"], 400, { steamAccount }))
     }
 
     const user = await this.usersDAO.getByID(steamAccount.ownerId)
@@ -49,7 +47,11 @@ export class AutoRestartCron implements IAutoRestartCron {
 
     const plan = await this.planRepository.getById(user.plan.id_plan)
     if (!plan) {
-      return bad(new Fail({ code: EAppResults["PLAN-NOT-FOUND"], payload: { planId: user.plan.id_plan } }))
+      return bad(
+        Fail.create(EAppResults["PLAN-NOT-FOUND"], 404, {
+          planId: user.plan.id_plan,
+        })
+      )
     }
     if (!forceRestoreSessionOnApplication && !plan.autoRestarter) {
       return bad(

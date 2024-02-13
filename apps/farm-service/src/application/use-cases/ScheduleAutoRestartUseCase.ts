@@ -49,8 +49,7 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
         this.logger.log(`dismissing cron for account [${accountName}]`)
 
         if (errorWhileRestarting.code === "PLAN-NOT-FOUND") {
-          errorWhileRestarting
-          this.logger.log(`plano não encontrado com id [${errorWhileRestarting.payload}]`)
+          this.logger.log(`plano não encontrado com id [${errorWhileRestarting.payload.planId}]`)
           return
         }
         if (errorWhileRestarting.code === "STEAM-ACCOUNT-IS-NOT-OWNED") {
@@ -65,8 +64,7 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
           this.logger.log(`usuario não encontrado com id [${errorWhileRestarting.payload.user}]`)
           return
         }
-        // errorWhileRestarting satisfies never
-        return
+        return this.logger.log(`erro não tratado: ${errorWhileRestarting.code}`)
       }
 
       if (result.fatal) {

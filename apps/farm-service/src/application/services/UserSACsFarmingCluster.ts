@@ -38,7 +38,7 @@ export interface IUserSACsFarmingCluster {
 
 export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
   private readonly publisher: Publisher
-  farmService: FarmUsageService | FarmInfinityService 
+  farmService: FarmUsageService | FarmInfinityService
   private readonly sacList: SACList = new SACList()
   private readonly username: string
   private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository
@@ -124,6 +124,7 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
       })
 
       const plan = await this.planRepository.getById(this.planId)
+      // esse codigo deve ir para dentro de um handler do `ErrorOccuredOnSteamClientCommand`
       if (plan instanceof PlanInfinity) {
         const steamAccount = await this.steamAccountsRepository.getByAccountName(sacStateCacheDTO.accountName)
         if (!steamAccount || !steamAccount.autoRelogin) return
@@ -182,18 +183,19 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
   async farmWithAccount({ accountName, gamesId, planId, sessionType }: NSUserCluster.FarmWithAccount) {
     try {
       const sac = this.sacList.get(accountName)
-      if (!sac) return bad(new Fail({ httpStatus: 404, code: EAppResults["SAC-NOT-FOUND"] }))
+      if (!sac) return bad(Fail.create(EAppResults["SAC-NOT-FOUND"], 404))
 
       if (!this.farmService.hasAccountsFarming()) {
         this.logger.log("SETANDO PRIMEIRO FARM")
         const plan = await this.planRepository.getById(planId)
         if (!plan) {
-          return bad(new Fail({ code: EAppResults["PLAN-NOT-FOUND"], httpStatus: 404 }))
+          return bad(Fail.create(EAppResults["PLAN-NOT-FOUND"], 404))
         }
         this.updateFarmService(plan)
       }
       const accountIsNotFarming = !this.isAccountFarming(accountName)
       if (accountIsNotFarming && sessionType === "NEW") {
+        console.log(`22: CREATING CACHE ENTRY WITH ACCOUNT ${accountName}`)
         await this.notifyFirstTimeFarming(accountName)
       }
       await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId, planId, sac.username)
@@ -236,7 +238,9 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     // const errorTryingToFarm = false
     const errorTryingToFarm = await Promise.race([
       new Promise<SACGenericError>(res => sac.client.once("error", res)),
-      new Promise<false>(res => setTimeout(() => res(false), process.env.NODE_ENV === "TEST" ? 0 : 400).unref()),
+      new Promise<false>(res =>
+        setTimeout(() => res(false), process.env.NODE_ENV === "TEST" ? 0 : 400).unref()
+      ),
     ])
 
     if (errorTryingToFarm) {

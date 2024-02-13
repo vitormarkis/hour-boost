@@ -44,13 +44,13 @@ export class EventEmitter<EventArgs extends EventsTuple = EventsTuple> {
     const eventHandlers = this.handlers[event]
     if (!eventHandlers) return
     const { asyncHandlers, handlers } = getAsyncFunction(eventHandlers)
-    handlers.forEach(handler => handler(...args))
+    for (const handler of handlers) {
+      handler(...args)
+    }
     const promises = asyncHandlers.map(asyncHandler => asyncHandler(...args))
-    if (event === "interrupt") console.log({ asyncHandlers, handlers })
     Promise.all(promises).finally(() => {
       const resolver = this.resolvers[event]
       if (!resolver) return
-      console.log(`[event-handler]: Promise.all.finally(), calling the resolver. ${event.toString()}`)
       resolver()
     })
   }

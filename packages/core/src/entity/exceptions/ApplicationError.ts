@@ -65,6 +65,18 @@ export class Fail<
     this.payload = payload as TPayload
     this.httpStatus = httpStatus
   }
+
+  static create<
+    const TCode extends string = string,
+    const THTTPStatus = number,
+    const TPayload extends Record<string, any> | undefined = Record<string, any> | undefined,
+  >(code: TCode, httpStatus: THTTPStatus, payload?: TPayload) {
+    return new Fail({
+      code,
+      httpStatus,
+      payload,
+    })
+  }
 }
 
 const failInstance = new Fail({

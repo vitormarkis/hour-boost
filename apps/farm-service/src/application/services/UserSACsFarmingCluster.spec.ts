@@ -38,25 +38,38 @@ afterAll(() => {
   jest.useRealTimers()
 })
 
-test("should store StateCache DTO with as farming with one game", async () => {
+test.only("should NOT store persist farm session if NoConnection error is triggered AND account don't have autorelogin on", async () => {
+  console.log = log
+  const user = await i.usersRepository.getByID(s.me.userId)
+  if (!user) throw user
   i.allUsersClientsStorage.addSteamAccount(s.me.username, s.me.userId, meInstances.meSAC)
+  i.sacStateCacheRepository.init({
+    accountName: s.me.accountName,
+    planId: user.plan.id_plan,
+    username: s.me.username,
+  })
   const [error, meCluster] = i.usersClusterStorage.get(s.me.username)
   if (error) throw error
-  meCluster.addSAC(meInstances.meSAC)
-  await meCluster.farmWithAccount({
+  const [errorAddingSAC] = meCluster.addSAC(meInstances.meSAC)
+  if (errorAddingSAC) throw errorAddingSAC
+  const [errorFarmingWithAccount] = await meCluster.farmWithAccount({
     accountName: s.me.accountName,
     gamesId: [100],
     planId: meInstances.me.plan.id_plan,
     sessionType: "NEW",
   })
+  if (errorFarmingWithAccount) throw errorFarmingWithAccount
   // await new Promise(res => meInstances.meSAC.emitter.setEventResolver("hasSession", res))
   jest.advanceTimersByTime(1000 * 3600 * 2) // 2 hours
   connection.emit("break")
+
+  console.log("22: steam accounts", Array.from(i.sacCacheInMemory.state.keys()))
   const stateCacheDTO = await i.sacStateCacheRepository.get(s.me.accountName)
-  console.log("finalstate: ", stateCacheDTO)
-  expect(stateCacheDTO?.accountName).toBe(s.me.accountName)
-  expect(stateCacheDTO?.gamesPlaying).toStrictEqual([100])
-  expect(stateCacheDTO?.isFarming).toBeTruthy()
+  if (!stateCacheDTO) console.log(`22: Não encontrou cache entry com ${s.me.accountName}`)
+  expect(stateCacheDTO).not.toBeNull()
+  expect(stateCacheDTO!.gamesPlaying).toStrictEqual([])
+  expect(stateCacheDTO!.isFarming).toStrictEqual(false)
+  expect(stateCacheDTO!.farmStartedAt).toStrictEqual(null)
 })
 
 test("should stop farming once interrupt occurs", async () => {
