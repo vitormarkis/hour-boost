@@ -25,7 +25,7 @@ export const SeeGamesSheet = React.forwardRef<React.ElementRef<typeof SheetConte
   ) {
     const [isOpen, setIsOpen] = useState(false)
 
-    const games = gamesRaw?.sort(game => (choosedOnes.includes(game.id) ? -1 : 1))
+    const games = gamesRaw ? [...gamesRaw].sort(game => (choosedOnes.includes(game.id) ? -1 : 1)) : null
 
     return (
       <Sheet
@@ -52,6 +52,7 @@ export const SeeGamesSheet = React.forwardRef<React.ElementRef<typeof SheetConte
                   {games ? (
                     games.map(game => (
                       <GameItem
+                        key={game.id}
                         game={game}
                         handleFarmGame={() => {}}
                         isSelected={choosedOnes.includes(game.id)}
