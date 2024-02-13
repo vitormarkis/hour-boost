@@ -14,31 +14,31 @@ export function ImagesGridMany({ source }: ImagesGridManyProps) {
       <div className="flex flex-col h-full w-[--games-container-width]">
         <div className="flex-1 relative overflow-hidden">
           <Image
-            quality={30}
+            quality={3}
             src={game1}
             fill
             alt=""
-            className="object-cover"
+            objectFit="cover"
           />
         </div>
         <div className="flex-1 relative overflow-hidden">
           <Image
-            quality={30}
+            quality={3}
             src={game2}
             fill
             alt=""
-            className="object-cover"
+            objectFit="cover"
           />
         </div>
       </div>
       <div className="flex flex-col h-full w-[--games-container-width]">
         <div className="flex-1 relative overflow-hidden">
           <Image
-            quality={30}
+            quality={3}
             src={game3}
             fill
             alt=""
-            className="object-cover"
+            objectFit="cover"
           />
         </div>
         <div className="flex-1 relative overflow-hidden">

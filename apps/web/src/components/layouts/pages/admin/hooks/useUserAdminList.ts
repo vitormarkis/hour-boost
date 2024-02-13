@@ -10,7 +10,7 @@ type Options<TData = UserAdminPanelSession[]> = Omit<
 
 export function useUserAdminList<TData = UserAdminPanelSession[]>(options = {} as Options<TData>) {
   return useSuspenseQuery<UserAdminPanelSession[], Error, TData>({
-    queryFn: getUsersAdminList,
+    queryFn: () => getUsersAdminList(Math.random() > 0.5),
     queryKey: ECacheKeys["USER-ADMIN-ITEM-LIST"],
     refetchIntervalInBackground: false,
     staleTime: Infinity,
@@ -19,7 +19,7 @@ export function useUserAdminList<TData = UserAdminPanelSession[]>(options = {} a
   })
 }
 
-function getUsersAdminList() {
+function getUsersAdminList(chance: boolean) {
   return Promise.resolve<UserAdminPanelSession[]>([
     {
       id_user: "33ede51a-6f05-4ee5-969b-334f8c49e2c3",
@@ -38,7 +38,7 @@ function getUsersAdminList() {
           profilePictureUrl:
             "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/0b/0b1efee9f2cbdf55d47d0cb6ed955c8ebfa057d3_medium.jpg",
           stagingGames: [],
-          status: "offline",
+          status: chance ? "offline" : "online",
           games: [
             {
               id: 70,
@@ -62,7 +62,7 @@ function getUsersAdminList() {
           accountName: "chapilson2",
           autoRelogin: false,
           farmedTimeInSeconds: 62736,
-          farmingGames: [10, 130, 30],
+          farmingGames: chance ? [10, 130, 30] : [30],
           farmStartedAt: new Date(1706741221314),
           profilePictureUrl:
             "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/0a/0a1a2e5126ab9ffe32d3132884d910a2c7421e5f_medium.jpg",
@@ -167,7 +167,7 @@ function getUsersAdminList() {
           accountName: "darkrider360",
           autoRelogin: false,
           farmedTimeInSeconds: 9999,
-          farmingGames: [20, 30],
+          farmingGames: chance ? [20, 30] : [],
           farmStartedAt: new Date(1707513913828),
           profilePictureUrl:
             "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/6c/6c3f45ebe83fb17a896669f2e0e99d0f2cd7d73b_medium.jpg",

@@ -32,7 +32,6 @@ export const ModalSeeUserPurchases = React.forwardRef<
 >(function ModalSeeUserPurchasesComponent({ children, className, ...props }, ref) {
   const userId = useUserAdminItemId()
   const username = useUserAdminListItem(userId, user => user.username)
-  const purchases = useUserAdminListItem(userId, user => user.purchases)
 
   return (
     <Dialog>
@@ -54,17 +53,7 @@ export const ModalSeeUserPurchases = React.forwardRef<
           >
             <PurchaseListHeader />
             <ul className="flex flex-col bg-slate-900 p-[2px] gap-[2px] min-h-[50vh] rounded-[8px]">
-              {purchases.length > 0 ? (
-                purchases.map(purchase => (
-                  <PurchaseItem
-                    key={purchase.id_Purchase}
-                    purchase={purchase}
-                    className="bg-slate-950 rounded-[6px]"
-                  />
-                ))
-              ) : (
-                <NoPurchasesYet />
-              )}
+              <PurchasesList />
             </ul>
           </div>
         </DialogHeader>
@@ -74,3 +63,20 @@ export const ModalSeeUserPurchases = React.forwardRef<
 })
 
 ModalSeeUserPurchases.displayName = "ModalSeeUserPurchases"
+
+type PurchasesListProps = {}
+
+export const PurchasesList = React.memo(({}: PurchasesListProps) => {
+  const userId = useUserAdminItemId()
+  const purchaseIdList = useUserAdminListItem(userId, user => user.purchases.map(p => p.id_Purchase))
+
+  if (purchaseIdList.length === 0) return <NoPurchasesYet />
+
+  return purchaseIdList.map(purchaseId => (
+    <PurchaseItem
+      key={purchaseId}
+      purchaseId={purchaseId}
+      className="bg-slate-950 rounded-[6px]"
+    />
+  ))
+})

@@ -4,13 +4,20 @@ import { PurchaseSession } from "@/pages/admin"
 import { twc } from "react-twc"
 import { getTypeText } from "../utils/getTypeText"
 import { PurchasePayload } from "./purchase-payload"
+import { useUserAdminItemId } from "../../UserItemAction/context"
+import { useUserAdminListItem } from "../../hooks/useUserAdminListItem"
 
 export type PurchaseItemProps = React.ComponentPropsWithoutRef<"li"> & {
-  purchase: PurchaseSession
+  purchaseId: string
 }
 
 export const PurchaseItem = React.forwardRef<React.ElementRef<"li">, PurchaseItemProps>(
-  function PurchaseItemComponent({ purchase, className, ...props }, ref) {
+  function PurchaseItemComponent({ purchaseId, className, ...props }, ref) {
+    const userId = useUserAdminItemId()
+    const purchase = useUserAdminListItem(
+      userId,
+      user => user.purchases.find(p => p.id_Purchase === purchaseId)!
+    )
     const { id_Purchase, type, when, valueInCents } = purchase
     const typeName = getTypeText(type.name)
 
