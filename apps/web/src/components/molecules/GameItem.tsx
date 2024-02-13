@@ -1,7 +1,6 @@
-import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
 import { GameSession } from "core"
-import React, { CSSProperties, useContext } from "react"
+import React, { CSSProperties } from "react"
 
 export type GameItemProps = React.ComponentPropsWithoutRef<"div"> & {
   game: GameSession

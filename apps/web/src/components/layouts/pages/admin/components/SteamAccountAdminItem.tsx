@@ -8,6 +8,7 @@ import { useUserAdminItemId } from "../UserItemAction/context"
 import { IconJoystick } from "@/components/icons/IconJoystick"
 import { IconScrollText } from "@/components/icons/IconScrollText"
 import { TimeSince } from "@/components/atoms/TimeSince"
+import { SeeGamesSheet } from "./SeeGamesSheet"
 
 export type SteamAccountAdminItemProps = React.ComponentPropsWithoutRef<"div"> & {}
 
@@ -85,20 +86,35 @@ export const ImagesGridStagingGames = React.memo(
     function ImagesGridStagingGamesComponent({ className, ...props }, ref) {
       const games = useSteamAccountAdminItem(sa => sa.games)
       const stagingGames = useSteamAccountAdminItem(sa => sa.stagingGames)
+      const accountName = useSteamAccountAdminItem(sa => sa.accountName)
+
+      const description: React.FC = () => (
+        <p>
+          Esses são os jogos que atualmente{" "}
+          <strong className="font-semibold text-white">{accountName}</strong> possui em staging.
+        </p>
+      )
 
       return (
-        <ImagesGrid
-          {...props}
-          className={cn("w-full", className)}
-          ref={ref}
+        <SeeGamesSheet
+          description={description}
+          title="Jogos em staging"
+          choosedOnes={stagingGames}
+          games={games}
         >
-          <ImagesGridIconWrapper>
-            <IconScrollText className="size-4 text-slate-600 group-hover:text-white transition-all duration-150" />
-          </ImagesGridIconWrapper>
-          <ImagesGridContent
-            source={games!.filter(game => stagingGames.includes(game.id)).map(g => g.imageUrl)}
-          />
-        </ImagesGrid>
+          <ImagesGrid
+            {...props}
+            className={cn("w-full", className)}
+            ref={ref}
+          >
+            <ImagesGridIconWrapper>
+              <IconScrollText className="size-4 text-slate-600 group-hover:text-white transition-all duration-150" />
+            </ImagesGridIconWrapper>
+            <ImagesGridContent
+              source={games!.filter(game => stagingGames.includes(game.id)).map(g => g.imageUrl)}
+            />
+          </ImagesGrid>
+        </SeeGamesSheet>
       )
     }
   )
@@ -116,20 +132,35 @@ export const ImagesGridFarmingGames = React.memo(
     function ImagesGridFarmingGamesComponent({ className, ...props }, ref) {
       const games = useSteamAccountAdminItem(sa => sa.games)
       const farmingGames = useSteamAccountAdminItem(sa => sa.farmingGames)
+      const accountName = useSteamAccountAdminItem(sa => sa.accountName)
+
+      const description: React.FC = () => (
+        <p>
+          Esses são os jogos que atualmente{" "}
+          <strong className="font-semibold text-white">{accountName}</strong> está farmando.
+        </p>
+      )
 
       return (
-        <ImagesGrid
-          {...props}
-          className={cn("w-full", className)}
-          ref={ref}
+        <SeeGamesSheet
+          description={description}
+          title="Jogos farmando"
+          choosedOnes={farmingGames}
+          games={games}
         >
-          <ImagesGridIconWrapper>
-            <IconJoystick className="size-4 fill-slate-600 group-hover:fill-white transition-all duration-150" />
-          </ImagesGridIconWrapper>
-          <ImagesGridContent
-            source={games!.filter(game => farmingGames.includes(game.id)).map(g => g.imageUrl)}
-          />
-        </ImagesGrid>
+          <ImagesGrid
+            {...props}
+            className={cn("w-full", className)}
+            ref={ref}
+          >
+            <ImagesGridIconWrapper>
+              <IconJoystick className="size-4 fill-slate-600 group-hover:fill-white transition-all duration-150" />
+            </ImagesGridIconWrapper>
+            <ImagesGridContent
+              source={games!.filter(game => farmingGames.includes(game.id)).map(g => g.imageUrl)}
+            />
+          </ImagesGrid>
+        </SeeGamesSheet>
       )
     }
   )
