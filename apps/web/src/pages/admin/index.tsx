@@ -13,6 +13,7 @@ import {
 import { getUserProps } from "../dashboard"
 import { GetServerSideProps } from "next"
 import { UserProvider } from "@/contexts/UserContext"
+import { ApplicationStatus } from "@/components/layouts/pages/admin/components/ApplicationStatus"
 
 export type UserAdminPanelSession = {
   id_user: string
@@ -59,6 +60,7 @@ export default function AdminDashboard({ user }: UserSessionParams) {
       <HeaderDashboard />
       <div className="max-w-[1440px] w-full mx-auto mdx:px-8">
         <div className="mt-8">
+          <ApplicationStatus />
           <UserAdminItemList />
         </div>
       </div>
