@@ -12,7 +12,7 @@ import { UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { SACGenericError, handleSteamClientError } from "~/application/use-cases"
 import { FailGeneric } from "~/types/EventsApp.types"
-import { Prettify, bad, nice } from "~/utils/helpers"
+import { Pretify, bad, nice } from "~/utils/helpers"
 
 type Payload = {
   accountName: string
@@ -184,4 +184,4 @@ const EAppResultsRaw = {
   "PLAN-MAX-USAGE-EXCEEDED": "PLAN-MAX-USAGE-EXCEEDED",
 } as const
 
-export const EAppResults = EAppResultsRaw as Prettify<Mutable<typeof EAppResultsRaw>>
+export const EAppResults = EAppResultsRaw as Pretify<Mutable<typeof EAppResultsRaw>>

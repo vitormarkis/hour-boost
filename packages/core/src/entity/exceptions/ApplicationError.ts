@@ -1,3 +1,5 @@
+import { Mutable } from "core/utils"
+
 export class ApplicationError<const TCode = string | undefined, P = any> extends Error {
   status: number
   details: any
@@ -15,16 +17,6 @@ export class ApplicationError<const TCode = string | undefined, P = any> extends
   }
 }
 
-export type Mutable<T> = { -readonly [P in keyof T]: T[P] }
-
-type MutableDepper<T> = {
-  -readonly [P in keyof T]: T[P] extends (infer U)[]
-    ? MutableDepper<U>[]
-    : T[P] extends object
-      ? MutableDepper<T[P]>
-      : T[P]
-}
-
 export type MutableDeep<T> = {
   -readonly [P in keyof T]: T[P] extends object ? MutableDeep<T[P]> : T[P]
 }
@@ -34,7 +26,7 @@ type PrettifyOneLevel<T> = { [K in keyof T]: T[K] extends object ? PrettifyOneLe
 type PrettifyTwoLevel<T> = { [K in keyof T]: T[K] extends object ? PrettifySoft<T[K]> : T[K] } & unknown
 
 export function fail<const T>(error: T) {
-  return [error] as Mutable<[T]>
+  return [error] as [Mutable<T>]
 }
 
 const mason = () => {

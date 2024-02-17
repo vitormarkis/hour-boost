@@ -2,46 +2,58 @@ import "dotenv/config"
 
 import { ClerkExpressWithAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
 import { GetUser } from "core"
-import { Request, Response, Router } from "express"
 
 import { CreateUserUseCase } from "~/application/use-cases"
 import { GetMeController } from "~/presentation/controllers"
-import { promiseHandler } from "~/presentation/controllers/promiseHandler"
-import { userAuthentication, usersClusterStorage, usersDAO, usersRepository } from "~/presentation/instances"
+import {
+  tokenService,
+  userAuthentication,
+  usersClusterStorage,
+  usersDAO,
+  usersRepository,
+} from "~/presentation/instances"
+import { HBHeaders } from "~/inline-middlewares/hb-headers-enum"
+import express, { Application, Request, Response, Router } from "express"
 
 export const query_routerUser: Router = Router()
 export const createUser = new CreateUserUseCase(usersRepository, userAuthentication, usersClusterStorage)
 export const getUser = new GetUser(usersDAO)
 
-const loginErrorMessages: Record<number, string> = {
-  5: "Invalid password or steam account.",
-  61: "Invalid Password",
-  63:
-    "Account login denied due to 2nd factor authentication failure. " +
-    "If using email auth, an email has been sent.",
-  65: "Account login denied due to auth code being invalid",
-  66: "Account login denied due to 2nd factor auth failure and no mail has been sent",
-  84: "Rate limit exceeded.",
-}
-
 query_routerUser.get("/me", ClerkExpressWithAuth(), async (req: WithAuthProp<Request>, res: Response) => {
-  const getMeController = new GetMeController(usersRepository, createUser, getUser)
-  const { json, status } = await promiseHandler(
-    getMeController.handle({
-      payload: {
-        userId: req.auth.userId,
-      },
+  const userId = req.auth.userId!
+  const getMeController = new GetMeController(usersRepository, createUser, getUser, tokenService)
+  const [error, me] = await getMeController.handle({
+    userId,
+  })
+  if (error) {
+    switch (error.code) {
+      case "USER-SESSION-NOT-FOUND":
+        return res.status(404).json({
+          message: `Não foi possível encontrar uma sessão de usuário para usuário com ID [${error.payload.userId}]`,
+        })
+      default:
+        return res.status(500).json({
+          message: `Aconteceu um erro ao pegar dados do usuário de ID [${userId}]`,
+          errorMessage: error.message,
+        })
+    }
+  }
+
+  if (me.code === "NO-USER-ID-PROVIDED") {
+    return res.status(200).json({
+      message: `Nenhum ID de usuário informado, retornando sessão nula.`,
+      code: me.code,
     })
-  )
+  }
 
-  return res.status(status).json(json)
+  res.cookie(HBHeaders["hb-identification"], me.tokens["hb-identification"])
+  // res.header("Access-Control-Allow-Origin", "http://localhost:3000")
+  // res.header("Access-Control-Allow-Credentials", "true")
+  // res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE")
+  // res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+  const json = {
+    code: me.code,
+    userSession: me.userSession,
+  }
+  return res.status(200).json(json)
 })
-
-// ============
-export type UserID = string
-export type LoginSessionID = string
-export type LoginSessionConfig = {
-  insertCodeCallback: ((code: string) => void) | null
-}
-const userLoginSessions: Map<UserID, { loginSessionID: LoginSessionID }> = new Map()
-const loginSessions: Map<LoginSessionID, LoginSessionConfig> = new Map()

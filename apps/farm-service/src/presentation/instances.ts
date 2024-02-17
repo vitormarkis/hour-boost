@@ -42,6 +42,7 @@ import { SteamAccountsDAODatabase } from "~/infra/dao/SteamAccountsDAODatabase"
 import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
 import { StagingGamesListService } from "~/domain/services"
 import { SACStateCacheBuilder } from "~/utils/builders/SACStateCacheBuilder"
+import { TokenService } from "~/application/services/TokenService"
 
 const httpProxy = process.env.PROXY_URL
 
@@ -96,6 +97,7 @@ export const allUsersClientsStorage = new AllUsersClientsStorage(
   farmGamesUseCase,
   planRepository
 )
+export const tokenService = new TokenService()
 
 // export const farmingUsersStorage = new FarmingUsersStorage()
 
@@ -126,7 +128,9 @@ export const usersDAO = new UsersDAODatabase(
   prisma,
   getPersonaStateUseCase,
   getUserSteamGamesUseCase,
-  steamAccountClientStateCacheRepository
+  steamAccountClientStateCacheRepository,
+  usersClusterStorage,
+  allUsersClientsStorage
 )
 export const steamAccountsDAO = new SteamAccountsDAODatabase(prisma)
 export const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(

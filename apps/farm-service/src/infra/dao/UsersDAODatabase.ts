@@ -5,11 +5,14 @@ import {
   Persona,
   PlanInfinity,
   PlanUsage,
+  PlanUsageSession,
   SteamAccountClientStateCacheRepository,
   SteamAccountSession,
+  Usage,
   UserSession,
   UsersDAO,
 } from "core"
+import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 
@@ -20,7 +23,9 @@ export class UsersDAODatabase implements UsersDAO {
     private readonly prisma: PrismaClient,
     private readonly getPersonaStateUseCase: GetPersonaStateUseCase,
     private readonly getUserSteamGamesUseCase: GetUserSteamGamesUseCase,
-    private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository
+    private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository,
+    private readonly usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage,
+    private readonly allUsersClientsStorage: AllUsersClientsStorage
   ) {}
   async getUserInfoById(
     userId: string
@@ -76,6 +81,7 @@ export class UsersDAODatabase implements UsersDAO {
             id_steamAccount: true,
             accountName: true,
             autoRelogin: true,
+            usage: true,
           },
         },
       },
@@ -103,13 +109,16 @@ export class UsersDAODatabase implements UsersDAO {
         const [error, foundPersona] = personaResponse
         persona = error ? getDefaultPersona() : foundPersona
         games = gamesError ? null : foundGames.toJSON()
-        const accountState = await this.steamAccountClientStateCacheRepository.get(sa.accountName)
+        const [_, cluster] = this.usersSACsFarmingClusterStorage.get(dbUser.username)
+        const { farmStartedAt } = cluster?.getInnerState() ?? {}
+        const sac = this.allUsersClientsStorage.getAccountClient(dbUser.id_user, sa.accountName)
 
-        const usages = dbUser.plan
-          ? await this.prisma.usage.findMany({
-              where: { plan_id: dbUser.plan.id_plan, accountName: sa.accountName },
-            })
-          : null
+        const usages = dbUser.plan?.usages
+        // const usages = dbUser.plan
+        //   ? await this.prisma.usage.findMany({
+        //       where: { plan_id: dbUser.plan.id_plan, accountName: sa.accountName },
+        //     })
+        //   : null
 
         const farmedTimeInSeconds = usages
           ? usages.reduce((acc, item) => {
@@ -121,11 +130,11 @@ export class UsersDAODatabase implements UsersDAO {
           accountName: sa.accountName,
           games,
           id_steamAccount: sa.id_steamAccount,
-          farmingGames: accountState?.gamesPlaying ?? [],
-          stagingGames: accountState?.gamesStaging ?? [],
+          farmingGames: sac?.gamesPlaying ?? [],
+          stagingGames: sac?.gamesStaging ?? [],
           farmedTimeInSeconds,
-          farmStartedAt: accountState?.farmStartedAt ? new Date(accountState.farmStartedAt) : null,
-          status: accountState?.status ?? "offline",
+          farmStartedAt: farmStartedAt ? new Date(farmStartedAt) : null,
+          status: sac?.status ?? "offline",
           autoRelogin: sa.autoRelogin,
           ...persona,
         })

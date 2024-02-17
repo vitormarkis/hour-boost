@@ -149,7 +149,6 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
     }
     const games = JSON.parse(foundGames) as GameSession[]
     const accountSteamGamesList = new AccountSteamGamesList(games)
-    this.logger.log(`found games for ${accountName}: ${games.map(g => g.id).join(", ")}.`)
     return accountSteamGamesList
   }
 
@@ -166,7 +165,6 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
       this.logger.log(`state NOT found for user ${accountName}`)
       return null
     }
-    this.logger.log(`state found for user ${accountName}`)
     const [state] = JSON.parse(foundState) as [state: SACStateCacheDTO]
     return Promise.resolve(state)
   }

@@ -20,7 +20,7 @@ import { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
 import { Logger } from "~/utils/Logger"
 import { StateCachePayloadSAC } from "~/utils/builders/SACStateCacheBuilder"
-import { Prettify, bad, nice } from "~/utils/helpers"
+import { Pretify, bad, nice } from "~/utils/helpers"
 
 export class SteamAccountClient extends LastHandler {
   private readonly publisher: Publisher
@@ -119,7 +119,7 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("playingState", (...args) => {
       const [blocked, appId, ...rest] = args
-      console.log("44: playingState >>", {
+      this.logger.log("44: playingState >>", {
         blocked,
         appId,
         ...rest,
@@ -173,7 +173,7 @@ export class SteamAccountClient extends LastHandler {
     this.gamesStaging = newGameList
   }
 
-  getInnerState(): Prettify<StateCachePayloadSAC> {
+  getInnerState(): Pretify<StateCachePayloadSAC> {
     return {
       accountName: this.accountName,
       gamesPlaying: this.gamesPlaying,

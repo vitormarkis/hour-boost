@@ -1,44 +1,58 @@
-import { Controller, GetUser, HttpClient, UserSession, UsersRepository } from "core"
+import { DataOrFail, Fail, GetUser, UsersRepository } from "core"
+import { TokenService } from "~/application/services/TokenService"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
-import { makeRes, makeResError } from "~/utils"
+import { bad, nice } from "~/utils/helpers"
 
-export namespace GetMeHandle {
-  export type Payload = {
-    userId: string | null
-  }
-
-  export type Response = null | { message: string } | UserSession
-}
-
-export class GetMeController implements Controller<GetMeHandle.Payload, GetMeHandle.Response> {
+export class GetMeController implements IGetMeController {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly createUserUseCase: CreateUserUseCase,
-    private readonly getUser: GetUser
+    private readonly getUser: GetUser,
+    private readonly tokenService: TokenService
   ) {}
 
-  async handle({ payload }: APayload): AResponse {
+  async handle({ userId }: GetMeControllerPayload) {
+    let created = false
     try {
-      const { userId } = payload
-      if (!userId) return { json: null, status: 200 }
+      if (!userId) return nice({ code: "NO-USER-ID-PROVIDED" })
       const user = await this.usersRepository.getByID(userId)
       if (!user) {
         await this.createUserUseCase.execute(userId)
+        created = true
       }
       const userSession = await this.getUser.execute(userId)
-      if (!userSession) return makeRes(500, "Something went wrong during the creation of your user.")
-      return {
-        json: {
-          ...userSession,
+      if (!userSession)
+        return bad(
+          Fail.create("USER-SESSION-NOT-FOUND", 404, {
+            userSession,
+            userId,
+          })
+        )
+      const [errorSigningRoleName, identificationToken] = await this.tokenService.signIdentification({
+        role: userSession.role,
+        userId: userSession.id,
+      })
+
+      if (errorSigningRoleName) return bad(errorSigningRoleName)
+
+      return nice({
+        userSession,
+        tokens: {
+          ["hb-identification"]: identificationToken,
         },
-        status: 201,
-      }
+        code: created ? "USER-SESSION::CREATED" : "USER-SESSION::FOUND",
+      })
     } catch (error) {
       console.log(error)
-      return makeResError(error)
+      return bad(Fail.create("ERROR", 500, { error }))
     }
   }
 }
 
-type APayload = HttpClient.Request<GetMeHandle.Payload>
-type AResponse = Promise<HttpClient.Response<GetMeHandle.Response>>
+export type GetMeControllerPayload = {
+  userId: string | null
+}
+
+interface IGetMeController {
+  handle(props: GetMeControllerPayload): Promise<DataOrFail<Fail, object>>
+}

@@ -1,6 +1,6 @@
 import { AppAccountStatus, SACStateCache } from "core"
 import { Builder } from "~/utils/builders/builder.interface"
-import { Prettify } from "~/utils/helpers"
+import { Pretify } from "~/utils/helpers"
 
 export type StateCachePayloadSAC = {
   gamesPlaying: number[]
@@ -14,7 +14,7 @@ export type StateCachePayloadFarmService = {
   farmStartedAt: Date | null
 }
 
-type Payload = Prettify<StateCachePayloadSAC & StateCachePayloadFarmService>
+type Payload = Pretify<StateCachePayloadSAC & StateCachePayloadFarmService>
 
 export class SACStateCacheBuilder implements Builder<SACStateCache> {
   create(props: Payload): SACStateCache {

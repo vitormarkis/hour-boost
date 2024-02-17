@@ -28,7 +28,7 @@ import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
 import { StateCachePayloadFarmService } from "~/utils/builders/SACStateCacheBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { Prettify, bad, nice } from "~/utils/helpers"
+import { Pretify, bad, nice } from "~/utils/helpers"
 
 export interface IUserSACsFarmingCluster {
   addSAC(...args: any[]): DataOrError<{ userCluster: UserSACsFarmingCluster }>
@@ -147,7 +147,7 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     })
   }
 
-  getInnerState(): Prettify<StateCachePayloadFarmService> {
+  getInnerState(): Pretify<StateCachePayloadFarmService> {
     return {
       farmStartedAt: this.farmService.startedAt,
     }
