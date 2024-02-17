@@ -195,7 +195,6 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
       }
       const accountIsNotFarming = !this.isAccountFarming(accountName)
       if (accountIsNotFarming && sessionType === "NEW") {
-        console.log(`22: CREATING CACHE ENTRY WITH ACCOUNT ${accountName}`)
         await this.notifyFirstTimeFarming(accountName)
       }
       await this.sacStateCacheRepository.setPlayingGames(sac.accountName, gamesId, planId, sac.username)

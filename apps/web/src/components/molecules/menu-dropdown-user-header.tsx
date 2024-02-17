@@ -35,7 +35,10 @@ export const MenuDropdownUserHeader = React.forwardRef<
         <DropdownMenuSeparator /> */}
         <DropdownMenuItem
           className="focus:bg-red-500"
-          onClick={() => signOut()}
+          onClick={async () => {
+            await signOut()
+            router.push("/sign-in")
+          }}
         >
           Sair
         </DropdownMenuItem>

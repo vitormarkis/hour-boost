@@ -1,12 +1,11 @@
+import { api } from "@/lib/axios"
 import { ECacheKeys } from "@/mutations/queryKeys"
 import { QueryObserverOptions, useQuery } from "@tanstack/react-query"
-import { AxiosInstance } from "axios"
 import { UserSession } from "core"
 
-export function useUserSessionQuery({ initialData, userId, getAPI, onSuccess }: UseUserSessionQueryProps) {
+export function useUserSessionQuery({ initialData, userId, onSuccess }: UseUserSessionQueryProps) {
   const options: QueryObserverOptions<UserSession> = {
     queryFn: async () => {
-      const api = await getAPI()
       const { data: user } = await api.get<UserSession>("/me")
       console.log("Queried User, and update the internal state")
       onSuccess(user)
@@ -27,7 +26,6 @@ export function useUserSession<TData = UserSession>({ userId, options = {} }: Us
 }
 
 type UseUserSessionQueryProps = {
-  getAPI(): Promise<AxiosInstance>
   userId: string
   onSuccess(user: UserSession): void
   initialData: UserSession

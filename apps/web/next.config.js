@@ -5,6 +5,9 @@ const nextConfig = {
   images: {
     domains: ["cdn.akamai.steamstatic.com"],
   },
+  // experimental: {
+  //   swcPlugins: [["next-superjson-plugin", {}]],
+  // },
   // typescript: {
   //   ignoreBuildErrors: true,
   // },

@@ -1,9 +1,11 @@
 import "dotenv/config"
 
-import { ClerkExpressWithAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
+import { ClerkExpressWithAuth, WithAuthProp, createClerkExpressWithAuth } from "@clerk/clerk-sdk-node"
 import { GetUser } from "core"
 
+import { Request, Response, Router } from "express"
 import { CreateUserUseCase } from "~/application/use-cases"
+import { HBHeaders } from "~/inline-middlewares/hb-headers-enum"
 import { GetMeController } from "~/presentation/controllers"
 import {
   tokenService,
@@ -12,8 +14,6 @@ import {
   usersDAO,
   usersRepository,
 } from "~/presentation/instances"
-import { HBHeaders } from "~/inline-middlewares/hb-headers-enum"
-import express, { Application, Request, Response, Router } from "express"
 
 export const query_routerUser: Router = Router()
 export const createUser = new CreateUserUseCase(usersRepository, userAuthentication, usersClusterStorage)
@@ -42,6 +42,7 @@ query_routerUser.get("/me", ClerkExpressWithAuth(), async (req: WithAuthProp<Req
   if (me.code === "NO-USER-ID-PROVIDED") {
     return res.status(200).json({
       message: `Nenhum ID de usuário informado, retornando sessão nula.`,
+      userSession: null,
       code: me.code,
     })
   }

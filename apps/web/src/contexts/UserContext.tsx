@@ -28,17 +28,17 @@ export interface UserMethods {
 export interface IUserProviderProps {
   children: React.ReactNode
   serverUser: UserSession
+  serverHeaders: Record<string, string>
 }
 
 export const UserContext = createContext<IUserContext>({} as IUserContext)
 
-export function UserProvider({ serverUser, children }: IUserProviderProps) {
+export function UserProvider({ serverUser, serverHeaders, children }: IUserProviderProps) {
   const [user, setUser] = useState(userToSession(serverUser))
-  const { getToken } = useAuth()
 
-  const getAPI = async () => {
-    api.defaults.headers["Authorization"] = `Bearer ${await getToken()}`
-    return api
+  api.defaults.headers.common = {
+    ...api.defaults.headers.common,
+    ...serverHeaders,
   }
 
   function update(newUser: UserSession) {
@@ -46,7 +46,6 @@ export function UserProvider({ serverUser, children }: IUserProviderProps) {
   }
 
   useUserSessionQuery({
-    getAPI,
     initialData: user,
     userId: user.id,
     onSuccess(updatedUser) {

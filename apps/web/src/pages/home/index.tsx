@@ -7,25 +7,28 @@ import { HeroSection } from "@/components/layouts/Hero"
 import { HowItWorksSection } from "@/components/layouts/HowItWorks"
 import { GetServerSideProps } from "next"
 import { PlanSection } from "@/components/layouts/PlansSection"
-import { UserSession } from "core"
-import { api } from "@/lib/axios"
+import { ServerHeaders } from "@/server-fetch/server-headers"
+import { getUserSession } from "@/server-fetch/getUserSession"
+import { generateNextCommand } from "@/util/generateNextCommand"
+import { UserSessionParams } from "@/server-fetch/types"
 
 export const getServerSideProps: GetServerSideProps = async ctx => {
-  const response = await api.get<UserSession | null>("/me", {
-    headers: ctx.req.headers as Record<string, string>,
+  const serverHeaders = new ServerHeaders(ctx)
+  serverHeaders.appendAuthorization()
+
+  const [error, userSessionResponse] = await getUserSession({ headers: ctx.req.headers })
+  if (error) throw error
+  const { data, headers } = userSessionResponse
+
+  if (headers["set-cookie"]) ctx.res.setHeader("set-cookie", headers["set-cookie"])
+
+  const command = await generateNextCommand({
+    subject: {
+      user: data?.userSession,
+      serverHeaders: serverHeaders.toJSON(),
+    },
   })
-
-  const user = response.data
-
-  return {
-    props: {
-      user,
-    } as UserSessionParams,
-  }
-}
-
-export type UserSessionParams = {
-  user: UserSession | null
+  return command
 }
 
 export default function Home({ user }: UserSessionParams) {

@@ -1,19 +1,20 @@
 import { HeaderDashboard } from "@/components/layouts/Header/header-dashboard"
 import { UserAdminItemList } from "@/components/layouts/pages/admin/components/AdminUserItemList"
+import { ApplicationStatus } from "@/components/layouts/pages/admin/components/ApplicationStatus"
+import { UserProvider } from "@/contexts/UserContext"
 import {
   PlanAllNames,
   PlanInfinitySession,
   PlanUsageSession,
-  Role,
   RoleName,
   StatusName,
   SteamAccountSession,
-  UserSession,
 } from "core"
-import { getUserProps } from "../dashboard"
 import { GetServerSideProps } from "next"
-import { UserProvider } from "@/contexts/UserContext"
-import { ApplicationStatus } from "@/components/layouts/pages/admin/components/ApplicationStatus"
+import { generateNextCommand } from "@/util/generateNextCommand"
+import { getUserSession } from "@/server-fetch/getUserSession"
+import { UserSessionParams } from "@/server-fetch/types"
+import { ServerHeaders } from "@/server-fetch/server-headers"
 
 export type UserAdminPanelSession = {
   id_user: string
@@ -46,17 +47,35 @@ export type IPurchasePayloadTransactionPlan = {
 }
 
 export const getServerSideProps: GetServerSideProps = async ctx => {
-  const userProps = await getUserProps({ ctx })
-  return userProps
+  const serverHeaders = new ServerHeaders(ctx)
+  serverHeaders.appendAuthorization()
+
+  const [error, userSessionResponse] = await getUserSession({ headers: ctx.req.headers })
+  if (error) throw error.message
+  const { data, headers } = userSessionResponse
+
+  if (headers["set-cookie"]) ctx.res.setHeader("set-cookie", headers["set-cookie"])
+
+  const command = await generateNextCommand({
+    subject: {
+      user: data?.userSession,
+      serverHeaders: serverHeaders.toJSON(),
+    },
+    options: {
+      shouldShowNotFoundPageWhen({ user }) {
+        return user?.role !== "ADMIN"
+      },
+    },
+  })
+  return command
 }
 
-type UserSessionParams = {
-  user: UserSession
-}
-
-export default function AdminDashboard({ user }: UserSessionParams) {
+export default function AdminDashboard({ user, serverHeaders }: UserSessionParams) {
   return (
-    <UserProvider serverUser={user}>
+    <UserProvider
+      serverUser={user}
+      serverHeaders={serverHeaders}
+    >
       <HeaderDashboard />
       <div className="max-w-[1440px] w-full mx-auto mdx:px-8">
         <div className="mt-8">

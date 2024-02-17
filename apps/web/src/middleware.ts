@@ -7,8 +7,14 @@ export default function (req: NextRequest, event: NextFetchEvent) {
   // }
 
   // // Otherwise, apply the authMiddleware
+  if (req.nextUrl.pathname === "/cookies") {
+    console.log({ pathname: req.nextUrl.pathname })
+    // return NextResponse.next()
+  }
+
   return authMiddleware({
-    publicRoutes: ["/", "/home"],
+    publicRoutes: ["/", "/home", "/admin"],
+    debug: true,
   })(req, event)
 }
 

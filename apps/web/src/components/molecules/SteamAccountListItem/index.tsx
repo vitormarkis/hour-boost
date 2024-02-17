@@ -75,7 +75,7 @@ export function SteamAccountList({
   /**
    * Toggle Auto Relogin
    */
-  const toggleAutoReloginMutation = useToggleAutoReloginMutation(getAPI)
+  const toggleAutoReloginMutation = useToggleAutoReloginMutation()
 
   const handleToggleAutoRelogin = React.useCallback(async () => {
     toggleAutoRelogin()

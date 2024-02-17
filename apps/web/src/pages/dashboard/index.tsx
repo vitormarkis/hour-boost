@@ -2,49 +2,50 @@ import { DashboardSteamAccountsList } from "@/components/layouts/DashboardSteamA
 import { HeaderDashboard } from "@/components/layouts/Header/header-dashboard"
 import { UserPlanStatus } from "@/components/layouts/UserPlanStatus/component"
 import { UserProvider } from "@/contexts/UserContext"
-import { api } from "@/lib/axios"
+import { getUserSession } from "@/server-fetch/getUserSession"
+import { ServerHeaders } from "@/server-fetch/server-headers"
+import { UserSessionParams } from "@/server-fetch/types"
+import { generateNextCommand } from "@/util/generateNextCommand"
 import { UserSession } from "core"
-import { GetServerSideProps, GetServerSidePropsContext, PreviewData } from "next"
+import { GetServerSideProps } from "next"
 import Head from "next/head"
-import { ParsedUrlQuery } from "querystring"
 
-type getUserPropsProps = {
-  ctx: GetServerSidePropsContext<ParsedUrlQuery, PreviewData>
-}
-
-export async function getUserProps({ ctx }: getUserPropsProps) {
-  const { data: user } = await api.get<UserSession | null>("/me", {
-    headers: ctx.req.headers as Record<string, string>,
-  })
-
-  if (!user) {
-    return {
-      redirect: {
-        destination: "/sign-in",
-        permanent: false,
-      },
-    }
-  }
-
-  return {
-    props: {
-      user,
-    } as UserSessionParams,
-  }
+export type GetMeResponse = {
+  code: `USER-SESSION::${string}`
+  userSession: UserSession
 }
 
 export const getServerSideProps: GetServerSideProps = async ctx => {
-  const userProps = await getUserProps({ ctx })
-  return userProps
+  const serverHeaders = new ServerHeaders(ctx)
+  serverHeaders.appendAuthorization()
+
+  const [error, userSessionResponse] = await getUserSession({ headers: ctx.req.headers })
+  if (error) throw error
+  const { data, headers } = userSessionResponse
+
+  if (headers["set-cookie"]) ctx.res.setHeader("set-cookie", headers["set-cookie"])
+
+  const command = await generateNextCommand({
+    subject: {
+      user: data?.userSession,
+      serverHeaders: serverHeaders.toJSON(),
+    },
+    options: {
+      shouldRedirectToPathIf({ user }) {
+        if (user === null) return "/sign-in"
+      },
+    },
+  })
+  return command
 }
 
-type UserSessionParams = {
-  user: UserSession
-}
-
-export default function DashboardPage({ user }: UserSessionParams) {
+export default function DashboardPage({ user, serverHeaders }: UserSessionParams) {
+  console.log(user)
   return (
-    <UserProvider serverUser={user}>
+    <UserProvider
+      serverUser={user}
+      serverHeaders={serverHeaders}
+    >
       <Head>
         <title>Hourboost - Painel</title>
         <link
