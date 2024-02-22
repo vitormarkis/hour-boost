@@ -14,6 +14,7 @@ import {
   usersDAO,
   usersRepository,
 } from "~/presentation/instances"
+import { setCookie } from "~/utils/setCookie"
 
 export const query_routerUser: Router = Router()
 export const createUser = new CreateUserUseCase(usersRepository, userAuthentication, usersClusterStorage)
@@ -52,7 +53,7 @@ query_routerUser.get(
       })
     }
 
-    res.cookie(HBHeaders["hb-identification"], me.tokens["hb-identification"])
+    setCookie(res, HBHeaders["hb-identification"], me.tokens["hb-identification"])
     // res.header("Access-Control-Allow-Origin", "http://localhost:3000")
     // res.header("Access-Control-Allow-Credentials", "true")
     // res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE")
