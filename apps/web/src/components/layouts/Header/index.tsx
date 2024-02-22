@@ -16,7 +16,7 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
   { user, className, ...props },
   ref
 ) {
-  const userInitials = getUserInitials(user)
+  const userInitials = getUserInitials(user?.username)
 
   return (
     <header

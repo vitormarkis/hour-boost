@@ -5,7 +5,7 @@ type Options<T> = Partial<{
   shouldRedirectToPathIf(subject: T): string | undefined
 }>
 
-type GenerateNextCommandProps<T> = {
+export type GenerateNextCommandProps<T> = {
   subject: T
   options?: Options<T>
 }

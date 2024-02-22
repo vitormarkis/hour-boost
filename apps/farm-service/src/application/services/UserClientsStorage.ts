@@ -45,7 +45,7 @@ export class UserClientsStorage {
       })
       const sacStateCache = await this.sacStateCacheRepository.get(sac.accountName)
       if (sacStateCache && !sac.logged) {
-        sac.emitter.emit("relog-with-state", sacStateCache)
+        sac.emitter.emit("relog-with-state", sac.getCache().toDTO())
       } else {
         sac.emitter.emit("relog")
       }
@@ -54,7 +54,7 @@ export class UserClientsStorage {
     sac.emitter.on("relog-with-state", async state => {
       // TROCAR A LOGICA DESSA FUNÇÃO POR UMA USE CASE DE RESTAURAR ESTADO
 
-      const { accountName, username, gamesPlaying, isFarming, planId, status } = state
+      const { accountName, username, gamesPlaying, isFarming, planId, farmStartedAt } = state
       // sac.setStatus(status)
       this.logger.log(`${accountName} relogou com state.`)
       if (isFarming) {
@@ -71,11 +71,18 @@ export class UserClientsStorage {
           planId,
           sac,
           username,
-          sessionType: "CONTINUE-FROM-PREVIOUS",
+          session: farmStartedAt
+            ? {
+                type: "CONTINUE-FROM-PREVIOUS",
+                farmStartedAt: new Date(farmStartedAt),
+              }
+            : {
+                type: "NEW",
+              },
         })
         if (error?.code === "[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED") {
           console.log(`Parando farm na conta ${accountName}.`)
-          await this.sacStateCacheRepository.stopFarm(accountName)
+          await this.sacStateCacheRepository.save(sac.getCache())
         }
       }
     })
@@ -121,15 +128,17 @@ export class UserClientsStorage {
         gamesPlaying: number[]
         gamesStaging: number[]
         status: AppAccountStatus
+        farmStartedAt: string | null
       }
     >
     this.steamAccountClients.forEach((client, accountName) => {
       accountStatus[accountName] = {
         farming: client.isFarming(),
         logged: client.logged,
-        gamesPlaying: client.gamesPlaying,
-        gamesStaging: client.gamesStaging,
-        status: client.status,
+        gamesPlaying: client.getGamesPlaying(),
+        gamesStaging: client.getGamesStaging(),
+        status: client.getStatus(),
+        farmStartedAt: client.getCache().farmStartedAt?.toISOString() ?? null,
       }
     })
     return accountStatus

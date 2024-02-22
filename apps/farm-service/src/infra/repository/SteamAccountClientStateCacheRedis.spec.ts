@@ -1,4 +1,4 @@
-import { SACStateCacheDTO } from "core"
+import { CacheState, CacheStateDTO } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
@@ -31,20 +31,21 @@ beforeEach(async () => {
 test("should write a ME cache and retrieves it", async () => {
   // console.log = log
   await expect(
-    i.sacStateCacheRepository.set("markis", {
-      accountName: "markis",
-      gamesPlaying: [],
-      gamesStaging: [],
-      isFarming: false,
-      planId: meInstances.me.plan.id_plan,
-      username: s.me.username,
-      farmStartedAt: null,
-      status: "online",
-    })
+    i.sacStateCacheRepository.save(
+      CacheState.restore({
+        accountName: "markis",
+        gamesPlaying: [],
+        gamesStaging: [],
+        planId: meInstances.me.plan.id_plan,
+        username: s.me.username,
+        farmStartedAt: null,
+        status: "online",
+      })
+    )
   ).resolves.not.toThrow()
   const cache = await i.sacStateCacheRepository.get("markis")
   console.log({ cache })
-  expect(cache).toStrictEqual({
+  expect(cache?.toDTO()).toStrictEqual({
     accountName: "markis",
     gamesPlaying: [],
     gamesStaging: [],
@@ -53,32 +54,22 @@ test("should write a ME cache and retrieves it", async () => {
     planId: meInstances.me.plan.id_plan,
     username: s.me.username,
     status: "online",
-  } as SACStateCacheDTO)
+  } as CacheStateDTO)
 })
 
 test("should init state cache", async () => {
   await i.sacStateCacheRepository.flushAll()
-  await i.sacStateCacheRepository.init({
-    accountName: s.me.accountName,
-    planId: meInstances.me.plan.id_plan,
-    username: s.me.username,
-  })
+  i.sacCacheInMemory.state.set(
+    s.me.accountName,
+    CacheState.create({
+      accountName: s.me.accountName,
+      planId: meInstances.me.plan.id_plan,
+      username: s.me.username,
+      status: "online",
+    })
+  )
   const state = await i.sacStateCacheRepository.get(s.me.accountName)
   expect(state?.accountName).toBe(s.me.accountName)
   expect(state?.gamesPlaying).toStrictEqual([])
-  expect(state?.isFarming).toBeFalsy()
-})
-
-test("should init in case object weren't created", async () => {
-  await i.sacStateCacheRepository.flushAll()
-  await i.sacStateCacheRepository.init({
-    accountName: s.me.accountName,
-    planId: meInstances.me.plan.id_plan,
-    username: s.me.username,
-  })
-  await i.sacStateCacheRepository.setPlayingGames(s.me.accountName, [1009])
-  const state = await i.sacStateCacheRepository.get(s.me.accountName)
-  expect(state?.accountName).toBe(s.me.accountName)
-  expect(state?.gamesPlaying).toStrictEqual([1009])
-  expect(state?.isFarming).toBeTruthy()
+  expect(state?.isFarming()).toBeFalsy()
 })

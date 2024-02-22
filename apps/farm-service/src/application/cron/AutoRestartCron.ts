@@ -40,7 +40,7 @@ export class AutoRestartCron implements IAutoRestartCron {
       return bad(Fail.create(EAppResults["STEAM-ACCOUNT-IS-NOT-OWNED"], 400, { steamAccount }))
     }
 
-    const user = await this.usersDAO.getByID(steamAccount.ownerId)
+    const user = await this.usersDAO.getByIDShallow(steamAccount.ownerId)
     if (!user) {
       return bad(new Fail({ code: EAppResults["USER-NOT-FOUND"], payload: { user } }))
     }
@@ -67,6 +67,7 @@ export class AutoRestartCron implements IAutoRestartCron {
 
     let sac = this.allUsersClientsStorage.getAccountClient(steamAccount.ownerId, accountName)
 
+    /** garante um SAC truthy  */
     if (!sac || !sac.logged) {
       const [errorRestoringConnection, result] = await this.restoreAccountConnectionUseCase.execute({
         steamAccount: {
@@ -95,6 +96,8 @@ export class AutoRestartCron implements IAutoRestartCron {
       const { sac: newSteamAccountClient } = result
       sac = newSteamAccountClient
     }
+
+    console.log("auto-restart-cron [sac]: ", sac.accountName)
 
     const [errorRestoringSession] = await this.restoreAccountSessionUseCase.execute({
       accountName,

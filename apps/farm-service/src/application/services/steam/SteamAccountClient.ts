@@ -3,11 +3,13 @@ import {
   AccountSteamGamesList,
   AppAccountStatus,
   ApplicationError,
+  CacheState,
+  CacheStateDTO,
   DataOrError,
   Fail,
   GameSession,
   IRefreshToken,
-  SACStateCacheDTO,
+  NSCacheState,
   SteamAccountPersonaState,
 } from "core"
 import { appendFile } from "fs"
@@ -19,24 +21,25 @@ import { getHeaderImageByGameId } from "~/consts"
 import { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
 import { Logger } from "~/utils/Logger"
-import { StateCachePayloadSAC } from "~/utils/builders/SACStateCacheBuilder"
-import { Pretify, bad, nice } from "~/utils/helpers"
+import { bad, nice } from "~/utils/helpers"
 
 export class SteamAccountClient extends LastHandler {
+  private cache: CacheState
   private readonly publisher: Publisher
   readonly logger: Logger
   readonly emitter: EventEmitter<SteamApplicationEvents>
-  status: AppAccountStatus
   client: SteamUser
   userId: string
   username: string
   planId: string
   logged = false
-  gamesPlaying: number[] = []
-  gamesStaging: number[] = []
   accountName: string
   ownershipCached = false
   autoRestart: boolean
+
+  restoreCacheSession(cacheState: CacheState) {
+    this.cache = cacheState
+  }
 
   constructor({ instances, props }: SteamAccountClientProps) {
     super()
@@ -49,7 +52,13 @@ export class SteamAccountClient extends LastHandler {
     this.autoRestart = props.autoRestart
     this.accountName = props.accountName
     this.logger = new Logger(this.accountName)
-    this.status = "offline"
+
+    this.cache = CacheState.create({
+      accountName: props.accountName,
+      planId: props.planId,
+      status: "offline",
+      username: props.username,
+    })
 
     this.client.on("loggedOn", (...args) => {
       this.emitter.emit("hasSession")
@@ -105,7 +114,7 @@ export class SteamAccountClient extends LastHandler {
         () => {}
       )
       this.logger.log("error.", { eresult: args[0].eresult })
-      this.emitter.emit("interrupt", this.getInnerState(), error)
+      this.emitter.emit("interrupt", this.getCache().toDTO(), error)
       this.getLastHandler("error")(...args)
       this.setLastArguments("error", args)
 
@@ -134,7 +143,7 @@ export class SteamAccountClient extends LastHandler {
         () => {}
       )
       this.changeInnerStatusToNotLogged()
-      this.emitter.emit("interrupt", this.getInnerState(), { eresult: error })
+      this.emitter.emit("interrupt", this.getCache().toDTO(), { eresult: error })
       this.logger.log("disconnected.", ...args)
       this.getLastHandler("disconnected")(...args)
       this.setLastArguments("disconnected", args)
@@ -169,19 +178,12 @@ export class SteamAccountClient extends LastHandler {
     })
   }
 
-  updateStagingGames(newGameList: number[]) {
-    this.gamesStaging = newGameList
+  getCache() {
+    return this.cache
   }
 
-  getInnerState(): Pretify<StateCachePayloadSAC> {
-    return {
-      accountName: this.accountName,
-      gamesPlaying: this.gamesPlaying,
-      gamesStaging: this.gamesStaging,
-      planId: this.planId,
-      username: this.username,
-      status: this.status,
-    }
+  updateStagingGames(newGameList: number[]) {
+    this.cache.stageGames(newGameList)
   }
 
   setAutoRestart(on: boolean) {
@@ -190,15 +192,28 @@ export class SteamAccountClient extends LastHandler {
   }
 
   getGamesPlaying() {
-    return this.gamesPlaying
+    return this.cache.gamesPlaying
+  }
+
+  getGamesStaging() {
+    return this.cache.gamesStaging
+  }
+
+  getStatus() {
+    return this.cache.status
   }
 
   stopFarm() {
     this.farmGames([])
+    return this.cache.stopFarm()
+  }
+
+  stopFarm_CLIENT_() {
+    this.farmGames([])
   }
 
   setGamesPlaying(gamesID: number[]) {
-    this.gamesPlaying = gamesID
+    this.cache.farmGames(gamesID)
   }
 
   login(accountName: string, password: string, authCode?: string) {
@@ -250,13 +265,13 @@ export class SteamAccountClient extends LastHandler {
   }
 
   getPlayingGames() {
-    return this.gamesPlaying
+    return this.cache.gamesPlaying
   }
 
   farmGames(gamesID: number[]) {
     const when = new Date()
 
-    const userIntention = getUserFarmIntention(gamesID, this.gamesPlaying)
+    const userIntention = getUserFarmIntention(gamesID, this.cache.gamesPlaying)
     if (userIntention === "DIDNT-ADD-GAMES") return
 
     this.setGamesPlaying(gamesID)
@@ -265,13 +280,13 @@ export class SteamAccountClient extends LastHandler {
   }
 
   isFarming(): boolean {
-    return this.gamesPlaying.length > 0
+    return this.cache.isFarming()
   }
 
   setStatus(status: AppAccountStatus): void {
     const persona = mapStatusToPersona(status)
     this.client.setPersona(persona)
-    this.status = status
+    this.cache.changeStatus(status)
   }
 
   async getAccountGamesList(): Promise<DataOrError<AccountSteamGamesList>> {
@@ -326,6 +341,7 @@ type SteamAccountClientProps = {
     accountName: string
     planId: string
     autoRestart: boolean
+    farmStartedAt?: Date | null
   }
   instances: {
     publisher: Publisher
@@ -339,9 +355,9 @@ export type OnEventReturn = {
 }
 
 export type SteamApplicationEvents = {
-  interrupt: [stateCachePayloadSAC: StateCachePayloadSAC, error: { eresult: number }]
+  interrupt: [cacheStateDTO: CacheStateDTO, error: { eresult: number }]
   hasSession: []
-  "relog-with-state": [sacStateCache: SACStateCacheDTO]
+  "relog-with-state": [cacheState: CacheStateDTO]
   relog: []
   gotRefreshToken: [refreshTokenInterface: IRefreshToken & { accountName: string }]
   "user-logged-off": []
@@ -349,8 +365,8 @@ export type SteamApplicationEvents = {
   "access-denied": [props: { accountName: string }]
 }
 
-export class SACStateCacheFactory {
-  static createDTO(props: NSSACStateCacheFactory.CreateDTOProps): SACStateCacheDTO {
+export class CacheStateFactory {
+  static createDTO(props: NSCacheStateFactory.CreateDTOProps): CacheStateDTO {
     return {
       accountName: props.accountName,
       gamesPlaying: props.gamesPlaying,
@@ -364,7 +380,7 @@ export class SACStateCacheFactory {
   }
 }
 
-export namespace NSSACStateCacheFactory {
+export namespace NSCacheStateFactory {
   export type CreateDTO_SAC_Props = {
     accountName: string
     gamesPlaying: number[]

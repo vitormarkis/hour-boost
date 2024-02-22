@@ -1,4 +1,4 @@
-import React, { CSSProperties, PropsWithChildren, createContext, useContext } from "react"
+import React, { CSSProperties, PropsWithChildren, createContext, useContext, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { SteamAccountSession } from "core"
 import { ImagesGrid, ImagesGridContent, ImagesGridIconWrapper } from "./ImagesGrid"
@@ -18,6 +18,7 @@ const SteamAccountAdminItem = React.forwardRef<React.ElementRef<"div">, SteamAcc
     const profilePictureUrl = useSteamAccountAdminItem(sa => sa.profilePictureUrl)
     const status = useSteamAccountAdminItem(sa => sa.status)
     const farmedTimeInSeconds = useSteamAccountAdminItem(sa => sa.farmedTimeInSeconds)
+    const farmStartedAt = useSteamAccountAdminItem(sa => sa.farmStartedAt)
 
     return (
       <div
@@ -53,7 +54,13 @@ const SteamAccountAdminItem = React.forwardRef<React.ElementRef<"div">, SteamAcc
             </div>
           </div>
           <div className="h-full flex items-center justify-center w-[--sa-farm-since-width]">
-            <TimeSinceFarmStartedAt />
+            {farmStartedAt ? (
+              <TimeSinceFarmStartedAt farmStartedAt={new Date(farmStartedAt)} />
+            ) : (
+              <div className="flex gap-1 leading-none font-medium whitespace-nowrap text-sm text-slate-600">
+                <span>não</span>
+              </div>
+            )}
           </div>
           <div className="h-full flex items-center justify-center w-[--sa-farmed-time-width]">
             <div className="flex relative tabular-nums">
@@ -168,15 +175,15 @@ export const ImagesGridFarmingGames = React.memo(
 
 ImagesGridFarmingGames.displayName = "ImagesGridFarmingGames"
 
-type TimeSinceFarmStartedAtProps = {}
+type TimeSinceFarmStartedAtProps = {
+  farmStartedAt: Date | null
+}
 
-export function TimeSinceFarmStartedAt({}: TimeSinceFarmStartedAtProps) {
-  const farmStartedAt = useSteamAccountAdminItem(sa => sa.farmStartedAt?.getTime())
-
+export function TimeSinceFarmStartedAt({ farmStartedAt }: TimeSinceFarmStartedAtProps) {
   if (!farmStartedAt) return <span>Sem informações do farm</span>
 
   return (
-    <TimeSince.Root date={new Date(farmStartedAt)}>
+    <TimeSince.Root date={farmStartedAt}>
       <TimeSince.HighlightTime className="text-sm" />
     </TimeSince.Root>
   )

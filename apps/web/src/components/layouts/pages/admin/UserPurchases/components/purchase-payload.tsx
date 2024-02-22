@@ -1,4 +1,4 @@
-import { PurchaseSession } from "@/pages/admin"
+import { PurchaseSession } from "core"
 import { PurchasePayloadTransactionPlan } from "./payloads/transaction-plan"
 
 export type PurchasePayloadProps = {

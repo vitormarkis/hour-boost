@@ -1,3 +1,5 @@
+const webpack = require("webpack")
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -10,6 +12,14 @@ const nextConfig = {
   // },
   // typescript: {
   //   ignoreBuildErrors: true,
+  // },
+  // webpack(config) {
+  //   config.plugins.push(
+  //     new webpack.IgnorePlugin({
+  //       resourceRegExp: /^next\/(navigation|headers|compat\/router)$/,
+  //     })
+  //   )
+  //   return config
   // },
   env: {
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,

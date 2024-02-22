@@ -5,8 +5,9 @@ import {
   Mutable,
   PlanInfinity,
   PlanUsage,
-  SACStateCacheDTO,
+  CacheStateDTO,
   SteamAccountClientStateCacheRepository,
+  CacheState,
 } from "core"
 import { UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
@@ -44,7 +45,7 @@ export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCa
     const [errorRestoringOnApplication] = await restoreSACSessionOnApplication({
       plan,
       sac,
-      state,
+      state: state?.toDTO() ?? null,
       username,
       usersClusterStorage: this.usersSACsFarmingClusterStorage,
       shouldRestoreGames: sac.autoRestart,
@@ -92,7 +93,7 @@ type Props = {
   usersClusterStorage: UsersSACsFarmingClusterStorage
   plan: PlanUsage | PlanInfinity
   username: string
-  state: SACStateCacheDTO | null
+  state: CacheStateDTO | null
   shouldRestoreGames: boolean
 }
 
@@ -105,7 +106,7 @@ export async function restoreSACSessionOnApplication({
   shouldRestoreGames,
 }: Props) {
   const userCluster = usersClusterStorage.getOrAdd(username, plan)
-  const isAccountFarming = userCluster.isAccountFarming(sac.accountName)
+  const isAccountFarming = userCluster.isAccountFarmingOnService(sac.accountName)
 
   if (!userCluster.hasSteamAccountClient(sac.accountName) && !isAccountFarming) {
     const [errorAddingSac] = userCluster.addSAC(sac)
@@ -116,16 +117,33 @@ export async function restoreSACSessionOnApplication({
   }
 
   if (state) {
-    sac.setStatus(state.status)
-    sac.updateStagingGames(state.gamesStaging)
+    sac.restoreCacheSession(
+      CacheState.restore({
+        accountName: sac.accountName,
+        farmStartedAt: state.farmStartedAt ? new Date(state.farmStartedAt) : null,
+        gamesPlaying: state.gamesPlaying,
+        gamesStaging: state.gamesStaging,
+        planId: plan.id_plan,
+        status: state.status,
+        username,
+      })
+    )
   }
 
   if (state && state.isFarming && shouldRestoreGames) {
+    console.log(`33; 1. got from state: ${state.accountName} ${state.farmStartedAt}`)
     const [errorFarmWithAccount] = await userCluster.farmWithAccount({
       accountName: state.accountName,
       gamesId: state.gamesPlaying,
       planId: state.planId,
-      sessionType: EAppResults["CONTINUE-FROM-PREVIOUS"],
+      session: state.farmStartedAt
+        ? {
+            type: "CONTINUE-FROM-PREVIOUS",
+            farmStartedAt: new Date(state.farmStartedAt),
+          }
+        : {
+            type: "NEW",
+          },
     })
 
     if (errorFarmWithAccount) {

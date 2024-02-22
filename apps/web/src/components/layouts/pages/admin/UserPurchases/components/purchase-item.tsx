@@ -1,6 +1,6 @@
 import React from "react"
 import { cn } from "@/lib/utils"
-import { PurchaseSession } from "@/pages/admin"
+import { PurchaseSession } from "core"
 import { twc } from "react-twc"
 import { getTypeText } from "../utils/getTypeText"
 import { PurchasePayload } from "./purchase-payload"
@@ -18,7 +18,8 @@ export const PurchaseItem = React.forwardRef<React.ElementRef<"li">, PurchaseIte
       userId,
       user => user.purchases.find(p => p.id_Purchase === purchaseId)!
     )
-    const { id_Purchase, type, when, valueInCents } = purchase
+    const { id_Purchase, type, valueInCents } = purchase
+    const when = new Date(purchase.when)
     const typeName = getTypeText(type.name)
 
     const formatter = Intl.NumberFormat("pt-BR", {

@@ -46,7 +46,9 @@ describe("List test suite", () => {
       accountName: s.me.accountName,
       gamesId: [109],
       planId: meInstances.me.plan.id_plan,
-      sessionType: "NEW",
+      session: {
+        type: "NEW",
+      },
     })
     jest.advanceTimersByTime(1000 * 60) // 1 minute
     meCluster.pauseFarmOnAccount({ accountName: s.me.accountName })
@@ -69,13 +71,17 @@ describe("List test suite", () => {
       accountName: s.me.accountName,
       gamesId: [109],
       planId: meInstances.me.plan.id_plan,
-      sessionType: "NEW",
+      session: {
+        type: "NEW",
+      },
     })
     await friendCluster.farmWithAccount({
       accountName: s.friend.accountName,
       gamesId: [109],
       planId: friendInstances.friend.plan.id_plan,
-      sessionType: "NEW",
+      session: {
+        type: "NEW",
+      },
     })
     const accountStatus = usersClusterStorage.getAccountsStatus()
     expect(accountStatus).toStrictEqual({
@@ -101,7 +107,9 @@ describe("List test suite", () => {
       accountName: s.me.accountName,
       gamesId: [109],
       planId: meInstances.me.plan.id_plan,
-      sessionType: "NEW",
+      session: {
+        type: "NEW",
+      },
     })
     expect(spy_meCluster_setFarmService).toHaveBeenCalledTimes(1)
     expect(spy_planRepository_getById).toHaveBeenCalledTimes(1)
@@ -112,7 +120,9 @@ describe("List test suite", () => {
       accountName: s.me.accountName2,
       gamesId: [109],
       planId: meInstances.me.plan.id_plan,
-      sessionType: "NEW",
+      session: {
+        type: "NEW",
+      },
     })
     expect(spy_planRepository_getById).toHaveBeenCalledTimes(1)
 
@@ -124,7 +134,9 @@ describe("List test suite", () => {
       accountName: s.me.accountName,
       gamesId: [109],
       planId: meInstances.me.plan.id_plan,
-      sessionType: "NEW",
+      session: {
+        type: "NEW",
+      },
     })
     expect(spy_planRepository_getById).toHaveBeenCalledTimes(1)
 
@@ -137,7 +149,9 @@ describe("List test suite", () => {
       accountName: s.me.accountName2,
       gamesId: [109],
       planId: meInstances.me.plan.id_plan,
-      sessionType: "NEW",
+      session: {
+        type: "NEW",
+      },
     })
     expect(spy_planRepository_getById).toHaveBeenCalledTimes(2)
     expect(spy_meCluster_setFarmService).toHaveBeenCalledTimes(2)

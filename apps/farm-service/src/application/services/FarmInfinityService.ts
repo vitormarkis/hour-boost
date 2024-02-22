@@ -53,6 +53,7 @@ export class FarmInfinityService extends FarmService {
         planId: this.planId,
         when: new Date(),
         killSession,
+        userId: this.userId,
       })
     )
   }
@@ -88,7 +89,7 @@ export class FarmInfinityService extends FarmService {
     if (!account) {
       return [
         new ApplicationError(
-          `Tentativa de pausar farm na conta [${accountName}], mas ela não foi encontrada.`
+          `Tentativa de pausar farm na conta [${accountName}], mas ela não foi encontrada. Contas farmando: [${this.getFarmingAccountsNameList()}]`
         ),
       ]
     }

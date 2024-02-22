@@ -18,17 +18,18 @@ import twc from "tailwindcss/colors"
 import { ButtonAddNewAccount } from "./components"
 import { useSteamAccountListItem } from "./context"
 import { SteamAccountListItemViewProps } from "./types"
-import { ToggleAutoRelogin } from "@/components/molecules/ToggleAutoRelogin/controller"
+import { ToggleAutoRelogin, useSteamAccount } from "@/components/molecules/ToggleAutoRelogin/controller"
+import { useUserControl } from "@/contexts/hook"
 
 type SteamAccountListItemViewDesktopProps = SteamAccountListItemViewProps
 
 export const SteamAccountListItemViewDesktop = React.memo(
   React.forwardRef<React.ElementRef<"div">, SteamAccountListItemViewDesktopProps>(
     function SteamAccountListItemViewDesktopComponent({ handleClickFarmButton, actionText }, ref) {
-      const { header, steamGuard, app, mutations, hasUsagePlanLeft, isFarming, status } =
-        useSteamAccountListItem()
+      const { header, steamGuard, app, mutations, hasUsagePlanLeft, status } = useSteamAccountListItem()
       const { accountName, profilePictureUrl, farmStartedAt } = app
       const plan = useUser(u => u.plan)
+      const isFarming = useSteamAccount(sa => sa.farmingGames.length > 0)
 
       const handleClickFarmButtonImpl = async () => {
         const [undesired, payload] = await handleClickFarmButton()
@@ -50,7 +51,7 @@ export const SteamAccountListItemViewDesktop = React.memo(
               <ButtonAddNewAccount />
             </div>
           )}
-          {isFarming() && (
+          {isFarming && (
             <div className="absolute top-0 bottom-0 right-full w-[0.25rem] bg-accent animate-pulse" />
           )}
           <div className="flex items-center">
@@ -120,7 +121,7 @@ export const SteamAccountListItemViewDesktop = React.memo(
               <div
                 className={cn(
                   "h-1.5 w-1.5 rounded-full bg-slate-500",
-                  isFarming() && "bg-accent animate-pulse"
+                  isFarming && "bg-accent animate-pulse"
                 )}
               />
             </div>
@@ -129,12 +130,12 @@ export const SteamAccountListItemViewDesktop = React.memo(
                 <span>farmando</span>
               </div>
             )}
-            {isFarming() ? (
+            {isFarming ? (
               <div className="flex flex-col justify-center h-full leading-none">
                 {/* <span className="uppercase">2.5 horas</span> */}
                 {/* <span className="text-sm text-slate-500">153 min</span> */}
                 {farmStartedAt ? (
-                  <TimeSince.Root date={farmStartedAt}>
+                  <TimeSince.Root date={new Date(farmStartedAt)}>
                     <TimeSince.HighlightTime className="text-sm" />
                     <TimeSince.SecondaryTime className="text-xs" />
                   </TimeSince.Root>
@@ -202,14 +203,14 @@ export const SteamAccountListItemViewDesktop = React.memo(
               </button>
             </AlertDialogRemoveSteamAccount>
             <button
-              disabled={mutations.farmGames.isPending || mutations.stopFarm.isPending || !hasUsagePlanLeft()}
+              disabled={mutations.farmGames.isPending || mutations.stopFarm.isPending || !hasUsagePlanLeft}
               className={cn(
                 "flex justify-center text-white items-center px-8 h-full min-w-[12.6rem] bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:cursor-not-allowed",
-                isFarming() && "bg-accent hover:bg-accent-500 disabled:bg-accent-700"
+                isFarming && "bg-accent hover:bg-accent-500 disabled:bg-accent-700"
               )}
               onClick={handleClickFarmButtonImpl}
             >
-              {hasUsagePlanLeft() ? actionText : "Seu plano acabou"}
+              {hasUsagePlanLeft ? actionText : "Seu plano acabou"}
             </button>
           </div>
         </div>

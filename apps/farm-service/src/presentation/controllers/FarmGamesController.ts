@@ -26,6 +26,7 @@ export class FarmGamesController implements IFarmGamesController {
   private readonly usersRepository: UsersRepository
   private readonly allUsersClientsStorage: AllUsersClientsStorage
   private readonly farmGamesUseCase: FarmGamesUseCase
+  private readonly debugger = new ModuleDebugger("FarmGamesController")
 
   constructor(props: FarmGamesControllerProps) {
     this.usersRepository = props.usersRepository
@@ -34,12 +35,21 @@ export class FarmGamesController implements IFarmGamesController {
   }
 
   async handle({ payload }: APayload) {
+    this.debugger.init()
     const { accountName, gamesID, userId } = payload
+    this.debugger.log({ payload })
     const user = await this.usersRepository.getByID(userId)
-    if (!user) throw new ApplicationError("Usuário não encontrado.", 404)
+    this.debugger.log({ user })
+    if (!user) {
+      this.debugger.commit()
+      throw new ApplicationError("Usuário não encontrado.", 404)
+    }
     const steamAccountDomain = user.steamAccounts.data.find(sa => sa.credentials.accountName === accountName)
-    if (!steamAccountDomain)
+    this.debugger.log({ steamAccountDomain })
+    if (!steamAccountDomain) {
+      this.debugger.commit()
       throw new ApplicationError("Steam Account nunca foi registrada ou ela não pertence à você.", 400)
+    }
 
     const sac = this.allUsersClientsStorage.getOrAddSteamAccount({
       accountName,
@@ -48,6 +58,8 @@ export class FarmGamesController implements IFarmGamesController {
       planId: user.plan.id_plan,
       autoRestart: steamAccountDomain.autoRelogin,
     })
+    this.debugger.log({ sacLogged: sac.logged, sac })
+    const sacWasNotFarming = sac.isFarming()
     if (!sac.logged) {
       const loginSteamClientAwaitEvents = new LoginSteamWithCredentials()
       const loginSteamClientResult = await loginSteamClientAwaitEvents.execute({
@@ -62,20 +74,35 @@ export class FarmGamesController implements IFarmGamesController {
         },
       })
       const [errorLoggin] = this.errorWrapperLogingInSAC(loginSteamClientResult, sac)
-      if (errorLoggin) return errorLoggin
+      this.debugger.log({ errorLoggin })
+      if (errorLoggin) {
+        this.debugger.commit()
+        return errorLoggin
+      }
     }
+    this.debugger.log({ gamesIDLength: gamesID.length })
     if (gamesID.length === 0) {
+      this.debugger.commit()
       throw new ApplicationError("Você não pode farmar 0 jogos, começe o farm a partir de 1.", 403)
     }
+    this.debugger.log({
+      "gamesID.length > user.plan.maxGamesAllowed": gamesID.length > user.plan.maxGamesAllowed,
+    })
     if (gamesID.length > user.plan.maxGamesAllowed) {
       const hasS = user.plan.maxGamesAllowed > 1 ? "s" : ""
+      this.debugger.commit()
       throw new ApplicationError(
         `Seu plano não permite o farm de mais do que ${user.plan.maxGamesAllowed} jogo${hasS} por vez.`,
         403
       )
     }
     const noNewGameAddToFarm = areTwoArraysEqual(gamesID, sac.getGamesPlaying())
-    if (noNewGameAddToFarm) return makeRes(200, "Nenhum novo game adicionado ao farm.")
+
+    this.debugger.log({ noNewGameAddToFarm })
+    if (noNewGameAddToFarm) {
+      this.debugger.commit()
+      return makeRes(200, "Nenhum novo game adicionado ao farm.")
+    }
 
     const [error] = await this.farmGamesUseCase.execute({
       accountName,
@@ -84,16 +111,22 @@ export class FarmGamesController implements IFarmGamesController {
       planId: user.plan.id_plan,
       sac,
       username: user.username,
-      sessionType: "NEW",
+      session: {
+        type: "NEW",
+      },
     })
+    this.debugger.log({ error })
 
     if (error) {
       if (error.code === "[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED") {
+        this.debugger.commit()
         return makeRes(403, "Seu plano não possui mais uso disponível.")
       }
       if (error.code === "[FarmInfinityService]:ACCOUNT-ALREADY-FARMING") {
+        this.debugger.commit()
         return makeRes(403, "Essa conta já está farmando.")
       }
+      this.debugger.commit()
       return {
         json: {
           message: "Aconteceu um erro ao inicar o farm.",
@@ -104,7 +137,8 @@ export class FarmGamesController implements IFarmGamesController {
       }
     }
 
-    return makeRes(200, "Iniciando farm.")
+    this.debugger.commit()
+    return makeRes(200, sacWasNotFarming ? "Farm atualizado." : "Iniciando farm.")
   }
 
   private errorWrapperLogingInSAC(
@@ -158,4 +192,32 @@ type FarmGamesControllerProps = {
   usersRepository: UsersRepository
   allUsersClientsStorage: AllUsersClientsStorage
   farmGamesUseCase: FarmGamesUseCase
+}
+
+class ModuleDebugger {
+  consoleLog: ((...data: any[]) => void) | undefined = undefined
+  constructor(
+    public moduleName: string,
+    public enabled = false
+  ) {}
+
+  init() {
+    if (!this.enabled) return
+    this.consoleLog = console.log
+    console.log = () => {}
+    this.consoleLog(`[${this.moduleName}] =====`)
+  }
+
+  commit() {
+    if (!this.enabled) return
+    if (!this.consoleLog) throw new Error("Você esqueceu de dar init no debugger.")
+    console.log = this.consoleLog
+    this.consoleLog(`[${this.moduleName}] =====`)
+    this.consoleLog = undefined
+  }
+
+  log(...args: any[]) {
+    if (!this.enabled) return
+    this.consoleLog!(...args)
+  }
 }

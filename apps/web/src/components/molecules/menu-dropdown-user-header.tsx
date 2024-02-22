@@ -1,15 +1,13 @@
-import React from "react"
-import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 import { useClerk } from "@clerk/clerk-react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/router"
+import React from "react"
 
 export type MenuDropdownUserHeaderProps = React.ComponentPropsWithoutRef<typeof DropdownMenuContent> & {
   children: React.ReactNode

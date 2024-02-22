@@ -7,6 +7,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "test": "jest --silent --verbose",
+    "t": "jest",
     "test:w": "jest --verbose --watchAll",
     "dev": "npm run build -- --watch",
     "build": "tsup src/index.ts --format cjs,esm --dts",

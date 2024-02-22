@@ -3,19 +3,20 @@ import { getFarmedTimeSince } from "@/components/molecules/SteamAccountListItem"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
+import { getPlanName } from "@/util/getPlanName"
 import { planIsUsage } from "@/util/thisPlanIsUsage"
 import React from "react"
 import { BadgePlanInfo, BadgePlanType } from "./components"
-import { getPlanName } from "@/util/getPlanName"
 
 export function UserPlanStatus() {
-  const { plan, steamAccounts } = useUser()
-
-  const planName = getPlanName(plan.name)
-  const maxUsage = planIsUsage(plan) ? getTimePast(plan.maxUsageTime) : getTimePastInfinity()
-  const remaining = planIsUsage(plan)
-    ? getTimePast(plan.maxUsageTime - plan.farmUsedTime)
-    : getTimePastInfinity()
+  const _planName = useUser(user => user.plan.name)
+  const planName = getPlanName(_planName)
+  const _planIsUsage = useUser(user => planIsUsage(user.plan))
+  const maxGamesAllowed = useUser(user => user.plan.maxGamesAllowed)
+  const maxUsageTime = useUser(user => (planIsUsage(user.plan) ? user.plan.maxUsageTime : 0))
+  const farmUsedTime = useUser(user => (planIsUsage(user.plan) ? user.plan.farmUsedTime : 0))
+  const maxUsage = _planIsUsage ? getTimePast(maxUsageTime) : getTimePastInfinity()
+  const remaining = _planIsUsage ? getTimePast(maxUsageTime - farmUsedTime) : getTimePastInfinity()
 
   return (
     <div className="flex justify-between pt-12">
@@ -24,7 +25,7 @@ export function UserPlanStatus() {
         <div className="flex flex-col justify-end rounded-md border border-dashed border-slate-900 p-3">
           <div className="flex gap-2 items-center justify-end">
             <span className="text-slate-400">Seu plano:</span>
-            <BadgePlanType name={plan.name}>
+            <BadgePlanType name={_planName}>
               <span className="leading-none font-semibold">{planName}</span>
             </BadgePlanType>
           </div>
@@ -36,7 +37,7 @@ export function UserPlanStatus() {
               <HoverCardTrigger asChild>
                 <BadgePlanInfo.Root className="hover:ring-2 hover:ring-slate-900/70 hover:cursor-pointer">
                   <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">
-                    {plan.maxGamesAllowed}
+                    {maxGamesAllowed}
                   </BadgePlanInfo.Number>
                   <BadgePlanInfo.SubWrapper className="border-slate-700 bg-slate-600 text-slate-300">
                     <BadgePlanInfo.Icon className="fill-slate-200">

@@ -14,7 +14,7 @@ export const SteamAccountAdminListHeader = React.forwardRef<
       className={cn("flex", className)}
       ref={ref}
     >
-      <div className="w-[calc(var(--sa-padding-left)_+_var(--container-height))]" />
+      <div className="w-[calc(var(--sa-padding-left)_+_var(--container-height))] mr-2" />
       <ColumnWrapper className="w-[--sa-name-width] justify-start">
         <ColumnTitle>nome</ColumnTitle>
       </ColumnWrapper>

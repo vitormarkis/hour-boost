@@ -20,7 +20,7 @@ export interface ISteamAccountListItemContext extends SteamAccountStatusProps, S
   handleChangeStatus(newStatus: AppAccountStatus): Promise<DataOrMessage<string, IntentionCodes_ChangeStatus>>
   handleToggleAutoRelogin(): Promise<string | undefined>
   isFarming(): boolean
-  hasUsagePlanLeft(): boolean
+  hasUsagePlanLeft: boolean
   status: AppAccountStatus
   mutations: {
     stopFarm: MutationStopFarm

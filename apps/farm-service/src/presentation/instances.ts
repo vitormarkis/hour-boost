@@ -162,10 +162,16 @@ export const retrieveSessionAccountsUseCase = new RetrieveSessionListUseCase(
   steamAccountClientStateCacheRepository
 )
 
-export const stagingGamesListService = new StagingGamesListService(sacStateCacheBuilder)
+export const stagingGamesListService = new StagingGamesListService()
 
 publisher.register(new StartFarmPlanHandler())
-publisher.register(new PersistFarmSessionHandler(planRepository, steamAccountClientStateCacheRepository))
+publisher.register(
+  new PersistFarmSessionHandler(
+    planRepository,
+    steamAccountClientStateCacheRepository,
+    allUsersClientsStorage
+  )
+)
 
 // publisher.register(new LogUserFarmedHandler())
 

@@ -1,8 +1,75 @@
-import { DatabaseSteamAccount, PlanInfinity, PlanUsage, UserSession, UsersDAO } from "core"
+import {
+  DatabaseSteamAccount,
+  PlanInfinity,
+  PlanUsage,
+  UserAdminPanelSession,
+  UserSession,
+  UserSessionShallow,
+  UsersDAO,
+} from "core"
 import { UsersInMemory } from "~/infra/repository"
 
 export class UsersDAOInMemory implements UsersDAO {
   constructor(private readonly users: UsersInMemory) {}
+
+  async getByIDShallow(userId: string): Promise<UserSessionShallow | null> {
+    const foundUser = await this.getByID(userId)
+    if (!foundUser) return null
+    const { steamAccounts, purchases, ...user } = foundUser
+    return user
+  }
+
+  async getUsersAdminList(): Promise<UserAdminPanelSession[]> {
+    const usersAdmin: UserAdminPanelSession[] = this.users.users.map(user => {
+      const steamAccounts: UserAdminPanelSession["steamAccounts"] = user.steamAccounts.data.map(sa => ({
+        status: "online",
+        accountName: sa.credentials.accountName,
+        id_steamAccount: sa.id_steamAccount,
+        autoRelogin: sa.autoRelogin,
+        farmedTimeInSeconds: user.plan.usages.data.reduce((acc, item) => {
+          return acc + item.amountTime
+        }, 0),
+        games: null,
+        profilePictureUrl: null,
+        stagingGames: [],
+        farmingGames: [],
+        farmStartedAt: null,
+      }))
+
+      const finalUser: UserAdminPanelSession = {
+        id_user: user.id_user,
+        plan:
+          user.plan instanceof PlanUsage
+            ? {
+                id_plan: user.plan.id_plan,
+                autoRestarter: user.plan.autoRestarter,
+                maxGamesAllowed: user.plan.maxGamesAllowed,
+                maxSteamAccounts: user.plan.maxSteamAccounts,
+                maxUsageTime: user.plan.maxUsageTime,
+                name: user.plan.name,
+                type: "USAGE",
+                farmUsedTime: 0,
+              }
+            : {
+                id_plan: user.plan.id_plan,
+                autoRestarter: user.plan.autoRestarter,
+                maxGamesAllowed: user.plan.maxGamesAllowed,
+                maxSteamAccounts: user.plan.maxSteamAccounts,
+                name: user.plan.name,
+                type: "INFINITY",
+              },
+        profilePicture: user.profilePic,
+        purchases: [],
+        role: user.role.name,
+        status: user.status.name,
+        steamAccounts,
+        username: user.username,
+      }
+
+      return finalUser
+    })
+    return usersAdmin
+  }
 
   async getUserInfoById(
     userId: string
@@ -48,7 +115,7 @@ export class UsersDAOInMemory implements UsersDAO {
               maxSteamAccounts: foundUser.plan.maxSteamAccounts,
               maxUsageTime: foundUser.plan.maxUsageTime,
               name: foundUser.plan.name,
-              type: foundUser.plan.type as "USAGE",
+              type: "USAGE",
               farmUsedTime: 0,
             }
           : {
@@ -57,7 +124,7 @@ export class UsersDAOInMemory implements UsersDAO {
               maxGamesAllowed: foundUser.plan.maxGamesAllowed,
               maxSteamAccounts: foundUser.plan.maxSteamAccounts,
               name: foundUser.plan.name,
-              type: foundUser.plan.type as "INFINITY",
+              type: "INFINITY",
             },
       profilePic: foundUser.profilePic,
       purchases: foundUser.purchases.map(p => p.id_Purchase),

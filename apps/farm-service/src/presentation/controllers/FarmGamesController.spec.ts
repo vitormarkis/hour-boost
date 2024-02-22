@@ -81,7 +81,9 @@ describe("not mobile", () => {
     await setupInstances({
       validSteamAccounts,
     })
-    i.publisher.register(new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository))
+    i.publisher.register(
+      new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository, i.allUsersClientsStorage)
+    )
     i.publisher.register(createLogPersistFarmSessionHandler())
   })
 
@@ -99,6 +101,41 @@ describe("not mobile", () => {
     expect(response).toStrictEqual({
       status: 200,
       json: { message: "Iniciando farm." },
+    })
+  })
+
+  test("should update the farming games", async () => {
+    const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
+    await i.changeUserPlan(diamondPlan)
+
+    const responseFarmGames = await promiseHandler(
+      farmGamesController.handle({
+        payload: {
+          userId: s.me.userId,
+          accountName: s.me.accountName,
+          gamesID: [10892],
+        },
+      })
+    )
+
+    expect(responseFarmGames.status).toBe(200)
+
+    const responseUpdateGames = await promiseHandler(
+      farmGamesController.handle({
+        payload: {
+          userId: s.me.userId,
+          accountName: s.me.accountName,
+          gamesID: [10892, 708],
+        },
+      })
+    )
+
+    const accountCacheStatus = await i.sacStateCacheRepository.get(s.me.accountName)
+    expect(accountCacheStatus?.gamesPlaying).toStrictEqual([10892, 708])
+
+    expect(responseUpdateGames).toStrictEqual({
+      status: 200,
+      json: { message: "Farm atualizado." },
     })
   })
 
@@ -538,7 +575,9 @@ test("should log the amount time when persist INFINITY farm session", async () =
   await setupInstances({
     validSteamAccounts,
   })
-  i.publisher.register(new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository))
+  i.publisher.register(
+    new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository, i.allUsersClientsStorage)
+  )
 
   const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
   await i.changeUserPlan(diamondPlan)

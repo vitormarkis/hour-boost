@@ -1,4 +1,4 @@
-import { SACStateCacheDTO } from "core"
+import { CacheState, CacheStateDTO } from "core"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import {
@@ -9,7 +9,6 @@ import {
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
-import { NSSACStateCacheFactory } from "~/application/services/steam"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { StateCachePayloadSAC } from "~/utils/builders/SACStateCacheBuilder"
 
@@ -43,11 +42,15 @@ test.only("should NOT store persist farm session if NoConnection error is trigge
   const user = await i.usersRepository.getByID(s.me.userId)
   if (!user) throw user
   i.allUsersClientsStorage.addSteamAccount(s.me.username, s.me.userId, meInstances.meSAC)
-  i.sacStateCacheRepository.init({
-    accountName: s.me.accountName,
-    planId: user.plan.id_plan,
-    username: s.me.username,
-  })
+  i.sacCacheInMemory.state.set(
+    s.me.accountName,
+    CacheState.create({
+      accountName: s.me.accountName,
+      planId: user.plan.id_plan,
+      username: s.me.username,
+      status: "online",
+    })
+  )
   const [error, meCluster] = i.usersClusterStorage.get(s.me.username)
   if (error) throw error
   const [errorAddingSAC] = meCluster.addSAC(meInstances.meSAC)
@@ -56,7 +59,9 @@ test.only("should NOT store persist farm session if NoConnection error is trigge
     accountName: s.me.accountName,
     gamesId: [100],
     planId: meInstances.me.plan.id_plan,
-    sessionType: "NEW",
+    session: {
+      type: "NEW",
+    },
   })
   if (errorFarmingWithAccount) throw errorFarmingWithAccount
   // await new Promise(res => meInstances.meSAC.emitter.setEventResolver("hasSession", res))
@@ -68,7 +73,7 @@ test.only("should NOT store persist farm session if NoConnection error is trigge
   if (!stateCacheDTO) console.log(`22: Não encontrou cache entry com ${s.me.accountName}`)
   expect(stateCacheDTO).not.toBeNull()
   expect(stateCacheDTO!.gamesPlaying).toStrictEqual([])
-  expect(stateCacheDTO!.isFarming).toStrictEqual(false)
+  expect(stateCacheDTO!.isFarming()).toStrictEqual(false)
   expect(stateCacheDTO!.farmStartedAt).toStrictEqual(null)
 })
 
@@ -91,7 +96,9 @@ test("should stop farming once interrupt occurs", async () => {
     accountName: s.me.accountName,
     gamesId: [100],
     planId: meInstances.me.plan.id_plan,
-    sessionType: "NEW",
+    session: {
+      type: "NEW",
+    },
   })
   jest.advanceTimersByTime(0)
   expect(meCluster.getAccountsStatus()).toStrictEqual({
@@ -141,7 +148,9 @@ test("should get back farming once has session again", async () => {
     accountName: s.me.accountName,
     gamesId: [100],
     planId: meInstances.me.plan.id_plan,
-    sessionType: "NEW",
+    session: {
+      type: "NEW",
+    },
   })
   expect(meCluster.getAccountsStatus()).toStrictEqual({
     [s.me.accountName]: "FARMING",
@@ -178,7 +187,9 @@ test("should check if account is farming properly", async () => {
     accountName: s.me.accountName,
     gamesId: [100],
     planId: meInstances.me.plan.id_plan,
-    sessionType: "NEW",
+    session: {
+      type: "NEW",
+    },
   })
   expect(error).toBeNull()
   expect(meCluster.getAccountsStatus()).toStrictEqual({
@@ -186,7 +197,7 @@ test("should check if account is farming properly", async () => {
   })
   expect(meCluster.farmService.hasAccountsFarming()).toBe(true)
   expect(meCluster.farmService.startedAt).toStrictEqual(new Date("2024-01-10T10:00:00.000Z"))
-  expect(meCluster.isAccountFarming(s.me.accountName)).toBe(true)
+  expect(meCluster.isAccountFarmingOnService(s.me.accountName)).toBe(true)
   jest.advanceTimersByTime(1000 * 3600 * 2)
 
   /**
@@ -199,7 +210,7 @@ test("should check if account is farming properly", async () => {
   expect(meCluster.getAccountsStatus()).toStrictEqual({})
   expect(meCluster.farmService.hasAccountsFarming()).toBe(false)
   expect(usages?.type).toBe("STOP-ONE")
-  expect(meCluster.isAccountFarming(s.me.accountName)).toBe(false)
+  expect(meCluster.isAccountFarmingOnService(s.me.accountName)).toBe(false)
 
   /**
    * farm again
@@ -208,7 +219,9 @@ test("should check if account is farming properly", async () => {
     accountName: s.me.accountName,
     gamesId: [100],
     planId: meInstances.me.plan.id_plan,
-    sessionType: "NEW",
+    session: {
+      type: "NEW",
+    },
   })
   expect(error2).toBeNull()
   expect(meCluster.getAccountsStatus()).toStrictEqual({
@@ -216,7 +229,7 @@ test("should check if account is farming properly", async () => {
   })
   expect(meCluster.farmService.hasAccountsFarming()).toBe(true)
   expect(meCluster.farmService.startedAt).toStrictEqual(new Date("2024-01-10T12:00:00.000Z"))
-  expect(meCluster.isAccountFarming(s.me.accountName)).toBe(true)
+  expect(meCluster.isAccountFarmingOnService(s.me.accountName)).toBe(true)
 })
 
 test("should start farm again when relog with state happens", async () => {
@@ -238,7 +251,9 @@ test("should start farm again when relog with state happens", async () => {
     accountName: s.me.accountName,
     gamesId: [100],
     planId: meInstances.me.plan.id_plan,
-    sessionType: "NEW",
+    session: {
+      type: "NEW",
+    },
   })
   expect(meCluster.getAccountsStatus()).toStrictEqual({
     [s.me.accountName]: "FARMING",
@@ -276,7 +291,7 @@ test("should start farm again when relog with state happens", async () => {
       ...sacState,
       isFarming: true,
       farmStartedAt: new Date("2024-01-10T10:00:00.000Z").getTime(),
-    } satisfies SACStateCacheDTO,
+    } satisfies CacheStateDTO,
   ]) // agora ja possui valor quando foi parado
   expect(pauseFarmOnAccountSPY).toHaveBeenCalledTimes(1) // 1
   expect(meCluster.getAccountsStatus()).toStrictEqual({

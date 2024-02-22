@@ -2,23 +2,22 @@ import { FarmGamesMutationResult } from "@/components/molecules/FarmGames"
 import { IntentionCodes as IntentionCodes_FarmGames } from "@/components/molecules/FarmGames/types"
 import { useSteamAccountStore } from "@/components/molecules/SteamAccountListItem/store/useSteamAccountStore"
 import { IntentionCodes as IntentionCodes_StopFarm } from "@/components/molecules/StopFarm/types"
-import { IUserContext } from "@/contexts/UserContext"
+import { useUserControl } from "@/contexts/hook"
 import { StopFarmMutationResult } from "@/mutations"
 import { ECacheKeys } from "@/mutations/queryKeys"
 import { DataOrMessage } from "@/util/DataOrMessage"
-import { QueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import React from "react"
 
 type Props = {
   stopFarm: StopFarmMutationResult
-  queryClient: QueryClient
   userId: string
   farmGames: FarmGamesMutationResult
-  user: Pick<IUserContext, "updateFarmingGames" | "startFarm">
 }
 
-export function useHandlers({ stopFarm, queryClient, userId, farmGames, user }: Props) {
+export function useHandlers({ stopFarm, userId, farmGames }: Props) {
   const setUrgent = useSteamAccountStore(state => state.setUrgent)
+  const queryClient = useQueryClient()
 
   const handleStopFarm = React.useCallback(
     async (
@@ -42,6 +41,9 @@ export function useHandlers({ stopFarm, queryClient, userId, farmGames, user }: 
     [stopFarm, queryClient]
   )
 
+  const updateFarmingGames = useUserControl(c => c.updateFarmingGames)
+  const startFarm = useUserControl(c => c.startFarm)
+
   const handleFarmGames = React.useCallback(
     async (
       accountName: string,
@@ -56,21 +58,18 @@ export function useHandlers({ stopFarm, queryClient, userId, farmGames, user }: 
         userId,
       })
       const now = new Date()
-      user.updateFarmingGames({
+      updateFarmingGames({
         accountName,
         gameIdList: gamesID,
       })
-      user.startFarm({
-        accountName,
-        when: now,
-      })
+      startFarm(accountName, now)
       setUrgent(false)
       // 22: startFarm() only if farming games was 0 and staging list had more than 1 game
       return {
         dataOrMessage,
       }
     },
-    [farmGames, user.updateFarmingGames, user.startFarm]
+    [farmGames, updateFarmingGames, startFarm]
   )
 
   return {

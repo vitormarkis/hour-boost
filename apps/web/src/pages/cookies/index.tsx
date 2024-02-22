@@ -2,6 +2,7 @@ import { getUserSession } from "@/server-fetch/getUserSession"
 import { ServerHeaders } from "@/server-fetch/server-headers"
 import { UserSessionParams } from "@/server-fetch/types"
 import { generateNextCommand } from "@/util/generateNextCommand"
+import { getAuth } from "@clerk/nextjs/server"
 import axios, { AxiosError } from "axios"
 import { GetServerSideProps } from "next"
 import { useEffect, useState } from "react"
@@ -10,7 +11,8 @@ export const getServerSideProps: GetServerSideProps = async ctx => {
   const serverHeaders = new ServerHeaders(ctx)
   serverHeaders.appendAuthorization()
 
-  const [error, userSessionResponse] = await getUserSession({ headers: ctx.req.headers })
+  const { getToken } = getAuth(ctx.req)
+  const [error, userSessionResponse] = await getUserSession({ getToken })
   if (error) throw error.message
   const { data, headers } = userSessionResponse
 

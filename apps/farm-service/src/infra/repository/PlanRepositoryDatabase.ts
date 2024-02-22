@@ -5,8 +5,9 @@ import { getCurrentPlan } from "~/utils"
 export class PlanRepositoryDatabase implements PlanRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  list(): Promise<(PlanUsage | PlanInfinity)[]> {
-    throw new Error("PlanRepository.list() = Method not implemented.")
+  async list(): Promise<(PlanUsage | PlanInfinity)[]> {
+    console.log("NSTH: PlanRepository.list() = Method not implemented.")
+    return [] as (PlanUsage | PlanInfinity)[]
   }
 
   async update(plan: PlanUsage | PlanInfinity): Promise<void> {

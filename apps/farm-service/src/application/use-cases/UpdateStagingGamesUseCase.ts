@@ -53,18 +53,17 @@ export class UpdateStagingGamesUseCase implements IUpdateStagingGamesUseCase {
       return bad(fail)
     }
 
-    const [errorUpdatingStagingGameList, updatedSACStateCache] = await this.stagingGamesListService.update({
+    const [errorUpdatingStagingGameList] = await this.stagingGamesListService.update({
       newGameList,
       plan: user.plan,
       sac,
-      userCluster,
     })
 
     if (errorUpdatingStagingGameList) return bad(errorUpdatingStagingGameList)
 
-    await this.steamAccountClientStateCacheRepository.set(accountName, updatedSACStateCache.toJSON())
+    await this.steamAccountClientStateCacheRepository.save(sac.getCache())
 
-    return nice(updatedSACStateCache)
+    return nice(sac.getCache())
   }
 }
 

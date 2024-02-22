@@ -1,25 +1,27 @@
 import { AccountSteamGamesList } from "core/entity"
 import { AppAccountStatus } from "core/presenters"
+import { Todo } from "core/todo"
+import { CacheState } from "./CacheManagement"
 
 export interface SteamAccountClientStateCacheRepository {
-  get(accountName: string): Promise<SACStateCacheDTO | null>
-  set(accountName: string, sacStateCache: SACStateCacheDTO): Promise<SACStateCacheDTO>
-  delete(accountName: string): Promise<void>
+  get(accountName: string): Promise<CacheState | null>
+  save(state: CacheState): Promise<void>
+  // delete(accountName: string): Promise<void>
   getAccountGames(accountName: string): Promise<AccountSteamGamesList | null>
   setAccountGames(accountName: string, games: AccountSteamGamesList): Promise<void>
   setRefreshToken(accountName: string, refreshToken: IRefreshToken): Promise<void>
   getRefreshToken(accountName: string): Promise<IRefreshToken | null>
-  setPlayingGames(accountName: string, gamesId: number[], planId: string, username: string): Promise<void>
-  setStagingGames(accountName: string, gamesId: number[]): Promise<void>
+  // setPlayingGames(accountName: string, gamesId: number[], planId: string, username: string): Promise<void>
+  // setStagingGames(accountName: string, gamesId: number[]): Promise<void>
   init(props: InitProps): Promise<void>
   getUsersRefreshToken(): Promise<string[]>
   flushAll(): Promise<void>
   getPersona(accountName: string): Promise<SteamAccountPersonaState | null>
   setPersona(accountName: string, persona: SteamAccountPersonaState): Promise<void>
-  stopFarm(accountName: string): Promise<void>
+  // stopFarm(accountName: string): Promise<void>
   deleteAllEntriesFromAccount(accountName: string): Promise<void>
-  startFarm(props: NSSteamAccountClientStateCacheRepository.StartFarmProps): Promise<void>
-  setStatus({ accountName, status }: NSSteamAccountClientStateCacheRepository.SetStatusProps): Promise<void>
+  // startFarm(props: NSSteamAccountClientStateCacheRepository.StartFarmProps): Promise<void>
+  // setStatus({ accountName, status }: NSSteamAccountClientStateCacheRepository.SetStatusProps): Promise<void>
 }
 
 export namespace NSSteamAccountClientStateCacheRepository {
@@ -71,7 +73,8 @@ export class SACStateCache {
     this.gamesStaging = newGameList
   }
 
-  toJSON(): SACStateCacheDTO {
+  toJSON(): Todo {
+    // TODO:
     return {
       gamesPlaying: this.gamesPlaying,
       gamesStaging: this.gamesStaging,
@@ -83,15 +86,4 @@ export class SACStateCache {
       status: this.status,
     }
   }
-}
-
-export interface SACStateCacheDTO {
-  gamesPlaying: number[]
-  gamesStaging: number[]
-  accountName: string
-  isFarming: boolean
-  username: string
-  planId: string
-  farmStartedAt: number | null
-  status: AppAccountStatus
 }

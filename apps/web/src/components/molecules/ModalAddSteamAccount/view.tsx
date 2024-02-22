@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { useUser } from "@/contexts/UserContext"
+import { useUserId } from "@/contexts/UserContext"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { UseMutationResult, useQueryClient } from "@tanstack/react-query"
 import React from "react"
@@ -44,7 +44,7 @@ export const ModalAddSteamAccountView = React.forwardRef<
 ) {
   const queryClient = useQueryClient()
   const s = useStater(form.watch("accountName"), resetAllFields, clearField)
-  const user = useUser()
+  const userId = useUserId()
 
   const handleFormSubmit = async (
     formController: IFormController,
@@ -61,7 +61,7 @@ export const ModalAddSteamAccountView = React.forwardRef<
     formController.resolveSubmit()
     if (typeof steamAccountId === "string") {
       toast.success("Conta adicionada com sucesso.")
-      queryClient.invalidateQueries({ queryKey: ["me", user.id] })
+      queryClient.invalidateQueries({ queryKey: ["me", userId] })
       return s.completeForm()
     }
     if (undesired) {

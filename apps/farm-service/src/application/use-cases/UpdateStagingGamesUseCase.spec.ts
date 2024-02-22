@@ -58,7 +58,7 @@ describe("UpdateStagingGamesUseCase test suite", () => {
   test("should update the staging games", async () => {
     await restoreAccountSession(s.me.accountName)
 
-    const stagingGamesListService = new StagingGamesListService(i.sacStateCacheBuilder)
+    const stagingGamesListService = new StagingGamesListService()
     const updateStagingGamesUseCase = new UpdateStagingGamesUseCase(
       stagingGamesListService,
       i.usersClusterStorage,
@@ -104,7 +104,7 @@ describe("UpdateStagingGamesUseCase test suite", () => {
   test("should error if user stage more game than his plan allows", async () => {
     await restoreAccountSession(s.me.accountName)
 
-    const stagingGamesListService = new StagingGamesListService(i.sacStateCacheBuilder)
+    const stagingGamesListService = new StagingGamesListService()
     const updateStagingGamesUseCase = new UpdateStagingGamesUseCase(
       stagingGamesListService,
       i.usersClusterStorage,

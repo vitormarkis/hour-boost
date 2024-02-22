@@ -8,7 +8,7 @@ import {
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
-import { FarmingAccountDetails } from "~/application/services"
+import { FarmInfinityService, FarmUsageService, FarmingAccountDetails } from "~/application/services"
 import {
   AccountStatusList,
   FarmService,

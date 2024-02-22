@@ -53,7 +53,7 @@ test("should ", async () => {
   )
   expect(status).toBeLessThan(300)
   const cacheState = await i.sacStateCacheRepository.get(s.me.accountName)
-  expect(cacheState?.farmStartedAt).toBe(today.getTime())
+  expect(cacheState?.farmStartedAt?.getTime()).toBe(today.getTime())
 
   /**
    * Stop farm
@@ -95,5 +95,5 @@ test("should ", async () => {
   )
   expect(res.status).toBeLessThan(300)
   const cacheState3 = await i.sacStateCacheRepository.get(s.me.accountName)
-  expect(cacheState3?.farmStartedAt).toBe(after.getTime())
+  expect(cacheState3?.farmStartedAt?.getTime()).toBe(after.getTime())
 })

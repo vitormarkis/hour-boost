@@ -11,12 +11,14 @@ import { ServerHeaders } from "@/server-fetch/server-headers"
 import { getUserSession } from "@/server-fetch/getUserSession"
 import { generateNextCommand } from "@/util/generateNextCommand"
 import { UserSessionParams } from "@/server-fetch/types"
+import { getAuth } from "@clerk/nextjs/server"
 
 export const getServerSideProps: GetServerSideProps = async ctx => {
   const serverHeaders = new ServerHeaders(ctx)
   serverHeaders.appendAuthorization()
 
-  const [error, userSessionResponse] = await getUserSession({ headers: ctx.req.headers })
+  const { getToken } = getAuth(ctx.req)
+  const [error, userSessionResponse] = await getUserSession({ getToken })
   if (error) throw error
   const { data, headers } = userSessionResponse
 

@@ -2,72 +2,72 @@ test("should ", async () => {
   expect(1).toBeTruthy()
 })
 
-// import { AddSteamAccount } from "core"
-// import { connection } from "~/__tests__/connection"
-// import {
-//     makeTestInstances,
-//     validSteamAccounts,
-//     MakeTestInstancesProps,
-//     CustomInstances,
-//     password,
-// } from "~/__tests__/instances"
-// import { ensureExpectation } from "~/__tests__/utils"
-// import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
-// import { RestoreAccountSessionUseCase } from "~/application/use-cases/RestoreAccountSessionUseCase"
+import { AddSteamAccount } from "core"
+import {
+  CustomInstances,
+  MakeTestInstancesProps,
+  makeTestInstances,
+  validSteamAccounts,
+} from "~/__tests__/instances"
+import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
+import { RestoreAccountSessionUseCase } from "~/application/use-cases/RestoreAccountSessionUseCase"
 
-// import { testUsers as s, setPlayingSession } from "~/infra/services/UserAuthenticationInMemory"
-// import { AddSteamAccountController, FarmGamesController, promiseHandler } from "~/presentation/controllers"
-// import { SteamUserMockBuilder } from "~/utils/builders"
+import { AddSteamAccountController, FarmGamesController } from "~/presentation/controllers"
 
-// const log = console.log
-// console.log = () => {}
+const log = console.log
+console.log = () => {}
 
-// let i = makeTestInstances({
-//     validSteamAccounts,
-// })
-// let meInstances = {}
-// let restoreAccountSessionUseCase: RestoreAccountSessionUseCase
-// let addSteamAccountController: AddSteamAccountController
-// let farmGamesController: FarmGamesController
+let i = makeTestInstances({
+  validSteamAccounts,
+})
+let meInstances = {}
+let restoreAccountSessionUseCase: RestoreAccountSessionUseCase
+let addSteamAccountController: AddSteamAccountController
+let farmGamesController: FarmGamesController
 
-// async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
-//     i = makeTestInstances(props, customInstances)
-//     await Promise.all([
-//         i.createUser("me", { persistSteamAccounts: false }),
-//         // i.createUser("friend", { persistSteamAccounts: false }),
-//     ])
-//     const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
-//     const addSteamAccountUseCase = new AddSteamAccountUseCase(
-//         addSteamAccount,
-//         i.allUsersClientsStorage,
-//         i.usersDAO,
-//         i.checkSteamAccountOwnerStatusUseCase
-//     )
+async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
+  i = makeTestInstances(props, customInstances)
+  await Promise.all([
+    i.createUser("me", { persistSteamAccounts: false }),
+    // i.createUser("friend", { persistSteamAccounts: false }),
+  ])
+  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+  // const addSteamAccountUseCase = new AddSteamAccountUseCase(
+  //     addSteamAccount,
+  //     i.allUsersClientsStorage,
+  //     i.usersDAO,
+  //     i.checkSteamAccountOwnerStatusUseCase
+  // )
 
-//     addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)
-//     restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
-//         i.usersClusterStorage,
-//         i.sacStateCacheRepository
-//     )
+  // addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)
+  // restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
+  //     i.usersClusterStorage,
+  //     i.sacStateCacheRepository
+  // )
 
-//     farmGamesController = new FarmGamesController({
-//         allUsersClientsStorage: i.allUsersClientsStorage,
-//         farmGamesUseCase: i.farmGamesUseCase,
-//         planRepository: i.planRepository,
-//         publisher: i.publisher,
-//         sacStateCacheRepository: i.sacStateCacheRepository,
-//         usersClusterStorage: i.usersClusterStorage,
-//         usersRepository: i.usersRepository,
-//     })
-// }
+  // farmGamesController = new FarmGamesController({
+  //     allUsersClientsStorage: i.allUsersClientsStorage,
+  //     farmGamesUseCase: i.farmGamesUseCase,
+  //     planRepository: i.planRepository,
+  //     publisher: i.publisher,
+  //     sacStateCacheRepository: i.sacStateCacheRepository,
+  //     usersClusterStorage: i.usersClusterStorage,
+  //     usersRepository: i.usersRepository,
+  // })
+}
 
-// describe("NOT MOBILE test suite", () => {
-//     beforeEach(async () => {
-//         await setupInstances({
-//             validSteamAccounts,
-//         })
-//     })
+describe("NOT MOBILE test suite", () => {
+  beforeEach(async () => {
+    await setupInstances({
+      validSteamAccounts,
+    })
+  })
 
+  test("should get FARM STARTED AT from state, not when it started", async () => {
+    
+  })
+})
+//
 //     test.only("should NOT restore session if account is already logged", async () => {
 //         const response = await promiseHandler(
 //             addSteamAccountController.handle({

@@ -41,7 +41,7 @@ export class FarmUsageService extends FarmService {
   constructor(props: FarmUsageServiceProps) {
     super({
       planId: props.plan.id_plan,
-      startedAt: props.now,
+      startedAt: props.farmStartedAt,
       userId: props.plan.ownerId,
       username: props.username,
       publisher: props.publisher,
@@ -207,6 +207,7 @@ export class FarmUsageService extends FarmService {
         planId: this.planId,
         when: new Date(),
         killSession,
+        userId: this.userId,
       })
     )
   }
@@ -299,6 +300,6 @@ type FarmUsageServiceProps = {
   publisher: Publisher
   plan: PlanUsage
   username: string
-  now: Date
+  farmStartedAt: Date
   emitter: EventEmitter<UserClusterEvents>
 }

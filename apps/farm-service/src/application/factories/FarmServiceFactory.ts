@@ -22,7 +22,7 @@ export class FarmServiceBuilder implements Builder<FarmService> {
     if (plan.type === "USAGE")
       return new FarmUsageService({
         emitter: this.emitterBuilder.create(),
-        now,
+        farmStartedAt: now,
         plan: plan as PlanUsage,
         publisher: this.publisher,
         username,

@@ -1,4 +1,4 @@
-import { UserAdminPanelSession } from "@/pages/admin"
+import { UserAdminPanelSession } from "core"
 import { UserAdminActionSetGamesPayload } from "./controller"
 import { httpUserAdminActionSetGames } from "./httpRequest"
 import { IntentionCodes } from "./types"

@@ -2,7 +2,7 @@ import { useMediaQuery } from "@/components/hooks"
 import { FarmGamesContext } from "@/components/molecules/FarmGames/context"
 import { useSteamAccountListItem } from "@/components/molecules/SteamAccountListItem/context"
 import { useSteamAccountStore } from "@/components/molecules/SteamAccountListItem/store/useSteamAccountStore"
-import { useUser } from "@/contexts/UserContext"
+import { useUser, useUserId } from "@/contexts/UserContext"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { showToastFarmGamesResult, showToastFarmingGame } from "@/util/toaster"
 import { GameSession } from "core"
@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import { ChooseFarmingGamesDesktop } from "./desktop"
 import { DrawerChooseFarmingGamesView } from "./mobile"
 import { ChooseFarmingGamesHelpers, IntentionCodes } from "./types"
+import { useUserControl } from "@/contexts/hook"
 
 export interface FarmGamesPayload {
   accountName: string
@@ -40,8 +41,7 @@ export const ChooseFarmingGames = React.memo(
       const stageFarmingGames_handleAddGameToFarmStaging = useSteamAccountStore(
         state => state.handleAddGameToFarmStaging
       )
-      const user = useUser()
-
+      const userId = useUserId()
       const handleActionButton = React.useCallback(async () => {
         const [errorUpdatingStagingGames] = await mutations.updateStagingGames.mutateAsync({
           accountName: app.accountName,
@@ -51,7 +51,7 @@ export const ChooseFarmingGames = React.memo(
         stageFarmingGames_update()
 
         const getFarmGamesPromise = () => {
-          return handlers.handleFarmGames(accountName, localStagingFarm_list, user.id)
+          return handlers.handleFarmGames(accountName, localStagingFarm_list, userId)
         }
         const args = [app.games, localStagingFarm_list, () => closeModal_desktop()] as const
 
@@ -86,9 +86,10 @@ export const ChooseFarmingGames = React.memo(
         // stagingFarmGames.clear()
       }
 
+      const setGames = useUserControl(c => c.setGames)
       async function handleRefreshGames() {
         const { games } = await refreshGames.mutateAsync({ accountName: accountName })
-        user.setGames(accountName, games)
+        setGames(accountName, games)
       }
 
       const handleAddGameToFarmStaging = React.useCallback(

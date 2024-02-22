@@ -49,7 +49,9 @@ beforeEach(async () => {
   await setupInstances({
     validSteamAccounts,
   })
-  i.publisher.register(new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository))
+  i.publisher.register(
+    new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository, i.allUsersClientsStorage)
+  )
 })
 
 afterEach(() => {

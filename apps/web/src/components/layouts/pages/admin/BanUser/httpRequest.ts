@@ -1,8 +1,7 @@
-import { UserAdminActionBanUserPayload } from "./controller"
-import { IntentionCodes } from "./types"
 import { DataOrMessage, MessageMaker } from "@/util/DataOrMessage"
 import { resolvePromiseToMessage } from "@/util/resolvePromiseToMessage"
-import { AxiosInstance, AxiosResponse } from "axios"
+import { UserAdminActionBanUserPayload } from "./controller"
+import { IntentionCodes } from "./types"
 
 type UserAdminActionBanUserOutput = {
   message: string
@@ -10,10 +9,8 @@ type UserAdminActionBanUserOutput = {
 
 export async function httpUserAdminActionBanUser(
   payload: UserAdminActionBanUserPayload,
-  getAPI: () => Promise<AxiosInstance>,
   msg = new MessageMaker<IntentionCodes>()
 ): Promise<DataOrMessage<string, IntentionCodes>> {
-  const api = await getAPI()
   const [error, response] = await resolvePromiseToMessage(
     (async () => {
       const { username } = payload

@@ -1,6 +1,6 @@
 import { BadgePlanType } from "@/components/layouts/UserPlanStatus/components"
-import { IPurchasePayloadTransactionPlan } from "@/pages/admin"
 import { getPlanName } from "@/util/getPlanName"
+import { IPurchasePayloadTransactionPlan } from "core"
 import React from "react"
 import { twc } from "react-twc"
 

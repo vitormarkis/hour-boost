@@ -1,4 +1,4 @@
-import { useUser } from "@/contexts/UserContext"
+import { useUser, useUserId } from "@/contexts/UserContext"
 import { api } from "@/lib/axios"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { useAuth } from "@clerk/clerk-react"
@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { RemoveSteamAccountPayload } from "../controller"
 import { httpRemoveSteamAccount } from "../httpRequest"
 import { AlertDialogRemoveSteamAccountView, AlertDialogRemoveSteamAccountViewProps } from "./alert-dialog"
+import { ECacheKeys } from "@/mutations/queryKeys"
 
 export type ControllerProps = {
   steamAccount: SteamAccountSession
@@ -21,7 +22,8 @@ export const AlertDialogRemoveSteamAccount = React.forwardRef<
   AlertDialogRemoveSteamAccountProps
 >(function AlertDialogRemoveSteamAccountComponent({ ...props }, ref) {
   const queryClient = useQueryClient()
-  const user = useUser()
+  const username = useUser(user => user.username)
+  const userId = useUserId()
   const { getToken } = useAuth()
   const getAPI = async () => {
     api.defaults.headers["Authorization"] = `Bearer ${await getToken()}`
@@ -37,7 +39,7 @@ export const AlertDialogRemoveSteamAccount = React.forwardRef<
     const [error] = await removeSteamAccount.mutateAsync({
       accountName: props.steamAccount.accountName,
       steamAccountId: props.steamAccount.id_steamAccount,
-      username: user.username,
+      username: username,
     })
     toast.dismiss(toastId)
     if (error) {
@@ -45,7 +47,7 @@ export const AlertDialogRemoveSteamAccount = React.forwardRef<
       return
     }
     toast.success("Conta da Steam removida do seu perfil.")
-    queryClient.invalidateQueries({ queryKey: ["me", user.id] })
+    queryClient.invalidateQueries({ queryKey: ECacheKeys.user_session(userId) })
   }
 
   return (

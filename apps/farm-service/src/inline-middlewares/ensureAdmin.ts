@@ -35,7 +35,6 @@ export async function ensureAdmin(req: Request, res: Response) {
     )
   }
 
-  console.log({ identificationJWTPayload: result })
   const { role } = result as HBHeadersType.HBIdentification.JWTPayload
   if (role !== "ADMIN") {
     return bad(

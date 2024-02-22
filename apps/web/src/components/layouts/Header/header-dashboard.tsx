@@ -2,7 +2,6 @@ import { IconChevron } from "@/components/icons/IconChevron"
 import { HeaderStructure } from "@/components/layouts/Header/header-structure"
 import { MenuDropdownUserHeader } from "@/components/molecules/menu-dropdown-user-header"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
 import { getUserInitials } from "@/util/getUserInitials"
 import { RoleName } from "core"
@@ -11,19 +10,16 @@ import React from "react"
 export type HeaderDashboardProps = Omit<
   React.ComponentPropsWithoutRef<typeof HeaderStructure>,
   "children"
-> & {}
+> & {
+  username: string
+  profilePic: string
+}
 
 export const HeaderDashboard = React.forwardRef<
   React.ElementRef<typeof HeaderStructure>,
   HeaderDashboardProps
->(function HeaderDashboardComponent({ className, ...props }, ref) {
-  const user = useUser()
-  const userInitials = getUserInitials(user)
-
-  console.log({
-    user,
-    userInitials,
-  })
+>(function HeaderDashboardComponent({ username, profilePic, className, ...props }, ref) {
+  const userInitials = getUserInitials(username)
 
   return (
     <HeaderStructure
@@ -42,12 +38,12 @@ export const HeaderDashboard = React.forwardRef<
       </div>
       <div className="flex-1 h-full flex gap-4 items-center justify-end">
         <div className="hidden sm:flex">
-          <span className="font-medium text-white text-sm">{user.username}</span>
+          <span className="font-medium text-white text-sm">{username}</span>
         </div>
         <MenuDropdownUserHeader>
           <div className="flex items-center h-9 px-1 hover:bg-slate-800 cursor-pointer rounded-sm">
             <Avatar className="h-7 w-7 rounded-sm">
-              <AvatarImage src={user.profilePic} />
+              <AvatarImage src={profilePic} />
               <AvatarFallback>{userInitials}</AvatarFallback>
             </Avatar>
             <div className="flex items-center justify-center ml-0.5">

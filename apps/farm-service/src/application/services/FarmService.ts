@@ -3,6 +3,7 @@ const log = console.log
 import { DataOrError, DataOrFail, Fail, PlanType, Usage } from "core"
 import { FarmServiceStatus } from "~/application/services"
 import { Publisher } from "~/infra/queue"
+import { SteamAccountClient } from "./steam"
 
 export type FarmServiceProps = {
   startedAt: Date

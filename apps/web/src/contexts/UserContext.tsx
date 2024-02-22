@@ -1,16 +1,16 @@
-import { Helper } from "@/contexts/UserContext.helper"
 import { api } from "@/lib/axios"
 import { ECacheKeys } from "@/mutations/queryKeys"
-import { useAuth } from "@clerk/clerk-react"
-import { useQuery } from "@tanstack/react-query"
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { GameSession, Persona, SteamAccountSession, UserSession } from "core"
-import React, { createContext, useContext, useState } from "react"
-import { useUserSession, useUserSessionQuery } from "./query/useUserSession"
+import React, { PropsWithChildren, createContext, useContext } from "react"
+import { createContext as createContextSelector } from "use-context-selector"
+import { createUserActions } from "./controls"
+import { useUserQuery } from "./query/useUserSession"
 
 export interface IUserContext extends UserSession, UserMethods {}
 export namespace NSUserMethods {
   export type StartFarmProps = {
-    when: Date
+    when: string
     accountName: string
   }
 }
@@ -32,63 +32,51 @@ export interface IUserProviderProps {
 }
 
 export const UserContext = createContext<IUserContext>({} as IUserContext)
+export const UserControlContext = createContextSelector<UserControl | null>(null)
+export const UserIdContext = createContext("")
 
 export function UserProvider({ serverUser, serverHeaders, children }: IUserProviderProps) {
-  const [user, setUser] = useState(userToSession(serverUser))
-
   api.defaults.headers.common = {
     ...api.defaults.headers.common,
     ...serverHeaders,
   }
 
-  function update(newUser: UserSession) {
-    setUser(oldUser => new Helper(oldUser).udpate(newUser))
-  }
-
-  useUserSessionQuery({
-    initialData: user,
-    userId: user.id,
-    onSuccess(updatedUser) {
-      update(updatedUser)
-    },
-  })
-
   return (
-    <UserContext.Provider
-      value={{
-        ...user,
-        setGames: (accountName, games) => {
-          setUser(user => new Helper(user).setGames(accountName, games))
-        },
-        updatePersona: (accountName, persona) => {
-          setUser(user => new Helper(user).updatePersona(accountName, persona))
-        },
-        hasGames: () => new Helper(user).hasGames(),
-        updateFarmingGames: ({ accountName, gameIdList }) => {
-          setUser(user => new Helper(user).updateFarmingGames(accountName, gameIdList))
-        },
-        isFarming() {
-          return new Helper(user).isFarming()
-        },
-        hasAccounts() {
-          return user.steamAccounts.length > 0
-        },
-        startFarm(props) {
-          setUser(user => new Helper(user).startFarm(props))
-        },
-      }}
-    >
-      {children}
-    </UserContext.Provider>
+    <UserIdContext.Provider value={serverUser.id}>
+      <ControlProvider serverUser={serverUser}>{children}</ControlProvider>
+    </UserIdContext.Provider>
   )
 }
 
-export function useUser<R>(): IUserContext
-export function useUser<R>(selector: (context: IUserContext) => R): R
-export function useUser(selector?: (...args: any[]) => any) {
-  const context = useContext(UserContext)
-  return selector ? selector(context) : context
+type ControlProviderProps = PropsWithChildren & {
+  serverUser: UserSession
 }
+
+export function ControlProvider({ serverUser, children }: ControlProviderProps) {
+  const queryClient = useQueryClient()
+
+  useUserQuery({
+    initialData: serverUser,
+  })
+
+  return (
+    <UserControlContext.Provider value={createUserActions(queryClient, serverUser.id)}>
+      {children}
+    </UserControlContext.Provider>
+  )
+}
+
+export function useUser<Select>(select: (user: UserSession) => Select) {
+  return useUserQuery<Select>({
+    select,
+  }).data
+}
+
+export function useUserId() {
+  return useContext(UserIdContext)
+}
+
+export type UserControl = ReturnType<typeof createUserActions>
 
 export namespace NSUserContext {
   export interface StageFarmingGames {
@@ -115,18 +103,4 @@ export namespace IUserMethods {
   export type DataOrError = [error: Error, data: null] | [error: null, data: UserSession]
 
   export type OnError = (error: Error) => void
-}
-
-function userToSession(user: UserSession): UserSession {
-  const steamAccounts = user.steamAccounts.map(
-    ({ farmStartedAt, ...rest }): SteamAccountSession => ({
-      farmStartedAt: farmStartedAt ? new Date(farmStartedAt) : null,
-      ...rest,
-    })
-  )
-
-  return {
-    ...user,
-    steamAccounts,
-  }
 }

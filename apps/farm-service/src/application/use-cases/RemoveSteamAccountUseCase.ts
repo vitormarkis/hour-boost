@@ -57,7 +57,7 @@ export class RemoveSteamAccountUseCase implements IRemoveSteamAccountUseCase {
     const [errorFindingCluster, userCluster] = this.usersSACsFarmingClusterStorage.get(username)
     if (errorFindingCluster) return bad(errorFindingCluster)
 
-    const isAccountFarming = userCluster.isAccountFarming(accountName)
+    const isAccountFarming = userCluster.isAccountFarmingOnService(accountName)
 
     this.autoRestarterScheduler.stopCron(accountName)
 

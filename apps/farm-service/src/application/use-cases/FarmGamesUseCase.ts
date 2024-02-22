@@ -13,12 +13,12 @@ export class FarmGamesUseCase extends IFarmGamesUseCase {
     super()
   }
 
-  async execute({ username, plan, accountName, sac, gamesId, planId, sessionType }: FarmGamesUseCaseProps) {
+  async execute({ username, plan, accountName, sac, gamesId, planId, session }: FarmGamesUseCaseProps) {
     try {
       // const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
       const [error, userCluster] = this.usersClusterStorage.get(username)
       if (error) return bad(error)
-      const isAccountFarming = userCluster.isAccountFarming(accountName)
+      const isAccountFarming = userCluster.isAccountFarmingOnService(accountName)
       if (!userCluster.hasSteamAccountClient(accountName) && !isAccountFarming) {
         userCluster.addSAC(sac)
       }
@@ -26,7 +26,7 @@ export class FarmGamesUseCase extends IFarmGamesUseCase {
         accountName,
         gamesId,
         planId,
-        sessionType,
+        session,
       })
       if (errorFarmingWithAccount) return bad(errorFarmingWithAccount)
       return nice(result)
@@ -50,5 +50,5 @@ type FarmGamesUseCaseProps = {
   sac: SteamAccountClient
   gamesId: number[]
   planId: string
-  sessionType: NSUserCluster.SessionType
+  session: NSUserCluster.SessionType
 }

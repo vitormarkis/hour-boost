@@ -5,7 +5,7 @@ import { IntentionCodes } from "./types"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { DefaultError, useMutation, useQueryClient } from "@tanstack/react-query"
 import { AxiosInstance } from "axios"
-import { UserAdminPanelSession } from "@/pages/admin"
+import { UserAdminPanelSession } from "core"
 import { produce } from "immer"
 
 export function useUserAdminActionSetAccounts(getApi: () => Promise<AxiosInstance>) {

@@ -32,7 +32,9 @@ beforeEach(async () => {
     validSteamAccounts,
   })
   i.publisher.register(new ChangePlanStatusHandler(i.planRepository))
-  i.publisher.register(new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository))
+  i.publisher.register(
+    new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository, i.allUsersClientsStorage)
+  )
 })
 
 afterAll(() => {
@@ -49,7 +51,7 @@ const getMe = async () => {
 const getFarmService = (user: User) => {
   return new FarmUsageService({
     emitter: i.emitterBuilder.create(),
-    now,
+    farmStartedAt: now,
     plan: user.plan as PlanUsage,
     publisher: i.publisher,
     username: user.username,
@@ -414,6 +416,7 @@ describe("FarmUsageService test suite", () => {
       expect.arrayContaining([
         [
           new UserCompleteFarmSessionCommand({
+            userId: s.me.userId,
             pauseFarmCategory: {
               accountNameList: [s.me.accountName],
               type: "STOP-ALL",

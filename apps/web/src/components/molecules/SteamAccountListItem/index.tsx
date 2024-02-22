@@ -3,7 +3,7 @@ import { useChangeAccountStatus } from "@/components/molecules/ChangeAccountStat
 import { IntentionCodes as IntentionCodes_ChangeStatus } from "@/components/molecules/ChangeAccountStatus/types"
 import { IntentionCodes, useFarmGamesMutation } from "@/components/molecules/FarmGames"
 import { useSteamAccountStore } from "@/components/molecules/SteamAccountListItem/store/useSteamAccountStore"
-import { useUser } from "@/contexts/UserContext"
+import { useUser, useUserId } from "@/contexts/UserContext"
 import { api } from "@/lib/axios"
 import { useRefreshGamesMutation, useStopFarmMutation } from "@/mutations"
 import { DataOrMessage, Message } from "@/util/DataOrMessage"
@@ -11,7 +11,7 @@ import { planIsUsage } from "@/util/thisPlanIsUsage"
 import { useAuth } from "@clerk/clerk-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { AppAccountStatus, GameSession, formatTimeSince } from "core"
-import React, { useMemo, useState } from "react"
+import React, { createContext, useContext, useMemo, useState } from "react"
 import { ISteamAccountListItemContext, SteamAccountListItemContext } from "./context"
 import { SteamAccountListItemViewDesktop } from "./desktop"
 import { useHandlers } from "./hooks/useHandlers"
@@ -34,8 +34,9 @@ export function SteamAccountList({
     api.defaults.headers["Authorization"] = `Bearer ${await getToken()}`
     return api
   }
-
-  const queryClient = useQueryClient()
+  const hasUsagePlanLeft = useUser(user =>
+    planIsUsage(user.plan) ? user.plan.farmUsedTime < user.plan.maxUsageTime : true
+  )
 
   const refreshGames = useRefreshGamesMutation(getAPI)
   const stopFarm = useStopFarmMutation(getAPI)
@@ -44,7 +45,7 @@ export function SteamAccountList({
   const updateStagingGames = useUpdateStagingGames(getAPI)
 
   const isLessDesktop = useMediaQuery("(max-width: 896px)")
-  const user = useUser()
+  const userId = useUserId()
 
   const stageFarmingGames_list = useSteamAccountStore(state => state.stageFarmingGames_list)
   const stageFarmingGames_hasGamesOnTheList = useSteamAccountStore(
@@ -57,30 +58,24 @@ export function SteamAccountList({
 
   const handlers = useHandlers({
     farmGames,
-    queryClient,
     stopFarm,
-    user,
-    userId: user.id,
+    userId,
   })
 
   const isFarming = React.useCallback(() => {
     return app.farmingGames.length > 0
   }, [app.farmingGames.length])
 
-  const hasUsagePlanLeft = React.useCallback(() => {
-    if (!planIsUsage(user.plan)) return true
-    return user.plan.farmUsedTime < user.plan.maxUsageTime
-  }, [app.farmedTimeInSeconds])
-
   /**
    * Toggle Auto Relogin
    */
-  const toggleAutoReloginMutation = useToggleAutoReloginMutation()
+  const toggleAutoReloginMutation = useToggleAutoReloginMutation(app.accountName, getAPI)
 
   const handleToggleAutoRelogin = React.useCallback(async () => {
     toggleAutoRelogin()
     const [undesired, result] = await toggleAutoReloginMutation.mutateAsync({
       accountName: app.accountName,
+      userId,
     })
     if (undesired) return
     return result
@@ -109,7 +104,7 @@ export function SteamAccountList({
         new Message("Nenhum jogo foi encontrado na sua conta, atualize seus jogos ou a página.", "error"),
       ]
     }
-    const { dataOrMessage } = await handlers.handleFarmGames(app.accountName, stageFarmingGames_list, user.id)
+    const { dataOrMessage } = await handlers.handleFarmGames(app.accountName, stageFarmingGames_list, userId)
     const [undesired] = dataOrMessage
     if (undesired) return [undesired]
     return [null, { list: stageFarmingGames_list, games: app.games }]
@@ -181,11 +176,19 @@ export function SteamAccountList({
   }
 
   return (
-    <SteamAccountListItemContext.Provider value={value}>
-      {isLessDesktop && <SteamAccountListItemViewMobile {...props} />}
-      {!isLessDesktop && <SteamAccountListItemViewDesktop {...props} />}
-    </SteamAccountListItemContext.Provider>
+    <SteamAccountIdContext.Provider value={app.id_steamAccount}>
+      <SteamAccountListItemContext.Provider value={value}>
+        {isLessDesktop && <SteamAccountListItemViewMobile {...props} />}
+        {!isLessDesktop && <SteamAccountListItemViewDesktop {...props} />}
+      </SteamAccountListItemContext.Provider>
+    </SteamAccountIdContext.Provider>
   )
+}
+
+const SteamAccountIdContext = createContext("")
+
+export function useSteamAccountId() {
+  return useContext(SteamAccountIdContext)
 }
 
 export function getActionText({

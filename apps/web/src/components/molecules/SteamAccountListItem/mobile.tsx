@@ -1,34 +1,33 @@
 import { TimeSince } from "@/components/atoms/TimeSince"
 import { IconChart } from "@/components/icons/IconChart"
 import { IconDeviceMobile } from "@/components/icons/IconDeviceMobile"
+import { IconSpinner } from "@/components/icons/IconSpinner"
 import { IconTrash } from "@/components/icons/IconTrash"
+import { MenuDropdownChangeAccountStatus } from "@/components/molecules/ChangeAccountStatus/components"
 import { ChooseFarmingGames } from "@/components/molecules/FarmGames/controller"
 import { AlertDialogRemoveSteamAccount } from "@/components/molecules/RemoveSteamAccount/components/controller"
-import { getFarmedTimeSince } from "@/components/molecules/SteamAccountListItem"
-import { Switch } from "@/components/ui/switch"
+import { ToggleAutoRelogin, useSteamAccount } from "@/components/molecules/ToggleAutoRelogin/controller"
 import { IMG_USER_PLACEHOLDER } from "@/consts"
 import { cn } from "@/lib/utils"
 import { Message } from "@/util/DataOrMessage"
 import { showToastFarmingGame } from "@/util/toaster"
 import React, { CSSProperties } from "react"
 import { toast } from "sonner"
+import twc from "tailwindcss/colors"
 import { ButtonAddNewAccount } from "./components"
 import { useSteamAccountListItem } from "./context"
 import { SteamAccountListItemViewProps } from "./types"
 import { useUser } from "@/contexts/UserContext"
-import { ToggleAutoRelogin } from "@/components/molecules/ToggleAutoRelogin/controller"
-import { MenuDropdownChangeAccountStatus } from "@/components/molecules/ChangeAccountStatus/components"
-import twc from "tailwindcss/colors"
-import { IconSpinner } from "@/components/icons/IconSpinner"
 
 type SteamAccountListItemViewMobileProps = SteamAccountListItemViewProps
 
 export const SteamAccountListItemViewMobile = React.memo(
   React.forwardRef<React.ElementRef<"div">, SteamAccountListItemViewMobileProps>(
     function SteamAccountListItemViewMobileComponent({ handleClickFarmButton, actionText }, ref) {
-      const { header, steamGuard, mutations, app, isFarming, status } = useSteamAccountListItem()
+      const { header, steamGuard, mutations, app, status } = useSteamAccountListItem()
       const { accountName, profilePictureUrl, farmStartedAt } = app
-      const plan = useUser(u => u.plan)
+      const autoRestarter = useUser(user => user.plan.autoRestarter)
+      const isFarming = useSteamAccount(sa => sa.farmingGames.length > 0)
 
       const handleClickFarmButtonImpl = async () => {
         const [undesired, payload] = await handleClickFarmButton()
@@ -50,7 +49,7 @@ export const SteamAccountListItemViewMobile = React.memo(
           )}
           <div className="flex items-center gap-4 overflow-hidden">
             <div className="flex">
-              {isFarming() && <div className="h-[4.5rem] w-[0.25rem] bg-accent animate-pulse" />}
+              {isFarming && <div className="h-[4.5rem] w-[0.25rem] bg-accent animate-pulse" />}
               <div className={cn("h-[4.5rem] w-[4.5rem] relative shrink-0")}>
                 <img
                   // src="https://avatarcloudflare.steamstatic.com/2ec38f7a0953fe2585abdda0757324dbbb519749_full.jpg"
@@ -128,17 +127,17 @@ export const SteamAccountListItemViewMobile = React.memo(
                 <div
                   className={cn(
                     "h-1.5 w-1.5 rounded-full bg-slate-500",
-                    isFarming() && "bg-accent animate-pulse"
+                    isFarming && "bg-accent animate-pulse"
                   )}
                 />
               </div>
               <div className="">
-                {isFarming() ? (
+                {isFarming ? (
                   <div className="flex flex-col justify-center h-full leading-none">
                     {farmStartedAt ? (
                       <TimeSince.Root
                         className="items-end gap-2"
-                        date={farmStartedAt}
+                        date={new Date(farmStartedAt)}
                       >
                         <TimeSince.HighlightTime />
                         <TimeSince.SecondaryTime suspense={false} />
@@ -174,7 +173,7 @@ export const SteamAccountListItemViewMobile = React.memo(
             <li className="flex items-center  min-h-[2.25rem]">
               <span className="pr-3 w-[var(--propertiesWidth)]">Auto restart:</span>
               <div className="flex flex-col justify-center h-full leading-none">
-                {plan.autoRestarter ? <ToggleAutoRelogin /> : null}
+                {autoRestarter ? <ToggleAutoRelogin /> : null}
               </div>
             </li>
           </ul>
@@ -216,7 +215,7 @@ export const SteamAccountListItemViewMobile = React.memo(
               disabled={mutations.farmGames.isPending || mutations.stopFarm.isPending}
               className={cn(
                 "flex justify-center w-full text-white items-center px-8 h-20 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:cursor-not-allowed",
-                isFarming() && "bg-accent hover:bg-accent-500 disabled:bg-accent-700"
+                isFarming && "bg-accent hover:bg-accent-500 disabled:bg-accent-700"
               )}
               onClick={handleClickFarmButtonImpl}
             >

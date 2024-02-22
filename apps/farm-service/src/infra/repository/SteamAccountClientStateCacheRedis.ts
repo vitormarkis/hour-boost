@@ -1,10 +1,10 @@
 import {
   AccountSteamGamesList,
+  CacheState,
+  CacheStateDTO,
   GameSession,
   IRefreshToken,
   InitProps,
-  NSSteamAccountClientStateCacheRepository,
-  SACStateCacheDTO,
   SteamAccountClientStateCacheRepository,
   SteamAccountPersonaState,
 } from "core"
@@ -23,63 +23,22 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
     this.logger = new Logger(`State Redis`)
   }
 
-  async setStagingGames(accountName: string, gamesId: number[]): Promise<void> {
+  async get(accountName: string): Promise<CacheState | null> {
     const key = this.KEY_STATE(accountName)
-    const values = JSON.stringify(gamesId)
-    await this.redis.call("JSON.SET", key, "$.gamesStaging", values)
-  }
-
-  async setStatus({
-    accountName,
-    status,
-  }: NSSteamAccountClientStateCacheRepository.SetStatusProps): Promise<void> {
-    const key = this.KEY_STATE(accountName)
-    await this.redis.call("JSON.SET", key, "$.status", JSON.stringify(status))
-  }
-
-  async startFarm({
-    accountName,
-    when,
-    initSession = true,
-  }: NSSteamAccountClientStateCacheRepository.StartFarmProps): Promise<void> {
-    const key = this.KEY_STATE(accountName)
-    const farmStartedAt = when.getTime()
-    this.logger.log("Saving farmStartedAt: ", farmStartedAt)
-    if (initSession) {
-      await this.redis.call("JSON.SET", key, "$.farmStartedAt", farmStartedAt)
-    }
-  }
-
-  async deleteAllEntriesFromAccount(accountName: string): Promise<void> {
-    this.logger.log(`Deleting all entries for [${accountName}].`)
-    await this.redis
-      .multi()
-      .call("JSON.DEL", this.KEY_STATE(accountName))
-      .del(this.KEY_REFRESH_TOKEN(accountName))
-      .exec()
-  }
-
-  async stopFarm(accountName: string): Promise<void> {
-    const key = this.KEY_STATE(accountName)
-    await this.redis
-      .multi()
-      .call("JSON.SET", key, "$.gamesPlaying", "[]")
-      .call("JSON.SET", key, "$.isFarming", "false")
-      .call("JSON.SET", key, "$.farmStartedAt", "null")
-      .exec()
-  }
-
-  async getPersona(accountName: string): Promise<SteamAccountPersonaState | null> {
-    const key = this.KEY_ACCOUNT_PERSONA(accountName)
     const foundState = (await this.redis.call("JSON.GET", key, "$")) as string | null
-    if (!foundState) return null
-    const [persona] = JSON.parse(foundState) as [persona: SteamAccountPersonaState]
-    return persona
+    if (!foundState) {
+      this.logger.log(`state NOT found for user ${accountName}`)
+      return null
+    }
+    const [state] = JSON.parse(foundState) as [state: CacheStateDTO]
+    return CacheState.restoreFromDTO(state)
   }
 
-  async setPersona(accountName: string, persona: SteamAccountPersonaState): Promise<void> {
-    const value = JSON.stringify(persona)
-    const key = this.KEY_ACCOUNT_PERSONA(accountName)
+  async save(state: CacheState): Promise<void> {
+    const value = JSON.stringify(state.toDTO())
+    const key = this.KEY_STATE(state.accountName)
+    this.logger.log(`setting state for ${state.accountName}`)
+    console.log(`REDIS COMMAND: "JSON.SET", ${key}, "$", ${value}`)
     await this.redis.call("JSON.SET", key, "$", value)
   }
 
@@ -88,56 +47,16 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
     const hasState = await this.redis.call("JSON.TYPE", key)
     if (!hasState) {
       this.logger.log(`account don't have state, initting ${accountName}`)
-      await this.set(accountName, {
-        accountName,
-        gamesPlaying: [],
-        gamesStaging: [],
-        isFarming: false,
-        planId,
-        username,
-        farmStartedAt: null,
-        status: "online",
-      })
+      await this.save(
+        CacheState.create({
+          accountName,
+          planId,
+          status: "online",
+          username,
+        })
+      )
       return
     }
-  }
-  async setRefreshToken(accountName: string, refreshToken: IRefreshToken): Promise<void> {
-    this.logger.log(`set refresh token for ${accountName}`)
-    await this.redis.set(this.KEY_REFRESH_TOKEN(accountName), JSON.stringify(refreshToken))
-  }
-  async getRefreshToken(accountName: string): Promise<IRefreshToken | null> {
-    this.logger.log(`getting refresh token for ${accountName}`)
-    const foundRefreshToken = await this.redis.get(this.KEY_REFRESH_TOKEN(accountName))
-    if (!foundRefreshToken) return null
-    const refreshToken = JSON.parse(foundRefreshToken) as IRefreshToken
-    return refreshToken ?? null
-  }
-
-  getUsersRefreshToken(): Promise<string[]> {
-    return this.redis.keys(this.KEY_REFRESH_TOKEN_LIST)
-  }
-
-  async setPlayingGames(
-    accountName: string,
-    gamesId: number[],
-    planId: string,
-    username: string
-  ): Promise<void> {
-    const key = this.KEY_STATE(accountName)
-    const hasState = await this.redis.call("JSON.TYPE", key)
-    if (!hasState)
-      await this.init({
-        accountName,
-        planId,
-        username,
-      })
-    const value = JSON.stringify(gamesId)
-    this.logger.log(`${accountName} set playing games on cache: ${gamesId.join(", ")}.`)
-    await this.redis
-      .multi()
-      .call("JSON.SET", key, "$.gamesPlaying", value)
-      .call("JSON.SET", key, "$.isFarming", "true")
-      .exec()
   }
 
   async getAccountGames(accountName: string): Promise<AccountSteamGamesList | null> {
@@ -158,32 +77,48 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
     await this.redis.set(key, JSON.stringify(games.toJSON()))
   }
 
-  async get(accountName: string): Promise<SACStateCacheDTO | null> {
-    const key = this.KEY_STATE(accountName)
-    const foundState = (await this.redis.call("JSON.GET", key, "$")) as string | null
-    if (!foundState) {
-      this.logger.log(`state NOT found for user ${accountName}`)
-      return null
-    }
-    const [state] = JSON.parse(foundState) as [state: SACStateCacheDTO]
-    return Promise.resolve(state)
+  async setRefreshToken(accountName: string, refreshToken: IRefreshToken): Promise<void> {
+    this.logger.log(`set refresh token for ${accountName}`)
+    await this.redis.set(this.KEY_REFRESH_TOKEN(accountName), JSON.stringify(refreshToken))
   }
 
-  async set(accountName: string, sacStateCache: SACStateCacheDTO): Promise<SACStateCacheDTO> {
-    const value = JSON.stringify(sacStateCache)
-    const key = this.KEY_STATE(accountName)
-    this.logger.log(`setting state for ${accountName}`)
-    await this.redis.call("JSON.SET", key, "$", value)
-    return sacStateCache
+  async getRefreshToken(accountName: string): Promise<IRefreshToken | null> {
+    this.logger.log(`getting refresh token for ${accountName}`)
+    const foundRefreshToken = await this.redis.get(this.KEY_REFRESH_TOKEN(accountName))
+    if (!foundRefreshToken) return null
+    const refreshToken = JSON.parse(foundRefreshToken) as IRefreshToken
+    return refreshToken ?? null
   }
 
-  async delete(accountName: string): Promise<void> {
-    this.logger.log(`invalidating cache for user ${accountName}`)
-    await this.redis.del(accountName)
+  async getUsersRefreshToken(): Promise<string[]> {
+    throw new Error("Method not implemented.")
   }
 
   async flushAll(): Promise<void> {
     this.logger.log(`deleting all entries for in cache.`)
     await this.redis.flushall()
+  }
+
+  async getPersona(accountName: string): Promise<SteamAccountPersonaState | null> {
+    const key = this.KEY_ACCOUNT_PERSONA(accountName)
+    const foundState = (await this.redis.call("JSON.GET", key, "$")) as string | null
+    if (!foundState) return null
+    const [persona] = JSON.parse(foundState) as [persona: SteamAccountPersonaState]
+    return persona
+  }
+
+  async setPersona(accountName: string, persona: SteamAccountPersonaState): Promise<void> {
+    const value = JSON.stringify(persona)
+    const key = this.KEY_ACCOUNT_PERSONA(accountName)
+    await this.redis.call("JSON.SET", key, "$", value)
+  }
+
+  async deleteAllEntriesFromAccount(accountName: string): Promise<void> {
+    this.logger.log(`Deleting all entries for [${accountName}].`)
+    await this.redis
+      .multi()
+      .call("JSON.DEL", this.KEY_STATE(accountName))
+      .del(this.KEY_REFRESH_TOKEN(accountName))
+      .exec()
   }
 }

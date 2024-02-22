@@ -1,20 +1,29 @@
+import { api } from "@/lib/axios"
 import { ECacheKeys } from "@/mutations/queryKeys"
-import { UserAdminPanelSession } from "@/pages/admin"
 import { UseSuspenseQueryOptions, useSuspenseQuery } from "@tanstack/react-query"
-import { PlanInfinitySession, PlanUsageSession } from "core"
+import { PlanInfinitySession, PlanUsageSession, UserAdminPanelSession } from "core"
 
 type Options<TData = UserAdminPanelSession[]> = Omit<
   UseSuspenseQueryOptions<UserAdminPanelSession[], Error, TData>,
   "queryKey"
 >
 
+type GetAdminUsersListResponse = { usersAdminList: UserAdminPanelSession[]; code: "SUCCESS" }
+
 export function useUserAdminList<TData = UserAdminPanelSession[]>(options = {} as Options<TData>) {
   return useSuspenseQuery<UserAdminPanelSession[], Error, TData>({
-    queryFn: () => getUsersAdminList(Math.random() > 0.5),
+    // queryFn: () => getUsersAdminList(Math.random() > 0.5),
+    queryFn: async () => {
+      const response = await api.get<GetAdminUsersListResponse>("/admin/users-list", {
+        withCredentials: true,
+      })
+
+      return response.data.usersAdminList
+    },
     queryKey: ECacheKeys["USER-ADMIN-ITEM-LIST"],
-    refetchIntervalInBackground: false,
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 20,
+    refetchOnWindowFocus: true,
     ...options,
   })
 }
@@ -34,7 +43,7 @@ function getUsersAdminList(chance: boolean) {
           autoRelogin: false,
           farmedTimeInSeconds: 22236,
           farmingGames: [70],
-          farmStartedAt: new Date(1707513913828),
+          farmStartedAt: new Date(1707513913828).toISOString(),
           profilePictureUrl:
             "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/0b/0b1efee9f2cbdf55d47d0cb6ed955c8ebfa057d3_medium.jpg",
           stagingGames: [],
@@ -63,7 +72,7 @@ function getUsersAdminList(chance: boolean) {
           autoRelogin: false,
           farmedTimeInSeconds: 62736,
           farmingGames: chance ? [10, 130, 30] : [30],
-          farmStartedAt: new Date(1706741221314),
+          farmStartedAt: new Date(1706741221314).toISOString(),
           profilePictureUrl:
             "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/0a/0a1a2e5126ab9ffe32d3132884d910a2c7421e5f_medium.jpg",
           stagingGames: [10, 130, 20, 30, 40, 50, 60, 70, 730],
@@ -128,7 +137,7 @@ function getUsersAdminList(chance: boolean) {
       purchases: [
         {
           id_Purchase: "ec768f0f-223a-4b6d-b06b-76200fc6019e",
-          when: new Date("2023-12-31T10:00:00.000Z"),
+          when: new Date("2023-12-31T10:00:00.000Z").toISOString(),
           valueInCents: 2700,
           type: {
             name: "TRANSACTION-PLAN",
@@ -142,7 +151,7 @@ function getUsersAdminList(chance: boolean) {
         },
         {
           id_Purchase: "5634b221-3906-4585-bcea-62f78d9bb76f",
-          when: new Date("2024-01-26T17:00:00.000Z"),
+          when: new Date("2024-01-26T17:00:00.000Z").toISOString(),
           valueInCents: 2150,
           type: {
             name: "TRANSACTION-PLAN",
@@ -168,7 +177,7 @@ function getUsersAdminList(chance: boolean) {
           autoRelogin: false,
           farmedTimeInSeconds: 9999,
           farmingGames: chance ? [20, 30] : [],
-          farmStartedAt: new Date(1707513913828),
+          farmStartedAt: new Date(1707513913828).toISOString(),
           profilePictureUrl:
             "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/6c/6c3f45ebe83fb17a896669f2e0e99d0f2cd7d73b_medium.jpg",
           stagingGames: [20, 30, 40, 60],

@@ -39,7 +39,14 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 }
 
 beforeEach(async () => {
+  jest
+    .useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
+    .setSystemTime(new Date("2024-02-20T00:00:00.000Z"))
   await setupInstances({ validSteamAccounts })
+})
+
+afterEach(async () => {
+  jest.useRealTimers()
 })
 
 describe("2 infinity plan and 1 usage plan farming ", () => {
@@ -54,10 +61,12 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
       payload: { accountName: s.friend.accountName, gamesID: [109230], userId: s.friend.userId },
     })
 
-    i.publisher.register(new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository))
+    i.publisher.register(
+      new PersistFarmSessionHandler(i.planRepository, i.sacStateCacheRepository, i.allUsersClientsStorage)
+    )
   })
 
-  test("should list all users SACs as farming", async () => {
+  test("should list all users SACs but friend account 2, as farming", async () => {
     expect(i.allUsersClientsStorage.listUsers()).toStrictEqual({
       [s.me.userId]: {
         [s.me.accountName]: {
@@ -65,6 +74,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
           gamesPlaying: [109230],
           gamesStaging: [],
           logged: true,
+          farmStartedAt: "2024-02-20T00:00:00.000Z",
           status: "offline",
         },
         [s.me.accountName2]: {
@@ -72,6 +82,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
           gamesPlaying: [109230],
           gamesStaging: [],
           logged: true,
+          farmStartedAt: "2024-02-20T00:00:00.000Z",
           status: "offline",
         },
       },
@@ -81,6 +92,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
           gamesPlaying: [109230],
           gamesStaging: [],
           logged: true,
+          farmStartedAt: "2024-02-20T00:00:00.000Z",
           status: "offline",
         },
         [s.friend.accountName2]: {
@@ -88,10 +100,13 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
           gamesPlaying: [],
           gamesStaging: [],
           logged: false,
+          farmStartedAt: null,
           status: "offline",
         },
       },
     })
+
+    jest.useRealTimers()
   })
 
   test("should list all users services as farming", async () => {
@@ -122,6 +137,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
             gamesPlaying: [],
             gamesStaging: [],
             logged: true,
+            farmStartedAt: null,
             status: "offline",
           },
           [s.me.accountName2]: {
@@ -129,6 +145,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
             gamesPlaying: [],
             gamesStaging: [],
             logged: true,
+            farmStartedAt: null,
             status: "offline",
           },
         },
@@ -138,6 +155,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
             gamesPlaying: [],
             gamesStaging: [],
             logged: true,
+            farmStartedAt: null,
             status: "offline",
           },
           [s.friend.accountName2]: {
@@ -145,6 +163,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
             gamesPlaying: [],
             gamesStaging: [],
             logged: false,
+            farmStartedAt: null,
             status: "offline",
           },
         },

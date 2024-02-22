@@ -32,7 +32,7 @@ export class SACList {
   hasAccountsFarming() {
     let isFarmingSACs = false
     for (const [_, sac] of this.list) {
-      if (sac.gamesPlaying.length > 0) {
+      if (sac.getGamesPlaying().length > 0) {
         isFarmingSACs = true
         break
       }

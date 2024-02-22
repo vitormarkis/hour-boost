@@ -13,6 +13,7 @@ export default function Document() {
           href="/favicon.ico"
         />
       </Head>
+
       <body>
         <Main />
         <NextScript />

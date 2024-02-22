@@ -4,6 +4,7 @@ import { RoleName } from "../entity/role/Role"
 import { StatusName } from "../entity/status/Status"
 
 export interface UserSession extends UserSessionApp, UserSessionAuth {}
+export interface UserSessionShallow extends Omit<UserSession, "steamAccounts" | "purchases"> {}
 
 export interface UserSessionAuth {
   id: string
@@ -31,7 +32,7 @@ export interface SteamAccountSession extends Persona {
   games: GameSession[] | null
   farmingGames: number[]
   stagingGames: number[]
-  farmStartedAt: Date | null
+  farmStartedAt: string | null
   farmedTimeInSeconds: number
   autoRelogin: boolean
   status: AppAccountStatus

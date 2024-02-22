@@ -24,8 +24,8 @@ export class ChangeAccountStatusUseCase implements UseCase<ChangeAccountStatusUs
   async execute({ accountName, userId, status }: APayload): Promise<DataOrError<200>> {
     const sac = this.allUsersClientsStorage.getAccountClient(userId, accountName)
     if (!sac) return [new ApplicationError("NSTH: Nenhuma conta encontrada.")]
-    await this.steamAccountClientStateCacheRepository.setStatus({ accountName, status })
     sac.setStatus(status)
+    await this.steamAccountClientStateCacheRepository.save(sac.getCache())
     return [null, 200]
   }
 }

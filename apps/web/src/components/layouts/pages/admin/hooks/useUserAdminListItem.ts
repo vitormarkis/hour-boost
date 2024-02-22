@@ -1,4 +1,4 @@
-import { UserAdminPanelSession } from "@/pages/admin"
+import { UserAdminPanelSession } from "core"
 import { useUserAdminList } from "./useUserAdminList"
 
 export function useUserAdminListItem<Selected = UserAdminPanelSession>(

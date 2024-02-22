@@ -1,37 +1,30 @@
 import { api } from "@/lib/axios"
 import { ECacheKeys } from "@/mutations/queryKeys"
-import { QueryObserverOptions, useQuery } from "@tanstack/react-query"
+import { UseSuspenseQueryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { UserSession } from "core"
+import { useContext } from "react"
+import { UserIdContext } from "../UserContext"
+import { useAuth } from "@clerk/clerk-react"
+import { GetMeResponse } from "@/pages/dashboard"
 
-export function useUserSessionQuery({ initialData, userId, onSuccess }: UseUserSessionQueryProps) {
-  const options: QueryObserverOptions<UserSession> = {
-    queryFn: async () => {
-      const { data: user } = await api.get<UserSession>("/me")
-      console.log("Queried User, and update the internal state")
-      onSuccess(user)
-      return user
-    },
-    initialData,
-    refetchOnWindowFocus: false,
-  }
+type UserQueryOptions<TData = UserSession> = Omit<
+  UseSuspenseQueryOptions<UserSession, Error, TData>,
+  "queryKey"
+>
 
-  return useUserSession({ userId, options })
-}
-
-export function useUserSession<TData = UserSession>({ userId, options = {} }: UseUserSessionProps<TData>) {
-  return useQuery<UserSession, unknown, TData>({
+export function useUserQuery<TData = UserSession>(options = {} as UserQueryOptions<TData>) {
+  const { getToken } = useAuth()
+  const userId = useContext(UserIdContext)
+  return useSuspenseQuery<UserSession, Error, TData>({
     queryKey: ECacheKeys.user_session(userId),
+    queryFn: async () => {
+      const { data: meResponse } = await api.get<GetMeResponse>("/me", {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      })
+      return meResponse.userSession
+    },
     ...options,
   })
-}
-
-type UseUserSessionQueryProps = {
-  userId: string
-  onSuccess(user: UserSession): void
-  initialData: UserSession
-}
-
-type UseUserSessionProps<TData = UserSession> = {
-  userId: string
-  options?: QueryObserverOptions<UserSession, unknown, TData>
 }

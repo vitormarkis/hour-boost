@@ -4,6 +4,7 @@ import { SteamAccountList as SteamAccountListComp } from "@/components/molecules
 import { ZustandSteamAccountStoreProvider } from "@/components/molecules/SteamAccountListItem/store/useSteamAccountStore"
 import { Button } from "@/components/ui/button"
 import { useUser } from "@/contexts/UserContext"
+import { useUserControl } from "@/contexts/hook"
 import { cn } from "@/lib/utils"
 import React from "react"
 
@@ -14,7 +15,9 @@ export const DashboardSteamAccountsList = React.forwardRef<
   React.ElementRef<"section">,
   DashboardSteamAccountsListProps
 >(function DashboardSteamAccountsListComponent({ className, ...props }, ref) {
-  const { hasAccounts, plan, steamAccounts } = useUser()
+  const hasAccounts = useUserControl(user => user.hasAccounts)
+  const plan = useUser(user => user.plan)
+  const steamAccounts = useUser(user => user.steamAccounts)
 
   return (
     <section
@@ -22,7 +25,7 @@ export const DashboardSteamAccountsList = React.forwardRef<
       className={cn("flex flex-col gap-16 mdx:gap-2 mdx:p-2", className)}
       ref={ref}
     >
-      {hasAccounts() ? (
+      {hasAccounts ? (
         <>
           {steamAccounts.map((app, index) => (
             <ZustandSteamAccountStoreProvider
