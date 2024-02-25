@@ -3,32 +3,39 @@ import { IconCircleDollar } from "@/components/icons/IconCircleDollar"
 import { IconUserCycle } from "@/components/icons/IconUserCycle"
 import { IconUserX } from "@/components/icons/IconUserX"
 import { BadgePlanType } from "@/components/layouts/UserPlanStatus/components"
+import { AccordionContent, AccordionItem } from "@/components/ui/accordion"
 import { cn } from "@/lib/utils"
+import { ECacheKeys } from "@/mutations/queryKeys"
 import { getPlanName } from "@/util/getPlanName"
-import { Accordion, AccordionContent, AccordionItem } from "@/components/ui/accordion"
-import React, { CSSProperties } from "react"
+import { getRoleName } from "@/util/getUserRoleName"
+import { AccordionTrigger } from "@radix-ui/react-accordion"
+import { atom, useAtomValue } from "jotai"
+import React, { CSSProperties, useMemo } from "react"
+import { VariantProps, tv } from "tailwind-variants"
 import { AlertDialogBanUser } from "../BanUser/components/alert-dialog"
 import { AlertDialogUnbanUser } from "../UnbanUser/components/alert-dialog"
+import { isMutationPending } from "../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
 import { UserItemActionMenuDropdown } from "../UserItemAction/MenuDropdown"
 import { UserAdminIdProvider, useUserAdminItemId } from "../UserItemAction/context"
 import { ModalSeeUserPurchases } from "../UserPurchases"
 import { useUserAdminListItem } from "../hooks/useUserAdminListItem"
 import { AdminUserItemProfilePicture } from "./AdminUserItemProfilePicture"
+import { filterInputAtom } from "./AdminUserListContent"
 import { SteamAccountAdminList } from "./SteamAccountAdminList"
-import { isMutationPending } from "../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
-import { ECacheKeys } from "@/mutations/queryKeys"
-import { SteamAccountAdminListHeader } from "./SteamAccountAdminListHeader"
-import { AccordionTrigger } from "@radix-ui/react-accordion"
-import { getRoleName } from "@/util/getUserRoleName"
-import { tv, VariantProps } from "tailwind-variants"
 
 export type UserAdminItemListItemProps = {
   userId: string
 }
 
 export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
+  const username = useUserAdminListItem(userId, user => user.username)
   const planNameDomain = useUserAdminListItem(userId, user => user.plan.name)
   const status = useUserAdminListItem(userId, user => user.status)
+  const typedThisUsernameAtom = useMemo(
+    () => atom(get => get(filterInputAtom).length > 0 && !username.includes(get(filterInputAtom))),
+    [filterInputAtom]
+  )
+  const shouldHide = useAtomValue(typedThisUsernameAtom)
   const isBanned = React.useMemo(() => status === "BANNED", [status])
 
   const planName = getPlanName(planNameDomain)
@@ -38,6 +45,7 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
       <AccordionItem
         removeBorderOnClosed
         value={userId}
+        className={shouldHide ? "hidden" : "block"}
       >
         <div className="[--user-item-height:4.2rem] h-[--user-item-height] flex items-center bg-black/10 hover:bg-slate-900/50 cursor-pointer">
           <AdminUserItemProfilePicture />

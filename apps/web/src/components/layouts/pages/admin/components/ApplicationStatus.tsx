@@ -7,8 +7,6 @@ export type ApplicationStatusProps = React.ComponentPropsWithoutRef<"div"> & {}
 
 export const ApplicationStatus = React.forwardRef<React.ElementRef<"div">, ApplicationStatusProps>(
   function ApplicationStatusComponent({ className, ...props }, ref) {
-    console.log("1.")
-    
     return (
       <ClientOnly>
         <div

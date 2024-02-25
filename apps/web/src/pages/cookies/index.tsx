@@ -36,16 +36,11 @@ const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
 })
 
-export default function Cookies({ user, serverHeaders }: UserSessionParams) {
+export default function Cookies({ user }: UserSessionParams) {
   const [clientResponse, setClientResponse] = useState<{ statusCode: number; data: any }>({
     data: null,
     statusCode: 0,
   })
-
-  api.defaults.headers.common = {
-    ...api.defaults.headers.common,
-    ...serverHeaders,
-  }
 
   useEffect(() => {
     api

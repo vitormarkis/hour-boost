@@ -7,6 +7,8 @@ export const badgePlanTypeVariants = cva("border py-0 5 shadow-md", {
       GOLD: "bg-amber-600 border-amber-500 text-amber-100 shadow-yellow-800/60",
       GUEST: "bg-zinc-600 border-neutral-600 text-zinc-100 shadow-black-800/60",
       SILVER: "bg-neutral-100 border-white text-neutral-600 shadow-white/20",
+      "USAGE-CUSTOM": "bg-fuchsia-600 border-fuchsia-500 text-fuchsia-100 shadow-yellow-800/60",
+      "INFINITY-CUSTOM": "bg-fuchsia-600 border-fuchsia-500 text-fuchsia-100 shadow-yellow-800/60",
     },
     size: {
       regular: "px-2",

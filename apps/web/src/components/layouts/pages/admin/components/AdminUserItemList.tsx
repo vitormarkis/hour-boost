@@ -3,7 +3,11 @@ import { useEffect, useState } from "react"
 import { useUserAdminList } from "../hooks/useUserAdminList"
 import { UserAdminItemListItem } from "./AdminUserItemListItem"
 
-function UserAdminItemListComponent() {
+type PendingProps = {
+  isPending: boolean
+}
+
+function UserAdminItemListComponent({ isPending }: PendingProps) {
   const { data: usersInfo } = useUserAdminList({
     select: userList => userList.map(user => `${user.id_user}::${user.steamAccounts.length}`),
   })
@@ -23,6 +27,7 @@ function UserAdminItemListComponent() {
     <Accordion
       type="multiple"
       defaultValue={userIdListHasAccounts}
+      className={isPending ? "opacity-50" : "opacity-100"}
     >
       {shownUserIdList.map(userId => (
         <UserAdminItemListItem
@@ -36,7 +41,7 @@ function UserAdminItemListComponent() {
 
 UserAdminItemListComponent.displayName = "UserAdminItemListComponent"
 
-export function UserAdminItemList() {
+export function UserAdminItemList({ isPending }: PendingProps) {
   const [hasDocument, setHasDocument] = useState(false)
 
   useEffect(() => {
@@ -47,5 +52,5 @@ export function UserAdminItemList() {
     return <h3>Loading...</h3>
   }
 
-  return <UserAdminItemListComponent />
+  return <UserAdminItemListComponent isPending={isPending} />
 }

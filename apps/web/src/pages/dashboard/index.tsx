@@ -5,7 +5,6 @@ import { UserProvider } from "@/contexts/UserContext"
 import { UserSessionParams } from "@/server-fetch/types"
 import { userProcedure } from "@/server-fetch/userProcedure"
 import { UserSession } from "core"
-import { GetServerSideProps } from "next"
 import Head from "next/head"
 
 export type GetMeResponse = {
@@ -13,19 +12,15 @@ export type GetMeResponse = {
   userSession: UserSession
 }
 
-export const getServerSideProps: GetServerSideProps = userProcedure({
+export const getServerSideProps = userProcedure({
   shouldRedirectToPathIf({ user }) {
     if (user === null) return "/sign-in"
   },
 })
 
-export default function DashboardPage({ user, serverHeaders }: UserSessionParams) {
-  console.log(user)
+export default function DashboardPage({ user }: UserSessionParams) {
   return (
-    <UserProvider
-      serverUser={user}
-      serverHeaders={serverHeaders}
-    >
+    <UserProvider serverUser={user}>
       <Head>
         <title>Hourboost - Painel</title>
         <link

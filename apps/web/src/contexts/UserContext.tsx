@@ -1,7 +1,5 @@
-import { api } from "@/lib/axios"
-import { ECacheKeys } from "@/mutations/queryKeys"
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
-import { GameSession, Persona, SteamAccountSession, UserSession } from "core"
+import { useQueryClient } from "@tanstack/react-query"
+import { GameSession, Persona, UserSession } from "core"
 import React, { PropsWithChildren, createContext, useContext } from "react"
 import { createContext as createContextSelector } from "use-context-selector"
 import { createUserActions } from "./controls"
@@ -28,19 +26,13 @@ export interface UserMethods {
 export interface IUserProviderProps {
   children: React.ReactNode
   serverUser: UserSession
-  serverHeaders: Record<string, string>
 }
 
 export const UserContext = createContext<IUserContext>({} as IUserContext)
 export const UserControlContext = createContextSelector<UserControl | null>(null)
 export const UserIdContext = createContext("")
 
-export function UserProvider({ serverUser, serverHeaders, children }: IUserProviderProps) {
-  api.defaults.headers.common = {
-    ...api.defaults.headers.common,
-    ...serverHeaders,
-  }
-
+export function UserProvider({ serverUser, children }: IUserProviderProps) {
   return (
     <UserIdContext.Provider value={serverUser.id}>
       <ControlProvider serverUser={serverUser}>{children}</ControlProvider>
