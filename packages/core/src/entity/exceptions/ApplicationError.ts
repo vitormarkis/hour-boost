@@ -41,7 +41,7 @@ export class Fail<
   // payload: TPayload extends Record<string, any> ? TPayload : undefined
   payload: TPayload
   code: TCode
-  httpStatus?: THTTPStatus
+  httpStatus: THTTPStatus
 
   constructor({
     code,
@@ -55,7 +55,7 @@ export class Fail<
     super(code)
     this.code = code as TCode
     this.payload = payload as TPayload
-    this.httpStatus = httpStatus
+    this.httpStatus = httpStatus as THTTPStatus
   }
 
   static create<

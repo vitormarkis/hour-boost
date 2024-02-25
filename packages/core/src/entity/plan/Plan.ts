@@ -1,3 +1,4 @@
+import { z } from "zod"
 import { Usage } from "../../entity/plan/Usage"
 import { UsageList } from "core/entity/plan"
 
@@ -11,6 +12,7 @@ export abstract class Plan {
   type: PlanType
   private _status: PlanStatus
   usages: UsageList
+  price: number
 
   constructor(props: PlanAllProps) {
     this.maxSteamAccounts = props.maxSteamAccounts
@@ -22,6 +24,7 @@ export abstract class Plan {
     this.name = props.name
     this._status = props.status
     this.usages = props.usages
+    this.price = props.price
   }
 
   abstract use(usage: Usage): void
@@ -62,9 +65,15 @@ export type PlanAllProps = {
   usages: UsageList
 }
 
-export type PlanInfinityName = "SILVER" | "GOLD" | "DIAMOND"
-export type PlanUsageName = "GUEST"
 export type PlanAllNames = PlanInfinityName | PlanUsageName
 export type PlanStatus = "FARMING" | "IDDLE"
+export type PlanCustomName = Extract<PlanAllNames, "USAGE-CUSTOM" | "INFINITY-CUSTOM">
+export type PlanNormalName = Exclude<PlanAllNames, "USAGE-CUSTOM" | "INFINITY-CUSTOM">
+
+export const planUsageNameSchema = z.enum(["GUEST", "USAGE-CUSTOM"])
+export type PlanUsageName = z.infer<typeof planUsageNameSchema>
+
+export const planInfinityNameSchema = z.enum(["SILVER", "GOLD", "DIAMOND", "INFINITY-CUSTOM"])
+export type PlanInfinityName = z.infer<typeof planInfinityNameSchema>
 
 export type PlanType = "INFINITY" | "USAGE"
