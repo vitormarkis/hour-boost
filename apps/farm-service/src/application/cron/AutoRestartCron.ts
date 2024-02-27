@@ -1,4 +1,11 @@
-import { DataOrFail, Fail, PlanRepository, SteamAccountsRepository, UsersDAO } from "core"
+import {
+  DataOrFail,
+  Fail,
+  PlanRepository,
+  SteamAccountClientStateCacheRepository,
+  SteamAccountsRepository,
+  UsersDAO,
+} from "core"
 import { AllUsersClientsStorage } from "~/application/services"
 import {
   EAppResults,
@@ -28,7 +35,8 @@ export class AutoRestartCron implements IAutoRestartCron {
     private readonly steamAccountsRepository: SteamAccountsRepository,
     private readonly restoreAccountConnectionUseCase: RestoreAccountConnectionUseCase,
     private readonly restoreAccountSessionUseCase: RestoreAccountSessionUseCase,
-    private readonly usersDAO: UsersDAO
+    private readonly usersDAO: UsersDAO,
+    private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository
   ) {}
 
   async run({ accountName, forceRestoreSessionOnApplication }: AutoRestartCronPayload) {
@@ -99,8 +107,10 @@ export class AutoRestartCron implements IAutoRestartCron {
 
     console.log("auto-restart-cron [sac]: ", sac.accountName)
 
+    const state = await this.steamAccountClientStateCacheRepository.get(sac.accountName)
+
     const [errorRestoringSession] = await this.restoreAccountSessionUseCase.execute({
-      accountName,
+      state,
       plan,
       sac,
       username: user.username,

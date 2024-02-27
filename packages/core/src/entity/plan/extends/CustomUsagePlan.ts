@@ -2,14 +2,24 @@ import { UsageList } from "core/entity/plan/UsageList"
 import { makeID } from "../../generateID"
 import { PlanUsage } from "../PlanUsage"
 
-export class CustomUsagePlan extends PlanUsage {
+export type PlanSetters = {
+  setMaxGamesAllowed(newMaxGamesAllowed: number): void
+}
+
+export type PlanInvariant = {}
+
+export class CustomUsagePlan extends PlanUsage implements PlanSetters {
   private constructor(props: PlanCustomUsageRestoreProps) {
     super({
       ...props,
       name: "USAGE-CUSTOM",
       autoRestarter: false,
-      price: 0,
+      custom: true,
     })
+  }
+
+  setMaxGamesAllowed(newMaxGamesAllowed: number): void {
+    this.maxGamesAllowed = newMaxGamesAllowed
   }
 
   static create(props: PlanCustomUsageCreateProps) {
@@ -24,6 +34,18 @@ export class CustomUsagePlan extends PlanUsage {
   static restore(props: PlanCustomUsageRestoreProps) {
     return new CustomUsagePlan(props)
   }
+
+  static fromPlan(plan: PlanUsage, price: number) {
+    return CustomUsagePlan.restore({
+      id_plan: plan.id_plan,
+      maxGamesAllowed: plan.maxGamesAllowed,
+      maxSteamAccounts: plan.maxSteamAccounts,
+      maxUsageTime: plan.maxUsageTime,
+      ownerId: plan.ownerId,
+      usages: plan.usages,
+      price,
+    })
+  }
 }
 
 export type PlanCustomUsageCreateProps = {
@@ -31,6 +53,7 @@ export type PlanCustomUsageCreateProps = {
   maxGamesAllowed: number
   maxSteamAccounts: number
   maxUsageTime: number
+  price: number
 }
 
 export type PlanCustomUsageRestoreProps = {
@@ -40,4 +63,5 @@ export type PlanCustomUsageRestoreProps = {
   maxGamesAllowed: number
   maxSteamAccounts: number
   maxUsageTime: number
+  price: number
 }

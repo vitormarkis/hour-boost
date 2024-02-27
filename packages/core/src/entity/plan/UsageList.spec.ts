@@ -8,6 +8,7 @@ const makeUsage = (amountTime: number, id_usage: string = "123") =>
     createdAt: new Date("2023-06-15T10:00:00"),
     plan_id: "plan_123",
     accountName: "acc1",
+    user_id: "123",
   })
 
 test("should move usage to the trash", async () => {

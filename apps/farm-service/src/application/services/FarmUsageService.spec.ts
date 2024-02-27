@@ -192,6 +192,7 @@ describe("FarmUsageService test suite", () => {
       createdAt: new Date("2023-06-10T10:00:00Z"),
       plan_id: meInstances.me.plan.id_plan,
       accountName: s.me.accountName,
+      user_id: s.me.userId,
     })
     await i.usePlan(s.me.userId, allPlanUsage)
     const plan = await getPlanByOwnerId(meInstances.me.plan.id_plan)

@@ -133,10 +133,7 @@ export const usersDAO = new UsersDAODatabase(
   allUsersClientsStorage
 )
 export const steamAccountsDAO = new SteamAccountsDAODatabase(prisma)
-export const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
-  usersClusterStorage,
-  steamAccountClientStateCacheRepository
-)
+export const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(usersClusterStorage)
 
 export const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
   allUsersClientsStorage,
@@ -150,7 +147,8 @@ export const autoRestartCron = new AutoRestartCron(
   steamAccountsRepository,
   restoreAccountConnectionUseCase,
   restoreAccountSessionUseCase,
-  usersDAO
+  usersDAO,
+  steamAccountClientStateCacheRepository
 )
 
 export const scheduleAutoRestartUseCase = new ScheduleAutoRestartUseCase(

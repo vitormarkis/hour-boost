@@ -34,17 +34,15 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.usersClusterStorage,
     i.sacStateCacheRepository
   )
-  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
-    i.usersClusterStorage,
-    i.sacStateCacheRepository
-  )
+  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage)
   autoRestartCron = new AutoRestartCron(
     i.allUsersClientsStorage,
     i.planRepository,
     i.steamAccountsRepository,
     restoreAccountConnectionUseCase,
     restoreAccountSessionUseCase,
-    i.usersDAO
+    i.usersDAO,
+    i.sacStateCacheRepository
   )
 }
 

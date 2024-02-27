@@ -8,6 +8,7 @@ import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { FarmGamesController, StopFarmController, promiseHandler } from "~/presentation/controllers"
+import { StopFarmUseCase } from "../use-cases/StopFarmUseCase"
 
 const log = console.log
 // console.log = () => {}
@@ -58,11 +59,9 @@ test("should ", async () => {
   /**
    * Stop farm
    */
-  const stopFarmController = new StopFarmController(
-    i.usersClusterStorage,
-    i.usersRepository,
-    i.planRepository
-  )
+  const stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
+  const stopFarmController = new StopFarmController(stopFarmUseCase, i.usersRepository)
+
   await promiseHandler(
     stopFarmController.handle({
       payload: {

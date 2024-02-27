@@ -68,9 +68,7 @@ test.only("should NOT store persist farm session if NoConnection error is trigge
   jest.advanceTimersByTime(1000 * 3600 * 2) // 2 hours
   connection.emit("break")
 
-  console.log("22: steam accounts", Array.from(i.sacCacheInMemory.state.keys()))
   const stateCacheDTO = await i.sacStateCacheRepository.get(s.me.accountName)
-  if (!stateCacheDTO) console.log(`22: Não encontrou cache entry com ${s.me.accountName}`)
   expect(stateCacheDTO).not.toBeNull()
   expect(stateCacheDTO!.gamesPlaying).toStrictEqual([])
   expect(stateCacheDTO!.isFarming()).toStrictEqual(false)
@@ -84,7 +82,6 @@ test("should stop farming once interrupt occurs", async () => {
   let xs = 0
   const sac = meInstances.meSAC
   sac.emitter.setEventResolver("interrupt", () => {
-    console.log("TEST resolving")
     // res(true)
   })
   meCluster.addSAC(sac)

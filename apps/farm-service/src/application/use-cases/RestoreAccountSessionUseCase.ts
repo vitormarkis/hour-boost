@@ -16,7 +16,7 @@ import { FailGeneric } from "~/types/EventsApp.types"
 import { Pretify, bad, nice } from "~/utils/helpers"
 
 type Payload = {
-  accountName: string
+  state: CacheState | null
   plan: PlanInfinity | PlanUsage
   sac: SteamAccountClient
   username: string
@@ -33,15 +33,11 @@ const moduleName = "[RestoreAccountSessionUseCase]"
  * atualizar/restaurar sessão (status, jogos farmando...)
  */
 export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCase {
-  constructor(
-    private readonly usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage,
-    private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository
-  ) {}
+  constructor(private readonly usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage) {}
 
-  async execute({ accountName, plan, sac, username }: Payload) {
-    if (!sac.logged) throw new Error("tried to restore session of an not logged account")
+  async execute({ state, plan, sac, username }: Payload) {
+    const accountName = sac.accountName
 
-    const state = await this.steamAccountClientStateCacheRepository.get(accountName)
     const [errorRestoringOnApplication] = await restoreSACSessionOnApplication({
       plan,
       sac,
@@ -130,6 +126,8 @@ export async function restoreSACSessionOnApplication({
     )
   }
 
+  if (!sac.logged) return bad(Fail.create(EAppResults["SAC-NOT-LOGGED"], 400))
+
   if (state && state.isFarming && shouldRestoreGames) {
     console.log(`33; 1. got from state: ${state.accountName} ${state.farmStartedAt}`)
     const [errorFarmWithAccount] = await userCluster.farmWithAccount({
@@ -200,6 +198,8 @@ const EAppResultsRaw = {
   "STEAM-ACCOUNT-IS-NOT-OWNED": "STEAM-ACCOUNT-IS-NOT-OWNED",
   "STEAM-ACCOUNT-NOT-FOUND": "STEAM-ACCOUNT-NOT-FOUND",
   "PLAN-MAX-USAGE-EXCEEDED": "PLAN-MAX-USAGE-EXCEEDED",
+  "USER-STORAGE-NOT-FOUND": "USER-STORAGE-NOT-FOUND",
+  "SAC-NOT-LOGGED": "SAC-NOT-LOGGED",
 } as const
 
 export const EAppResults = EAppResultsRaw as Pretify<Mutable<typeof EAppResultsRaw>>

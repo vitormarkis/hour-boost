@@ -30,10 +30,7 @@ const addSteamAccountUseCase = new AddSteamAccountUseCase(
   i.usersDAO,
   i.checkSteamAccountOwnerStatusUseCase
 )
-const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
-  i.usersClusterStorage,
-  i.sacStateCacheRepository
-)
+const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage)
 const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
   i.allUsersClientsStorage,
   i.usersClusterStorage,
@@ -45,7 +42,8 @@ const autoRestartCron = new AutoRestartCron(
   i.steamAccountsRepository,
   restoreAccountConnectionUseCase,
   restoreAccountSessionUseCase,
-  i.usersDAO
+  i.usersDAO,
+  i.sacStateCacheRepository
 )
 
 async function main() {

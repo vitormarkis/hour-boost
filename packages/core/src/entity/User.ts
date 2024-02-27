@@ -8,6 +8,7 @@ import {
   Role,
   Status,
   SteamAccount,
+  UsageList,
   UserRole,
 } from "core/entity"
 import { SteamAccountList } from "core/entity/SteamAccountList"
@@ -22,6 +23,7 @@ export class User {
   readonly role: Role
   readonly status: Status
   readonly purchases: Purchase[]
+  readonly usages: UsageList
 
   private constructor(props: UserProps) {
     this.id_user = props.id_user
@@ -33,6 +35,7 @@ export class User {
     this.role = props.role
     this.status = props.status
     this.purchases = props.purchases
+    this.usages = props.usages
   }
 
   static create(props: UserCreateProps) {
@@ -46,6 +49,7 @@ export class User {
       role: new UserRole(),
       status: new ActiveStatus(),
       steamAccounts: new SteamAccountList(),
+      usages: new UsageList(),
     })
   }
 
@@ -82,6 +86,7 @@ type UserProps = {
   role: Role
   status: Status
   purchases: Purchase[]
+  usages: UsageList
 }
 
 type UserCreateProps = {

@@ -22,6 +22,7 @@ model User {
   status        Status
   steamAccounts SteamAccount[] @relation("user_steam_accounts")
   purchases     Purchase[]     @relation("user_purchases")
+  usages        Usage[]        @relation("user_usages")
 
   @@map("users")
 }
@@ -57,6 +58,8 @@ model Usage {
   amountTime   Int
   plan         Plan         @relation("plan_usages", fields: [plan_id], references: [id_plan], onDelete: Cascade)
   plan_id      String
+  user         User         @relation("user_usages", fields: [user_id], references: [id_user], onDelete: Cascade)
+  user_id      String       @default("UNDEFINED")
   accountName  String       @default("undefined")
   SteamAccount SteamAccount @relation("steam_account_usages", fields: [accountName], references: [accountName])
 
@@ -82,6 +85,8 @@ enum PlanName {
   SILVER
   GOLD
   DIAMOND
+  USAGE_CUSTOM
+  INFINITY_CUSTOM
 }
 
 enum Status {

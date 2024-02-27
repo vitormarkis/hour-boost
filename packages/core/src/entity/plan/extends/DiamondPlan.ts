@@ -2,8 +2,9 @@ import { PlanCreateProps, PlanProps } from "../Plan"
 import { makeID } from "../../generateID"
 import { PlanInfinity, PlanInfinityRestoreProps } from "../PlanInfinity"
 import { UsageList } from "core/entity/plan/UsageList"
+import { PlanInvariant } from "./CustomUsagePlan"
 
-export class DiamondPlan extends PlanInfinity {
+export class DiamondPlan extends PlanInfinity implements PlanInvariant {
   private constructor(props: PlanProps) {
     super({
       ...props,
@@ -12,6 +13,7 @@ export class DiamondPlan extends PlanInfinity {
       autoRestarter: true,
       name: "DIAMOND",
       price: 2200,
+      custom: false,
     })
   }
 

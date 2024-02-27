@@ -12,6 +12,7 @@ export class GuestPlan extends PlanUsage {
       maxUsageTime: 60 * 60 * 6, // 6 hours in seconds
       name: "GUEST",
       price: 0,
+      custom: false,
     })
   }
 

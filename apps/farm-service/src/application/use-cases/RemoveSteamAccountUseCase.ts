@@ -85,7 +85,7 @@ export class RemoveSteamAccountUseCase implements IRemoveSteamAccountUseCase {
         return bad(
           new Fail({
             code: `PERSISTING-USAGES::${errorPersistingUsages.code ?? "UNKNOWN"}`,
-            httpStatus: errorPersistingUsages.status,
+            httpStatus: errorPersistingUsages.httpStatus,
             payload: errorPersistingUsages.payload,
           })
         )

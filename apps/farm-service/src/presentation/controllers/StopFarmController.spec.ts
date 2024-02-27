@@ -5,6 +5,7 @@ import {
   makeTestInstances,
   password,
 } from "~/__tests__/instances"
+import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { FarmGamesController, StopFarmController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
@@ -30,7 +31,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     usersRepository: i.usersRepository,
     farmGamesUseCase: i.farmGamesUseCase,
   })
-  stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository, i.planRepository)
+  const stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
+  stopFarmController = new StopFarmController(stopFarmUseCase, i.usersRepository)
 }
 
 beforeEach(async () => {
@@ -46,11 +48,8 @@ afterEach(() => {
 describe("StopFarmController.spec test suite", () => {
   describe("Account Name IS NOT farming", () => {
     test("should reject is not registered user is provided", async () => {
-      const stopFarmController = new StopFarmController(
-        i.usersClusterStorage,
-        i.usersRepository,
-        i.planRepository
-      )
+      const stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
+      const stopFarmController = new StopFarmController(stopFarmUseCase, i.usersRepository)
       const { status, json } = await stopFarmController.handle({
         payload: {
           userId: "RANDOM_ID",
@@ -66,11 +65,8 @@ describe("StopFarmController.spec test suite", () => {
     })
 
     test("should reject if user is not farming", async () => {
-      const stopFarmController = new StopFarmController(
-        i.usersClusterStorage,
-        i.usersRepository,
-        i.planRepository
-      )
+      const stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
+      const stopFarmController = new StopFarmController(stopFarmUseCase, i.usersRepository)
       const { status, json } = await promiseHandler(
         stopFarmController.handle({
           payload: {
@@ -120,7 +116,8 @@ describe("StopFarmController.spec test suite", () => {
 
       console.log({ status, json })
 
-      expect(json).toBeNull()
+      expect(json.message).toBe("Farm pausado com sucesso.")
+      expect(json.code).toBe("SUCCESS")
       expect(status).toBe(200)
       expect(i.usersClusterStorage.getAccountsStatus()).toStrictEqual({
         [s.me.username]: {

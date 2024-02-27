@@ -1,6 +1,8 @@
 import { Plan as PrismaPlan, Usage as PrismaUsage } from "@prisma/client"
 import {
   ApplicationError,
+  CustomInfinityPlan,
+  CustomUsagePlan,
   DiamondPlan,
   GoldPlan,
   GuestPlan,
@@ -21,6 +23,14 @@ export function makeInfinityPlan(planProps: PlanInfinityRestoreProps & PlanName[
   if (planProps.name === "GOLD") return GoldPlan.restore(planProps)
   console.log(`makeInfinityPlan: Tried to assign this invalid planProps: `, planProps)
   throw new ApplicationError("Invalid plan assignment")
+}
+
+export function makeCustomInfinityPlan(plan: PlanInfinity): CustomInfinityPlan {
+  return CustomInfinityPlan.fromPlan(plan, plan.price)
+}
+
+export function makeCustomUsagePlan(plan: PlanUsage): CustomUsagePlan {
+  return CustomUsagePlan.fromPlan(plan, plan.price)
 }
 
 export function makeUsagePlan(planProps: PlanUsageRestoreProps & PlanName["USAGE"]): PlanUsage {
@@ -51,15 +61,7 @@ export function getCurrentPlan(dbUserPlan: SessionPlan) {
       name: dbUserPlan.name as PlanUsageName,
       ownerId: dbUserPlan.ownerId,
       usages: new UsageList({
-        data: dbUserPlan.usages.map(u =>
-          Usage.restore({
-            amountTime: u.amountTime,
-            createdAt: u.createdAt,
-            id_usage: u.id_usage,
-            plan_id: u.plan_id,
-            accountName: u.accountName,
-          })
-        ),
+        data: dbUserPlan.usages.map(Usage.restore),
       }),
     })
   console.log({ dbUserPlan })

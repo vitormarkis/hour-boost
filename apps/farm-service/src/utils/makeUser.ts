@@ -1,4 +1,13 @@
-import { ActiveStatus, GuestPlan, PlanInfinity, PlanUsage, SteamAccountList, User, UserRole } from "core"
+import {
+  ActiveStatus,
+  GuestPlan,
+  PlanInfinity,
+  PlanUsage,
+  SteamAccountList,
+  UsageList,
+  User,
+  UserRole,
+} from "core"
 
 export const makeUser = (userId: string, username: string, plan?: PlanUsage | PlanInfinity): User => {
   return User.restore({
@@ -15,5 +24,6 @@ export const makeUser = (userId: string, username: string, plan?: PlanUsage | Pl
     status: new ActiveStatus(),
     steamAccounts: new SteamAccountList(),
     username,
+    usages: new UsageList(),
   })
 }

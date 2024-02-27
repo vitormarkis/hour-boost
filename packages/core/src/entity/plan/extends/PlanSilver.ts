@@ -12,6 +12,7 @@ export class SilverPlan extends PlanInfinity {
       autoRestarter: true,
       name: "SILVER",
       price: 1200,
+      custom: false,
     })
   }
 

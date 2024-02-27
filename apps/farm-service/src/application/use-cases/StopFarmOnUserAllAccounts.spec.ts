@@ -1,0 +1,102 @@
+import {
+  makeTestInstances,
+  validSteamAccounts,
+  PrefixKeys,
+  MakeTestInstancesProps,
+  CustomInstances,
+  password,
+} from "~/__tests__/instances"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
+import { StopFarmOnUserAllAccounts } from "./StopFarmOnUserAllAccounts"
+import { StopFarmUseCase } from "./StopFarmUseCase"
+import { AddSteamAccountController, FarmGamesController } from "~/presentation/controllers"
+import { AddSteamAccountUseCase } from "./AddSteamAccountUseCase"
+import { CheckSteamAccountOwnerStatusUseCase } from "./CheckSteamAccountOwnerStatusUseCase"
+import { AddSteamAccount } from "core"
+import { PlanBuilder } from "../factories/PlanFactory"
+
+const log = console.log
+// console.log = () => {}
+
+let i = makeTestInstances({
+  validSteamAccounts,
+})
+let meInstances = {} as PrefixKeys<"me">
+let stopFarmOnUserAllAccounts: StopFarmOnUserAllAccounts
+let stopFarmUseCase: StopFarmUseCase
+let farmGamesController: FarmGamesController
+let addSteamAccountController: AddSteamAccountController
+
+async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
+  i = makeTestInstances(props, customInstances)
+  meInstances = await i.createUser("me")
+  stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
+  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+  stopFarmOnUserAllAccounts = new StopFarmOnUserAllAccounts(stopFarmUseCase)
+  farmGamesController = new FarmGamesController({
+    allUsersClientsStorage: i.allUsersClientsStorage,
+    farmGamesUseCase: i.farmGamesUseCase,
+    usersRepository: i.usersRepository,
+  })
+  const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(
+    i.steamAccountsRepository
+  )
+  const addSteamAccountUseCase = new AddSteamAccountUseCase(
+    addSteamAccount,
+    i.allUsersClientsStorage,
+    i.usersDAO,
+    checkSteamAccountOwnerStatusUseCase
+  )
+  addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)
+}
+
+beforeEach(async () => {
+  await setupInstances({
+    validSteamAccounts,
+  })
+
+  const diamond = new PlanBuilder(s.me.userId).infinity().diamond()
+  await i.changeUserPlan(diamond)
+
+  await addSteamAccountController.handle({
+    payload: {
+      accountName: s.me.accountName2,
+      password,
+      userId: s.me.userId,
+    },
+  })
+
+  await farmGamesController.handle({
+    payload: {
+      accountName: s.me.accountName,
+      gamesID: [308],
+      userId: s.me.userId,
+    },
+  })
+
+  await farmGamesController.handle({
+    payload: {
+      accountName: s.me.accountName2,
+      gamesID: [700],
+      userId: s.me.userId,
+    },
+  })
+})
+
+test("should stop farm on user all accounts", async () => {
+  const farmingUsers = i.usersClusterStorage.getAccountsStatus()
+  expect(farmingUsers).toStrictEqual({
+    [s.me.username]: {
+      [s.me.accountName]: "FARMING",
+      [s.me.accountName2]: "FARMING",
+    },
+  })
+
+  const user = await i.usersRepository.getByID(s.me.userId)
+  await stopFarmOnUserAllAccounts.execute(user!, console.log)
+
+  const farmingUsers2 = i.usersClusterStorage.getAccountsStatus()
+  expect(farmingUsers2).toStrictEqual({
+    [s.me.username]: {},
+  })
+})

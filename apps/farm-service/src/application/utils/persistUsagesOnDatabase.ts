@@ -1,13 +1,20 @@
-import { ApplicationError, DataOrError, PlanInfinity, PlanRepository, PlanUsage, Usage } from "core"
+import { Fail, PlanInfinity, PlanRepository, PlanUsage, Usage } from "core"
 import { PauseFarmOnAccountUsage } from "~/application/services"
+import { EAppResults } from "../use-cases"
 
 export async function persistUsagesOnDatabase(
   planId: string,
   pauseFarm: PauseFarmOnAccountUsage,
   planRepository: PlanRepository
-): Promise<DataOrError<null>> {
+) {
   const plan = await planRepository.getById(planId)
-  if (!plan) return [new ApplicationError(`Plano com id [${planId}] não encontrado.`)]
+  if (!plan)
+    return [
+      Fail.create(EAppResults["PLAN-NOT-FOUND"], 404, {
+        foundPlan: plan,
+        givenPlanId: planId,
+      }),
+    ]
   if (pauseFarm.type == "STOP-ALL") appendUsagesStopAll(plan, pauseFarm.usages)
   else if (pauseFarm.type == "STOP-ONE") appendUsagesStopOne(plan, pauseFarm.usage)
   else if (pauseFarm.type == "STOP-SILENTLY") {

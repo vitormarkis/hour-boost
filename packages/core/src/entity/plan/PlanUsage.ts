@@ -2,10 +2,12 @@ import { Usage } from "../../entity/plan/Usage"
 import { Plan, PlanUsageName } from "../../entity/plan/Plan"
 import { UsageUsedMoreThanPlanAllows } from "../../entity/exceptions"
 import { UsageList } from "core/entity/plan/UsageList"
+import { PlanSetters } from "./extends"
 
 export abstract class PlanUsage extends Plan {
   readonly name: PlanUsageName
   readonly maxUsageTime: number
+  custom: boolean
 
   constructor(props: PlanUsageAllProps) {
     super({
@@ -16,6 +18,7 @@ export abstract class PlanUsage extends Plan {
     this.maxUsageTime = props.maxUsageTime
     this.usages = props.usages
     this.name = props.name
+    this.custom = props.custom
   }
 
   getUsageTotal(): number {
@@ -34,6 +37,10 @@ export abstract class PlanUsage extends Plan {
     this.usages.remove(usageID)
   }
 
+  isCustom(): this is PlanSetters {
+    return this.custom
+  }
+
   use(usage: Usage): void | UsageUsedMoreThanPlanAllows {
     if (usage.amountTime + this.getUsageTotal() > this.maxUsageTime) {
       const usageWithRemainingUsageLeft = Usage.restore({
@@ -42,6 +49,7 @@ export abstract class PlanUsage extends Plan {
         id_usage: usage.id_usage,
         plan_id: this.id_plan,
         accountName: usage.accountName,
+        user_id: usage.user_id,
       })
       this.usages.add(usageWithRemainingUsageLeft)
       return new UsageUsedMoreThanPlanAllows()
@@ -85,4 +93,5 @@ export type PlanUsageAllProps = {
   autoRestarter: boolean
   maxUsageTime: number
   usages: UsageList
+  custom: boolean
 }

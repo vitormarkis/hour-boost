@@ -9,6 +9,7 @@ import {
 import { ensureExpectation } from "~/__tests__/utils"
 import { UserCompleteFarmSessionCommand } from "~/application/commands"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
+import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
 import { Observer } from "~/infra/queue"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
@@ -30,20 +31,14 @@ let stopFarmController: StopFarmController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
-  console.log("aaa")
   meInstances = await i.createUser("me")
-  console.log("bbb")
   farmGamesController = new FarmGamesController({
     allUsersClientsStorage: i.allUsersClientsStorage,
     usersRepository: i.usersRepository,
     farmGamesUseCase: i.farmGamesUseCase,
   })
-  stopFarmController = new StopFarmController(i.usersClusterStorage, i.usersRepository, i.planRepository)
-  // console.log("ccc promise race")
-  // await i.redis.call("FLUSHALL")
-  // console.log("DDD promise finished")
-  // const [error, res] = await promiseRace(i.sacStateCacheRepository.flushAll(), 1000, "flushAll")
-  // if (error) console.log({ flushAll: error.message })
+  const stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
+  stopFarmController = new StopFarmController(stopFarmUseCase, i.usersRepository)
 }
 
 describe("mobile", () => {
@@ -184,6 +179,7 @@ describe("not mobile", () => {
     const allUsage = Usage.create({
       amountTime: 21600,
       createdAt: new Date("2023-06-10T10:00:00Z"),
+      user_id: s.me.userId,
       plan_id: reachedPlan.id_plan,
       accountName: s.me.accountName,
     })
@@ -315,6 +311,7 @@ describe("not mobile", () => {
     const allUsage = Usage.create({
       amountTime: 21600,
       createdAt: new Date("2023-06-10T10:00:00Z"),
+      user_id: s.me.userId,
       plan_id: user.plan.id_plan,
       accountName: s.me.accountName,
     })
@@ -348,6 +345,7 @@ describe("not mobile", () => {
     const allUsage = Usage.create({
       amountTime: 21600,
       createdAt: new Date("2023-06-10T10:00:00Z"),
+      user_id: s.me.userId,
       plan_id: user.plan.id_plan,
       accountName: s.me.accountName,
     })
@@ -383,6 +381,7 @@ describe("not mobile", () => {
       amountTime: 21600,
       createdAt: now,
       plan_id: meInstances.me.plan.id_plan,
+      user_id: s.me.userId,
     })
     await i.usePlan(s.me.userId, maxGuestPlanUsage)
     expect((meInstances.me.plan as PlanUsage).getUsageLeft()).toBe(0)

@@ -23,6 +23,7 @@ command_routerPlan.post("/usage", async (req, res) => {
         amountTime,
         createdAt: new Date(),
         plan_id: planID,
+        user_id: plan.ownerId,
       })
     )
     await planRepository.update(plan)

@@ -24,6 +24,7 @@ yarn-error.log*
 
 # logs
 apps/farm-service/logs 
+apps/farm-service/prisma/script.ts
 
 # local env files
 .env

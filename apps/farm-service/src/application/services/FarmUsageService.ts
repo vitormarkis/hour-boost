@@ -142,6 +142,7 @@ export class FarmUsageService extends FarmService {
         amountTime: accountDetails.usageAmountInSeconds,
         createdAt: when,
         plan_id: this.planId,
+        user_id: this.userId,
       })
     })
     clearInterval(this.farmingInterval)

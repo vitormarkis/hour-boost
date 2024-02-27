@@ -32,10 +32,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   i = makeTestInstances(props, customInstances)
   meInstances = await i.createUser("me", { persistSteamAccounts: false })
 
-  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
-    i.usersClusterStorage,
-    i.sacStateCacheRepository
-  )
+  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage)
   const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
     i.allUsersClientsStorage,
     i.usersClusterStorage,
@@ -47,7 +44,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.steamAccountsRepository,
     restoreAccountConnectionUseCase,
     restoreAccountSessionUseCase,
-    i.usersDAO
+    i.usersDAO,
+    i.sacStateCacheRepository
   )
 
   const plan = new PlanBuilder(s.me.userId).infinity().diamond()

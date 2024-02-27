@@ -72,6 +72,7 @@ export class FarmInfinityService extends FarmService {
         amountTime,
         createdAt: now,
         plan_id: this.planId,
+        user_id: this.userId,
       })
       usages.push(usage)
     }
@@ -101,6 +102,7 @@ export class FarmInfinityService extends FarmService {
       amountTime,
       createdAt: when,
       plan_id: this.planId,
+      user_id: this.userId,
     })
     this.farmingAccounts.delete(accountName)
     return [null, usage]

@@ -9,6 +9,7 @@ import {
   UpdateStagingGamesUseCase,
 } from "~/application/use-cases"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
+import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 import { ToggleAutoReloginUseCase } from "~/application/use-cases/ToggleAutoReloginUseCase"
 
 import {
@@ -170,7 +171,8 @@ command_routerSteam.post(
     const perform = async () => {
       const { accountName } = req.body
 
-      const stopFarmController = new StopFarmController(usersClusterStorage, usersRepository, planRepository)
+      const stopFarmUseCase = new StopFarmUseCase(usersClusterStorage, planRepository)
+      const stopFarmController = new StopFarmController(stopFarmUseCase, usersRepository)
       return await stopFarmController.handle({
         payload: {
           userId: req.auth.userId!,

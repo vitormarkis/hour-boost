@@ -35,6 +35,7 @@ test("should restore user with default values", async () => {
     role: new UserRole(),
     status: new ActiveStatus(),
     steamAccounts: new SteamAccountList(),
+    usages: [],
   })
   expect(user).toHaveProperty("username")
   expect(user).toHaveProperty("id_user")

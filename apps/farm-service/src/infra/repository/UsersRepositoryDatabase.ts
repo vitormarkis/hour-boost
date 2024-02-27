@@ -1,9 +1,10 @@
-import { PrismaClient } from "@prisma/client"
+import { $Enums, Plan, Prisma, PrismaClient } from "@prisma/client"
 import {
   ActiveStatus,
   AdminRole,
   ApplicationError,
   BannedStatus,
+  PlanAllNames,
   Purchase,
   Role,
   RoleName,
@@ -12,6 +13,8 @@ import {
   SteamAccount,
   SteamAccountCredentials,
   SteamAccountList,
+  Usage,
+  UsageList,
   User,
   UserRole,
   UsersRepository,
@@ -41,7 +44,7 @@ export class UsersRepositoryDatabase implements UsersRepository {
           create: {
             createdAt: new Date(),
             id_plan: user.plan.id_plan,
-            name: user.plan.name,
+            name: mapPlanName_toPrisma(user.plan.name),
             type: user.plan.type,
           },
         },
@@ -70,7 +73,7 @@ export class UsersRepositoryDatabase implements UsersRepository {
             create: {
               createdAt: new Date(),
               id_plan: user.plan.id_plan,
-              name: user.plan.name,
+              name: mapPlanName_toPrisma(user.plan.name),
               type: user.plan.type,
               usages: {
                 connectOrCreate: user.plan.usages.data.map(u => ({
@@ -169,6 +172,9 @@ function prismaUserFindManyToUserDomain(user: PrismaFindMany[number]): User {
     role: roleFactory(user.role),
     status: statusFactory(user.status),
     steamAccounts,
+    usages: new UsageList({
+      data: user.usages.map(Usage.restore),
+    }),
   })
 }
 
@@ -208,6 +214,9 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
     steamAccounts,
     role: roleFactory(dbUser.role),
     status: statusFactory(dbUser.status),
+    usages: new UsageList({
+      data: dbUser.usages.map(Usage.restore),
+    }),
   })
 }
 
@@ -232,6 +241,7 @@ export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
       },
       purchases: true,
       steamAccounts: true,
+      usages: true,
     },
   })
 }
@@ -246,6 +256,35 @@ export function prismaFindMany(prisma: PrismaClient) {
       },
       steamAccounts: true,
       purchases: true,
+      usages: true,
     },
   })
+}
+
+export function mapPlanName_toDomain(planName: $Enums.PlanName): PlanAllNames {
+  switch (planName) {
+    case "DIAMOND":
+    case "GOLD":
+    case "GUEST":
+    case "SILVER":
+      return planName
+    case "INFINITY_CUSTOM":
+      return "INFINITY-CUSTOM"
+    case "USAGE_CUSTOM":
+      return "USAGE-CUSTOM"
+  }
+}
+
+export function mapPlanName_toPrisma(planName: PlanAllNames): $Enums.PlanName {
+  switch (planName) {
+    case "DIAMOND":
+    case "GOLD":
+    case "GUEST":
+    case "SILVER":
+      return planName
+    case "INFINITY-CUSTOM":
+      return "INFINITY_CUSTOM"
+    case "USAGE-CUSTOM":
+      return "USAGE_CUSTOM"
+  }
 }

@@ -25,18 +25,16 @@ export class UsersDAODatabase implements UsersDAO {
 
   constructor(
     private readonly prisma: PrismaClient,
-    private readonly getPersonaStateUseCase: GetPersonaStateUseCase,
-    private readonly getUserSteamGamesUseCase: GetUserSteamGamesUseCase,
-    private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository,
-    private readonly usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage,
-    private readonly allUsersClientsStorage: AllUsersClientsStorage
+    getPersonaStateUseCase: GetPersonaStateUseCase,
+    getUserSteamGamesUseCase: GetUserSteamGamesUseCase,
+    steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository,
+    usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage,
+    allUsersClientsStorage: AllUsersClientsStorage
   ) {
     this.steamAccountFromDatabaseToSession = makeSteamAccountFromDatabaseToSession(
       getPersonaStateUseCase,
       getUserSteamGamesUseCase,
-      allUsersClientsStorage,
-      usersSACsFarmingClusterStorage,
-      steamAccountClientStateCacheRepository
+      allUsersClientsStorage
     )
   }
   async getByIDShallow(userId: string): Promise<UserSessionShallow | null> {
@@ -269,9 +267,7 @@ type DBUser = {
 function makeSteamAccountFromDatabaseToSession(
   getPersonaStateUseCase: GetPersonaStateUseCase,
   getUserSteamGamesUseCase: GetUserSteamGamesUseCase,
-  allUsersClientsStorage: AllUsersClientsStorage,
-  usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage,
-  steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository
+  allUsersClientsStorage: AllUsersClientsStorage
 ) {
   return async function (sa: DBSteamAccount, dbUser: DBUser): Promise<SteamAccountSession> {
     let games: GameSession[] | null

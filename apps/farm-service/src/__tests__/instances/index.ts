@@ -17,7 +17,10 @@ import { SteamAccountClient } from "~/application/services/steam"
 import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
+import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 import { AutoRestarterScheduler } from "~/domain/cron"
+import { PlanService } from "~/domain/services/PlanService"
+import { UserService } from "~/domain/services/UserService"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { Publisher } from "~/infra/queue"
 import {
@@ -81,6 +84,8 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const sacStateCacheBuilder = new SACStateCacheBuilder()
   // const sacStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
   const emitterBuilder = new EventEmitterBuilder()
+  const userService = new UserService()
+  const planService = new PlanService()
   const farmServiceBuilder = new FarmServiceBuilder({
     publisher,
     emitterBuilder,
@@ -103,6 +108,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const usersDAO = new UsersDAOInMemory(usersMemory)
   const steamUserBuilder = ci?.steamUserBuilder ?? new SteamUserMockBuilder(validSteamAccounts)
   const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
+  const stopFarmUseCase = new StopFarmUseCase(usersClusterStorage, planRepository)
   const farmGamesUseCase = new FarmGamesUseCase(usersClusterStorage)
   const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(steamAccountsRepository)
   const allUsersClientsStorage = new AllUsersClientsStorage(
@@ -204,9 +210,12 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     sacStateCacheRepository,
     steamAccountsRepository,
     planRepository,
+    stopFarmUseCase,
     farmGamesUseCase,
     checkSteamAccountOwnerStatusUseCase,
     redis,
+    planService,
+    userService,
     idGenerator,
     userAuthentication,
     async makeUserInstances<P extends TestUsers>(prefix: P, props: TestUserProperties) {
