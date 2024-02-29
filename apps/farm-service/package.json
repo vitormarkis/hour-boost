@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx src/server.ts",
     "dev:inspect": "node --require tsx/cjs --inspect src/server.ts",
     "check": "tsc --noEmit",
     "build": "tsup src/server.ts",
@@ -26,6 +26,7 @@
   "dependencies": {
     "@clerk/clerk-sdk-node": "^4.12.19",
     "@prisma/client": "^5.5.2",
+    "@t3-oss/env-core": "^0.9.2",
     "@types/cookie-parser": "^1.4.6",
     "@types/cookies": "^0.7.9",
     "@types/cors": "^2.8.15",
