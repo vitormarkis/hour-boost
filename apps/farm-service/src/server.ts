@@ -36,6 +36,7 @@ import {
   query_routerUser,
 } from "~/presentation/routes/query"
 import { query_routerAdmin } from "./presentation/routes/query/routes-admin"
+import { isProductionServerOn } from "./infra/helpers/isProductionServerOn"
 
 const app: Application = express()
 app.use(
@@ -67,6 +68,11 @@ const restoreUsersSessionsUseCase = new RestoreUsersSessionsUseCase(usersCluster
 const restoreAccountSessionsUseCase = new RestoreAccountManySessionsUseCase(steamAccountsDAO, autoRestartCron)
 
 async function main() {
+  if (process.env["NODE_ENV"] !== "PRODUCTION") {
+    const is = await isProductionServerOn()
+    if (is) throw new Error("PROD SERVER ON")
+  }
+
   try {
     const users = await usersRepository.findMany()
     restoreUsersSessionsUseCase.execute({ users })
