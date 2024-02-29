@@ -1,7 +1,6 @@
 import { DataOrFail, Fail } from "core"
 import { appendFile } from "fs"
-import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
-import { AUTO_RESTARTER_INTERVAL_IN_SECONDS } from "~/consts"
+import { AutoRestartCron, AutoRestartCronPayload } from "~/application/cron/AutoRestartCron"
 import { AutoRestarterScheduler } from "~/domain/cron"
 import { Logger } from "~/utils/Logger"
 import { bad, nice } from "~/utils/helpers"
@@ -9,7 +8,6 @@ import { bad, nice } from "~/utils/helpers"
 export type ScheduleAutoRestartPayload = {
   accountName: string
   intervalInSeconds: number
-  forceRestoreSessionOnApplication?: boolean
 }
 
 interface IScheduleRestartRelogin {
@@ -24,11 +22,7 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
     private readonly autoRestartCron: AutoRestartCron
   ) {}
 
-  async execute({
-    accountName,
-    intervalInSeconds,
-    forceRestoreSessionOnApplication,
-  }: ScheduleAutoRestartPayload) {
+  async execute({ accountName, intervalInSeconds }: ScheduleAutoRestartPayload) {
     this.logger.log(`Scheduling a cron for [${accountName}] to run every ${intervalInSeconds} seconds.`)
     const hasCronAlready = this.autoRestarterScheduler.alreadyHasCron(accountName)
     if (hasCronAlready) return bad(new Fail({ code: "ALREADY-HAS-CRON" }))
@@ -36,7 +30,7 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
     const interval = setInterval(async () => {
       const [errorWhileRestarting, result] = await this.autoRestartCron.run({
         accountName,
-        forceRestoreSessionOnApplication,
+        forceRestoreSessionOnApplication: true,
       })
 
       appendFile(
@@ -48,7 +42,7 @@ export class ScheduleAutoRestartUseCase implements IScheduleRestartRelogin {
         this.autoRestarterScheduler.stopCron(accountName)
         this.logger.log(`dismissing cron for account [${accountName}]`)
 
-        if (errorWhileRestarting.code === "PLAN-NOT-FOUND") {
+        if (errorWhileRestarting.code === "[AutoRestarterCron]::PLAN-NOT-FOUND") {
           this.logger.log(`plano não encontrado com id [${errorWhileRestarting.payload.planId}]`)
           return
         }

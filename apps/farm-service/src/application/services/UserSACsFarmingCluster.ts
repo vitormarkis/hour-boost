@@ -10,7 +10,6 @@ import {
   SteamAccountClientStateCacheRepository,
   SteamAccountsRepository,
 } from "core"
-import SteamUser from "steam-user"
 import { ErrorOccuredOnSteamClientCommand } from "~/application/commands"
 import { FarmServiceBuilder } from "~/application/factories"
 import {
@@ -192,7 +191,10 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     this.logger.log(`Appending account to farm on service: `, accountName)
     if (!this.isAccountFarmingOnService(accountName)) {
       const [cantFarm] = this.farmService.checkIfCanFarm()
-      if (cantFarm) return bad(cantFarm)
+      if (cantFarm) {
+        sac.stopFarm()
+        return bad(cantFarm)
+      }
     }
 
     sac.farmGames(gamesId)

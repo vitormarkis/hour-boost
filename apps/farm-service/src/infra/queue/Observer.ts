@@ -4,6 +4,7 @@ export type EventNames =
   | "user-has-start-farming"
   | "user-complete-farm-session-usage"
   | "user-complete-farm-session-infinity"
+  | "PLAN-MAX-USAGE-EXCEEDED"
   | "user-farmed"
   | "error-occured-on-steam-client"
   | "user-complete-farm-session"

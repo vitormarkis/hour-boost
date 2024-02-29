@@ -13,6 +13,7 @@ import { RemoveSteamAccountUseCase } from "./RemoveSteamAccountUseCase"
 import { RestoreAccountSessionUseCase } from "."
 import { FarmGamesController } from "~/presentation/controllers"
 import { isAccountFarmingOnCluster, isAccountFarmingOnClusterByUsername } from "~/utils/isAccount"
+import { TEST_FarmGames, makeFarmGames } from "./__tests_helpers"
 
 const log = console.log
 // console.log = () => {}
@@ -23,6 +24,7 @@ let i = makeTestInstances({
 let meInstances = {} as PrefixKeys<"me">
 let changeUserPlanToCustomUseCase: ChangeUserPlanToCustomUseCase
 let farmGamesController: FarmGamesController
+let farmGames: TEST_FarmGames
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
@@ -36,7 +38,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.planRepository,
     i.autoRestarterScheduler
   )
-  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage)
+  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
   const changeUserPlanUseCase = new ChangeUserPlanUseCase(
     i.allUsersClientsStorage,
     i.usersRepository,
@@ -51,6 +53,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     farmGamesUseCase: i.farmGamesUseCase,
     usersRepository: i.usersRepository,
   })
+  farmGames = makeFarmGames(farmGamesController)
   changeUserPlanToCustomUseCase = new ChangeUserPlanToCustomUseCase(changeUserPlanUseCase)
 }
 
@@ -77,13 +80,3 @@ test("should change guest plan to custom usage plan", async () => {
   const user = await i.usersRepository.getByID(s.me.userId)
   expect(user?.plan).toBeInstanceOf(CustomUsagePlan)
 })
-
-export function farmGames(accountName: string, gamesID: number[], userId: string) {
-  return farmGamesController.handle({
-    payload: {
-      accountName,
-      gamesID,
-      userId,
-    },
-  })
-}

@@ -37,7 +37,7 @@ let stopFarmController: StopFarmController
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   meInstances = await i.createUser("me")
-  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage)
+  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
   const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
     i.usersRepository,
     i.allUsersClientsStorage,

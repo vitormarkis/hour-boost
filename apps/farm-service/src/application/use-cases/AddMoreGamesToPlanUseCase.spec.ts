@@ -33,7 +33,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.planRepository,
     i.autoRestarterScheduler
   )
-  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage)
+  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
   const changeUserPlanUseCase = new ChangeUserPlanUseCase(
     i.allUsersClientsStorage,
     i.usersRepository,

@@ -59,7 +59,7 @@ model Usage {
   plan         Plan         @relation("plan_usages", fields: [plan_id], references: [id_plan], onDelete: Cascade)
   plan_id      String
   user         User         @relation("user_usages", fields: [user_id], references: [id_user], onDelete: Cascade)
-  user_id      String       @default("UNDEFINED")
+  user_id      String       @default("user_2Xk8sUsugFULRFTZoMjprlpeu0t")
   accountName  String       @default("undefined")
   SteamAccount SteamAccount @relation("steam_account_usages", fields: [accountName], references: [accountName])
 

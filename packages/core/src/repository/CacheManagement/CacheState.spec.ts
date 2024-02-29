@@ -58,7 +58,11 @@ test("should farm and create DTO", async () => {
     username: "versalebackup",
   })
   cache.farmGames([123, 3453])
-  expect(cache.toDTO()).toStrictEqual({})
+  expect(cache.toDTO()).toStrictEqual(
+    expect.objectContaining({
+      isFarming: true,
+    })
+  )
   jest.useRealTimers()
 })
 
@@ -95,4 +99,33 @@ test("should farm, stop and return correct usage amount", async () => {
   const usage = cache.stopFarm()
   expect(usage.amountTime).toBe(60 * 60 * 5)
   jest.useRealTimers()
+})
+
+describe("Invariant", () => {
+  test("throw if farm started at truthy, but not farming", async () => {
+    expect(() =>
+      CacheState.restore({
+        accountName: "vitor",
+        planId: "plan_123",
+        status: "online",
+        username: "versalebackup",
+        farmStartedAt: new Date(),
+        gamesPlaying: [],
+        gamesStaging: [],
+      })
+    ).toThrow("Invariant! Não está farmando e started at está truthy.")
+  })
+  test("throw if is farming, but farm started at is null", async () => {
+    expect(() =>
+      CacheState.restore({
+        accountName: "vitor",
+        planId: "plan_123",
+        status: "online",
+        username: "versalebackup",
+        farmStartedAt: null,
+        gamesPlaying: [100],
+        gamesStaging: [100],
+      })
+    ).toThrow("Invariant! Está farmando mas started at está como nulo.")
+  })
 })

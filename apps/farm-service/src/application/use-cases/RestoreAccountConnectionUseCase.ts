@@ -8,7 +8,6 @@ import {
 import SteamUser from "steam-user"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
-import { restoreSACSessionOnApplication } from "~/application/use-cases/RestoreAccountSessionUseCase"
 import { EventParameters } from "~/infra/services"
 import { EventParametersTimeout, FarmGamesEventsResolve, SingleEventResolver } from "~/types/EventsApp.types"
 import { Logger } from "~/utils/Logger"

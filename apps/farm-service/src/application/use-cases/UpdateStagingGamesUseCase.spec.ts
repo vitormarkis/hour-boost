@@ -34,7 +34,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.usersClusterStorage,
     i.sacStateCacheRepository
   )
-  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage)
+  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
   autoRestartCron = new AutoRestartCron(
     i.allUsersClientsStorage,
     i.planRepository,

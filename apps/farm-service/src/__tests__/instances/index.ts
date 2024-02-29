@@ -22,6 +22,7 @@ import { AutoRestarterScheduler } from "~/domain/cron"
 import { PlanService } from "~/domain/services/PlanService"
 import { UserService } from "~/domain/services/UserService"
 import { UsersDAOInMemory } from "~/infra/dao"
+import { SteamAccountsDAOMemory } from "~/infra/dao/SteamAccountsDAOMemory"
 import { Publisher } from "~/infra/queue"
 import {
   PlanRepositoryInMemory,
@@ -38,6 +39,7 @@ import {
   UserAuthenticationInMemory,
   testUsers,
 } from "~/infra/services/UserAuthenticationInMemory"
+import { FarmGamesController } from "~/presentation/controllers"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
 import { SACStateCacheBuilder } from "~/utils/builders/SACStateCacheBuilder"
 import { SteamUserMockBuilder } from "~/utils/builders/SteamMockBuilder"
@@ -106,6 +108,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const usersRepository = new UsersRepositoryInMemory(usersMemory, steamAccountsMemory)
 
   const usersDAO = new UsersDAOInMemory(usersMemory)
+  const steamAccountsDAO = new SteamAccountsDAOMemory(steamAccountsMemory)
   const steamUserBuilder = ci?.steamUserBuilder ?? new SteamUserMockBuilder(validSteamAccounts)
   const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
   const stopFarmUseCase = new StopFarmUseCase(usersClusterStorage, planRepository)
@@ -115,13 +118,20 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     sacBuilder,
     sacStateCacheRepository,
     farmGamesUseCase,
-    planRepository
+    planRepository,
+    publisher
   )
   const userAuthentication = new UserAuthenticationInMemory()
   const sacFactory = makeSACFactory(validSteamAccounts, publisher)
   const createUserUseCase = new CreateUserUseCase(usersRepository, userAuthentication, usersClusterStorage)
 
   const userInstancesBuilder = new UserInstancesBuilder(allUsersClientsStorage)
+
+  const farmGamesController = new FarmGamesController({
+    allUsersClientsStorage,
+    usersRepository,
+    farmGamesUseCase,
+  })
 
   async function createUser<P extends TestUsers>(userPrefix: P, options?: CreateUserOptions) {
     const { persistSteamAccounts = true } = options ?? {}
@@ -206,6 +216,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     sacStateCacheBuilder,
     sacBuilder,
     usersDAO,
+    steamAccountsDAO,
     usersRepository,
     sacStateCacheRepository,
     steamAccountsRepository,
@@ -218,6 +229,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     userService,
     idGenerator,
     userAuthentication,
+    farmGamesController,
     async makeUserInstances<P extends TestUsers>(prefix: P, props: TestUserProperties) {
       const user = await createUserUseCase.execute(props.userId)
       return userInstancesBuilder.create(prefix, props, user)

@@ -1,4 +1,5 @@
 import { AppAccountStatus } from "core/presenters"
+import { makeError } from "core/utils/throw"
 
 export class CacheState {
   gamesPlaying: number[]
@@ -10,6 +11,11 @@ export class CacheState {
   status: AppAccountStatus
 
   private constructor(props: NSCacheState.Restore) {
+    if (props.gamesPlaying.length > 0 && props.farmStartedAt === null)
+      throw makeError("Invariant! Está farmando mas started at está como nulo.", props)
+    if (props.gamesPlaying.length === 0 && props.farmStartedAt !== null)
+      throw makeError("Invariant! Não está farmando e started at está truthy.", props)
+
     this.gamesPlaying = props.gamesPlaying
     this.gamesStaging = props.gamesStaging
     this.accountName = props.accountName

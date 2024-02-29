@@ -1,17 +1,8 @@
-import {
-  ApplicationError,
-  DataOrFail,
-  Fail,
-  Mutable,
-  PlanInfinity,
-  PlanUsage,
-  CacheStateDTO,
-  SteamAccountClientStateCacheRepository,
-  CacheState,
-} from "core"
+import { CacheState, CacheStateDTO, DataOrFail, Fail, Mutable, PlanInfinity, PlanUsage } from "core"
 import { UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { SACGenericError, handleSteamClientError } from "~/application/use-cases"
+import { Publisher } from "~/infra/queue"
 import { FailGeneric } from "~/types/EventsApp.types"
 import { Pretify, bad, nice } from "~/utils/helpers"
 
@@ -33,18 +24,18 @@ const moduleName = "[RestoreAccountSessionUseCase]"
  * atualizar/restaurar sessão (status, jogos farmando...)
  */
 export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCase {
-  constructor(private readonly usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage) {}
+  constructor(
+    private readonly usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage,
+    private readonly publisher: Publisher
+  ) {}
 
   async execute({ state, plan, sac, username }: Payload) {
-    const accountName = sac.accountName
-
     const [errorRestoringOnApplication] = await restoreSACSessionOnApplication({
       plan,
       sac,
       state: state?.toDTO() ?? null,
       username,
       usersClusterStorage: this.usersSACsFarmingClusterStorage,
-      shouldRestoreGames: sac.autoRestart,
     })
 
     if (!errorRestoringOnApplication) {
@@ -59,7 +50,7 @@ export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCa
         }
       }
       if (errorRestoringOnApplication.code === "[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED") {
-        console.log(`[${moduleName}::${accountName}] uso máximo do plano excedido.`)
+        return bad(errorRestoringOnApplication)
       }
       if (errorRestoringOnApplication.code === "cluster.farmWithAccount()::UNKNOWN-CLIENT-ERROR") {
         const fail = new Fail({
@@ -90,7 +81,6 @@ type Props = {
   plan: PlanUsage | PlanInfinity
   username: string
   state: CacheStateDTO | null
-  shouldRestoreGames: boolean
 }
 
 export async function restoreSACSessionOnApplication({
@@ -99,7 +89,6 @@ export async function restoreSACSessionOnApplication({
   state,
   username,
   usersClusterStorage,
-  shouldRestoreGames,
 }: Props) {
   const userCluster = usersClusterStorage.getOrAdd(username, plan)
   const isAccountFarming = userCluster.isAccountFarmingOnService(sac.accountName)
@@ -108,7 +97,6 @@ export async function restoreSACSessionOnApplication({
     const [errorAddingSac] = userCluster.addSAC(sac)
 
     if (errorAddingSac?.code === "TRIED_TO_ADD::ALREADY_EXISTS") {
-      console.log({ errorAddingSac })
     }
   }
 
@@ -128,8 +116,9 @@ export async function restoreSACSessionOnApplication({
 
   if (!sac.logged) return bad(Fail.create(EAppResults["SAC-NOT-LOGGED"], 400))
 
-  if (state && state.isFarming && shouldRestoreGames) {
-    console.log(`33; 1. got from state: ${state.accountName} ${state.farmStartedAt}`)
+  if (state && state.isFarming) {
+    // if (state && state.isFarming && shouldRestoreGames) {
+
     const [errorFarmWithAccount] = await userCluster.farmWithAccount({
       accountName: state.accountName,
       gamesId: state.gamesPlaying,

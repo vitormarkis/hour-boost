@@ -2,7 +2,7 @@ import { LooseAuthProp } from "@clerk/clerk-sdk-node"
 import cors from "cors"
 import "dotenv/config"
 import express, { Application, NextFunction, Request, Response } from "express"
-import { RestoreAccountSessionsUseCase } from "~/application/use-cases/RestoreAccountSessionsUseCase"
+import { RestoreAccountManySessionsUseCase } from "~/application/use-cases/RestoreAccountManySessionsUseCase"
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
 import {
   autoRestartCron,
@@ -64,7 +64,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 })
 
 const restoreUsersSessionsUseCase = new RestoreUsersSessionsUseCase(usersClusterStorage)
-const restoreAccountSessionsUseCase = new RestoreAccountSessionsUseCase(steamAccountsDAO, autoRestartCron)
+const restoreAccountSessionsUseCase = new RestoreAccountManySessionsUseCase(steamAccountsDAO, autoRestartCron)
 
 async function main() {
   try {

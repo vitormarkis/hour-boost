@@ -2,6 +2,7 @@ import {
   DataOrFail,
   Fail,
   PlanRepository,
+  PlanUsage,
   SteamAccountClientStateCacheRepository,
   SteamAccountsRepository,
   UsersDAO,
@@ -17,7 +18,7 @@ import { bad, nice } from "~/utils/helpers"
 
 export type AutoRestartCronPayload = {
   accountName: string
-  forceRestoreSessionOnApplication?: boolean
+  forceRestoreSessionOnApplication: boolean
 }
 
 interface IAutoRestartCron {
@@ -56,11 +57,12 @@ export class AutoRestartCron implements IAutoRestartCron {
     const plan = await this.planRepository.getById(user.plan.id_plan)
     if (!plan) {
       return bad(
-        Fail.create(EAppResults["PLAN-NOT-FOUND"], 404, {
+        Fail.create(`[AutoRestarterCron]::${EAppResults["PLAN-NOT-FOUND"]}`, 404, {
           planId: user.plan.id_plan,
         })
       )
     }
+
     if (!forceRestoreSessionOnApplication && !plan.autoRestarter) {
       return bad(
         new Fail({
@@ -81,10 +83,7 @@ export class AutoRestartCron implements IAutoRestartCron {
         steamAccount: {
           accountName,
           password: steamAccount.credentials.password,
-          autoRestart:
-            forceRestoreSessionOnApplication !== undefined
-              ? forceRestoreSessionOnApplication
-              : steamAccount.autoRelogin,
+          autoRestart: steamAccount.autoRelogin,
         },
         user: {
           id: user.id,
@@ -104,8 +103,6 @@ export class AutoRestartCron implements IAutoRestartCron {
       const { sac: newSteamAccountClient } = result
       sac = newSteamAccountClient
     }
-
-    console.log("auto-restart-cron [sac]: ", sac.accountName)
 
     const state = await this.steamAccountClientStateCacheRepository.get(sac.accountName)
 

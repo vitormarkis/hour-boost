@@ -1,72 +1,133 @@
-test("should ", async () => {
-  expect(1).toBeTruthy()
-})
-
-import { AddSteamAccount } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
-import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 import { RestoreAccountSessionUseCase } from "~/application/use-cases/RestoreAccountSessionUseCase"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
-import { AddSteamAccountController, FarmGamesController } from "~/presentation/controllers"
+import { GuestPlan, PlanUsage, Usage } from "core"
+import { RestoreAccountConnectionUseCase } from "./RestoreAccountConnectionUseCase"
 
 const log = console.log
-console.log = () => {}
+// console.log = () => {}
 
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = {}
+let meInstances = {} as PrefixKeys<"me">
 let restoreAccountSessionUseCase: RestoreAccountSessionUseCase
-let addSteamAccountController: AddSteamAccountController
-let farmGamesController: FarmGamesController
+let restoreAccountConnectionUseCase: RestoreAccountConnectionUseCase
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
+  console.log = () => {}
   i = makeTestInstances(props, customInstances)
-  await Promise.all([
-    i.createUser("me", { persistSteamAccounts: false }),
-    // i.createUser("friend", { persistSteamAccounts: false }),
-  ])
-  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
-  // const addSteamAccountUseCase = new AddSteamAccountUseCase(
-  //     addSteamAccount,
-  //     i.allUsersClientsStorage,
-  //     i.usersDAO,
-  //     i.checkSteamAccountOwnerStatusUseCase
-  // )
+  meInstances = await i.createUser("me")
 
-  // addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)
-  // restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(
-  //     i.usersClusterStorage,
-  //     i.sacStateCacheRepository
-  // )
-
-  // farmGamesController = new FarmGamesController({
-  //     allUsersClientsStorage: i.allUsersClientsStorage,
-  //     farmGamesUseCase: i.farmGamesUseCase,
-  //     planRepository: i.planRepository,
-  //     publisher: i.publisher,
-  //     sacStateCacheRepository: i.sacStateCacheRepository,
-  //     usersClusterStorage: i.usersClusterStorage,
-  //     usersRepository: i.usersRepository,
-  // })
+  restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
+    i.allUsersClientsStorage,
+    i.usersClusterStorage,
+    i.sacStateCacheRepository
+  )
+  restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
+  console.log = log
 }
 
-describe("NOT MOBILE test suite", () => {
+describe("RestoreAccountSessionUseCase test suite", () => {
   beforeEach(async () => {
     await setupInstances({
       validSteamAccounts,
     })
   })
 
-  test("should get FARM STARTED AT from state, not when it started", async () => {
-    
+  test("should restore account session on application", async () => {
+    await restoreAccountConnection(s.me.userId, s.me.accountName)
+    const [error, result] = await restoreAccountSession(
+      s.me.accountName,
+      s.me.userId,
+      meInstances.me.plan.id_plan,
+      s.me.username
+    )
+    expect(error).toBeNull()
+    expect(result?.code).toBe("SESSION-RESTORED")
+  })
+
+  test("should stop farm on cache in case attempt to start farm with max usage time plan expired", async () => {
+    await restoreAccountConnection(s.me.userId, s.me.accountName)
+    expect(meInstances.me.plan).toBeInstanceOf(GuestPlan)
+    const usage = Usage.create({
+      accountName: s.me.accountName,
+      amountTime: 21600,
+      createdAt: new Date(),
+      plan_id: meInstances.me.plan.id_plan,
+      user_id: s.me.userId,
+    })
+    meInstances.me.plan.use(usage)
+    expect((meInstances.me.plan as PlanUsage).getUsageLeft()).toBe(0)
+    await i.usersRepository.update(meInstances.me)
+    const userPlan = (await i.planRepository.getById(meInstances.me.plan.id_plan))!
+    expect((userPlan as PlanUsage).getUsageLeft()).toBe(0)
+
+    const sac = i.allUsersClientsStorage.getAccountClient(s.me.userId, s.me.accountName)!
+    const sacState = sac.getCache()
+    sacState.farmGames([100])
+    await i.sacStateCacheRepository.save(sacState)
+    const state = await i.sacStateCacheRepository.get(s.me.accountName)
+    expect(state?.isFarming()).toBe(true)
+    expect(state?.gamesPlaying).toStrictEqual([100])
+
+    const [error, result] = await restoreAccountSession(
+      s.me.accountName,
+      s.me.userId,
+      meInstances.me.plan.id_plan,
+      s.me.username
+    )
+    expect(result?.code).not.toBe("SESSION-RESTORED")
+    expect(error).not.toBeNull()
+    expect(error?.code).toStrictEqual("[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED")
   })
 })
+
+/**
+ *
+ * HELPERS
+ */
+async function restoreAccountSession(accountName: string, userId: string, planId: string, username: string) {
+  const plan = (await i.planRepository.getById(planId))!
+  const state = await i.sacStateCacheRepository.get(accountName)
+  const sac = i.allUsersClientsStorage.getAccountClient(userId, accountName)!
+  const res = restoreAccountSessionUseCase.execute({
+    plan,
+    sac,
+    state,
+    username,
+  })
+
+  return res
+}
+
+async function restoreAccountConnection(userId: string, accountName: string) {
+  const user = (await i.usersRepository.getByID(userId))!
+  const steamAccount = user.steamAccounts.getByAccountName(accountName)!
+  const [errorRestoringConnection, restoreConnectionResult] = await restoreAccountConnectionUseCase.execute({
+    steamAccount: {
+      accountName: steamAccount.credentials.accountName,
+      autoRestart: steamAccount.autoRelogin,
+      password: steamAccount.credentials.password,
+    },
+    user: {
+      id: user.id_user,
+      plan: user.plan,
+      username: user.username,
+    },
+  })
+
+  expect(errorRestoringConnection).toBeNull()
+  expect(restoreConnectionResult?.code).toBe("ACCOUNT-RELOGGED::CREDENTIALS")
+}
+
 //
 //     test.only("should NOT restore session if account is already logged", async () => {
 //         const response = await promiseHandler(

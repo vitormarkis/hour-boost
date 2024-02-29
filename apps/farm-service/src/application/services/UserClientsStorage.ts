@@ -6,7 +6,10 @@ import {
 } from "core"
 import { SteamAccountClient } from "~/application/services/steam"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
+import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
+import { Command } from "../commands"
+import { PlanMaxUsageExceededCommand } from "../commands/PlanMaxUsageExceededCommand"
 
 type AccountName = string
 
@@ -18,7 +21,8 @@ export class UserClientsStorage {
     readonly username: string,
     private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository,
     private readonly farmGamesUseCase: FarmGamesUseCase,
-    private readonly planRepository: PlanRepository
+    private readonly planRepository: PlanRepository,
+    private readonly publisher: Publisher
   ) {
     this.logger = new Logger(`User SAC Storage`)
   }
@@ -81,8 +85,13 @@ export class UserClientsStorage {
               },
         })
         if (error?.code === "[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED") {
-          console.log(`Parando farm na conta ${accountName}.`)
-          await this.sacStateCacheRepository.save(sac.getCache())
+          this.publisher.publish(
+            new PlanMaxUsageExceededCommand({
+              state: sac.getCache().toDTO(),
+              when: new Date(),
+            })
+          )
+          console.log(`emitindo evento PLAN-MAX-USAGE-EXCEEDED para conta ${sac.accountName}`)
         }
       }
     })

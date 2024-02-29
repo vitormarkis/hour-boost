@@ -2,6 +2,7 @@ import { ApplicationError, PlanRepository, SteamAccountClientStateCacheRepositor
 import { UserClientsStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
+import { Publisher } from "~/infra/queue"
 import { SteamAccountClientBuilder } from "~/utils/builders"
 
 type UserID = string
@@ -12,7 +13,8 @@ export class AllUsersClientsStorage {
     private readonly sacBuilder: SteamAccountClientBuilder,
     private readonly sacStateCacheRepository: SteamAccountClientStateCacheRepository,
     private readonly farmGamesUseCase: FarmGamesUseCase,
-    private readonly planRepository: PlanRepository
+    private readonly planRepository: PlanRepository,
+    private readonly publisher: Publisher
   ) {}
 
   private generateSAC({ accountName, userId, username, planId, autoRestart }: AddUserProps) {
@@ -30,7 +32,8 @@ export class AllUsersClientsStorage {
       username,
       this.sacStateCacheRepository,
       this.farmGamesUseCase,
-      this.planRepository
+      this.planRepository,
+      this.publisher
     )
   }
 
@@ -115,7 +118,8 @@ export class AllUsersClientsStorage {
         username,
         this.sacStateCacheRepository,
         this.farmGamesUseCase,
-        this.planRepository
+        this.planRepository,
+        this.publisher
       )
       userClientsStorage.addAccountClient(steamAccountClient)
       this.registerUser(userId, userClientsStorage)

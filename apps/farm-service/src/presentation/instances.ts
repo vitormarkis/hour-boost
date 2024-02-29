@@ -43,6 +43,7 @@ import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSess
 import { StagingGamesListService } from "~/domain/services"
 import { SACStateCacheBuilder } from "~/utils/builders/SACStateCacheBuilder"
 import { TokenService } from "~/application/services/TokenService"
+import { UpdateAccountCacheStateHandler } from "~/domain/handler/UpdateAccountCacheStateHandler"
 
 const httpProxy = process.env.PROXY_URL
 
@@ -95,7 +96,8 @@ export const allUsersClientsStorage = new AllUsersClientsStorage(
   sacBuilder,
   steamAccountClientStateCacheRepository,
   farmGamesUseCase,
-  planRepository
+  planRepository,
+  publisher
 )
 export const tokenService = new TokenService()
 
@@ -133,7 +135,7 @@ export const usersDAO = new UsersDAODatabase(
   allUsersClientsStorage
 )
 export const steamAccountsDAO = new SteamAccountsDAODatabase(prisma)
-export const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(usersClusterStorage)
+export const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(usersClusterStorage, publisher)
 
 export const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
   allUsersClientsStorage,
@@ -175,5 +177,6 @@ publisher.register(
 
 publisher.register(new LogSteamStopFarmHandler())
 publisher.register(new LogSteamStartFarmHandler())
+publisher.register(new UpdateAccountCacheStateHandler(steamAccountClientStateCacheRepository))
 publisher.register(new ScheduleAutoRestartHandler(scheduleAutoRestartUseCase))
 // publisher.register(new LogUserCompleteFarmSessionHandler())
