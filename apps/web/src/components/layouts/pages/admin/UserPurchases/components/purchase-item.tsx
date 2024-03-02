@@ -30,7 +30,7 @@ export const PurchaseItem = React.forwardRef<React.ElementRef<"li">, PurchaseIte
     return (
       <li
         {...props}
-        className={cn("h-12 px-6 flex items-center", className)}
+        className={cn("flex h-12 items-center px-6", className)}
         ref={ref}
       >
         <Item className="w-[--width-id]">
@@ -38,7 +38,7 @@ export const PurchaseItem = React.forwardRef<React.ElementRef<"li">, PurchaseIte
         </Item>
         <Separator />
         <Item className="w-[--width-type]">
-          <span className="leading/none px-1.5 h-5 text-xs flex items-center bg-accent font-medium rounded-sm">
+          <span className="leading/none bg-accent flex h-5 items-center rounded-sm px-1.5 text-xs font-medium">
             {typeName}
           </span>
         </Item>
@@ -48,13 +48,13 @@ export const PurchaseItem = React.forwardRef<React.ElementRef<"li">, PurchaseIte
         </Item>
         <Separator />
         <Item className="w-[--width-when]">
-          <span className="text-sm/none flex items-center font-medium">
+          <span className="flex items-center text-sm/none font-medium">
             {when.toLocaleDateString("pt-Br", { dateStyle: "medium" })}
           </span>
         </Item>
         <Separator />
         <Item className="w-[--width-value]">
-          <span className="tabular-nums text-sm/none flex items-center font-medium">
+          <span className="flex items-center text-sm/none font-medium tabular-nums">
             {formatter.format(valueInCents / 100)}
           </span>
         </Item>

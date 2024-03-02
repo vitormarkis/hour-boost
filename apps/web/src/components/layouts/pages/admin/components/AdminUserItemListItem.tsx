@@ -47,14 +47,14 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
         value={userId}
         className={shouldHide ? "hidden" : "block"}
       >
-        <div className="[--user-item-height:4.2rem] h-[--user-item-height] flex items-center bg-black/10 hover:bg-slate-900/50 cursor-pointer">
+        <div className="flex h-[--user-item-height] cursor-pointer items-center bg-black/10 [--user-item-height:4.2rem] hover:bg-slate-900/50">
           <AdminUserItemProfilePicture />
-          <div className="pl-4 w-[13rem] shrink-0 flex flex-col">
+          <div className="flex w-[13rem] shrink-0 flex-col pl-4">
             <AdminUserItemUsername />
             <AdminUserItemRole />
           </div>
           <div className="px-4">
-            <div className="w-20 flex justify-center">
+            <div className="flex w-20 justify-center">
               <BadgePlanType
                 size="sm"
                 name={planNameDomain}
@@ -63,11 +63,11 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
               </BadgePlanType>
             </div>
           </div>
-          <div className="pl-4 h-full grid place-items-center">
+          <div className="grid h-full place-items-center pl-4">
             <UserItemActionMenuDropdown preventDefault={isBanned}>
               <button
                 disabled={isBanned}
-                className="flex items-center gap-2 h-full pl-8 pr-6 hover:bg-slate-800/50 disabled:cursor-not-allowed disabled:opacity-70"
+                className="flex h-full items-center gap-2 pl-8 pr-6 hover:bg-slate-800/50 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <span>Ações</span>
                 <IconChevron className="size-3" />
@@ -75,23 +75,23 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
             </UserItemActionMenuDropdown>
           </div>
           <AccordionTrigger className="h-full w-full" />
-          <div className="h-full flex ml-auto">
-            <div className="h-full flex">
+          <div className="ml-auto flex h-full">
+            <div className="flex h-full">
               <ModalSeeUserPurchases>
-                <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                <button className="flex h-full w-[3.5rem] items-center justify-center gap-2 px-4 text-sm hover:bg-slate-800/50">
                   <IconCircleDollar className="size-5" />
                 </button>
               </ModalSeeUserPurchases>
               {!isBanned && (
                 <AlertDialogBanUser>
-                  <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                  <button className="flex h-full w-[3.5rem] items-center justify-center gap-2 px-4 text-sm hover:bg-slate-800/50">
                     <IconUserX className="size-5" />
                   </button>
                 </AlertDialogBanUser>
               )}
               {isBanned && (
                 <AlertDialogUnbanUser>
-                  <button className="w-[3.5rem] justify-center flex items-center gap-2 h-full px-4 text-sm hover:bg-slate-800/50">
+                  <button className="flex h-full w-[3.5rem] items-center justify-center gap-2 px-4 text-sm hover:bg-slate-800/50">
                     <IconUnbanning />
                   </button>
                 </AlertDialogUnbanUser>
@@ -103,7 +103,7 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
           </div>
         </div>
         <AccordionContent
-          className="border-b border-slate-900 pb-2 relative"
+          className="relative border-b border-slate-900 pb-2"
           style={
             {
               "--container-height": "2.75rem",

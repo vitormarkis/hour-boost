@@ -12,7 +12,7 @@ export const PurchaseListHeader = React.forwardRef<React.ElementRef<"div">, Purc
         className={cn("h-9 px-6", className)}
         ref={ref}
       >
-        <div className="flex items-center h-full px-[2px]">
+        <div className="flex h-full items-center px-[2px]">
           <Head className="w-[--width-id]">ID</Head>
           <Separator />
           <Head className="w-[--width-type]">tipo</Head>

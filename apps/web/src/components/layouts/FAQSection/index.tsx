@@ -14,13 +14,13 @@ export const FAQSection = React.forwardRef<React.ElementRef<"section">, FAQSecti
         <div className="pt-24" />
         <section
           {...props}
-          className={cn("flex flex-col pt-8 pb-72 w-screen grow flex-wrap justify-center gap-6", className)}
+          className={cn("flex w-screen grow flex-col flex-wrap justify-center gap-6 pb-72 pt-8", className)}
           ref={ref}
           id="faq"
         >
-          <TitleSection className="text-center grow">FAQ</TitleSection>
-          <div className="max-w-7xl w-full mx-auto px-4 md:px-8">
-            <div className="max-w-5xl w-full mx-auto">
+          <TitleSection className="grow text-center">FAQ</TitleSection>
+          <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+            <div className="mx-auto w-full max-w-5xl">
               <Accordion type="multiple">
                 {FAQData.map(faq => (
                   <AccordionItem

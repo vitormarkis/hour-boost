@@ -32,13 +32,13 @@ export function DrawerChooseFarmingGamesView() {
       onOpenChange={helpers.onOpenChange}
     >
       <DrawerTrigger asChild>
-        <button className="relative py-2 flex items-center px-6 group hover:bg-slate-700 transition-[background-color] duration-300 h-full">
+        <button className="group relative flex h-full items-center px-6 py-2 transition-[background-color] duration-300 hover:bg-slate-700">
           <div className="flex flex-col items-end">
             <strong className="pb-0.5">Jogos</strong>
-            <div className="flex items-center gap-2 h-6 ">
-              <span className="uppercase text-sm">{helpers.gamesStaging}</span>
-              <IconJoystick className="transition-[background-color] duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />
-              <span className="transition-[background-color] duration-300 text-slate-500 group-hover:text-white">
+            <div className="flex h-6 items-center gap-2 ">
+              <span className="text-sm uppercase">{helpers.gamesStaging}</span>
+              <IconJoystick className="h-4 w-4 fill-slate-500 transition-[background-color] duration-300 group-hover:fill-white" />
+              <span className="text-slate-500 transition-[background-color] duration-300 group-hover:text-white">
                 +
               </span>
             </div>
@@ -49,18 +49,18 @@ export function DrawerChooseFarmingGamesView() {
         <DrawerHeader className="px-2">
           <DrawerTitle>{local.accountName} - Seus jogos</DrawerTitle>
           <DrawerDescription>Selecione os jogos que queira farmar e clique em salvar.</DrawerDescription>
-          <label className="flex flex-col relative">
+          <label className="relative flex flex-col">
             <div className="absolute right-4 top-1/2 -translate-y-1/2">
-              <IconMagnifying className="w-4 h-4 text-slate-500" />
+              <IconMagnifying className="h-4 w-4 text-slate-500" />
             </div>
             <Input
               placeholder="Filtre jogos"
               {...helpers.handleFilterInput}
             />
           </label>
-          <div className="flex items-center flex-wrap gap-2 pt-2">
+          <div className="flex flex-wrap items-center gap-2 pt-2">
             <ButtonSmall
-              className="pr-4 pl-2"
+              className="pl-2 pr-4"
               onClick={() => helpers.clearLocalStagingFarmList()}
             >
               <ButtonSmallIcon>
@@ -68,11 +68,11 @@ export function DrawerChooseFarmingGamesView() {
               </ButtonSmallIcon>
               <span>Resetar</span>
             </ButtonSmall>
-            <div className="pl-1 tabular-nums grid">
-              <span className="text-slate-500 text-sm">{helpers.localStagingSelectedGames}</span>
+            <div className="grid pl-1 tabular-nums">
+              <span className="text-sm text-slate-500">{helpers.localStagingSelectedGames}</span>
             </div>
             <ButtonSmall
-              className="pr-4 pl-2 ml-auto"
+              className="ml-auto pl-2 pr-4"
               onClick={helpers.handleRefreshGames}
               disabled={local.refreshGames.isPending}
             >
@@ -102,28 +102,28 @@ export function DrawerChooseFarmingGamesView() {
                   />
                 ))
               ) : (
-                <span className="pt-6 px-4 text-slate-600">Nenhum jogo encontrado.</span>
+                <span className="px-4 pt-6 text-slate-600">Nenhum jogo encontrado.</span>
               )}
             </div>
           </ScrollArea>
         </main>
-        <div className="p-2 flex gap-2">
+        <div className="flex gap-2 p-2">
           <Button
-            className="h-12 flex-1 rounded-sm z-30"
+            className="z-30 h-12 flex-1 rounded-sm"
             variant="destructive"
             onClick={closeModal_desktop}
           >
             Cancelar
           </Button>
           <Button
-            className="h-12 flex-1 rounded-sm relative z-40"
+            className="relative z-40 h-12 flex-1 rounded-sm"
             onClick={helpers.handleActionButton}
             disabled={helpers.actionSavingState}
           >
             <span>{helpers.actionSavingState ? "Salvando" : "Salvar"}</span>
             {helpers.actionSavingState && (
-              <div className="absolute top-1/2 -translate-y-1/2 right-4">
-                <IconArrowClockwise className="w-4 h-4 animate-spin" />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <IconArrowClockwise className="h-4 w-4 animate-spin" />
               </div>
             )}
           </Button>

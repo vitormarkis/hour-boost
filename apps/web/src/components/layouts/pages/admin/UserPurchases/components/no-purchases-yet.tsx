@@ -13,7 +13,7 @@ export const NoPurchasesYet = React.forwardRef<React.ElementRef<"div">, NoPurcha
     return (
       <h3
         {...props}
-        className={cn("text-center mt-4 text-slate-500", className)}
+        className={cn("mt-4 text-center text-slate-500", className)}
         ref={ref}
       >
         O usuário <strong>{username}</strong> ainda não fez nenhuma compra, assinatura ou transação na

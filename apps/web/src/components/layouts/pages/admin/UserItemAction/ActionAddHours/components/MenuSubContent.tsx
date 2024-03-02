@@ -96,7 +96,7 @@ export const ActionAddHoursMenuSubContent = React.forwardRef<
     >
       <Pieces.Header>
         <Pieces.HeaderTitle>Tempo restante:</Pieces.HeaderTitle>
-        <Pieces.HeaderSubjectAmount className="text-white font-medium pl-2">
+        <Pieces.HeaderSubjectAmount className="pl-2 font-medium text-white">
           <span>{currentHours}h</span>
           {shouldDisplayCurrentMinutes && <span> {currentMinutes}m</span>}
         </Pieces.HeaderSubjectAmount>
@@ -129,7 +129,7 @@ export const ActionAddHoursMenuSubContent = React.forwardRef<
             {isSure && children}
             <HoverCard data-open={isSure}>
               <p>- Máximo de horas -</p>
-              <p className="tabular-nums text-sm/none py-1 px-2 rounded-md bg-accent border border-accent-500 mt-1">
+              <p className="bg-accent border-accent-500 mt-1 rounded-md border px-2 py-1 text-sm/none tabular-nums">
                 De{" "}
                 <strong>
                   {currentHours} horas {currentMinutes > 0 && `e ${currentMinutes} minutos`}{" "}
@@ -139,7 +139,7 @@ export const ActionAddHoursMenuSubContent = React.forwardRef<
                   {finalHours} horas {finalMinutes > 0 && `e ${finalMinutes} minutos`}
                 </strong>
               </p>
-              <span className="text-xs text-slate-500 mt-1">
+              <span className="mt-1 text-xs text-slate-500">
                 Tem certeza que deseja fazer essa alteração?
               </span>
             </HoverCard>
@@ -161,7 +161,7 @@ export const ActionAddHoursMenuSubContentTrigger = React.forwardRef<
   return (
     <button
       {...props}
-      className={cn("px-3 hover:bg-slate-800 relative", className)}
+      className={cn("relative px-3 hover:bg-slate-800", className)}
       ref={ref}
     />
   )

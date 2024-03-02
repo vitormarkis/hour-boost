@@ -9,15 +9,15 @@ export default function ResourceNotFoundPage() {
   const router = useRouter()
 
   return (
-    <div className="relative h-screen flex justify-center items-center overflow-hidden">
-      <header className="h-10 z-20 absolute top-0 right-0 left-0 flex items-center">
-        <div className="max-w-7xl px-4 md:px-8 w-full flex items-center mx-auto">
-          <div className="flex md:hidden flex-1 items-center">
+    <div className="relative flex h-screen items-center justify-center overflow-hidden">
+      <header className="absolute left-0 right-0 top-0 z-20 flex h-10 items-center">
+        <div className="mx-auto flex w-full max-w-7xl items-center px-4 md:px-8">
+          <div className="flex flex-1 items-center md:hidden">
             <div className="relative">
               <div className="absolute inset-0" />
               <button
                 onClick={() => router.back()}
-                className="relative h-8 w-8 grid place-items-center hover:bg-slate-950/40"
+                className="relative grid h-8 w-8 place-items-center hover:bg-slate-950/40"
               >
                 <SVGArrowLeft className="h-5 w-5" />
               </button>
@@ -30,10 +30,10 @@ export default function ResourceNotFoundPage() {
               className="h-[1.7rem]"
             />
           </div> */}
-          <div className="flex md:hidden flex-1 items-center justify-end">
+          <div className="flex flex-1 items-center justify-end md:hidden">
             <Link
               href="/"
-              className="h-8 w-8 grid place-items-center hover:bg-slate-950/40"
+              className="grid h-8 w-8 place-items-center hover:bg-slate-950/40"
             >
               <SVGHome className="h-5 w-5" />
             </Link>
@@ -41,7 +41,7 @@ export default function ResourceNotFoundPage() {
         </div>
       </header>
       <div
-        className="-z-10 pointer-events-none"
+        className="pointer-events-none -z-10"
         style={{
           position: "absolute",
           top: "50%",
@@ -66,31 +66,31 @@ export default function ResourceNotFoundPage() {
           }}
         />
       </div>
-      <div className="relative h-[30rem] w-full max-w-[40rem] flex flex-col">
-        <div className="hidden md:flex pb-6 justify-between">
+      <div className="relative flex h-[30rem] w-full max-w-[40rem] flex-col">
+        <div className="hidden justify-between pb-6 md:flex">
           <Button
             onClick={() => router.back()}
             size="sm"
-            className="border border-slate-500 hover:border-white bg-slate-950 hover:bg-black text-slate-200 hover:text-white hover:pl-10 group transition-all duration-200 relative"
+            className="group relative border border-slate-500 bg-slate-950 text-slate-200 transition-all duration-200 hover:border-white hover:bg-black hover:pl-10 hover:text-white"
           >
-            <SVGArrowLeft className="absolute top-1/2 -translate-y-1/2 left-3 h-4 w-4 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0 translate-x-2" />
+            <SVGArrowLeft className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 translate-x-2 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
             <span>Voltar</span>
           </Button>
           <Button
             onClick={() => router.back()}
             size="sm"
-            className="border border-slate-500 hover:border-white bg-slate-950 hover:bg-black text-slate-200 hover:text-white hover:pr-10 group transition-all duration-200 relative"
+            className="group relative border border-slate-500 bg-slate-950 text-slate-200 transition-all duration-200 hover:border-white hover:bg-black hover:pr-10 hover:text-white"
             asChild
           >
             <Link href="/">
-              <SVGArrowLeft className="rotate-180 absolute top-1/2 -translate-y-1/2 right-3 h-4 w-4 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0 translate-x-2" />
+              <SVGArrowLeft className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 translate-x-2 rotate-180 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100" />
               <span>Home</span>
             </Link>
           </Button>
         </div>
-        <div className="grid place-items-center h-full">
-          <div className="flex flex-col scale-[0.9] xs:scale-100">
-            <div className="relative leading-none h-fit font-extrabold text-[7rem]">
+        <div className="grid h-full place-items-center">
+          <div className="xs:scale-100 flex scale-[0.9] flex-col">
+            <div className="relative h-fit text-[7rem] font-extrabold leading-none">
               <div className="flex justify-between">
                 {["4", "0", "4"].map((number, index) => (
                   <motion.span
@@ -108,14 +108,14 @@ export default function ResourceNotFoundPage() {
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
                 transition={{ duration: 1.5, delay: 0.5, ease: "easeInOut" }}
-                className="h-1 absolute top-0 w-full bg-white"
+                className="absolute top-0 h-1 w-full bg-white"
               />
             </div>
             <motion.span
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, ease: "easeInOut" }}
-              className="leading-none text-slate-300 block font-normal text-[1.5rem]"
+              className="block text-[1.5rem] font-normal leading-none text-slate-300"
             >
               Página não encontrada!
             </motion.span>

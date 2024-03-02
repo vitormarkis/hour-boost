@@ -43,14 +43,14 @@ export const SteamAccountListItemViewMobile = React.memo(
           ref={ref}
         >
           {header && (
-            <div className="absolute left-4 bottom-full">
+            <div className="absolute bottom-full left-4">
               <ButtonAddNewAccount />
             </div>
           )}
           <div className="flex items-center gap-4 overflow-hidden">
             <div className="flex">
-              {isFarming && <div className="h-[4.5rem] w-[0.25rem] bg-accent animate-pulse" />}
-              <div className={cn("h-[4.5rem] w-[4.5rem] relative shrink-0")}>
+              {isFarming && <div className="bg-accent h-[4.5rem] w-[0.25rem] animate-pulse" />}
+              <div className={cn("relative h-[4.5rem] w-[4.5rem] shrink-0")}>
                 <img
                   // src="https://avatarcloudflare.steamstatic.com/2ec38f7a0953fe2585abdda0757324dbbb519749_full.jpg"
                   src={profilePictureUrl ?? IMG_USER_PLACEHOLDER}
@@ -59,24 +59,24 @@ export const SteamAccountListItemViewMobile = React.memo(
                 />
               </div>
             </div>
-            <div className="leading-none flex flex-col grow">
+            <div className="flex grow flex-col leading-none">
               <strong className="text-lg">{accountName}</strong>
-              <div className="text-xs flex">
+              <div className="flex text-xs">
                 <span>Status: </span>
                 <MenuDropdownChangeAccountStatus>
                   <button
                     disabled={mutations.changeAccountStatus.isPending}
-                    className="disabled:cursor-not-allowed focus:outline-none flex items-center translate-y-[1px]"
+                    className="flex translate-y-[1px] items-center focus:outline-none disabled:cursor-not-allowed"
                   >
                     <div
                       className={cn(
-                        "h-1 w-1 rounded-full mr-1.5 bg-slate-500 ml-2",
+                        "ml-2 mr-1.5 h-1 w-1 rounded-full bg-slate-500",
                         status === "online" && "bg-green-500"
                       )}
                     />
                     <span
                       className={cn(
-                        "text-slate-300 select-none cursor-pointer hover:underline pr-2 -translate-y-[2px]",
+                        "-translate-y-[2px] cursor-pointer select-none pr-2 text-slate-300 hover:underline",
                         status === "offline" && "text-slate-500"
                       )}
                     >
@@ -96,33 +96,33 @@ export const SteamAccountListItemViewMobile = React.memo(
             </div>
             <div className="flex items-center">
               {steamGuard ? (
-                <button className="relative flex items-center h-full group">
-                  <div className="absolute inset-0 bg-slate-800 group-hover:animate-none animate-pulse" />
+                <button className="group relative flex h-full items-center">
+                  <div className="absolute inset-0 animate-pulse bg-slate-800 group-hover:animate-none" />
                   <div className="relative z-10">
-                    <span className="absolute flex h-2 w-2 right-0 top-0 -translate-y-1/2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    <span className="absolute right-0 top-0 flex h-2 w-2 -translate-y-1/2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
                     </span>
                     <IconDeviceMobile className="h-5 w-5" />
                   </div>
                 </button>
               ) : (
-                <div className="flex items-center h-full px-6">
+                <div className="flex h-full items-center px-6">
                   <IconDeviceMobile className="h-5 w-5" />
                 </div>
               )}
             </div>
           </div>
           <ul
-            className="flex flex-col pt-3 px-4 gap-1"
+            className="flex flex-col gap-1 px-4 pt-3"
             style={
               {
                 "--propertiesWidth": "8.5rem",
               } as CSSProperties
             }
           >
-            <li className="flex items-center  min-h-[2.25rem]">
-              <span className="pr-3 w-[var(--propertiesWidth)]">Farmando:</span>
+            <li className="flex min-h-[2.25rem]  items-center">
+              <span className="w-[var(--propertiesWidth)] pr-3">Farmando:</span>
               <div className="pr-3">
                 <div
                   className={cn(
@@ -133,7 +133,7 @@ export const SteamAccountListItemViewMobile = React.memo(
               </div>
               <div className="">
                 {isFarming ? (
-                  <div className="flex flex-col justify-center h-full leading-none">
+                  <div className="flex h-full flex-col justify-center leading-none">
                     {farmStartedAt ? (
                       <TimeSince.Root
                         className="items-end gap-2"
@@ -147,18 +147,18 @@ export const SteamAccountListItemViewMobile = React.memo(
                     )}
                   </div>
                 ) : (
-                  <div className="flex flex-col justify-center h-full leading-none">
+                  <div className="flex h-full flex-col justify-center leading-none">
                     <span className="text-slate-500">0 horas</span>
                   </div>
                 )}
               </div>
             </li>
-            <li className="flex items-center  min-h-[2.25rem]">
-              <span className="pr-3 w-[var(--propertiesWidth)] whitespace-nowrap">Horas farmadas:</span>
+            <li className="flex min-h-[2.25rem]  items-center">
+              <span className="w-[var(--propertiesWidth)] whitespace-nowrap pr-3">Horas farmadas:</span>
 
-              <div className="flex flex-col justify-center h-full leading-none">
-                <div className="flex relative tabular-nums">
-                  <div className="flex gap-1 leading-none font-medium whitespace-nowrap">
+              <div className="flex h-full flex-col justify-center leading-none">
+                <div className="relative flex tabular-nums">
+                  <div className="flex gap-1 whitespace-nowrap font-medium leading-none">
                     {(app.farmedTimeInSeconds / 60 / 60).toFixed(2)}
                     <span className="pl-1 text-slate-600">horas</span>
                   </div>
@@ -170,22 +170,22 @@ export const SteamAccountListItemViewMobile = React.memo(
                 </div>
               </div>
             </li>
-            <li className="flex items-center  min-h-[2.25rem]">
-              <span className="pr-3 w-[var(--propertiesWidth)]">Auto restart:</span>
-              <div className="flex flex-col justify-center h-full leading-none">
+            <li className="flex min-h-[2.25rem]  items-center">
+              <span className="w-[var(--propertiesWidth)] pr-3">Auto restart:</span>
+              <div className="flex h-full flex-col justify-center leading-none">
                 {autoRestarter ? <ToggleAutoRelogin /> : null}
               </div>
             </li>
           </ul>
           <ul className="flex h-24">
             <li>
-              <button className="flex items-center h-full px-4 hover:bg-slate-700 transition-[background-color] duration-300">
+              <button className="flex h-full items-center px-4 transition-[background-color] duration-300 hover:bg-slate-700">
                 <IconChart className="h-5 w-5 fill-white" />
               </button>
             </li>
             <li>
               <AlertDialogRemoveSteamAccount steamAccount={app}>
-                <button className="flex items-center h-full px-4 hover:bg-slate-700 transition-[background-color] duration-300">
+                <button className="flex h-full items-center px-4 transition-[background-color] duration-300 hover:bg-slate-700">
                   <IconTrash className="h-5 w-5" />
                 </button>
               </AlertDialogRemoveSteamAccount>
@@ -214,7 +214,7 @@ export const SteamAccountListItemViewMobile = React.memo(
             <button
               disabled={mutations.farmGames.isPending || mutations.stopFarm.isPending}
               className={cn(
-                "flex justify-center w-full text-white items-center px-8 h-20 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:cursor-not-allowed",
+                "flex h-20 w-full items-center justify-center bg-slate-800 px-8 text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-900",
                 isFarming && "bg-accent hover:bg-accent-500 disabled:bg-accent-700"
               )}
               onClick={handleClickFarmButtonImpl}

@@ -43,7 +43,7 @@ const AccordionItem = React.forwardRef<
     >
       {children}
       <i
-        className={cn("absolute h-[1px] top-full right-0 left-0")}
+        className={cn("absolute left-0 right-0 top-full h-[1px]")}
         style={getStyleHued()}
       />
     </AccordionPrimitive.Item>
@@ -59,7 +59,7 @@ const AccordionTrigger = React.forwardRef<
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex flex-1 items-center justify-between py-4 text-lg md:text-xl text-left font-medium transition-all [&[data-state=open]>svg]:rotate-180",
+        "flex flex-1 items-center justify-between py-4 text-left text-lg font-medium transition-all md:text-xl [&[data-state=open]>svg]:rotate-180",
         className
       )}
       {...props}
@@ -77,7 +77,7 @@ const AccordionContent = React.forwardRef<
   <AccordionPrimitive.Content
     ref={ref}
     className={cn(
-      "overflow-hidden text-slate-400 transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
+      "data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-slate-400 transition-all",
       className
     )}
     {...props}

@@ -32,7 +32,7 @@ export const ActionSelectItem = React.forwardRef<
   return (
     <SelectItem
       {...props}
-      className={cn("data-[selected=true]:bg-slate-800 data-[selected=true]:hover:bg-accent", className)}
+      className={cn("data-[selected=true]:hover:bg-accent data-[selected=true]:bg-slate-800", className)}
       ref={ref}
     />
   )

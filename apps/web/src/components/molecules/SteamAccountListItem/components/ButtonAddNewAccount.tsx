@@ -14,7 +14,7 @@ export const ButtonAddNewAccount = React.forwardRef<
       <Button
         {...props}
         className={cn(
-          "border-t border-x border-slate-800 bg-transparent text-white hover:bg-slate-800",
+          "border-x border-t border-slate-800 bg-transparent text-white hover:bg-slate-800",
           className
         )}
         ref={ref}

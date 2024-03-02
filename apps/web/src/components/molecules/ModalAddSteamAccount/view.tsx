@@ -187,7 +187,7 @@ export const ModalAddSteamAccountView = React.forwardRef<
               )}
               {/* </FlipMove> */}
             </div>
-            <footer className="flex flex-col-reverse sm:flex-row justify-between gap-2">
+            <footer className="flex flex-col-reverse justify-between gap-2 sm:flex-row">
               <Button
                 disabled={s.isSubmitting}
                 type="submit"

@@ -17,20 +17,20 @@ export const AdminUserItemProfilePicture = React.forwardRef<
   return (
     <div
       {...props}
-      className={cn("size-[--user-item-height] grid place-items-center", className)}
+      className={cn("grid size-[--user-item-height] place-items-center", className)}
       ref={ref}
     >
-      <div className="size-[calc(var(--user-item-height)_-_0.25rem)] relative grid place-items-center">
-        <div className="size-[calc(var(--user-item-height)_-_0.5rem)] relative shadow-lg shadow-black/50 rounded overflow-hidden">
+      <div className="relative grid size-[calc(var(--user-item-height)_-_0.25rem)] place-items-center">
+        <div className="relative size-[calc(var(--user-item-height)_-_0.5rem)] overflow-hidden rounded shadow-lg shadow-black/50">
           <img
             src={profilePicture}
             // alt={`${user.username}'s profile picture.`}
-            className={cn("h-full w-full absolute inset-0", isBanned && "opacity-50")}
+            className={cn("absolute inset-0 h-full w-full", isBanned && "opacity-50")}
           />
           <div className="inset-0 bg-black" />
         </div>
         {isBanned && (
-          <span className="flex items-center h-4 text-2xs px-1 bg-red-500 absolute left-0 top-0 -translate-y-1/2 -translate-x-2 z-30">
+          <span className="text-2xs absolute left-0 top-0 z-30 flex h-4 -translate-x-2 -translate-y-1/2 items-center bg-red-500 px-1">
             banido
           </span>
         )}

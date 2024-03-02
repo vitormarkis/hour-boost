@@ -23,14 +23,14 @@ export const FooterItemLink = React.forwardRef<React.ElementRef<typeof Link>, Fo
         {...props}
         target={target}
         className={cn(
-          "relative h-9 px-4 flex items-center rounded-md gap-4 group [&>*]:transition-all [&>*]:duration-200 text-slate-400 hover:text-white",
+          "group relative flex h-9 items-center gap-4 rounded-md px-4 text-slate-400 hover:text-white [&>*]:transition-all [&>*]:duration-200",
           className
         )}
         ref={ref}
       >
         <div
           className={cn(
-            "group-hover:w-full group-hover:opacity-100 opacity-0 w-[50%] absolute top-full left-1/2 translate-x-[-50%] h-[1px]",
+            "absolute left-1/2 top-full h-[1px] w-[50%] translate-x-[-50%] opacity-0 group-hover:w-full group-hover:opacity-100",
             st_footer.shadowEffect
           )}
           style={cssVariables(hues)}

@@ -38,7 +38,7 @@ export const ModalSeeUserPurchases = React.forwardRef<
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         {...props}
-        className={cn("max-w-[80rem] w-full", className)}
+        className={cn("w-full max-w-[80rem]", className)}
         ref={ref}
       >
         <DialogHeader>
@@ -52,7 +52,7 @@ export const ModalSeeUserPurchases = React.forwardRef<
             style={columnsWidth}
           >
             <PurchaseListHeader />
-            <ul className="flex flex-col bg-slate-900 p-[2px] gap-[2px] min-h-[50vh] rounded-[8px]">
+            <ul className="flex min-h-[50vh] flex-col gap-[2px] rounded-[8px] bg-slate-900 p-[2px]">
               <PurchasesList />
             </ul>
           </div>
@@ -76,7 +76,7 @@ export const PurchasesList = React.memo(({}: PurchasesListProps) => {
     <PurchaseItem
       key={purchaseId}
       purchaseId={purchaseId}
-      className="bg-slate-950 rounded-[6px]"
+      className="rounded-[6px] bg-slate-950"
     />
   ))
 })

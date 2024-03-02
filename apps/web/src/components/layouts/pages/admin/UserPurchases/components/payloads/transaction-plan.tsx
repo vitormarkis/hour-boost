@@ -20,14 +20,14 @@ export const PurchasePayloadTransactionPlan = React.forwardRef<
   return (
     <>
       <BadgePlanType
-        className="text-sm/none flex items-center h-5"
+        className="flex h-5 items-center text-sm/none"
         name={from.planType}
       >
         {fromPlanName}
       </BadgePlanType>
       <span className="px-2 font-medium">→</span>
       <BadgePlanType
-        className="text-sm/none flex items-center h-5"
+        className="flex h-5 items-center text-sm/none"
         name={to.planType}
       >
         {toPlanName}

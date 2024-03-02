@@ -11,8 +11,8 @@ export function ImagesGridMany({ source }: ImagesGridManyProps) {
 
   return (
     <ImagesGridGamesContainer>
-      <div className="flex flex-col h-full w-[--games-container-width]">
-        <div className="flex-1 relative overflow-hidden">
+      <div className="flex h-full w-[--games-container-width] flex-col">
+        <div className="relative flex-1 overflow-hidden">
           <Image
             quality={3}
             src={game1}
@@ -21,7 +21,7 @@ export function ImagesGridMany({ source }: ImagesGridManyProps) {
             objectFit="cover"
           />
         </div>
-        <div className="flex-1 relative overflow-hidden">
+        <div className="relative flex-1 overflow-hidden">
           <Image
             quality={3}
             src={game2}
@@ -31,8 +31,8 @@ export function ImagesGridMany({ source }: ImagesGridManyProps) {
           />
         </div>
       </div>
-      <div className="flex flex-col h-full w-[--games-container-width]">
-        <div className="flex-1 relative overflow-hidden">
+      <div className="flex h-full w-[--games-container-width] flex-col">
+        <div className="relative flex-1 overflow-hidden">
           <Image
             quality={3}
             src={game3}
@@ -41,8 +41,8 @@ export function ImagesGridMany({ source }: ImagesGridManyProps) {
             objectFit="cover"
           />
         </div>
-        <div className="flex-1 relative overflow-hidden">
-          <div className="absolute inset-0 h-full w-full bg-slate-900 group-hover:bg-slate-700 flex items-center justify-center">
+        <div className="relative flex-1 overflow-hidden">
+          <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-slate-900 group-hover:bg-slate-700">
             <span className="text-2xs text-slate-300 group-hover:text-white">+ {restAmount}</span>
           </div>
         </div>

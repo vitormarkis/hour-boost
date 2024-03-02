@@ -35,16 +35,16 @@ export const UserItemActionMenuDropdown = React.forwardRef<
       >
         {planIsUsage && (
           <ActionAddHoursMenuSubTrigger>
-            <IconClock className="fill-white size-3" />
+            <IconClock className="size-3 fill-white" />
             <span>Adicionar horas</span>
           </ActionAddHoursMenuSubTrigger>
         )}
         <ActionSetGamesLimitMenuSubTrigger>
-          <IconJoystick className="fill-white size-3" />
+          <IconJoystick className="size-3 fill-white" />
           <span>Mudar número de jogos</span>
         </ActionSetGamesLimitMenuSubTrigger>
         <ActionSetAccountsLimitMenuSubTrigger>
-          <IconUser className="fill-white size-3" />
+          <IconUser className="size-3 fill-white" />
           <span>Mudar número de contas</span>
         </ActionSetAccountsLimitMenuSubTrigger>
       </DropdownMenuContent>

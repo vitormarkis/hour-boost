@@ -43,37 +43,37 @@ export const SteamAccountListItemViewDesktop = React.memo(
 
       return (
         <div
-          className={cn("relative h-[4.5rem] border border-slate-800 flex", header && "mt-[4.5rem]")}
+          className={cn("relative flex h-[4.5rem] border border-slate-800", header && "mt-[4.5rem]")}
           ref={ref}
         >
           {header && (
-            <div className="absolute left-4 bottom-full">
+            <div className="absolute bottom-full left-4">
               <ButtonAddNewAccount />
             </div>
           )}
           {isFarming && (
-            <div className="absolute top-0 bottom-0 right-full w-[0.25rem] bg-accent animate-pulse" />
+            <div className="bg-accent absolute bottom-0 right-full top-0 w-[0.25rem] animate-pulse" />
           )}
           <div className="flex items-center">
             {steamGuard ? (
-              <button className="relative flex items-center h-full px-6 group">
-                <div className="absolute inset-0 bg-slate-800 group-hover:animate-none animate-pulse" />
+              <button className="group relative flex h-full items-center px-6">
+                <div className="absolute inset-0 animate-pulse bg-slate-800 group-hover:animate-none" />
                 <div className="relative z-10">
-                  <span className="absolute flex h-2 w-2 right-0 top-0 -translate-y-1/2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  <span className="absolute right-0 top-0 flex h-2 w-2 -translate-y-1/2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
                   </span>
                   <IconDeviceMobile className="h-5 w-5" />
                 </div>
               </button>
             ) : (
-              <div className="flex items-center h-full px-6">
+              <div className="flex h-full items-center px-6">
                 <IconDeviceMobile className="h-5 w-5" />
               </div>
             )}
           </div>
-          <div className="flex items-center pr-6 gap-4 overflow-hidden max-w-[19rem] w-full">
-            <div className="h-[4.5rem] w-[4.5rem] relative shrink-0">
+          <div className="flex w-full max-w-[19rem] items-center gap-4 overflow-hidden pr-6">
+            <div className="relative h-[4.5rem] w-[4.5rem] shrink-0">
               <img
                 // src="https://avatarcloudflare.steamstatic.com/2ec38f7a0953fe2585abdda0757324dbbb519749_full.jpg"
                 src={profilePictureUrl ?? IMG_USER_PLACEHOLDER}
@@ -81,23 +81,23 @@ export const SteamAccountListItemViewDesktop = React.memo(
                 className="fillimg"
               />
             </div>
-            <div className="leading-none flex flex-col">
+            <div className="flex flex-col leading-none">
               <strong>{accountName}</strong>
-              <div className="text-xs flex gap-1 items-center mt-1 ">
+              <div className="mt-1 flex items-center gap-1 text-xs ">
                 <MenuDropdownChangeAccountStatus>
                   <button
                     disabled={mutations.changeAccountStatus.isPending}
-                    className="disabled:cursor-not-allowed focus:outline-none flex items-center"
+                    className="flex items-center focus:outline-none disabled:cursor-not-allowed"
                   >
                     <div
                       className={cn(
-                        "h-1 w-1 rounded-full mr-1.5 bg-slate-500",
+                        "mr-1.5 h-1 w-1 rounded-full bg-slate-500",
                         status === "online" && "bg-green-500"
                       )}
                     />
                     <span
                       className={cn(
-                        "text-slate-300 select-none cursor-pointer hover:underline pr-2 -translate-y-[2px]",
+                        "-translate-y-[2px] cursor-pointer select-none pr-2 text-slate-300 hover:underline",
                         status === "offline" && "text-slate-500"
                       )}
                     >
@@ -116,7 +116,7 @@ export const SteamAccountListItemViewDesktop = React.memo(
               </div>
             </div>
           </div>
-          <div className="relative flex items-center px-6 min-w-[8.5rem]">
+          <div className="relative flex min-w-[8.5rem] items-center px-6">
             <div className="pr-2">
               <div
                 className={cn(
@@ -126,12 +126,12 @@ export const SteamAccountListItemViewDesktop = React.memo(
               />
             </div>
             {header && (
-              <div className="absolute bottom-full px-6 left-0 right-0 py-2">
+              <div className="absolute bottom-full left-0 right-0 px-6 py-2">
                 <span>farmando</span>
               </div>
             )}
             {isFarming ? (
-              <div className="flex flex-col justify-center h-full leading-none">
+              <div className="flex h-full flex-col justify-center leading-none">
                 {/* <span className="uppercase">2.5 horas</span> */}
                 {/* <span className="text-sm text-slate-500">153 min</span> */}
                 {farmStartedAt ? (
@@ -144,14 +144,14 @@ export const SteamAccountListItemViewDesktop = React.memo(
                 )}
               </div>
             ) : (
-              <div className="flex flex-col justify-center h-full leading-none">
+              <div className="flex h-full flex-col justify-center leading-none">
                 <span className="text-slate-500">0 horas</span>
               </div>
             )}
           </div>
-          <div className="relative flex items-center px-6 group cursor-default whitespace-nowrap min-w-[8.5rem]">
+          <div className="group relative flex min-w-[8.5rem] cursor-default items-center whitespace-nowrap px-6">
             {header && (
-              <div className="absolute bottom-full px-6 left-0 right-0 py-2">
+              <div className="absolute bottom-full left-0 right-0 px-6 py-2">
                 <span>
                   horas
                   <br />
@@ -159,9 +159,9 @@ export const SteamAccountListItemViewDesktop = React.memo(
                 </span>
               </div>
             )}
-            <div className="flex flex-col mx-auto">
-              <div className="flex relative tabular-nums">
-                <div className="flex gap-1 leading-none font-medium whitespace-nowrap text-sm">
+            <div className="mx-auto flex flex-col">
+              <div className="relative flex tabular-nums">
+                <div className="flex gap-1 whitespace-nowrap text-sm font-medium leading-none">
                   {(app.farmedTimeInSeconds / 60 / 60).toFixed(2)}
                   <span className="text-slate-600">horas</span>
                 </div>
@@ -176,36 +176,36 @@ export const SteamAccountListItemViewDesktop = React.memo(
           </div>
           <div className="relative flex items-center ">
             {header && (
-              <div className="absolute bottom-full px-6 left-0 right-0 py-2">
+              <div className="absolute bottom-full left-0 right-0 px-6 py-2">
                 <span>jogos</span>
               </div>
             )}
 
             <ChooseFarmingGames />
           </div>
-          <div className="flex items-center ml-auto">
+          <div className="ml-auto flex items-center">
             {plan.autoRestarter ? (
-              <div className="relative flex items-center h-full px-4">
+              <div className="relative flex h-full items-center px-4">
                 {header && (
-                  <div className="absolute bottom-full px-6 left-0 right-0 py-2">
+                  <div className="absolute bottom-full left-0 right-0 px-6 py-2">
                     <span>auto-restarter</span>
                   </div>
                 )}
                 <ToggleAutoRelogin />
               </div>
             ) : null}
-            <button className="flex items-center h-full px-4 hover:bg-slate-700 transition-all duration-300">
+            <button className="flex h-full items-center px-4 transition-all duration-300 hover:bg-slate-700">
               <IconChart className="h-5 w-5 fill-white" />
             </button>
             <AlertDialogRemoveSteamAccount steamAccount={app}>
-              <button className="flex items-center h-full px-4 hover:bg-slate-700 transition-all duration-300">
+              <button className="flex h-full items-center px-4 transition-all duration-300 hover:bg-slate-700">
                 <IconTrash className="h-5 w-5" />
               </button>
             </AlertDialogRemoveSteamAccount>
             <button
               disabled={mutations.farmGames.isPending || mutations.stopFarm.isPending || !hasUsagePlanLeft}
               className={cn(
-                "flex justify-center text-white items-center px-8 h-full min-w-[12.6rem] bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:cursor-not-allowed",
+                "flex h-full min-w-[12.6rem] items-center justify-center bg-slate-800 px-8 text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-900",
                 isFarming && "bg-accent hover:bg-accent-500 disabled:bg-accent-700"
               )}
               onClick={handleClickFarmButtonImpl}

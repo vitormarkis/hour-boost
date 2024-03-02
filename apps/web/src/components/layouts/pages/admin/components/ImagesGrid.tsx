@@ -25,10 +25,10 @@ export const ImagesGrid = React.forwardRef<React.ElementRef<"div">, ImagesGridPr
     return (
       <div
         {...props}
-        className={cn("px-2 hover:bg-slate-800 group", className)}
+        className={cn("group px-2 hover:bg-slate-800", className)}
         ref={ref}
       >
-        <div className="h-[--container-height] items-center [--padding:0.5rem] pr-[calc(var(--padding)/2)] pl-[--padding] flex justify-center">
+        <div className="flex h-[--container-height] items-center justify-center pl-[--padding] pr-[calc(var(--padding)/2)] [--padding:0.5rem]">
           <div className="flex items-center pr-2">{children}</div>
         </div>
       </div>
@@ -48,7 +48,7 @@ export const ImagesGridGamesContainer = React.forwardRef<
     <div
       {...props}
       className={cn(
-        "h-[calc(var(--container-height)_-_var(--padding))] flex [--games-container-width:3rem]",
+        "flex h-[calc(var(--container-height)_-_var(--padding))] [--games-container-width:3rem]",
         className
       )}
       ref={ref}

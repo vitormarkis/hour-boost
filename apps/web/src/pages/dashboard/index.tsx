@@ -32,7 +32,7 @@ export default function DashboardPage({ user }: UserSessionParams) {
         username={user.username}
         profilePic={user.profilePic}
       />
-      <div className="max-w-[1440px] w-full mx-auto mdx:px-8">
+      <div className="mdx:px-8 mx-auto w-full max-w-[1440px]">
         <UserPlanStatus />
         <DashboardSteamAccountsList />
       </div>

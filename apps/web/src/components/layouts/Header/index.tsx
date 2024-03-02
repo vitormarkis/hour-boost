@@ -30,21 +30,21 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
       {/* <pre className="absolute top-5 left-5 bg-orange-100 text-orange-500 p-2 text-xs">
         {JSON.stringify({ user: user ?? "user is nullish" }, null, 2)}
       </pre> */}
-      <div className="h-full mx-auto flex w-full max-w-7xl items-center px-4">
-        <div className="flex-1 flex md:hidden">
+      <div className="mx-auto flex h-full w-full max-w-7xl items-center px-4">
+        <div className="flex flex-1 md:hidden">
           <SheetHeaderNavbar>
-            <SVGList className="h-7 w-7 aspect-square cursor-pointer" />
+            <SVGList className="aspect-square h-7 w-7 cursor-pointer" />
           </SheetHeaderNavbar>
         </div>
-        <div className="flex-1 flex h-full justify-center md:justify-start">
-          <div className="shrink-0 flex items-center">
+        <div className="flex h-full flex-1 justify-center md:justify-start">
+          <div className="flex shrink-0 items-center">
             <img
               src="logo.png"
               alt=""
               className="h-[1.7rem]"
             />
           </div>
-          <ul className="hidden md:flex gap-2 items-center pl-8">
+          <ul className="hidden items-center gap-2 pl-8 md:flex">
             <li className="px-2 text-slate-300 hover:text-white hover:underline">
               <Link
                 scroll={false}
@@ -79,12 +79,12 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
             </li>
           </ul>
         </div>
-        <div className="h-full flex flex-1 md:flex-initial justify-end">
+        <div className="flex h-full flex-1 justify-end md:flex-initial">
           {user && (
-            <div className="h-full flex gap-4 items-center">
+            <div className="flex h-full items-center gap-4">
               <Button
                 variant="ghost"
-                className="h-full hidden md:flex"
+                className="hidden h-full md:flex"
                 asChild
               >
                 <Link href="/dashboard">Ir para Dashboard</Link>
@@ -101,7 +101,7 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
             <>
               <Button
                 variant="ghost"
-                className="h-full hidden sm:flex"
+                className="hidden h-full sm:flex"
                 asChild
               >
                 <Link href="/sign-in">
@@ -111,9 +111,9 @@ export const Header = React.forwardRef<React.ElementRef<"header">, HeaderProps>(
               </Button>
               <Link
                 href="/sign-in"
-                className="overflow-hidden grid place-items-center sm:hidden"
+                className="grid place-items-center overflow-hidden sm:hidden"
               >
-                <SVGUser className="h-7 w-7 aspect-square scale-[0.925]" />
+                <SVGUser className="aspect-square h-7 w-7 scale-[0.925]" />
               </Link>
             </>
           )}

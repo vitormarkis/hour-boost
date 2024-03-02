@@ -7,7 +7,6 @@ body {
 }
 
 @media (max-width: 768px) {
-
   html,
   :root {
     font-size: 20px;
@@ -21,10 +20,12 @@ body {
 
 .span-gr-accent {
   background: #230ccf;
-  background: repeating-linear-gradient(149deg,
-      hsl(203.51deg 100% 87.97%) 0,
-      hsl(189.57deg 100% 50%) 50%,
-      hsl(193deg 100% 32.25%));
+  background: repeating-linear-gradient(
+    149deg,
+    hsl(203.51deg 100% 87.97%) 0,
+    hsl(189.57deg 100% 50%) 50%,
+    hsl(193deg 100% 32.25%)
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -188,7 +189,8 @@ body {
   color: theme("colors.slate.500");
 }
 
-.cl-formFieldLabel {}
+.cl-formFieldLabel {
+}
 
 .cl-form {
   display: flex;

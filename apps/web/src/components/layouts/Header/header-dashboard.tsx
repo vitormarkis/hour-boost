@@ -27,8 +27,8 @@ export const HeaderDashboard = React.forwardRef<
       className={cn("gap-8", className)}
       ref={ref}
     >
-      <div className="flex-1 h-full flex gap-4 items-center">
-        <div className="shrink-0 flex items-center">
+      <div className="flex h-full flex-1 items-center gap-4">
+        <div className="flex shrink-0 items-center">
           <img
             src="logo.png"
             alt=""
@@ -36,17 +36,17 @@ export const HeaderDashboard = React.forwardRef<
           />
         </div>
       </div>
-      <div className="flex-1 h-full flex gap-4 items-center justify-end">
+      <div className="flex h-full flex-1 items-center justify-end gap-4">
         <div className="hidden sm:flex">
-          <span className="font-medium text-white text-sm">{username}</span>
+          <span className="text-sm font-medium text-white">{username}</span>
         </div>
         <MenuDropdownUserHeader>
-          <div className="flex items-center h-9 px-1 hover:bg-slate-800 cursor-pointer rounded-sm">
+          <div className="flex h-9 cursor-pointer items-center rounded-sm px-1 hover:bg-slate-800">
             <Avatar className="h-7 w-7 rounded-sm">
               <AvatarImage src={profilePic} />
               <AvatarFallback>{userInitials}</AvatarFallback>
             </Avatar>
-            <div className="flex items-center justify-center ml-0.5">
+            <div className="ml-0.5 flex items-center justify-center">
               <IconChevron className="size-3.5 text-slate-400" />
             </div>
           </div>
@@ -70,7 +70,7 @@ export const RoleBadge = React.forwardRef<React.ElementRef<"div">, RoleBadgeProp
       >
         <span className="font-semibold">Cargo:</span>
         <span
-          className={cn("leading-none py-1 px-2 rounded-md bg-indigo-600", {
+          className={cn("rounded-md bg-indigo-600 px-2 py-1 leading-none", {
             "bg-lime-500/90": role === "ADMIN",
           })}
         >

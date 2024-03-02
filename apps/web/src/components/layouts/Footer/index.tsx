@@ -15,10 +15,10 @@ export const Footer = React.forwardRef<React.ElementRef<"footer">, FooterProps>(
       ref={ref}
       id="footer"
     >
-      <div className="flex flex-col sm:flex-row max-w-5xl w-full mx-auto pb-9 px-4 md:px-8">
-        <div className="flex-1 pt-9 px-2">
+      <div className="mx-auto flex w-full max-w-5xl flex-col px-4 pb-9 sm:flex-row md:px-8">
+        <div className="flex-1 px-2 pt-9">
           <div className="pb-4">
-            <h2 className="font-semibold text-xl">Navegação</h2>
+            <h2 className="text-xl font-semibold">Navegação</h2>
           </div>
           <div className="flex flex-col">
             <FooterItemLink
@@ -29,14 +29,14 @@ export const Footer = React.forwardRef<React.ElementRef<"footer">, FooterProps>(
             </FooterItemLink>
           </div>
         </div>
-        <div className="flex-1 pt-9 px-2 hidden sm:flex" />
-        <div className="flex-1 pt-9 px-2">
+        <div className="hidden flex-1 px-2 pt-9 sm:flex" />
+        <div className="flex-1 px-2 pt-9">
           <div className="pb-4">
-            <h2 className="font-semibold text-xl">Entre em contato</h2>
+            <h2 className="text-xl font-semibold">Entre em contato</h2>
           </div>
           <div className="flex flex-col gap-2">
             <FooterItemLink href="mailto:123456789@mail.com">
-              <SVGMail className="scale-[1.15] shrink-0" />
+              <SVGMail className="shrink-0 scale-[1.15]" />
               <span className="">suporte@hourboost.com.br</span>
             </FooterItemLink>
             <FooterItemLink href="https://discord.com/invite/ZMknxzWCBW">

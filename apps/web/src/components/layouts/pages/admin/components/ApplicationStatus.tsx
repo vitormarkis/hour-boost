@@ -12,22 +12,22 @@ export const ApplicationStatus = React.forwardRef<React.ElementRef<"div">, Appli
         <div
           {...props}
           className={cn(
-            "flex items-center h-9 rounded-md border border-blue-900/40 bg-blue-950/30 text-sm px-4 mb-4 w-fit",
+            "mb-4 flex h-9 w-fit items-center rounded-md border border-blue-900/40 bg-blue-950/30 px-4 text-sm",
             className
           )}
           ref={ref}
         >
-          <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2">
             <span>Usuários registrados:</span>
             <UserRegistered />
           </div>
-          <div className="h-full w-[1px] mx-4 bg-blue-900/40" />
-          <div className="flex gap-2 items-center">
+          <div className="mx-4 h-full w-[1px] bg-blue-900/40" />
+          <div className="flex items-center gap-2">
             <span>Contas registradas:</span>
             <SteamAccountsRegistered />
           </div>
-          <div className="h-full w-[1px] mx-4 bg-blue-900/40" />
-          <div className="flex gap-2 items-center">
+          <div className="mx-4 h-full w-[1px] bg-blue-900/40" />
+          <div className="flex items-center gap-2">
             <span>Contas farmando no momento:</span>
             <FarmingAccountsAmount />
           </div>

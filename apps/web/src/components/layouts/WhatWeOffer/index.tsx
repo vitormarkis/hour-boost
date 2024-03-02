@@ -26,62 +26,62 @@ export const WhatWeOfferSection = React.forwardRef<React.ElementRef<"section">, 
         style={cssVariables(bgHues)}
       >
         <div className="flex flex-col justify-center">
-          <div className="px-[1.5rem] flex flex-col">
-            <div className="flex pb-2 items-center self-center justify-around gap-8">
+          <div className="flex flex-col px-[1.5rem]">
+            <div className="flex items-center justify-around gap-8 self-center pb-2">
               <TitleSection>O que nós oferecemos</TitleSection>
             </div>
-            <p className="text-slate-400 max-w-md xs:text-center self-center">
+            <p className="xs:text-center max-w-md self-center text-slate-400">
               HourBoost é o serviço de aumento de horas mais barato e confiável atualmente no mercado!
             </p>
           </div>
         </div>
         <div className="py-24">
-          <div className="relative max-w-7xl w-full justify-evenly items-center md:items-stretch flex-col md:flex-row flex grow flex-wrap px-0 md:px-8 mx-auto gap-8">
-            <div className="max-w-full sm:max-w-xs w-full flex-1 bg-slate-900 px-4 sm:px-8 py-8 md:rounded-md flex flex-col">
+          <div className="relative mx-auto flex w-full max-w-7xl grow flex-col flex-wrap items-center justify-evenly gap-8 px-0 md:flex-row md:items-stretch md:px-8">
+            <div className="flex w-full max-w-full flex-1 flex-col bg-slate-900 px-4 py-8 sm:max-w-xs sm:px-8 md:rounded-md">
               <div className="flex justify-center pb-6">
                 <div
-                  className="relative h-16 w-20 rounded-md bg-slate-800 grid place-items-center neonShadow neonBackground"
+                  className="neonShadow neonBackground relative grid h-16 w-20 place-items-center rounded-md bg-slate-800"
                   style={cssVariables(questionHues)}
                 >
                   <SVGMoney className="h-10 w-10 text-[hsl(var(--bananaHue),_70%,_56%)]" />
                 </div>
               </div>
               <div className="">
-                <h1 className="text-2xl font-semibold text-center">Plano Gratuito</h1>
+                <h1 className="text-center text-2xl font-semibold">Plano Gratuito</h1>
                 <p className="text-slate-400">
                   Desfrute do nosso plano gratuito que para novos usuários, temos um bônus especial de 5 horas
                   grátis para que você aproveite ao máximo nossa plataforma.
                 </p>
               </div>
             </div>
-            <div className="max-w-full sm:max-w-xs w-full flex-1 bg-slate-900 px-4 sm:px-8 py-8 md:rounded-md flex flex-col">
+            <div className="flex w-full max-w-full flex-1 flex-col bg-slate-900 px-4 py-8 sm:max-w-xs sm:px-8 md:rounded-md">
               <div className="flex justify-center pb-6">
                 <div
-                  className="relative h-16 w-20 rounded-md bg-slate-800 grid place-items-center neonShadow neonBackground"
+                  className="neonShadow neonBackground relative grid h-16 w-20 place-items-center rounded-md bg-slate-800"
                   style={cssVariables(upHues)}
                 >
                   <SVGStack className="h-10 w-10 text-[hsl(var(--bananaHue),_70%,_56%)]" />
                 </div>
               </div>
               <div className="">
-                <h1 className="text-2xl font-semibold text-center">Muitos recursos</h1>
+                <h1 className="text-center text-2xl font-semibold">Muitos recursos</h1>
                 <p className="text-slate-400">
                   Oferecemos muitos e vários recursos, incluindo, entre outros: suporte 2FA, suporte a vários
                   jogos, resposta automática, aceitação automática de solicitações de amizade e muito mais!
                 </p>
               </div>
             </div>
-            <div className="max-w-full sm:max-w-xs w-full flex-1 bg-slate-900 px-4 sm:px-8 py-8 md:rounded-md flex flex-col">
+            <div className="flex w-full max-w-full flex-1 flex-col bg-slate-900 px-4 py-8 sm:max-w-xs sm:px-8 md:rounded-md">
               <div className="flex justify-center pb-6">
                 <div
-                  className="relative h-16 w-20 rounded-md bg-slate-800 grid place-items-center neonShadow neonBackground"
+                  className="neonShadow neonBackground relative grid h-16 w-20 place-items-center rounded-md bg-slate-800"
                   style={cssVariables(stableHues)}
                 >
                   <SVGShieldLock className="h-10 w-10 text-[hsl(var(--bananaHue),_70%,_56%)]" />
                 </div>
               </div>
               <div className="">
-                <h1 className="text-2xl font-semibold text-center">Serviço estável</h1>
+                <h1 className="text-center text-2xl font-semibold">Serviço estável</h1>
                 <p className="text-slate-400">
                   O serviço de aumento de horas de Steam mais confiável e estável que você pode encontrar.
                   Aproveite nossos recursos para potencializar sua experiência na plataforma Steam{" "}

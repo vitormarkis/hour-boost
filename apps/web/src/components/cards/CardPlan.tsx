@@ -46,13 +46,13 @@ export const CardPlanRoot = React.forwardRef<React.ElementRef<"article">, CardPl
       <article
         {...props}
         className={cn(
-          "relative max-w-[25rem] mdx:max-w-xs w-full flex flex-col bg-slate-900 [&_strong]:font-semibold [&_strong]:text-white",
+          "mdx:max-w-xs relative flex w-full max-w-[25rem] flex-col bg-slate-900 [&_strong]:font-semibold [&_strong]:text-white",
           className
         )}
         ref={ref}
       >
         {highlight}
-        <div className="overflow-hidden relative p-8">{children}</div>
+        <div className="relative overflow-hidden p-8">{children}</div>
       </article>
     )
   }
@@ -77,7 +77,7 @@ export const CardPlanHighlight = React.forwardRef<React.ElementRef<"div">, CardP
       <div
         {...props}
         className={cn(
-          "absolute top-0 right-0 translate-y-[-50%] translate-x-4 z-10 bg-black text-white leading-none py-1.5 px-4 text-sm",
+          "absolute right-0 top-0 z-10 translate-x-4 translate-y-[-50%] bg-black px-4 py-1.5 text-sm leading-none text-white",
           st.highlight,
           className
         )}
@@ -100,7 +100,7 @@ export const CardPlanBackgroundBlob = React.forwardRef<React.ElementRef<"div">, 
       <div
         {...props}
         className={cn(
-          "aspect-square rounded-full absolute w-[80rem] h-[80rem] translate-y-[-69.7rem] translate-x-[-29rem] bg-[hsl(222.22deg_18.37%_18.18%)]",
+          "absolute aspect-square h-[80rem] w-[80rem] translate-x-[-29rem] translate-y-[-69.7rem] rounded-full bg-[hsl(222.22deg_18.37%_18.18%)]",
           className
         )}
         ref={ref}
@@ -121,7 +121,7 @@ export const CardPlanButton = React.forwardRef<React.ElementRef<typeof Button>, 
     const Component = asChild ? Slot : Button
 
     return (
-      <div className="pt-10 flex justify-center">
+      <div className="flex justify-center pt-10">
         <Component
           {...props}
           className={cn("", className)}
@@ -148,7 +148,7 @@ export const CardPlanName = React.forwardRef<React.ElementRef<"div">, CardPlanNa
         className={cn("relative pb-4", className)}
         ref={ref}
       >
-        <h2 className="font-semibold text-4xl">{children}</h2>
+        <h2 className="text-4xl font-semibold">{children}</h2>
       </div>
     )
   }
@@ -168,7 +168,7 @@ export const CardPlanPrice = React.forwardRef<React.ElementRef<"div">, CardPlanP
         className={cn("flex justify-center", className)}
         ref={ref}
       >
-        <div className="w-fit relative">
+        <div className="relative w-fit">
           <span className="text absolute right-full top-2 translate-x-[-2px]">R$</span>
           <span className="text-7xl font-bold leading-none">{children}</span>
           <span className="text absolute bottom-0 left-full">/mês</span>
@@ -224,14 +224,14 @@ export const CardPlanBulletItem = React.forwardRef<React.ElementRef<"li">, CardP
       >
         <SVGCheckIcon
           className={cn({
-            "text-slate-500 h-4 w-4": weight === "weak",
-            "text-slate-400 h-4 w-4": weight === "normal",
-            "text-green-500 h-5 w-5": weight === "strong",
+            "h-4 w-4 text-slate-500": weight === "weak",
+            "h-4 w-4 text-slate-400": weight === "normal",
+            "h-5 w-5 text-green-500": weight === "strong",
           })}
         />
         <span
           className={cn({
-            "uppercase text-xl font-medium": weight === "strong",
+            "text-xl font-medium uppercase": weight === "strong",
             "line-through": weight === "weak",
           })}
         >

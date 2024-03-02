@@ -23,19 +23,19 @@ export function UserPlanStatus() {
       <div className="flex"></div>
       <div className="flex">
         <div className="flex flex-col justify-end rounded-md border border-dashed border-slate-900 p-3">
-          <div className="flex gap-2 items-center justify-end">
+          <div className="flex items-center justify-end gap-2">
             <span className="text-slate-400">Seu plano:</span>
             <BadgePlanType name={_planName}>
-              <span className="leading-none font-semibold">{planName}</span>
+              <span className="font-semibold leading-none">{planName}</span>
             </BadgePlanType>
           </div>
-          <div className="flex gap-2 pt-2 select-none justify-end">
+          <div className="flex select-none justify-end gap-2 pt-2">
             <HoverCard
               openDelay={300}
               closeDelay={0}
             >
               <HoverCardTrigger asChild>
-                <BadgePlanInfo.Root className="hover:ring-2 hover:ring-slate-900/70 hover:cursor-pointer">
+                <BadgePlanInfo.Root className="hover:cursor-pointer hover:ring-2 hover:ring-slate-900/70">
                   <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">
                     {maxGamesAllowed}
                   </BadgePlanInfo.Number>
@@ -58,7 +58,7 @@ export function UserPlanStatus() {
               closeDelay={0}
             >
               <HoverCardTrigger asChild>
-                <BadgePlanInfo.Root className="hover:ring-2 hover:ring-slate-900/70 hover:cursor-pointer">
+                <BadgePlanInfo.Root className="hover:cursor-pointer hover:ring-2 hover:ring-slate-900/70">
                   <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">1</BadgePlanInfo.Number>
                   <BadgePlanInfo.SubWrapper className="border-slate-700 bg-slate-600 text-slate-300">
                     <BadgePlanInfo.Icon className="fill-slate-200">
@@ -75,13 +75,13 @@ export function UserPlanStatus() {
               </HoverCardContent>
             </HoverCard>
           </div>
-          <div className="flex gap-2 pt-2 select-none justify-end">
+          <div className="flex select-none justify-end gap-2 pt-2">
             <HoverCard
               openDelay={300}
               closeDelay={0}
             >
               <HoverCardTrigger asChild>
-                <BadgePlanInfo.Root className="hover:ring-2 hover:ring-zinc-900/70 hover:cursor-pointer">
+                <BadgePlanInfo.Root className="hover:cursor-pointer hover:ring-2 hover:ring-zinc-900/70">
                   <BadgePlanInfo.SubWrapper className="border-zinc-700 bg-zinc-600 text-zinc-300">
                     <BadgePlanInfo.Icon className="fill-zinc-200">
                       <IconClock />
@@ -89,8 +89,8 @@ export function UserPlanStatus() {
                     <BadgePlanInfo.Label>no máximo</BadgePlanInfo.Label>
                   </BadgePlanInfo.SubWrapper>
                   <BadgePlanInfo.Number className="border-zinc-700 bg-zinc-800">
-                    <div className="flex gap-1.5 items-center">
-                      <span className="text-white font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-medium text-white">
                         <maxUsage.HighlightTime />
                       </span>
                       <maxUsage.SecondaryTime />
@@ -105,16 +105,16 @@ export function UserPlanStatus() {
               </HoverCardContent>
             </HoverCard>
           </div>
-          <div className="flex gap-2 pt-2 select-none justify-end">
+          <div className="flex select-none justify-end gap-2 pt-2">
             <HoverCard
               openDelay={300}
               closeDelay={0}
             >
               <HoverCardTrigger asChild>
-                <BadgePlanInfo.Root className="hover:ring-2 hover:ring-slate-900/70 hover:cursor-pointer">
+                <BadgePlanInfo.Root className="hover:cursor-pointer hover:ring-2 hover:ring-slate-900/70">
                   <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">
-                    <div className="flex gap-1.5 items-center">
-                      <span className="text-white font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-medium text-white">
                         <remaining.HighlightTime />
                       </span>
                       <remaining.SecondaryTime />
@@ -144,7 +144,7 @@ export function UserPlanStatus() {
 function getTimePast(time: number) {
   const { highlightTime, secondaryTime } = getFarmedTimeSince(time)
   const SecondaryTime: React.FC = () =>
-    secondaryTime.length ? <span className="text-zinc-400 text-sm">{secondaryTime}</span> : null
+    secondaryTime.length ? <span className="text-sm text-zinc-400">{secondaryTime}</span> : null
 
   return {
     SecondaryTime,

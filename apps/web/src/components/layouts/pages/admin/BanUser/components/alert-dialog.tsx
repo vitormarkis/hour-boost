@@ -120,8 +120,8 @@ export const ConfirmButton = React.forwardRef<React.ElementRef<typeof Button>, C
       >
         <span>Confirmar</span>
         {isBanningUser && (
-          <div className="absolute top-1/2 -translate-y-1/2 right-4">
-            <IconArrowClockwise className="w-4 h-4 animate-spin" />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <IconArrowClockwise className="h-4 w-4 animate-spin" />
           </div>
         )}
       </Button>

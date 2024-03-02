@@ -22,7 +22,7 @@ export const DashboardSteamAccountsList = React.forwardRef<
   return (
     <section
       {...props}
-      className={cn("flex flex-col gap-16 mdx:gap-2 mdx:p-2", className)}
+      className={cn("mdx:gap-2 mdx:p-2 flex flex-col gap-16", className)}
       ref={ref}
     >
       {hasAccounts ? (
@@ -55,9 +55,9 @@ export const DashboardSteamAccountsList = React.forwardRef<
           <div className="pb-16" />
         </>
       ) : (
-        <div className="w-full h-full grid place-items-center">
-          <div className="py-12 flex items-center px-16 md:px-0">
-            <h1 className="font-bold w-fit h-fit text-[2.6rem] md:text-[2rem] mdx:text-[2.6rem] leading-none text-center md:text-right text-slate-600/80">
+        <div className="grid h-full w-full place-items-center">
+          <div className="flex items-center px-16 py-12 md:px-0">
+            <h1 className="mdx:text-[2.6rem] h-fit w-fit text-center text-[2.6rem] font-bold leading-none text-slate-600/80 md:text-right md:text-[2rem]">
               Você não possui contas no momento...
             </h1>
             <div className="hidden md:block">

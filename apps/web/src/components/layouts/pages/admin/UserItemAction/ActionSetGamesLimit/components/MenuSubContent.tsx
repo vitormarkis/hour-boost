@@ -124,10 +124,10 @@ export const ActionSetGamesLimitMenuSubContent = React.forwardRef<
             {isSure && children}
             <HoverCard data-open={isSure}>
               <p>- Máximo de jogos -</p>
-              <p className="tabular-nums text-sm/none py-1 px-2 rounded-md bg-accent border border-accent-500 mt-1">
+              <p className="bg-accent border-accent-500 mt-1 rounded-md border px-2 py-1 text-sm/none tabular-nums">
                 De <strong>{maxGamesAllowed}</strong> para <strong>{inputValueMaxGamesLimit}</strong>
               </p>
-              <span className="text-xs text-slate-500 mt-1">Tem certeza que deseja fazer alteração?</span>
+              <span className="mt-1 text-xs text-slate-500">Tem certeza que deseja fazer alteração?</span>
             </HoverCard>
           </Pieces.Trigger>
         )}

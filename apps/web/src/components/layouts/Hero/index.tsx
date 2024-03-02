@@ -22,9 +22,9 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
         className={cn("flex grow flex-wrap justify-center gap-2", className)}
         ref={ref}
       >
-        <div className="flex flex-col min-h-[calc(100vh_-_56px)] grow items-center justify-center relative">
+        <div className="relative flex min-h-[calc(100vh_-_56px)] grow flex-col items-center justify-center">
           <div
-            className="opacity-20 top-0 left-0 right-0 bottom-1/3 absolute"
+            className="absolute bottom-1/3 left-0 right-0 top-0 opacity-20"
             style={{
               WebkitMaskImage: "linear-gradient(180deg, black 50%, transparent 99%)",
             }}
@@ -43,7 +43,7 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
           </div>
           <motion.div
             {...solderAnimationWrapper}
-            className="absolute aspect-square w-full max-w-[32rem] md:max-w-[40rem] translate-y-[-10rem] md:-translate-y-16 bg-black mix-blend-luminosity"
+            className="absolute aspect-square w-full max-w-[32rem] translate-y-[-10rem] bg-black mix-blend-luminosity md:max-w-[40rem] md:-translate-y-16"
             style={{
               WebkitMaskImage: "radial-gradient(black 53%, transparent 67%)",
               maskImage: "radial-gradient(black 53%, transparent 67%)",
@@ -56,18 +56,18 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
               className="fillimg object-cover"
             />
           </motion.div>
-          <div className="w-full z-10 relative">
+          <div className="relative z-10 w-full">
             <div
-              className="inset-0 top-[-2.5rem] bottom-[-2.5rem] absolute backdrop-blur-sm bg-black/30"
+              className="absolute inset-0 bottom-[-2.5rem] top-[-2.5rem] bg-black/30 backdrop-blur-sm"
               style={{
                 WebkitMaskImage:
                   "linear-gradient(0deg, transparent 0%, black 30%, black 80%, transparent 100%)",
               }}
             />
-            <div className="relative z-10 mx-auto max-w-6xl text-white px-[0.25rem]">
+            <div className="relative z-10 mx-auto max-w-6xl px-[0.25rem] text-white">
               <motion.h1
                 {...titleAnimations}
-                className="pb-6 text-center text-[2.75rem]/[90%] xs:text-5xl md:text-7xl font-black tracking-[2.4px]"
+                className="xs:text-5xl pb-6 text-center text-[2.75rem]/[90%] font-black tracking-[2.4px] md:text-7xl"
               >
                 <span className={st.titleSpan}>Farme horas na</span>{" "}
                 <span className="span-gr-accent">Steam</span>
@@ -76,13 +76,13 @@ export const HeroSection = React.forwardRef<React.ElementRef<"section">, HeroSec
               </motion.h1>
               <motion.h2
                 {...subtitleAnimations}
-                className="text-center text-xl xs:text-2xl md:text-3xl font-light tracking-[0.1rem] xs:tracking-[0.2rem] md:tracking-[0.4rem] text-zinc-500"
+                className="xs:text-2xl xs:tracking-[0.2rem] text-center text-xl font-light tracking-[0.1rem] text-zinc-500 md:text-3xl md:tracking-[0.4rem]"
               >
                 Começe com 6 horas grátis
               </motion.h2>
             </div>
           </div>
-          <div className="flex w-full relative z-20 max-w-[14rem] md:max-w-none md:flex-row md:gap-20 md:pt-12 justify-center flex-col gap-4 pt-16 px-12">
+          <div className="relative z-20 flex w-full max-w-[14rem] flex-col justify-center gap-4 px-12 pt-16 md:max-w-none md:flex-row md:gap-20 md:pt-12">
             <ButtonPrimary colorScheme="cyan-blue">Ver mais</ButtonPrimary>
             <ButtonPrimary colorScheme="cyan-blue">Entrar</ButtonPrimary>
           </div>

@@ -51,7 +51,7 @@ export const AlertDialogRemoveSteamAccountView = React.forwardRef<
           <AlertDialogCancel className={buttonVariants({ variant: "outline" })}>Cancelar</AlertDialogCancel>
           <AlertDialogAction
             onClick={() => handleAction({ id: steamAccount.id_steamAccount })}
-            className="bg-red-500 hover:bg-red-600 text-white"
+            className="bg-red-500 text-white hover:bg-red-600"
           >
             Remover
           </AlertDialogAction>

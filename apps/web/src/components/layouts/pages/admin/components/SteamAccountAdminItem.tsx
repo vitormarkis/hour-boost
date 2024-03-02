@@ -26,55 +26,55 @@ const SteamAccountAdminItem = React.forwardRef<React.ElementRef<"div">, SteamAcc
         className={cn("pl-[--sa-padding-left]", className)}
         ref={ref}
       >
-        <div className="select-none h-[--container-height] flex items-center bg-black/10 hover:bg-slate-900/50 cursor-pointer">
+        <div className="flex h-[--container-height] cursor-pointer select-none items-center bg-black/10 hover:bg-slate-900/50">
           <div className="pr-2">
-            <div className="h-[--container-height] w-[--container-height] grid place-items-center">
-              <div className="h-11 w-11 grid place-items-center">
-                <div className="h-10 w-10 relative shadow-lg shadow-black/50 rounded overflow-hidden">
+            <div className="grid h-[--container-height] w-[--container-height] place-items-center">
+              <div className="grid h-11 w-11 place-items-center">
+                <div className="relative h-10 w-10 overflow-hidden rounded shadow-lg shadow-black/50">
                   <img
                     src={profilePictureUrl ?? IMG_USER_PLACEHOLDER}
                     // alt={`${user.username}'s profile picture.`}
-                    className="h-full w-full absolute inset-0"
+                    className="absolute inset-0 h-full w-full"
                   />
                   <div className="inset-0 bg-black" />
                 </div>
               </div>
             </div>
           </div>
-          <div className="h-full flex justify-center flex-col w-[--sa-name-width]">
+          <div className="flex h-full w-[--sa-name-width] flex-col justify-center">
             <span className="text-sm text-slate-300">{accountName}</span>
             <div className="flex items-center">
               <div
                 className={cn(
-                  "size-1 rounded-full bg-slate-500 translate-y-0.5",
+                  "size-1 translate-y-0.5 rounded-full bg-slate-500",
                   status === "online" && "bg-green-500"
                 )}
               />
-              <span className="text-xs pl-1 text-slate-500">{status}</span>
+              <span className="pl-1 text-xs text-slate-500">{status}</span>
             </div>
           </div>
-          <div className="h-full flex items-center justify-center w-[--sa-farm-since-width]">
+          <div className="flex h-full w-[--sa-farm-since-width] items-center justify-center">
             {farmStartedAt ? (
               <TimeSinceFarmStartedAt farmStartedAt={new Date(farmStartedAt)} />
             ) : (
-              <div className="flex gap-1 leading-none font-medium whitespace-nowrap text-sm text-slate-600">
+              <div className="flex gap-1 whitespace-nowrap text-sm font-medium leading-none text-slate-600">
                 <span>não</span>
               </div>
             )}
           </div>
-          <div className="h-full flex items-center justify-center w-[--sa-farmed-time-width]">
-            <div className="flex relative tabular-nums">
-              <div className="flex gap-1 leading-none font-medium whitespace-nowrap text-sm">
+          <div className="flex h-full w-[--sa-farmed-time-width] items-center justify-center">
+            <div className="relative flex tabular-nums">
+              <div className="flex gap-1 whitespace-nowrap text-sm font-medium leading-none">
                 {(farmedTimeInSeconds / 60 / 60).toFixed(2)}
                 <span className="text-slate-600">horas</span>
               </div>
             </div>
           </div>
           <div className="ml-auto flex">
-            <div className="h-full flex items-center justify-center w-[--sa-games-width]">
+            <div className="flex h-full w-[--sa-games-width] items-center justify-center">
               <ImagesGridStagingGames />
             </div>
-            <div className="h-full flex items-center justify-center w-[--sa-games-width]">
+            <div className="flex h-full w-[--sa-games-width] items-center justify-center">
               <ImagesGridFarmingGames />
             </div>
           </div>
@@ -115,7 +115,7 @@ export const ImagesGridStagingGames = React.memo(
             ref={ref}
           >
             <ImagesGridIconWrapper>
-              <IconScrollText className="size-4 text-slate-600 group-hover:text-white transition-all duration-150" />
+              <IconScrollText className="size-4 text-slate-600 transition-all duration-150 group-hover:text-white" />
             </ImagesGridIconWrapper>
             <ImagesGridContent
               source={games!.filter(game => stagingGames.includes(game.id)).map(g => g.imageUrl)}
@@ -161,7 +161,7 @@ export const ImagesGridFarmingGames = React.memo(
             ref={ref}
           >
             <ImagesGridIconWrapper>
-              <IconJoystick className="size-4 fill-slate-600 group-hover:fill-white transition-all duration-150" />
+              <IconJoystick className="size-4 fill-slate-600 transition-all duration-150 group-hover:fill-white" />
             </ImagesGridIconWrapper>
             <ImagesGridContent
               source={games!.filter(game => farmingGames.includes(game.id)).map(g => g.imageUrl)}

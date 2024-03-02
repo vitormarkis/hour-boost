@@ -9,9 +9,9 @@ import { SVGDiscord } from "@/components/layouts/Footer"
 
 export default function ResourceNotFoundPage() {
   return (
-    <div className="relative h-screen flex justify-center items-center overflow-hidden">
+    <div className="relative flex h-screen items-center justify-center overflow-hidden">
       <div
-        className="-z-10 pointer-events-none"
+        className="pointer-events-none -z-10"
         style={{
           position: "absolute",
           top: "50%",
@@ -36,20 +36,20 @@ export default function ResourceNotFoundPage() {
           }}
         />
       </div>
-      <div className="flex flex-col scale-[0.9] xs:scale-100 px-8">
-        <div className="relative leading-none h-fit font-extrabold">
+      <div className="xs:scale-100 flex scale-[0.9] flex-col px-8">
+        <div className="relative h-fit font-extrabold leading-none">
           <div className="flex justify-between">
             <motion.span
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ease: "easeInOut", duration: 0.7 }}
-              className="block text-[2.5rem] sm:text-[4rem] text-center sm:text-left"
+              className="block text-center text-[2.5rem] sm:text-left sm:text-[4rem]"
             >
               Em desenvolvimento...
             </motion.span>
           </div>
         </div>
-        <div className="flex items-center flex-col gap-4 pt-6 sm:pt-8 justify-center">
+        <div className="flex flex-col items-center justify-center gap-4 pt-6 sm:pt-8">
           {/* <motion.span
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -66,7 +66,7 @@ export default function ResourceNotFoundPage() {
               target="_blank"
               href="https://discord.com/invite/ZMknxzWCBW"
             >
-              <span className="text-neutral-300 font-normal">Entre em contato</span>
+              <span className="font-normal text-neutral-300">Entre em contato</span>
               <SVGDiscord className="shrink-0" />
               <span>Discord</span>
             </Link>

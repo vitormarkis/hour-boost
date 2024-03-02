@@ -12,15 +12,15 @@ export const PlanSection = React.forwardRef<React.ElementRef<"section">, PlanSec
     return (
       <section
         {...props}
-        className={cn("flex py-32 pb-72 w-screen grow flex-wrap justify-center gap-6", className)}
+        className={cn("flex w-screen grow flex-wrap justify-center gap-6 py-32 pb-72", className)}
         ref={ref}
       >
-        <TitleSection className="text-center grow pb-[4rem]">Planos</TitleSection>
+        <TitleSection className="grow pb-[4rem] text-center">Planos</TitleSection>
         <div
           className="w-full pt-16"
           id="plans"
         >
-          <div className="max-w-7xl h-full flex flex-col items-center mdx:flex-row md:justify-evenly gap-16 md:gap-8 px-4 md:px-8 w-full mx-auto">
+          <div className="mdx:flex-row mx-auto flex h-full w-full max-w-7xl flex-col items-center gap-16 px-4 md:justify-evenly md:gap-8 md:px-8">
             <CP.Root>
               <CP.BackgroundBlob />
               <CP.Name>Grátis</CP.Name>
@@ -38,7 +38,7 @@ export const PlanSection = React.forwardRef<React.ElementRef<"section">, PlanSec
               <CP.BackgroundBlob className="bg-slate-400">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="translate-x-4 -translate-y-24 mdx:translate-x-4 rotate-[-7deg]"
+                  className="mdx:translate-x-4 -translate-y-24 translate-x-4 rotate-[-7deg]"
                   viewBox="0 0 256 256"
                   style={{
                     position: "absolute",
@@ -115,7 +115,7 @@ export const PlanSection = React.forwardRef<React.ElementRef<"section">, PlanSec
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 256 256"
-                  className="translate-y-[-6.5rem] translate-x-[0.9rem] mdx:translate-x-[-1.7rem] rotate-[28deg] scale-[1.8]"
+                  className="mdx:translate-x-[-1.7rem] translate-x-[0.9rem] translate-y-[-6.5rem] rotate-[28deg] scale-[1.8]"
                   style={{
                     position: "absolute",
                     bottom: 0,

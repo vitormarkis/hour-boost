@@ -8,17 +8,17 @@ export const SteamAccountListHeader = React.forwardRef<React.ElementRef<"div">, 
     return (
       <div
         {...props}
-        className={cn("relative h-11 border border-slate-800 flex", className)}
+        className={cn("relative flex h-11 border border-slate-800", className)}
         ref={ref}
       >
-        <div className="absolute top-0 bottom-0 right-full w-[0.25rem] bg-green-500" />
+        <div className="absolute bottom-0 right-full top-0 w-[0.25rem] bg-green-500" />
         <div className="flex items-center">
-          <div className="flex items-center h-full px-4">
+          <div className="flex h-full items-center px-4">
             <SGVDeviceMobile className="h-4 w-4" />
           </div>
         </div>
-        <div className="flex items-center pr-4 gap-4">
-          <div className="h-11 w-11 relative">
+        <div className="flex items-center gap-4 pr-4">
+          <div className="relative h-11 w-11">
             <img
               src="https://avatars.cloudflare.steamstatic.com/2ec38f7a0953fe2585abdda0757324dbbb519749_full.jpg"
               alt=""
@@ -30,14 +30,14 @@ export const SteamAccountListHeader = React.forwardRef<React.ElementRef<"div">, 
         <div className="flex items-center px-4">Farmando: 3h 22m...</div>
         <div className="flex items-center px-4">Horas ganhas: 23h</div>
         <div className="flex items-center px-4">Jogos: 1/2</div>
-        <div className="flex items-center ml-auto">
-          <button className="flex items-center h-full px-4 hover:bg-slate-700">
+        <div className="ml-auto flex items-center">
+          <button className="flex h-full items-center px-4 hover:bg-slate-700">
             <SVGChart className="h-4 w-4 fill-white" />
           </button>
-          <button className="flex items-center h-full px-4 hover:bg-slate-700">
+          <button className="flex h-full items-center px-4 hover:bg-slate-700">
             <SVGTrash className="h-4 w-4" />
           </button>
-          <button className="flex items-center px-8 bg-slate-800 h-full">Começar farm</button>
+          <button className="flex h-full items-center bg-slate-800 px-8">Começar farm</button>
         </div>
       </div>
     )

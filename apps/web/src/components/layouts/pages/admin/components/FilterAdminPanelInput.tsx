@@ -18,12 +18,12 @@ export const FilterAdminPanelInput = React.forwardRef<
   return (
     <section
       {...props}
-      className={cn("flex gap-2 mb-3", className)}
+      className={cn("mb-3 flex gap-2", className)}
       ref={ref}
     >
-      <label className="flex flex-col relative w-[20rem]">
+      <label className="relative flex w-[20rem] flex-col">
         <div className="absolute right-4 top-1/2 -translate-y-1/2">
-          <IconMagnifying className="w-4 h-4 text-slate-500" />
+          <IconMagnifying className="h-4 w-4 text-slate-500" />
         </div>
         <Input
           type="text"

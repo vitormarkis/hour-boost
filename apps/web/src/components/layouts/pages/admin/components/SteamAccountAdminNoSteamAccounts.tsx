@@ -10,7 +10,7 @@ export const SteamAccountAdminNoSteamAccounts = React.forwardRef<
   return (
     <div
       {...props}
-      className={cn("flex justify-center items-center", className)}
+      className={cn("flex items-center justify-center", className)}
       ref={ref}
     >
       <div className="py-4">

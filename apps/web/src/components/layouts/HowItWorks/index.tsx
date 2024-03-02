@@ -14,19 +14,19 @@ export const HowItWorksSection = React.forwardRef<React.ElementRef<"section">, H
         <div className="pt-24" />
         <section
           {...props}
-          className={cn("flex py-8 pb-72 w-screen grow flex-wrap justify-center gap-6", className)}
+          className={cn("flex w-screen grow flex-wrap justify-center gap-6 py-8 pb-72", className)}
           ref={ref}
           id="how-it-works"
         >
-          <div className="flex flex-col w-full">
+          <div className="flex w-full flex-col">
             <div className="mx-auto flex flex-col">
               <div className="px-[1.5rem]">
-                <div className="flex pb-2 items-center self-center justify-around gap-8">
-                  <div className="hidden md:block w-12 border-b border-white" />
+                <div className="flex items-center justify-around gap-8 self-center pb-2">
+                  <div className="hidden w-12 border-b border-white md:block" />
                   <TitleSection>Como funciona</TitleSection>
-                  <div className="hidden md:block w-12 border-b border-white" />
+                  <div className="hidden w-12 border-b border-white md:block" />
                 </div>
-                <p className="text-slate-400 max-w-md xs:text-center self-center">
+                <p className="xs:text-center max-w-md self-center text-slate-400">
                   Faça seu cadastro, adicione horas a sua conta, adicione quantas contas da steam quiser,
                   selecione os jogos e inicie o farm
                 </p>
@@ -34,7 +34,7 @@ export const HowItWorksSection = React.forwardRef<React.ElementRef<"section">, H
             </div>
             <div className="pt-12">
               <div className="w-full overflow-hidden">
-                <div className="flex flex-col md:flex-row gap-24 md:gap-0 justify-between w-full mx-auto max-w-6xl">
+                <div className="mx-auto flex w-full max-w-6xl flex-col justify-between gap-24 md:flex-row md:gap-0">
                   <CardApple.Root>
                     <CardApple.Title>1. Faça login</CardApple.Title>
                     <CardApple.MainAsset maskURL="https://cdn-icons-png.flaticon.com/512/4289/4289598.png" />
@@ -50,7 +50,7 @@ export const HowItWorksSection = React.forwardRef<React.ElementRef<"section">, H
                 </div>
               </div>
             </div>
-            <div className="pt-24 flex justify-center">
+            <div className="flex justify-center pt-24">
               <ButtonPrimary colorScheme="cyan-blue">Ver planos</ButtonPrimary>
             </div>
           </div>

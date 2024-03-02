@@ -17,7 +17,7 @@ export default function AdminDashboard({ user }: UserSessionParams) {
         username={user.username}
         profilePic={user.profilePic}
       />
-      <div className="max-w-[1440px] w-full mx-auto mdx:px-8 overflow-hidden">
+      <div className="mdx:px-8 mx-auto w-full max-w-[1440px] overflow-hidden">
         <AdminUserListContent />
       </div>
     </UserProvider>

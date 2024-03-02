@@ -12,8 +12,8 @@ export function ImagesGridOne({ source }: ImagesGridOneProps) {
 
   return (
     <ImagesGridGamesContainer>
-      <div className="flex flex-col h-full w-[calc(var(--games-container-width)*2)]">
-        <div className="flex-1 relative overflow-hidden">
+      <div className="flex h-full w-[calc(var(--games-container-width)*2)] flex-col">
+        <div className="relative flex-1 overflow-hidden">
           <Image
             quality={20}
             src={game1}

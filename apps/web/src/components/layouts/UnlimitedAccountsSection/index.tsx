@@ -11,10 +11,10 @@ export const UnlimitedAccountsSection = React.forwardRef<
   return (
     <section
       {...props}
-      className={cn("pb-24 relative overflow-hidden flex grow flex-wrap gap-6 bg-slate-950", className)}
+      className={cn("relative flex grow flex-wrap gap-6 overflow-hidden bg-slate-950 pb-24", className)}
       ref={ref}
     >
-      <TitleSection className="text-center grow">Contas Ilimitadas</TitleSection>
+      <TitleSection className="grow text-center">Contas Ilimitadas</TitleSection>
     </section>
   )
 })

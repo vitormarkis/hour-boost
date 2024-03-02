@@ -10,7 +10,7 @@ export const HeaderStructure = React.forwardRef<React.ElementRef<"div">, HeaderS
     return (
       <header className="relative z-40 flex h-14 items-center border-b border-white/10 bg-black/30 backdrop-blur-sm">
         <div
-          className={cn("h-full mx-auto flex w-full max-w-[1440px] items-center sm:px-8 px-4", className)}
+          className={cn("mx-auto flex h-full w-full max-w-[1440px] items-center px-4 sm:px-8", className)}
           {...props}
           ref={ref}
         >

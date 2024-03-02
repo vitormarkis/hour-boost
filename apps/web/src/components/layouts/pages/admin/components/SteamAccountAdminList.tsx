@@ -20,7 +20,7 @@ function SteamAccountAdminList({}: SteamAccountAdminListProps) {
 
   return (
     <>
-      {isUserBanned && <div className="absolute inset-0 bg-black/10 z-50 cursor-not-allowed" />}
+      {isUserBanned && <div className="absolute inset-0 z-50 cursor-not-allowed bg-black/10" />}
       <SteamAccountAdminListHeader />
       {steamAccountsIdList.map(id => (
         <SteamAccountAdminItem

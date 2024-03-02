@@ -31,28 +31,28 @@ export function ChooseFarmingGamesDesktop() {
       onOpenChange={helpers.onOpenChange}
     >
       <SheetTrigger asChild>
-        <button className="flex h-full items-center px-6 group hover:bg-slate-700 transition-all duration-300">
+        <button className="group flex h-full items-center px-6 transition-all duration-300 hover:bg-slate-700">
           <div className="flex flex-col items-center">
-            <span className="uppercase text-sm pb-1">{helpers.gamesStaging}</span>
-            <div className="flex items-center gap-1 h-6 ">
-              <IconJoystick className="transition-all duration-300 h-4 w-4 fill-slate-500 group-hover:fill-white" />
-              <span className="transition-all duration-300 text-slate-500 group-hover:text-white">+</span>
+            <span className="pb-1 text-sm uppercase">{helpers.gamesStaging}</span>
+            <div className="flex h-6 items-center gap-1 ">
+              <IconJoystick className="h-4 w-4 fill-slate-500 transition-all duration-300 group-hover:fill-white" />
+              <span className="text-slate-500 transition-all duration-300 group-hover:text-white">+</span>
             </div>
           </div>
         </button>
       </SheetTrigger>
       <SheetContent
-        className="p-0 border-none bg-transparent"
+        className="border-none bg-transparent p-0"
         side="right"
       >
-        <div className="p-0 flex flex-col h-screen">
-          <div className="absolute inset-0 bottom-[4.5rem] rounded-b-md border-l border-b border-slate-800 bg-background overflow-hidden">
-            <SheetHeader className="pt-6 px-4">
+        <div className="flex h-screen flex-col p-0">
+          <div className="bg-background absolute inset-0 bottom-[4.5rem] overflow-hidden rounded-b-md border-b border-l border-slate-800">
+            <SheetHeader className="px-4 pt-6">
               <SheetTitle>{local.accountName} - Seus jogos</SheetTitle>
               <SheetDescription>Selecione os jogos que queira farmar e clique em salvar.</SheetDescription>
-              <label className="flex flex-col relative">
+              <label className="relative flex flex-col">
                 <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <IconMagnifying className="w-4 h-4 text-slate-500" />
+                  <IconMagnifying className="h-4 w-4 text-slate-500" />
                 </div>
                 <Input
                   placeholder="Filtre jogos"
@@ -62,7 +62,7 @@ export function ChooseFarmingGamesDesktop() {
             </SheetHeader>
             <div className="flex flex-wrap gap-2 px-4 pt-4">
               <ButtonSmall
-                className="pr-4 pl-2"
+                className="pl-2 pr-4"
                 onClick={() => helpers.clearLocalStagingFarmList()}
               >
                 <ButtonSmallIcon>
@@ -71,7 +71,7 @@ export function ChooseFarmingGamesDesktop() {
                 <span>Resetar</span>
               </ButtonSmall>
               <ButtonSmall
-                className="pr-4 pl-2"
+                className="pl-2 pr-4"
                 onClick={helpers.handleRefreshGames}
                 disabled={local.refreshGames.isPending}
               >
@@ -85,11 +85,11 @@ export function ChooseFarmingGamesDesktop() {
               </div>
             )} */}
               </ButtonSmall>
-              <div className="pl-1 tabular-nums grid">
-                <span className="text-slate-500 text-sm">{helpers.localStagingSelectedGames}</span>
+              <div className="grid pl-1 tabular-nums">
+                <span className="text-sm text-slate-500">{helpers.localStagingSelectedGames}</span>
               </div>
             </div>
-            <main className="flex-1 overflow-y-scroll pb-14 mt-4 h-[calc(100%_-_8rem)]">
+            <main className="mt-4 h-[calc(100%_-_8rem)] flex-1 overflow-y-scroll pb-14">
               <div className="flex flex-col gap-2 overflow-y-hidden">
                 {helpers.gameList ? (
                   helpers.gameList.map(game => (
@@ -100,28 +100,28 @@ export function ChooseFarmingGamesDesktop() {
                     />
                   ))
                 ) : (
-                  <span className="pt-6 px-4 text-slate-600">Nenhum jogo encontrado.</span>
+                  <span className="px-4 pt-6 text-slate-600">Nenhum jogo encontrado.</span>
                 )}
               </div>
             </main>
           </div>
         </div>
-        <SheetFooter className="absolute left-0 right-0 bottom-0 z-30 gap-4 pb-4 pr-4">
+        <SheetFooter className="absolute bottom-0 left-0 right-0 z-30 gap-4 pb-4 pr-4">
           <ButtonSmall
-            className="flex-1 relative disabled:opacity-70 z-40"
+            className="relative z-40 flex-1 disabled:opacity-70"
             onClick={helpers.handleActionButton}
             disabled={helpers.actionSavingState}
             size="big"
           >
             <span>{helpers.actionSavingState ? "Salvando" : "Salvar"}</span>
             {helpers.actionSavingState && (
-              <div className="absolute top-1/2 -translate-y-1/2 right-4">
-                <IconArrowClockwise className="w-4 h-4 animate-spin" />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <IconArrowClockwise className="h-4 w-4 animate-spin" />
               </div>
             )}
           </ButtonSmall>
           <CancelClick
-            className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+            className="flex-1 bg-red-500 text-white hover:bg-red-600"
             size="big"
           >
             Cancelar
@@ -169,7 +169,7 @@ export const ButtonSmall = React.forwardRef<React.ElementRef<"button">, ButtonSm
 )
 
 export const ButtonSmallIcon: React.FC<PropsWithChildren> = ({ children }) => (
-  <Slot className="w-3 h-3 fill-white">{children}</Slot>
+  <Slot className="h-3 w-3 fill-white">{children}</Slot>
 )
 
 ButtonSmall.displayName = "ButtonSmall"

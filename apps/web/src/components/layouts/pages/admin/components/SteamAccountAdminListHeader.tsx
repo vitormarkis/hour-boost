@@ -14,7 +14,7 @@ export const SteamAccountAdminListHeader = React.forwardRef<
       className={cn("flex", className)}
       ref={ref}
     >
-      <div className="w-[calc(var(--sa-padding-left)_+_var(--container-height))] mr-2" />
+      <div className="mr-2 w-[calc(var(--sa-padding-left)_+_var(--container-height))]" />
       <ColumnWrapper className="w-[--sa-name-width] justify-start">
         <ColumnTitle>nome</ColumnTitle>
       </ColumnWrapper>
@@ -24,7 +24,7 @@ export const SteamAccountAdminListHeader = React.forwardRef<
       <ColumnWrapper className="w-[--sa-farmed-time-width]">
         <ColumnTitle>horas farmadas</ColumnTitle>
       </ColumnWrapper>
-      <ColumnWrapper className="w-[--sa-games-width] ml-auto">
+      <ColumnWrapper className="ml-auto w-[--sa-games-width]">
         <ColumnTitle>jogos em staging</ColumnTitle>
       </ColumnWrapper>
       <ColumnWrapper className="w-[--sa-games-width]">
@@ -48,7 +48,7 @@ const ColumnWrapper = React.forwardRef<React.ElementRef<"div">, ColumnWrapperPro
     return (
       <div
         {...props}
-        className={cn("px-2 flex justify-center items-center h-9", className)}
+        className={cn("flex h-9 items-center justify-center px-2", className)}
         ref={ref}
       />
     )

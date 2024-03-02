@@ -55,7 +55,7 @@ export const TimeSinceRoot = React.forwardRef<React.ElementRef<"div">, TimeSince
       >
         <div
           {...props}
-          className={cn("flex relative tabular-nums", column && "flex-col", className)}
+          className={cn("relative flex tabular-nums", column && "flex-col", className)}
           ref={ref}
         >
           {children}
@@ -78,7 +78,7 @@ export const TimeSinceHighlightTime = React.forwardRef<
   return (
     <strong
       {...props}
-      className={cn("leading-none font-medium whitespace-nowrap", className)}
+      className={cn("whitespace-nowrap font-medium leading-none", className)}
       ref={ref}
     >
       {highlightTime}
@@ -99,7 +99,7 @@ export const TimeSinceSecondaryTime = React.forwardRef<React.ElementRef<"span">,
     const Text: React.FC = () => (
       <span
         {...props}
-        className={cn("pt-0.5 leading-none text-xs text-slate-500 whitespace-nowrap", className)}
+        className={cn("whitespace-nowrap pt-0.5 text-xs leading-none text-slate-500", className)}
         ref={ref}
       >
         {secondaryTime}
