@@ -37,12 +37,17 @@ query_routerUser.get(
           return res.status(404).json({
             message: `Não foi possível encontrar uma sessão de usuário para usuário com ID [${error.payload.userId}]`,
           })
-        default:
+        case "ERROR":
+        case "ERROR-SIGNING-IDENTIFICATION-TOKEN":
           return res.status(500).json({
             message: `Aconteceu um erro ao pegar dados do usuário de ID [${userId}]`,
             errorMessage: error.message,
           })
+        default:
+          error satisfies never
       }
+      error satisfies never
+      throw new Error("Something wrong with types.")
     }
 
     if (me.code === "NO-USER-ID-PROVIDED") {

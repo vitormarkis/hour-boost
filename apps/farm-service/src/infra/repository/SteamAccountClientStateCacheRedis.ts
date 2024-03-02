@@ -7,6 +7,7 @@ import {
   InitProps,
   SteamAccountClientStateCacheRepository,
   SteamAccountPersonaState,
+  getCallStack,
 } from "core"
 import { Redis } from "ioredis"
 import { Logger } from "~/utils/Logger"

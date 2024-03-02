@@ -161,30 +161,21 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
   }
 
   async farmWithAccount({ accountName, gamesId, planId, session }: NSUserCluster.FarmWithAccount) {
-    try {
-      const sac = this.sacList.get(accountName)
-      if (!sac) return bad(Fail.create(EAppResults["SAC-NOT-FOUND"], 404))
+    const sac = this.sacList.get(accountName)
+    if (!sac) return bad(Fail.create(EAppResults["SAC-NOT-FOUND"], 404))
 
-      if (!this.farmService.hasAccountsFarming()) {
-        this.logger.log("SETANDO PRIMEIRO FARM")
-        const plan = await this.planRepository.getById(planId)
-        if (!plan) {
-          return bad(Fail.create(EAppResults["PLAN-NOT-FOUND"], 404))
-        }
-        this.updateFarmService(plan, session)
+    if (!this.farmService.hasAccountsFarming()) {
+      this.logger.log("SETANDO PRIMEIRO FARM")
+      const plan = await this.planRepository.getById(planId)
+      if (!plan) {
+        return bad(Fail.create(EAppResults["PLAN-NOT-FOUND"], 404, { planId }))
       }
-      const [errorFarming, result] = await this.farmWithAccountImpl(sac, accountName, gamesId)
-      await this.sacStateCacheRepository.save(sac.getCache())
-      if (errorFarming) return bad(errorFarming)
-      return nice(result)
-    } catch (error) {
-      return bad(
-        new Fail({
-          code: EAppResults["UNKNOWN-ERROR"],
-          payload: error instanceof Error ? error : undefined,
-        })
-      )
+      this.updateFarmService(plan, session)
     }
+    const [errorFarming, result] = await this.farmWithAccountImpl(sac, accountName, gamesId)
+    await this.sacStateCacheRepository.save(sac.getCache())
+    if (errorFarming) return bad(errorFarming)
+    return nice(result)
   }
 
   private async farmWithAccountImpl(sac: SteamAccountClient, accountName: string, gamesId: number[]) {
@@ -192,7 +183,7 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     if (!this.isAccountFarmingOnService(accountName)) {
       const [cantFarm] = this.farmService.checkIfCanFarm()
       if (cantFarm) {
-        sac.stopFarm()
+        const [,] = sac.stopFarm()
         return bad(cantFarm)
       }
     }
@@ -227,7 +218,6 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     session: NSUserCluster.FarmWithAccount["session"]
   ) {
     const farmStartedAt = session.type === "CONTINUE-FROM-PREVIOUS" ? session.farmStartedAt : new Date()
-    console.log("33; 2. updating farmstartedat", session, farmStartedAt)
     // const newFarmService = this.farmServiceFactory.create(this.username, plan, farmStartedAt)
     const newFarmService = this.farmServiceFactory.create(this.username, plan, new Date())
     this.setFarmService(newFarmService)

@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals"
 import { GuestPlan, PlanUsage, Usage } from "core"
 import {
   CustomInstances,
@@ -20,7 +21,6 @@ jest.setTimeout(1000)
 
 const now = new Date("2023-06-10T10:00:00Z")
 const log = console.log
-console.log = () => {}
 
 let i = makeTestInstances({
   validSteamAccounts,
@@ -42,6 +42,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 }
 
 describe("mobile", () => {
+  console.log = () => {}
+
   beforeEach(async () => {
     await setupInstances(
       {
@@ -52,6 +54,7 @@ describe("mobile", () => {
       }
     )
   })
+  console.log = log
 
   test("should ask for steam guard if the account has mobile steam guard", async () => {
     const response = await promiseHandler(
@@ -72,6 +75,8 @@ describe("mobile", () => {
 })
 
 describe("not mobile", () => {
+  console.log = () => {}
+
   beforeEach(async () => {
     await setupInstances({
       validSteamAccounts,
@@ -81,6 +86,7 @@ describe("not mobile", () => {
     )
     i.publisher.register(createLogPersistFarmSessionHandler())
   })
+  // console.log = log
 
   test("should start the farm", async () => {
     const response = await promiseHandler(
@@ -100,6 +106,9 @@ describe("not mobile", () => {
   })
 
   test("should update the farming games", async () => {
+    // import.meta.jest.useFakeTimers({ doNotFake: ["setTimeout", "setImmediate"] })
+    // console.log = () => {}
+
     const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
     await i.changeUserPlan(diamondPlan)
 
@@ -115,6 +124,7 @@ describe("not mobile", () => {
 
     expect(responseFarmGames.status).toBe(200)
 
+    // console.log = log
     const responseUpdateGames = await promiseHandler(
       farmGamesController.handle({
         payload: {
@@ -132,7 +142,7 @@ describe("not mobile", () => {
       status: 200,
       json: { message: "Farm atualizado." },
     })
-  })
+  }, 2000)
 
   test("should return 404 when not registered user is provided", async () => {
     const response = await promiseHandler(

@@ -1,4 +1,4 @@
-import { CacheState, PlanUsage, Usage } from "core"
+import { CacheState, CacheStateDTO, PlanUsage, Usage } from "core"
 import {
   CustomInstances,
   MakeTestInstancesProps,
@@ -23,12 +23,36 @@ let i = makeTestInstances({
 let meInstances = {} as PrefixKeys<"me">
 let friendInstances = {} as PrefixKeys<"friend">
 let restoreAccountManySessionsUseCase: RestoreAccountManySessionsUseCase
+let meStateDTO: CacheStateDTO
+let friendStateDTO: CacheStateDTO
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   i.publisher.register(new UpdateAccountCacheStateHandler(i.sacStateCacheRepository))
   meInstances = await i.createUser("me")
   friendInstances = await i.createUser("friend", { persistSteamAccounts: true })
+
+  meStateDTO = {
+    accountName: s.me.accountName,
+    farmStartedAt: new Date().getTime(),
+    isFarming: true,
+    gamesPlaying: [100],
+    gamesStaging: [100],
+    planId: meInstances.me.plan.id_plan,
+    status: "online" as const,
+    username: s.me.username,
+  }
+  friendStateDTO = {
+    accountName: s.friend.accountName,
+    farmStartedAt: new Date().getTime(),
+    isFarming: true,
+    gamesPlaying: [100],
+    gamesStaging: [100],
+    planId: friendInstances.friend.plan.id_plan,
+    status: "online" as const,
+    username: s.friend.username,
+  }
+
   const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
   const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
     i.allUsersClientsStorage,
@@ -51,33 +75,21 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 }
 
 beforeEach(async () => {
+  import.meta.jest.useFakeTimers({ doNotFake: ["setTimeout"] })
   console.log = () => {}
   await setupInstances({
     validSteamAccounts,
   })
   console.log = log
 })
+afterEach(() => {
+  import.meta.jest.useRealTimers()
+})
 
 describe("2 accounts, one used all plan usage limit", () => {
   beforeEach(async () => {
-    const meState = CacheState.restore({
-      accountName: s.me.accountName,
-      farmStartedAt: new Date(),
-      gamesPlaying: [100],
-      gamesStaging: [100],
-      planId: meInstances.me.plan.id_plan,
-      status: "online",
-      username: s.me.username,
-    })
-    const friendState = CacheState.restore({
-      accountName: s.friend.accountName,
-      farmStartedAt: new Date(),
-      gamesPlaying: [100],
-      gamesStaging: [100],
-      planId: friendInstances.friend.plan.id_plan,
-      status: "online",
-      username: s.friend.username,
-    })
+    const meState = CacheState.restoreFromDTO(meStateDTO)
+    const friendState = CacheState.restoreFromDTO(friendStateDTO)
     await i.sacStateCacheRepository.save(meState)
     await i.sacStateCacheRepository.save(friendState)
     const meAccountState = (await i.sacStateCacheRepository.get(s.me.accountName))!
@@ -101,6 +113,11 @@ describe("2 accounts, one used all plan usage limit", () => {
   })
 
   test("should restore both accounts connections, but only one farm", async () => {
+    const meSac = i.allUsersClientsStorage.getAccountClient(s.me.userId, s.me.accountName)!
+    const friendSac = i.allUsersClientsStorage.getAccountClient(s.friend.userId, s.friend.accountName)!
+    const spy_friendGamesPlayed = import.meta.jest.spyOn(friendSac.client, "gamesPlayed")
+    const spy_friendFarmGames = import.meta.jest.spyOn(friendSac, "farmGames")
+
     const [error] = await restoreAccountManySessionsUseCase.execute()
     expect(error).toBeNull()
 
@@ -108,13 +125,23 @@ describe("2 accounts, one used all plan usage limit", () => {
     expect(meAccountState.isFarming()).toBe(false)
     expect(meAccountState.gamesPlaying).toStrictEqual([])
 
-    const meSac = i.allUsersClientsStorage.getAccountClient(s.me.userId, s.me.accountName)!
-    const friendSac = i.allUsersClientsStorage.getAccountClient(s.friend.userId, s.friend.accountName)!
     expect(friendSac.logged).toBe(true)
     expect(friendSac.isFarming()).toBe(true)
     expect(friendSac.getGamesPlaying()).toStrictEqual([100])
+    expect(friendSac.getCache().toDTO()).toStrictEqual(friendStateDTO)
+    expect(spy_friendFarmGames).toHaveBeenCalledTimes(1)
+    expect(spy_friendFarmGames).toHaveBeenCalledWith([100])
+    expect(spy_friendGamesPlayed).toHaveBeenCalledWith([100])
     expect(meSac.logged).toBe(true)
     expect(meSac.getGamesPlaying()).toStrictEqual([])
     expect(meSac.isFarming()).toBe(false)
+    // @ ele bateu na validação e pausou o farm no cache
+    const finalMeDTO: CacheStateDTO = {
+      ...meStateDTO,
+      farmStartedAt: null,
+      gamesPlaying: [],
+      isFarming: false,
+    }
+    expect(meSac.getCache().toDTO()).toStrictEqual(finalMeDTO)
   })
 })

@@ -39,6 +39,7 @@ export interface SteamAccountSession extends Persona {
 }
 export const appAccountStatusSchema = z.enum(["offline", "online"])
 export type AppAccountStatus = z.infer<typeof appAccountStatusSchema>
+export type AppAccountStatusIddle = AppAccountStatus | "iddle"
 
 export interface PersonaWithAccountName extends Persona {
   accountName: string

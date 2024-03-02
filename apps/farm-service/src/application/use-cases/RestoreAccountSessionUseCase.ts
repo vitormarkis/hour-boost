@@ -5,6 +5,7 @@ import { SACGenericError, handleSteamClientError } from "~/application/use-cases
 import { Publisher } from "~/infra/queue"
 import { FailGeneric } from "~/types/EventsApp.types"
 import { Pretify, bad, nice } from "~/utils/helpers"
+import { restoreSACStateOnApplication } from "~/utils/restoreSACStateOnApplication"
 
 type Payload = {
   state: CacheState | null
@@ -91,69 +92,13 @@ export async function restoreSACSessionOnApplication({
   usersClusterStorage,
 }: Props) {
   const userCluster = usersClusterStorage.getOrAdd(username, plan)
-  const isAccountFarming = userCluster.isAccountFarmingOnService(sac.accountName)
-
-  if (!userCluster.hasSteamAccountClient(sac.accountName) && !isAccountFarming) {
-    const [errorAddingSac] = userCluster.addSAC(sac)
-
-    if (errorAddingSac?.code === "TRIED_TO_ADD::ALREADY_EXISTS") {
-    }
-  }
 
   if (state) {
-    sac.restoreCacheSession(
-      CacheState.restore({
-        accountName: sac.accountName,
-        farmStartedAt: state.farmStartedAt ? new Date(state.farmStartedAt) : null,
-        gamesPlaying: state.gamesPlaying,
-        gamesStaging: state.gamesStaging,
-        planId: plan.id_plan,
-        status: state.status,
-        username,
-      })
-    )
+    const restore = restoreSACStateOnApplication(userCluster)
+    const [error] = await restore(sac, CacheState.restoreFromDTO(state))
+    if (error) return bad(error)
   }
 
-  if (!sac.logged) return bad(Fail.create(EAppResults["SAC-NOT-LOGGED"], 400))
-
-  if (state && state.isFarming) {
-    // if (state && state.isFarming && shouldRestoreGames) {
-
-    const [errorFarmWithAccount] = await userCluster.farmWithAccount({
-      accountName: state.accountName,
-      gamesId: state.gamesPlaying,
-      planId: state.planId,
-      session: state.farmStartedAt
-        ? {
-            type: "CONTINUE-FROM-PREVIOUS",
-            farmStartedAt: new Date(state.farmStartedAt),
-          }
-        : {
-            type: "NEW",
-          },
-    })
-
-    if (errorFarmWithAccount) {
-      return bad(
-        new Fail({
-          code: errorFarmWithAccount.code,
-        })
-      )
-    }
-
-    const error = await Promise.race([
-      new Promise<SACGenericError>(res => sac.client.once("error", res)),
-      new Promise<false>(res => setTimeout(() => res(false), 1000)),
-    ])
-    if (error) {
-      const fail = new Fail({
-        code: EAppResults["UNKNOWN-CLIENT-ERROR"],
-        httpStatus: 400,
-        payload: error,
-      })
-      return bad(fail)
-    }
-  }
   return nice()
 }
 

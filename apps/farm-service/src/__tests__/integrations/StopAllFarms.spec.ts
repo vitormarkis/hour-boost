@@ -39,14 +39,14 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 }
 
 beforeEach(async () => {
-  jest
+  import.meta.jest
     .useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
     .setSystemTime(new Date("2024-02-20T00:00:00.000Z"))
   await setupInstances({ validSteamAccounts })
 })
 
 afterEach(async () => {
-  jest.useRealTimers()
+  import.meta.jest.useRealTimers()
 })
 
 describe("2 infinity plan and 1 usage plan farming ", () => {
@@ -106,7 +106,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
       },
     })
 
-    jest.useRealTimers()
+    import.meta.jest.useRealTimers()
   })
 
   test("should list all users services as farming", async () => {
@@ -124,7 +124,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
   describe("Stopped all farms test suite", () => {
     let spyPublish: jest.SpyInstance
     beforeEach(async () => {
-      spyPublish = jest.spyOn(i.publisher, "publish")
+      spyPublish = import.meta.jest.spyOn(i.publisher, "publish")
       stopAllFarms.execute({ killSession: false })
       await new Promise(setImmediate)
     })

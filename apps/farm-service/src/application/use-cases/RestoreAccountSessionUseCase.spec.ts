@@ -10,6 +10,10 @@ import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 import { GuestPlan, PlanUsage, Usage } from "core"
 import { RestoreAccountConnectionUseCase } from "./RestoreAccountConnectionUseCase"
+import {
+  TEST_RestoreAccountConnection,
+  makeRestoreAccountConnection,
+} from "~/application/use-cases/__tests_helpers"
 
 const log = console.log
 // console.log = () => {}
@@ -20,6 +24,7 @@ let i = makeTestInstances({
 let meInstances = {} as PrefixKeys<"me">
 let restoreAccountSessionUseCase: RestoreAccountSessionUseCase
 let restoreAccountConnectionUseCase: RestoreAccountConnectionUseCase
+let restoreAccountConnection: TEST_RestoreAccountConnection
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   console.log = () => {}
@@ -31,6 +36,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.usersClusterStorage,
     i.sacStateCacheRepository
   )
+  restoreAccountConnection = makeRestoreAccountConnection(restoreAccountConnectionUseCase, i.usersRepository)
   restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
   console.log = log
 }
@@ -106,26 +112,6 @@ async function restoreAccountSession(accountName: string, userId: string, planId
   })
 
   return res
-}
-
-async function restoreAccountConnection(userId: string, accountName: string) {
-  const user = (await i.usersRepository.getByID(userId))!
-  const steamAccount = user.steamAccounts.getByAccountName(accountName)!
-  const [errorRestoringConnection, restoreConnectionResult] = await restoreAccountConnectionUseCase.execute({
-    steamAccount: {
-      accountName: steamAccount.credentials.accountName,
-      autoRestart: steamAccount.autoRelogin,
-      password: steamAccount.credentials.password,
-    },
-    user: {
-      id: user.id_user,
-      plan: user.plan,
-      username: user.username,
-    },
-  })
-
-  expect(errorRestoringConnection).toBeNull()
-  expect(restoreConnectionResult?.code).toBe("ACCOUNT-RELOGGED::CREDENTIALS")
 }
 
 //

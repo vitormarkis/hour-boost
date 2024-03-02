@@ -125,7 +125,7 @@ test("should remove steam account and logoff client", async () => {
     password,
   })
   const sac = i.allUsersClientsStorage.getAccountClient(s.me.userId, s.me.accountName)!
-  const spy = jest.spyOn(sac.client, "logOff")
+  const spy = import.meta.jest.spyOn(sac.client, "logOff")
   const accountId = meInstances.me.steamAccounts.data[0].id_steamAccount
   const account1 = await i.steamAccountsRepository.getByAccountName(s.me.accountName)
   expect(account1?.ownerId).toBe(s.me.userId)

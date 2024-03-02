@@ -1,5 +1,5 @@
-import { ClerkClient } from "@clerk/clerk-sdk-node/dist/types/types"
 import { IClerkUser, UserAuthentication } from "core"
+import { ClerkClient } from "node_modules/@clerk/clerk-sdk-node/dist/types/types"
 
 export class ClerkAuthentication implements UserAuthentication {
   constructor(private readonly clerkClient: ClerkClient) {}

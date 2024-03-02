@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals"
 import { CustomInstances, MakeTestInstancesProps, makeTestInstances } from "~/__tests__/instances"
 import { UsersSACsFarmingClusterStorage } from "~/application/services/UsersSACsFarmingClusterStorage"
 // console.log = () => { }

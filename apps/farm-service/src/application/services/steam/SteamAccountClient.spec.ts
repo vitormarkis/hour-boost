@@ -27,7 +27,7 @@ let logSpy: jest.SpyInstance
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   meInstances = await i.createUser("me")
-  logSpy = jest.spyOn(console, "log")
+  logSpy = import.meta.jest.spyOn(console, "log")
 }
 
 beforeEach(async () => {
@@ -37,7 +37,7 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-  jest.useRealTimers()
+  import.meta.jest.useRealTimers()
   await i.sacStateCacheRepository.flushAll()
 })
 
@@ -62,7 +62,7 @@ test("should ", async () => {
 })
 
 test("should await promise, call hasSession resolver once user logged in", async () => {
-  jest.useFakeTimers({ doNotFake: ["setTimeout"] })
+  import.meta.jest.useFakeTimers({ doNotFake: ["setTimeout"] })
   const sac = meInstances.meSAC
   let xs = 0
 
@@ -84,20 +84,20 @@ test("should await promise, call hasSession resolver once user logged in", async
       res((xs = 1))
     })
   })
-  // jest.runAllTimers()
+  // import.meta.jest.runAllTimers()
   expect(xs).toBe(1)
 })
 
 test("should await promise, call interrupt resolver once connection is break", async () => {
   console.log("starting last one")
-  jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
+  import.meta.jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
   const sac = meInstances.meSAC
   const userCluster = i.usersClusterStorage.getOrAdd(s.me.username, meInstances.me.plan)
   let xs = 0
   userCluster.addSAC(sac)
 
   sac.login(s.me.accountName, password)
-  jest.advanceTimersByTime(0)
+  import.meta.jest.advanceTimersByTime(0)
   sac.client.emit("error", { eresult: SteamUser.EResult.NoConnection })
   await new Promise(res => {
     sac.emitter.setEventResolver("interrupt", () => {

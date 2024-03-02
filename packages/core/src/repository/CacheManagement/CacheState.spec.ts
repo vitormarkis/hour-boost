@@ -96,8 +96,9 @@ test("should farm, stop and return correct usage amount", async () => {
   })
   cache.farmGames([123, 3453])
   jest.advanceTimersByTime(1000 * 60 * 60 * 5)
-  const usage = cache.stopFarm()
-  expect(usage.amountTime).toBe(60 * 60 * 5)
+  const [error, usage] = cache.stopFarm()
+  expect(error).toBeNull()
+  expect(usage!.amountTime).toBe(60 * 60 * 5)
   jest.useRealTimers()
 })
 
@@ -115,6 +116,7 @@ describe("Invariant", () => {
       })
     ).toThrow("Invariant! Não está farmando e started at está truthy.")
   })
+
   test("throw if is farming, but farm started at is null", async () => {
     expect(() =>
       CacheState.restore({
@@ -127,5 +129,17 @@ describe("Invariant", () => {
         gamesStaging: [100],
       })
     ).toThrow("Invariant! Está farmando mas started at está como nulo.")
+  })
+
+  test("throw if attempt to farm with 0 games", async () => {
+    const cache = CacheState.create({
+      accountName: "acc",
+      planId: "plan_123",
+      status: "online",
+      username: "username",
+    })
+    expect(() => cache.farmGames([])).toThrow(
+      "NSTH: Tentativa de farmar 0 jogos. 0 jogos significa não farmando."
+    )
   })
 })

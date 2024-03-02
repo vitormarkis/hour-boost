@@ -1,5 +1,6 @@
 import {
   AppAccountStatus,
+  AppAccountStatusIddle,
   ApplicationError,
   PlanRepository,
   SteamAccountClientStateCacheRepository,
@@ -136,7 +137,7 @@ export class UserClientsStorage {
         logged: boolean
         gamesPlaying: number[]
         gamesStaging: number[]
-        status: AppAccountStatus
+        status: AppAccountStatusIddle
         farmStartedAt: string | null
       }
     >

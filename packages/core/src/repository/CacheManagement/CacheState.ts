@@ -1,4 +1,6 @@
-import { AppAccountStatus } from "core/presenters"
+import { Fail } from "core/entity"
+import { AppAccountStatus, AppAccountStatusIddle } from "core/presenters"
+import { bad, nice } from "core/utils"
 import { makeError } from "core/utils/throw"
 
 export class CacheState {
@@ -8,7 +10,7 @@ export class CacheState {
   planId: string
   username: string
   farmStartedAt: Date | null
-  status: AppAccountStatus
+  status: AppAccountStatusIddle
 
   private constructor(props: NSCacheState.Restore) {
     if (props.gamesPlaying.length > 0 && props.farmStartedAt === null)
@@ -29,15 +31,13 @@ export class CacheState {
     this.gamesStaging = gamesId
   }
 
-  setFarmStartedAt(when: Date | null) {
-    this.farmStartedAt = when
-  }
-
   changeStatus(status: AppAccountStatus) {
     this.status = status
   }
 
   farmGames(gamesIdList: number[]) {
+    if (gamesIdList.length === 0)
+      throw new Error("NSTH: Tentativa de farmar 0 jogos. 0 jogos significa não farmando.")
     if (!this.isFarming()) {
       this.farmStartedAt = new Date()
     }
@@ -48,14 +48,14 @@ export class CacheState {
     return this.gamesPlaying.length > 0
   }
 
-  stopFarm(): { amountTime: number } {
+  stopFarm() {
     this.gamesPlaying = []
-    if (!this.farmStartedAt) throw new Error("tentou parar farm que esteva com started como nulo")
+    if (!this.farmStartedAt) return bad(Fail.create("ATTEMPT_TO_STOP_FARM_ON_NULL_FARM_STARTED_AT", 403))
     const usage = {
       amountTime: this.calculateManySecondsSince(this.farmStartedAt),
     }
     this.farmStartedAt = null
-    return usage
+    return nice(usage)
   }
 
   private calculateManySecondsSince(date: Date) {
@@ -79,6 +79,16 @@ export class CacheState {
     return new CacheState(fromDTOToRestore(props))
   }
 
+  restoreHollow(props: CacheStateHollow) {
+    return new CacheState({
+      ...props,
+      farmStartedAt: null,
+      gamesStaging: [],
+      gamesPlaying: [],
+      status: "iddle",
+    })
+  }
+
   toDTO(): CacheStateDTO {
     return {
       accountName: this.accountName,
@@ -92,6 +102,8 @@ export class CacheState {
     }
   }
 }
+
+export type CacheStateHollow = Pick<CacheStateDTO, "accountName" | "planId" | "username">
 
 function fromDTOToRestore(props: CacheStateDTO): NSCacheState.Restore {
   return {
@@ -113,7 +125,7 @@ export interface CacheStateDTO {
   username: string
   planId: string
   farmStartedAt: number | null
-  status: AppAccountStatus
+  status: AppAccountStatusIddle
 }
 
 export namespace NSCacheState {
@@ -121,7 +133,7 @@ export namespace NSCacheState {
     accountName: string
     planId: string
     username: string
-    status: AppAccountStatus
+    status: AppAccountStatusIddle
   }
 
   export type Restore = {
@@ -131,6 +143,6 @@ export namespace NSCacheState {
     planId: string
     username: string
     farmStartedAt: Date | null
-    status: AppAccountStatus
+    status: AppAccountStatusIddle
   }
 }

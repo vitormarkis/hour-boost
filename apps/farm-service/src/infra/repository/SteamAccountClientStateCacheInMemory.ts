@@ -5,6 +5,7 @@ import {
   InitProps,
   SteamAccountClientStateCacheRepository,
   SteamAccountPersonaState,
+  getCallStack,
 } from "core"
 import { SACCacheInMemory } from "~/infra/repository/SACCacheInMemory"
 import { Logger } from "~/utils/Logger"
@@ -31,12 +32,12 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
       )
     }
   }
-  async get(accountName: string): Promise<CacheState | null> {
+  get(accountName: string): Promise<CacheState | null> {
     if (accountName === s.me.accountName) {
       this.logger.log(`getting from cache`, this.data.state.get(accountName))
     }
     const foundCache = this.data.state.get(accountName)
-    return foundCache ? foundCache : null
+    return Promise.resolve(foundCache ? foundCache : null)
     // return foundCache ? CacheState.restoreFromDTO(foundCache) : null
   }
 

@@ -29,7 +29,7 @@ beforeEach(async () => {
 
 test("should ", async () => {
   const today = new Date("2024-01-12T10:00:00.000Z")
-  jest.useFakeTimers({ doNotFake: ["setTimeout"] }).setSystemTime(today)
+  import.meta.jest.useFakeTimers({ doNotFake: ["setTimeout"] }).setSystemTime(today)
   await i.createUser("me")
 
   const plan = new PlanBuilder(s.me.userId).infinity().diamond()
@@ -74,7 +74,7 @@ test("should ", async () => {
   const cacheState2 = await i.sacStateCacheRepository.get(s.me.accountName)
   expect(cacheState2?.farmStartedAt).toBe(null)
 
-  jest.advanceTimersByTime(1000 * 3600 * 2) // 2 hours
+  import.meta.jest.advanceTimersByTime(1000 * 3600 * 2) // 2 hours
   const after = new Date("2024-01-12T12:00:00.000Z")
 
   // console.log = log

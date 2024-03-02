@@ -8,6 +8,7 @@ const config: Config = {
     "^.+\\.(t|j)sx?$": "@swc/jest",
   },
   coverageProvider: "v8",
+  extensionsToTreatAsEsm: [".ts", ".tsx"],
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
     prefix: "<rootDir>/",
   }),

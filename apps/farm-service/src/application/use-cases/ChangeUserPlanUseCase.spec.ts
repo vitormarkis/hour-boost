@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals"
 import { DiamondPlan, GuestPlan, SilverPlan, Usage } from "core"
 import {
   CustomInstances,

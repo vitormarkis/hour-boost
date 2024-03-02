@@ -5,12 +5,12 @@ import {
   ApplicationError,
   CacheState,
   CacheStateDTO,
+  CacheStateHollow,
   DataOrError,
   Fail,
   GameSession,
   IRefreshToken,
-  NSCacheState,
-  SteamAccountPersonaState,
+  SteamAccountPersonaState
 } from "core"
 import { appendFile } from "fs"
 import SteamUser from "steam-user"
@@ -37,8 +37,8 @@ export class SteamAccountClient extends LastHandler {
   ownershipCached = false
   autoRestart: boolean
 
-  restoreCacheSession(cacheState: CacheState) {
-    this.cache = cacheState
+  restoreCacheHollowSession(props: CacheStateHollow) {
+    this.cache.restoreHollow(props)
   }
 
   constructor({ instances, props }: SteamAccountClientProps) {
@@ -203,17 +203,24 @@ export class SteamAccountClient extends LastHandler {
     return this.cache.status
   }
 
+  farmGames(gamesID: number[]) {
+    const userIntention = getUserFarmIntention(gamesID, this.cache.gamesPlaying)
+    if (userIntention === "DIDNT-ADD-GAMES") return
+
+    this.cache.farmGames(gamesID)
+    this.logger.log(`Calling the client with `, gamesID)
+    this.client.gamesPlayed(gamesID)
+  }
+
   stopFarm() {
-    this.farmGames([])
-    return this.cache.stopFarm()
+    this.client.gamesPlayed([])
+    const [error] = this.cache.stopFarm()
+    if (error) return bad(error)
+    return nice()
   }
 
   stopFarm_CLIENT_() {
-    this.farmGames([])
-  }
-
-  setGamesPlaying(gamesID: number[]) {
-    this.cache.farmGames(gamesID)
+    this.client.gamesPlayed([])
   }
 
   login(accountName: string, password: string, authCode?: string) {
@@ -266,17 +273,6 @@ export class SteamAccountClient extends LastHandler {
 
   getPlayingGames() {
     return this.cache.gamesPlaying
-  }
-
-  farmGames(gamesID: number[]) {
-    const when = new Date()
-
-    const userIntention = getUserFarmIntention(gamesID, this.cache.gamesPlaying)
-    if (userIntention === "DIDNT-ADD-GAMES") return
-
-    this.setGamesPlaying(gamesID)
-    this.logger.log(`Calling the client with `, gamesID)
-    this.client.gamesPlayed(gamesID)
   }
 
   isFarming(): boolean {

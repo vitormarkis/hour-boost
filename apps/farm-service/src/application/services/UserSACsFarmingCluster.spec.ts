@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals"
 import { CacheState, CacheStateDTO } from "core"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"

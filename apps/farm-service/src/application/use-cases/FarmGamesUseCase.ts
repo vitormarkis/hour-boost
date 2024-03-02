@@ -14,32 +14,21 @@ export class FarmGamesUseCase extends IFarmGamesUseCase {
   }
 
   async execute({ username, plan, accountName, sac, gamesId, planId, session }: FarmGamesUseCaseProps) {
-    try {
-      // const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
-      const [error, userCluster] = this.usersClusterStorage.get(username)
-      if (error) return bad(error)
-      const isAccountFarming = userCluster.isAccountFarmingOnService(accountName)
-      if (!userCluster.hasSteamAccountClient(accountName) && !isAccountFarming) {
-        userCluster.addSAC(sac)
-      }
-      const [errorFarmingWithAccount, result] = await userCluster.farmWithAccount({
-        accountName,
-        gamesId,
-        planId,
-        session,
-      })
-      if (errorFarmingWithAccount) return bad(errorFarmingWithAccount)
-      return nice(result)
-    } catch (error) {
-      console.log({ "FarmGamesUseCase.execute.error": error })
-      return bad(
-        new Fail({
-          code: EAppResults["UNKNOWN-ERROR"],
-          payload: error as Error,
-          httpStatus: 400,
-        })
-      )
+    // const userCluster = this.usersClusterStorage.getOrAdd(username, plan)
+    const [error, userCluster] = this.usersClusterStorage.get(username)
+    if (error) return bad(error)
+    const isAccountFarming = userCluster.isAccountFarmingOnService(accountName)
+    if (!userCluster.hasSteamAccountClient(accountName) && !isAccountFarming) {
+      userCluster.addSAC(sac)
     }
+    const [errorFarmingWithAccount, result] = await userCluster.farmWithAccount({
+      accountName,
+      gamesId,
+      planId,
+      session,
+    })
+    if (errorFarmingWithAccount) return bad(errorFarmingWithAccount)
+    return nice(result)
   }
 }
 

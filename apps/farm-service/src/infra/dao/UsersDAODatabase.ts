@@ -311,6 +311,8 @@ function makeSteamAccountFromDatabaseToSession(
         }, 0)
       : 0
 
+    if (status === "iddle") throw new Error("SAC state status iddle being sent to the client")
+
     return Promise.resolve({
       accountName,
       games,

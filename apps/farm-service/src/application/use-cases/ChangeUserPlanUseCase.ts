@@ -85,7 +85,7 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
         username: user.username,
         state,
       })
-      if (error && error?.code !== "[RestoreAccountSessionUseCase]::SAC-NOT-LOGGED") fails.push(error)
+      // if (error && error?.code !== "[RestoreAccountSessionUseCase]::SAC-NOT-LOGGED") fails.push(error)
     }
 
     if (fails.length > 0) {

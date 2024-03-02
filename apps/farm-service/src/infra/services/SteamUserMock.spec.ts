@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals"
 import { SteamUserMock } from "~/infra/services/SteamUserMock"
 import { sleep } from "~/utils"
 
