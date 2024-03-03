@@ -67,7 +67,10 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 })
 
 const restoreUsersSessionsUseCase = new RestoreUsersSessionsUseCase(usersClusterStorage)
-const restoreAccountSessionsUseCase = new RestoreAccountManySessionsUseCase(steamAccountsDAO, autoRestartCron)
+const restoreAccountManySessionsUseCase = new RestoreAccountManySessionsUseCase(
+  steamAccountsDAO,
+  autoRestartCron
+)
 
 async function main() {
   if (env.NODE_ENV !== "PRODUCTION") {
@@ -77,9 +80,9 @@ async function main() {
 
   const users = await usersRepository.findMany()
   restoreUsersSessionsUseCase.execute({ users })
-  await restoreAccountSessionsUseCase.execute()
-  // await restoreAccountSessionsUseCase.execute({
-  //   whitelistAccountNames: [],
+  await restoreAccountManySessionsUseCase.execute()
+  // await restoreAccountManySessionsUseCase.execute({
+  //   whitelistAccountNames: []
   // })
 }
 

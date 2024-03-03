@@ -9,10 +9,12 @@ export class AddMoreGamesToPlanUseCase implements IAddMoreGamesToPlanUseCase {
     private readonly changeUserPlanToCustomUseCase: ChangeUserPlanToCustomUseCase
   ) {}
 
-  async execute({ userId, newMaxGamesAllowed }: AddMoreGamesToPlanUseCasePayload) {
-    let user = await this.usersRepository.getByID(userId)
+  async execute({ mutatingUserId, newMaxGamesAllowed }: AddMoreGamesToPlanUseCasePayload) {
+    let user = await this.usersRepository.getByID(mutatingUserId)
     if (!user) {
-      return bad(Fail.create(EAppResults["USER-NOT-FOUND"], 404, { givenUserId: userId, foundUser: user }))
+      return bad(
+        Fail.create(EAppResults["USER-NOT-FOUND"], 404, { givenUserId: mutatingUserId, foundUser: user })
+      )
     }
     if (!user.plan.isCustom()) {
       const [error, userWithCustomPlan] = await this.changeUserPlanToCustomUseCase.execute({ user })
@@ -27,7 +29,7 @@ export class AddMoreGamesToPlanUseCase implements IAddMoreGamesToPlanUseCase {
 }
 
 export type AddMoreGamesToPlanUseCasePayload = {
-  userId: string
+  mutatingUserId: string
   newMaxGamesAllowed: number
 }
 

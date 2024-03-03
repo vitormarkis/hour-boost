@@ -54,11 +54,11 @@ export const ActionSetGamesLimitMenuSubContent = React.forwardRef<
     if (isSure) {
       mutationSetGames.mutate(
         {
-          newGamesLimit: inputValueMaxGamesLimit,
-          userId,
+          mutatingUserId: userId,
+          newMaxGamesAllowed: inputValueMaxGamesLimit,
         },
         {
-          onSuccess([undesired, message], { newGamesLimit }) {
+          onSuccess([undesired, message]) {
             if (undesired) {
               toast[undesired.type](undesired.message)
               return

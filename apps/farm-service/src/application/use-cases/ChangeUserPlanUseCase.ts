@@ -1,5 +1,4 @@
 import {
-  CacheState,
   DataOrFail,
   Fail,
   GetError,
@@ -9,13 +8,12 @@ import {
   UsersRepository,
 } from "core"
 import { PlanService } from "~/domain/services/PlanService"
+import { UserService } from "~/domain/services/UserService"
+import { getUserSACs_OnStorage_ByUser } from "~/utils/getUser"
 import { bad, nice } from "~/utils/helpers"
 import { trimAccountsName } from "~/utils/trimAccountsName"
-import { updateCacheStates } from "~/utils/updateCacheStates"
-import { EAppResults, RemoveSteamAccountUseCase, RestoreAccountSessionUseCase } from "."
+import { RemoveSteamAccountUseCase, RestoreAccountSessionUseCase } from "."
 import { AllUsersClientsStorage } from "../services"
-import { UserService } from "~/domain/services/UserService"
-import { getUserSACs_OnStorage_ByUser, getUserSACs_OnStorage_ByUserId } from "~/utils/getUser"
 
 export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
   constructor(
@@ -35,11 +33,6 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
     const trimmingAccountsName = trimAccountsName({
       newPlan,
       steamAccounts: user.steamAccounts.data,
-    })
-
-    console.log({
-      steamAccounts: user.steamAccounts.data,
-      trimmingAccountsName,
     })
 
     let failsTrimmingAccount: Fail[] = []
@@ -85,10 +78,27 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
         username: user.username,
         state,
       })
+      switch (error?.code) {
+        case "KNOWN-ERROR":
+        case "OTHER-SESSION-STILL-ON":
+        case "[RestoreAccountSessionUseCase]::PLAN-NOT-FOUND":
+        case "[RestoreAccountSessionUseCase]::[FarmInfinityService]:ACCOUNT-ALREADY-FARMING":
+        case "[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED":
+          continue
+        case "cluster.farmWithAccount()::UNKNOWN-CLIENT-ERROR":
+        case "[RestoreAccountSessionUseCase]::SAC-NOT-FOUND":
+        case "[RestoreAccountSessionUseCase]::UNKNOWN-CLIENT-ERROR":
+        case "UNKNOWN-APPLICATION-ERROR":
+        case "UNKNOWN-CLIENT-ERROR":
+          fails.push(error)
+          continue
+        default:
+          error satisfies null
+      }
       // if (error && error?.code !== "[RestoreAccountSessionUseCase]::SAC-NOT-LOGGED") fails.push(error)
     }
 
-    if (fails.length > 0) {
+    if (fails.length) {
       console.log("NSTH: had a list to restore account session, but some failed", fails)
       return bad({ code: "LIST::UPDATING-CACHE", fails })
     }

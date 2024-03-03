@@ -1,4 +1,4 @@
 export type UserAdminActionSetGamesPayload = {
-  userId: string
-  newGamesLimit: number
+  mutatingUserId: string
+  newMaxGamesAllowed: number
 }

@@ -10,6 +10,7 @@ import { AllUsersClientsStorage } from "~/application/services"
 import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { SteamClientEventsRequired } from "~/utils/SteamClientEventsRequired"
+import { bad } from "~/utils/helpers"
 
 export namespace AddSteamAccountUseCaseHandle {
   export type Payload = {

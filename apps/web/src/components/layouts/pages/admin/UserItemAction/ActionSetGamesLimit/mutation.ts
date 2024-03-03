@@ -31,7 +31,7 @@ function setGamesLimitMutateUser(
 ) {
   if (!users) return
   return produce(users, users => {
-    const user = users.find(u => u.id_user === variables.userId)!
-    user.plan.maxGamesAllowed = variables.newGamesLimit
+    const user = users.find(u => u.id_user === variables.mutatingUserId)!
+    user.plan.maxGamesAllowed = variables.newMaxGamesAllowed
   })
 }

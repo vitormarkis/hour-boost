@@ -22,12 +22,12 @@ import {
 } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
 import { EAppResults, SACGenericError } from "~/application/use-cases"
-import { CLIENT_ERRORS_THAT_SHOULD_SCHEDULE_AUTO_RESTARTER } from "~/consts"
 import { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
 import { StateCachePayloadFarmService } from "~/utils/builders/SACStateCacheBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { Pretify, bad, nice } from "~/utils/helpers"
+import { thisErrorShouldScheduleAutoRestarter } from "~/utils/shouldScheduleAutoRestater"
 
 export interface IUserSACsFarmingCluster {
   addSAC(...args: any[]): DataOrError<{ userCluster: UserSACsFarmingCluster }>
@@ -90,7 +90,7 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     })
 
     sac.emitter.on("interrupt", async (cacheState, error) => {
-      if (!sac.autoRestart && CLIENT_ERRORS_THAT_SHOULD_SCHEDULE_AUTO_RESTARTER.includes(error.eresult)) {
+      if (!sac.autoRestart && thisErrorShouldScheduleAutoRestarter(error.eresult)) {
         this.shouldPersistSession = false
       }
       if (this.shouldPersistSession) {

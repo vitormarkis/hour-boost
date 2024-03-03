@@ -16,11 +16,19 @@ export async function httpUserAdminActionSetGames(
   const api = await getAPI()
   const [error, response] = await resolvePromiseToMessage(
     (async () => {
-      const { newGamesLimit, userId } = payload
-      await new Promise(res => setTimeout(res, 1500))
+      const { data, status } = await api.post<
+        any,
+        AxiosResponse<UserAdminActionSetGamesOutput>,
+        UserAdminActionSetGamesPayload
+      >("/admin/add-more-games", payload, {
+        withCredentials: true,
+      })
+
+      console.log({ data, status })
+
       return {
         status: 200,
-        data: { message: `Você mudou o limite de jogos farmados simultâneamente para ${newGamesLimit}` },
+        data: { message: `Você mudou o limite de jogos farmados simultâneamente para ${payload.newMaxGamesAllowed}` },
       }
     })()
   )
@@ -33,7 +41,3 @@ export async function httpUserAdminActionSetGames(
   console.log({ response })
   return [msg.new("Resposta desconhecida.", "info")]
 }
-
-// api.post<any, AxiosResponse<UserAdminActionSetGamesOutput>, UserAdminActionSetGamesPayload>(
-//   "/farm/stop",
-//   payload

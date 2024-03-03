@@ -1,4 +1,3 @@
-import clerkClient from "@clerk/clerk-sdk-node"
 import { IDGeneratorUUID } from "core"
 import SteamUser from "steam-user"
 import { FarmServiceBuilder } from "~/application/factories"
@@ -12,6 +11,7 @@ import {
   FarmGamesUseCase,
   ScheduleAutoRestartUseCase,
   RestoreAccountConnectionUseCase,
+  RemoveSteamAccountUseCase,
 } from "~/application/use-cases"
 import { SteamBuilder } from "~/contracts/SteamBuilder"
 import { AutoRestarterScheduler } from "~/domain/cron"
@@ -44,6 +44,11 @@ import { StagingGamesListService } from "~/domain/services"
 import { SACStateCacheBuilder } from "~/utils/builders/SACStateCacheBuilder"
 import { TokenService } from "~/application/services/TokenService"
 import { UpdateAccountCacheStateHandler } from "~/domain/handler/UpdateAccountCacheStateHandler"
+import { ChangeUserPlanToCustomUseCase } from "~/application/use-cases/ChangeUserPlanToCustomUseCase"
+import { ChangeUserPlanUseCase } from "~/application/use-cases/ChangeUserPlanUseCase"
+import { PlanService } from "~/domain/services/PlanService"
+import { UserService } from "~/domain/services/UserService"
+import clerkClient from "@clerk/clerk-sdk-node"
 
 const httpProxy = process.env.PROXY_URL
 
@@ -134,8 +139,28 @@ export const usersDAO = new UsersDAODatabase(
   usersClusterStorage,
   allUsersClientsStorage
 )
-export const steamAccountsDAO = new SteamAccountsDAODatabase(prisma)
+export const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
+  usersRepository,
+  allUsersClientsStorage,
+  steamAccountClientStateCacheRepository,
+  usersClusterStorage,
+  planRepository,
+  autoRestarterScheduler
+)
+export const userService = new UserService()
+export const planService = new PlanService()
 export const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(usersClusterStorage, publisher)
+export const changeUserPlanUseCase = new ChangeUserPlanUseCase(
+  allUsersClientsStorage,
+  usersRepository,
+  planService,
+  steamAccountClientStateCacheRepository,
+  removeSteamAccountUseCase,
+  restoreAccountSessionUseCase,
+  userService
+)
+export const changeUserPlanToCustomUseCase = new ChangeUserPlanToCustomUseCase(changeUserPlanUseCase)
+export const steamAccountsDAO = new SteamAccountsDAODatabase(prisma)
 
 export const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
   allUsersClientsStorage,
