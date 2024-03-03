@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { Usage } from "../../entity/plan/Usage"
 import { UsageList } from "core/entity/plan"
+import { makeError } from "core/utils/throw"
 
 export abstract class Plan {
   id_plan: string
@@ -15,6 +16,24 @@ export abstract class Plan {
   price: number
 
   constructor(props: PlanAllProps) {
+    switch (props.name) {
+      case "DIAMOND":
+      case "GOLD":
+      case "SILVER":
+      case "INFINITY-CUSTOM":
+        console.log({ name: props.name, type: props.type })
+        if (props.type !== "INFINITY") {
+          throw makeError("Invariant! Mismatch entre o tipo do plano e o nome", props)
+        }
+        break
+      case "GUEST":
+      case "USAGE-CUSTOM":
+        if (props.type !== "USAGE") {
+          throw makeError("Invariant! Mismatch entre o tipo do plano e o nome", props)
+        }
+        break
+    }
+
     this.maxSteamAccounts = props.maxSteamAccounts
     this.maxGamesAllowed = props.maxGamesAllowed
     this.autoRestarter = props.autoRestarter
