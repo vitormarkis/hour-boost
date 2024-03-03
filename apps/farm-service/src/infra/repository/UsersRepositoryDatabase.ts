@@ -1,10 +1,9 @@
-import { $Enums, Plan, Prisma, PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@prisma/client"
 import {
   ActiveStatus,
   AdminRole,
   ApplicationError,
   BannedStatus,
-  PlanAllNames,
   Purchase,
   Role,
   RoleName,
@@ -18,9 +17,11 @@ import {
   User,
   UserRole,
   UsersRepository,
+  getCallStack,
 } from "core"
-
-import { getCurrentPlanOrCreateOne } from "~/utils"
+import { getCurrentPlanOrCreateOne } from "~/infra/mappers/databasePlanToDomain"
+import { databaseUsageToDomain } from "~/infra/mappers/databaseUsageToDomain"
+import { getPlanCreation, updateUser } from "~/infra/repository/UsersRepositoryUpdateMethod"
 
 export class UsersRepositoryDatabase implements UsersRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -40,18 +41,11 @@ export class UsersRepositoryDatabase implements UsersRepository {
         id_user: user.id_user,
         createdAt: new Date(),
         email: user.email,
-        plan: {
-          create: {
-            createdAt: new Date(),
-            id_plan: user.plan.id_plan,
-            name: mapPlanName_toPrisma(user.plan.name),
-            type: user.plan.type,
-          },
-        },
         profilePic: user.profilePic,
         role: user.role.name,
         status: user.status.name,
         username: user.username,
+        ...getPlanCreation(user.plan),
       },
     })
 
@@ -63,58 +57,7 @@ export class UsersRepositoryDatabase implements UsersRepository {
       where: {
         id_user: user.id_user,
       },
-      data: {
-        email: user.email,
-        plan: {
-          connectOrCreate: {
-            where: {
-              id_plan: user.plan.id_plan,
-            },
-            create: {
-              createdAt: new Date(),
-              id_plan: user.plan.id_plan,
-              name: mapPlanName_toPrisma(user.plan.name),
-              type: user.plan.type,
-              usages: {
-                connectOrCreate: user.plan.usages.data.map(u => ({
-                  where: { id_usage: u.id_usage },
-                  create: {
-                    amountTime: u.amountTime,
-                    createdAt: new Date(),
-                    id_usage: u.id_usage,
-                    accountName: u.accountName,
-                  },
-                })),
-              },
-            },
-          },
-        },
-        profilePic: user.profilePic,
-        purchases: {
-          connectOrCreate: user.purchases.map(p => ({
-            where: { id_Purchase: p.id_Purchase },
-            create: {
-              createdAt: new Date(),
-              id_Purchase: p.id_Purchase,
-            },
-          })),
-        },
-        role: user.role.name,
-        status: user.status.name,
-        username: user.username,
-        steamAccounts: {
-          disconnect: user.steamAccounts.getTrashIDs().map(id => ({ id_steamAccount: id })),
-          connectOrCreate: user.steamAccounts.data.map(sa => ({
-            where: { accountName: sa.credentials.accountName },
-            create: {
-              accountName: sa.credentials.accountName,
-              createdAt: new Date(),
-              id_steamAccount: sa.id_steamAccount,
-              password: sa.credentials.password,
-            },
-          })),
-        },
-      },
+      data: updateUser(user),
     })
   }
 
@@ -142,7 +85,7 @@ export function statusFactory(status: StatusName): Status {
 }
 
 function prismaUserFindManyToUserDomain(user: PrismaFindMany[number]): User {
-  const userPlan = getCurrentPlanOrCreateOne(user.plan, user.id_user)
+  const userPlan = getCurrentPlanOrCreateOne(user.plan ?? user.custom_plan, user.id_user)
 
   const steamAccounts: SteamAccountList = new SteamAccountList({
     data: user.steamAccounts.map(sa =>
@@ -173,7 +116,7 @@ function prismaUserFindManyToUserDomain(user: PrismaFindMany[number]): User {
     status: statusFactory(user.status),
     steamAccounts,
     usages: new UsageList({
-      data: user.usages.map(Usage.restore),
+      data: user.usages.map(databaseUsageToDomain),
     }),
   })
 }
@@ -198,8 +141,7 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
     ),
   })
 
-  const userPlan = getCurrentPlanOrCreateOne(dbUser.plan, dbUser.id_user)
-
+  const userPlan = getCurrentPlanOrCreateOne(dbUser.plan ?? dbUser.custom_plan, dbUser.id_user)
   return User.restore({
     email: dbUser.email,
     id_user: dbUser.id_user,
@@ -215,7 +157,7 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
     role: roleFactory(dbUser.role),
     status: statusFactory(dbUser.status),
     usages: new UsageList({
-      data: dbUser.usages.map(Usage.restore),
+      data: dbUser.usages.map(databaseUsageToDomain),
     }),
   })
 }
@@ -234,11 +176,8 @@ export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
             id_user: props.userId,
           },
     include: {
-      plan: {
-        include: {
-          usages: true,
-        },
-      },
+      plan: { include: { usages: true } },
+      custom_plan: { include: { usages: true } },
       purchases: true,
       steamAccounts: true,
       usages: true,
@@ -249,42 +188,11 @@ export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
 export function prismaFindMany(prisma: PrismaClient) {
   return prisma.user.findMany({
     include: {
-      plan: {
-        include: {
-          usages: true,
-        },
-      },
+      plan: { include: { usages: true } },
+      custom_plan: { include: { usages: true } },
       steamAccounts: true,
       purchases: true,
       usages: true,
     },
   })
-}
-
-export function mapPlanName_toDomain(planName: $Enums.PlanName): PlanAllNames {
-  switch (planName) {
-    case "DIAMOND":
-    case "GOLD":
-    case "GUEST":
-    case "SILVER":
-      return planName
-    case "INFINITY_CUSTOM":
-      return "INFINITY-CUSTOM"
-    case "USAGE_CUSTOM":
-      return "USAGE-CUSTOM"
-  }
-}
-
-export function mapPlanName_toPrisma(planName: PlanAllNames): $Enums.PlanName {
-  switch (planName) {
-    case "DIAMOND":
-    case "GOLD":
-    case "GUEST":
-    case "SILVER":
-      return planName
-    case "INFINITY-CUSTOM":
-      return "INFINITY_CUSTOM"
-    case "USAGE-CUSTOM":
-      return "USAGE_CUSTOM"
-  }
 }

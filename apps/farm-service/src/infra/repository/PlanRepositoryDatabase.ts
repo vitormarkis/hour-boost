@@ -1,9 +1,24 @@
 import { PrismaClient } from "@prisma/client"
 import { PlanInfinity, PlanRepository, PlanUsage } from "core"
-import { getCurrentPlan } from "~/utils"
+import { databasePlanToDomain } from "~/infra/mappers/databasePlanToDomain"
 
 export class PlanRepositoryDatabase implements PlanRepository {
   constructor(private readonly prisma: PrismaClient) {}
+
+  async getByUserId(userId: string): Promise<PlanUsage | PlanInfinity | null> {
+    let dbPlan: any
+    dbPlan = await this.prisma.plan.findUnique({
+      where: { ownerId: userId },
+      include: { usages: true },
+    })
+
+    dbPlan = await this.prisma.customPlan.findUnique({
+      where: { ownerId: userId },
+      include: { usages: true },
+    })
+
+    return dbPlan ? databasePlanToDomain(dbPlan) : null
+  }
 
   async list(): Promise<(PlanUsage | PlanInfinity)[]> {
     console.log("NSTH: PlanRepository.list() = Method not implemented.")
@@ -37,11 +52,17 @@ export class PlanRepositoryDatabase implements PlanRepository {
   }
 
   async getById(planId: string): Promise<PlanUsage | PlanInfinity | null> {
-    const dbPlan = await this.prisma.plan.findUnique({
+    let dbPlan: any
+    dbPlan = await this.prisma.plan.findUnique({
       where: { id_plan: planId },
       include: { usages: true },
     })
 
-    return dbPlan ? getCurrentPlan(dbPlan) : null
+    dbPlan = await this.prisma.customPlan.findUnique({
+      where: { id_plan: planId },
+      include: { usages: true },
+    })
+
+    return dbPlan ? databasePlanToDomain(dbPlan) : null
   }
 }

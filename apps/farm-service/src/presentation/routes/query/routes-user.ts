@@ -27,7 +27,7 @@ query_routerUser.get(
   }),
   async (req: WithAuthProp<Request>, res: Response) => {
     const userId = req.auth.userId!
-    const getMeController = new GetMeController(usersRepository, createUser, getUser, tokenService)
+    const getMeController = new GetMeController(usersRepository, createUser, usersDAO, tokenService)
     const [error, me] = await getMeController.handle({
       userId,
     })

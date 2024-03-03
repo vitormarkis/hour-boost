@@ -64,7 +64,7 @@ test("should change usage plan to CUSTOM usage plan and increase max games allow
   expect(userPlan?.maxGamesAllowed).toBe(1)
 
   const [error] = await addMoreGamesToPlanUseCase.execute({
-    userId: s.me.userId,
+    mutatingUserId: s.me.userId,
     newMaxGamesAllowed: 30,
   })
   expect(error).toBeNull()

@@ -1,6 +1,5 @@
 export * from "./areTwoArraysEqual"
 export * from "./bad-events-handler"
 export * from "./getTimeoutPromise"
-export * from "./getUserCurrentPlan"
 export * from "./makeResError"
 export * from "./sleep"

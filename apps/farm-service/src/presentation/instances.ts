@@ -137,7 +137,8 @@ export const usersDAO = new UsersDAODatabase(
   getUserSteamGamesUseCase,
   steamAccountClientStateCacheRepository,
   usersClusterStorage,
-  allUsersClientsStorage
+  allUsersClientsStorage,
+  planRepository
 )
 export const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
   usersRepository,

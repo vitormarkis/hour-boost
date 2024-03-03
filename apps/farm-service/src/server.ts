@@ -82,7 +82,7 @@ async function main() {
   restoreUsersSessionsUseCase.execute({ users })
   await restoreAccountManySessionsUseCase.execute()
   // await restoreAccountManySessionsUseCase.execute({
-  //   whitelistAccountNames: []
+  //   whitelistAccountNames: [],
   // })
 }
 

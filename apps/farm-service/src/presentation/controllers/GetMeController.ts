@@ -1,4 +1,4 @@
-import { DataOrFail, Fail, GetUser, UsersRepository } from "core"
+import { DataOrFail, Fail, UsersDAO, UsersRepository } from "core"
 import { TokenService } from "~/application/services/TokenService"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { bad, nice } from "~/utils/helpers"
@@ -7,7 +7,7 @@ export class GetMeController implements IGetMeController {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly createUserUseCase: CreateUserUseCase,
-    private readonly getUser: GetUser,
+    private readonly usersDAO: UsersDAO,
     private readonly tokenService: TokenService
   ) {}
 
@@ -20,7 +20,7 @@ export class GetMeController implements IGetMeController {
         await this.createUserUseCase.execute(userId)
         created = true
       }
-      const userSession = await this.getUser.execute(userId)
+    const userSession = await this.usersDAO.getByID(userId)
       if (!userSession)
         return bad(
           Fail.create("USER-SESSION-NOT-FOUND", 404, {
