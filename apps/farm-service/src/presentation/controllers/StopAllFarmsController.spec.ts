@@ -64,7 +64,7 @@ test("1xUser -> 2 Account (Infinity); should persist 2 usages of 2 hours", async
   const spyPublish = jest.spyOn(i.publisher, "publish")
   const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
   await i.changeUserPlan(diamondPlan)
-  await i.addSteamAccount(s.me.userId, s.me.accountName2, password)
+  await i.addSteamAccountInternally(s.me.userId, s.me.accountName2, password)
 
   const farmAccount1 = await promiseHandler(
     farmGamesController.handle({

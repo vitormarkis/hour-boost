@@ -14,9 +14,7 @@ export function useUserAdminList<TData = UserAdminPanelSession[]>(options = {} a
   return useSuspenseQuery<UserAdminPanelSession[], Error, TData>({
     // queryFn: () => getUsersAdminList(Math.random() > 0.5),
     queryFn: async () => {
-      const response = await api.get<GetAdminUsersListResponse>("/admin/users-list", {
-        withCredentials: true,
-      })
+      const response = await api.get<GetAdminUsersListResponse>("/admin/users-list")
 
       return response.data.usersAdminList
     },

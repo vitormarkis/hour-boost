@@ -14,6 +14,7 @@ import { bad, nice } from "~/utils/helpers"
 import { trimAccountsName } from "~/utils/trimAccountsName"
 import { RemoveSteamAccountUseCase, RestoreAccountSessionUseCase } from "."
 import { AllUsersClientsStorage } from "../services"
+import { nonNullable } from "~/utils/nonNullable"
 
 export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
   constructor(
@@ -57,14 +58,6 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
       this.allUsersClientsStorage
     )
     if (errorGettingUserSACList) return bad(errorGettingUserSACList)
-
-    if (!hasOnlyTruthyValues(userSacList))
-      return bad(
-        Fail.create("SOME-USER-ACCOUNTS-DO-NOT-HAVE-SAC-IN-MEMORY", 400, {
-          userStorage: this.allUsersClientsStorage.get(user.id_user),
-          user,
-        })
-      )
 
     const currentSACStates = userSacList.map(sac => sac.getCache())
     const { updatedCacheStates } = this.userService.changePlan(user, newPlan, currentSACStates)
@@ -117,7 +110,6 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
 
   handleFail(error: GetError<ChangeUserPlanUseCase["executeImpl"]>, props: ChangeUserPlanUseCasePayload) {
     switch (error.code) {
-      case "SOME-USER-ACCOUNTS-DO-NOT-HAVE-SAC-IN-MEMORY":
       case "LIST::TRIMMING-ACCOUNTS":
       case "LIST::UPDATING-CACHE":
       case "USER-STORAGE-NOT-FOUND":

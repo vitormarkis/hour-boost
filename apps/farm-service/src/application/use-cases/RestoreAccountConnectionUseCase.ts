@@ -167,6 +167,7 @@ const handleLoginSteamWithCredentialsResult = (
 ) => {
   const [errorLoggin] = loginSteamWithCredentialsResult
   if (errorLoggin) {
+    console.log({errorLoggin})
     if (errorLoggin.payload instanceof SingleEventResolver) {
       const { type } = errorLoggin.payload
       if (type === "steamGuard") {

@@ -52,7 +52,7 @@ describe("List test suite", () => {
       },
     })
     jest.advanceTimersByTime(1000 * 60) // 1 minute
-    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName })
+    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName, isFinalizingSession: true })
     const accountStatus = usersClusterStorage.getAccountsStatus()
     expect(accountStatus).toStrictEqual({
       user_vrsl: {
@@ -128,7 +128,7 @@ describe("List test suite", () => {
     expect(spy_planRepository_getById).toHaveBeenCalledTimes(1)
 
     jest.advanceTimersByTime(1000 * 60) // 1 minute
-    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName })
+    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName, isFinalizingSession: true })
 
     // 2 contas, usa plano existente, chamando o s.me.accountName
     await meCluster.farmWithAccount({
@@ -142,8 +142,8 @@ describe("List test suite", () => {
     expect(spy_planRepository_getById).toHaveBeenCalledTimes(1)
 
     jest.advanceTimersByTime(1000 * 60) // 1 minute
-    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName })
-    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName2 })
+    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName, isFinalizingSession: true })
+    meCluster.pauseFarmOnAccount({ accountName: s.me.accountName2, isFinalizingSession: true })
 
     // 0 contas, farm novo, busca plano
     await meCluster.farmWithAccount({

@@ -54,7 +54,7 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
             <AdminUserItemRole />
           </div>
           <div className="px-4">
-            <div className="flex w-20 justify-center">
+            <div className="flex w-20 justify-center whitespace-nowrap">
               <BadgePlanType
                 size="sm"
                 name={planNameDomain}

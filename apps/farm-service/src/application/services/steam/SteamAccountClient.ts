@@ -7,10 +7,11 @@ import {
   CacheStateDTO,
   CacheStateHollow,
   DataOrError,
+  DataOrFail,
   Fail,
   GameSession,
   IRefreshToken,
-  SteamAccountPersonaState
+  SteamAccountPersonaState,
 } from "core"
 import { appendFile } from "fs"
 import SteamUser from "steam-user"
@@ -61,6 +62,11 @@ export class SteamAccountClient extends LastHandler {
     })
 
     this.client.on("loggedOn", (...args) => {
+      appendFile(
+        "logs/sac-loggedon.txt",
+        `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(args)} \r\n`,
+        () => {}
+      )
       this.emitter.emit("hasSession")
       this.getLastHandler("loggedOn")(...args)
       this.setLastArguments("loggedOn", args)
@@ -94,6 +100,11 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("steamGuard", async (...args) => {
       const [domain] = args
+      appendFile(
+        "logs/sac-steam-guard.txt",
+        `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(args)} \r\n`,
+        () => {}
+      )
       this.logger.log("steam guard required.")
       this.getLastHandler("steamGuard")(...args)
       this.setLastArguments("steamGuard", args)
@@ -107,16 +118,20 @@ export class SteamAccountClient extends LastHandler {
 
     this.client.on("error", (...args) => {
       const [error] = args
-      this.changeInnerStatusToNotLogged()
       appendFile(
         "logs/sac-errors.txt",
         `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(...args)} \r\n`,
         () => {}
       )
-      this.logger.log("error.", { eresult: args[0].eresult })
-      this.emitter.emit("interrupt", this.getCache().toDTO(), error)
-      this.getLastHandler("error")(...args)
-      this.setLastArguments("error", args)
+      const validEResult = !!error.eresult
+      this.logger.log("22 error.", { error })
+      this.logger.log("error.", { eresult: error.eresult })
+      if (validEResult) {
+        this.changeInnerStatusToNotLogged()
+        this.emitter.emit("interrupt", this.getCache().toDTO(), error)
+        this.getLastHandler("error")(...args)
+        this.setLastArguments("error", args)
+      }
 
       if (error.eresult === SteamUser.EResult.LoggedInElsewhere) {
         this.emitter.emit("logged-somewhere-else")
@@ -171,6 +186,11 @@ export class SteamAccountClient extends LastHandler {
     }
 
     this.client.on("webSession", async (...args) => {
+      appendFile(
+        "logs/sac-webSession.txt",
+        `${new Date().toISOString()} [${this.accountName}] - ${JSON.stringify(args)} \r\n`,
+        () => {}
+      )
       this.emitter.emit("hasSession")
       this.logger.log(`Got webSession.`)
       this.getLastHandler("webSession")(...args)
@@ -297,23 +317,34 @@ export class SteamAccountClient extends LastHandler {
     return [null, userSteamGames]
   }
 
-  async getAccountPersona(): Promise<DataOrError<SteamAccountPersonaState>> {
+  async getAccountPersona() {
     const steamId = this.client.steamID?.toString()
-    if (!steamId)
-      return Promise.reject([new ApplicationError(`${this.accountName}: No steam id found.`), null])
-    const persona: Record<string, any> = await new Promise((resolve, reject) => {
+    if (!steamId) return bad(Fail.create("NO_STEAM_ID_FOUND", 400, { steamId }))
+
+    const [error, persona] = await new Promise<
+      DataOrFail<
+        Fail<"CLIENT_ERROR_GETTING_PERSONA", 400, { clientError: Error | null }>,
+        Record<string, any>
+      >
+    >(resolve => {
       this.client.getPersonas([steamId], (error, personas) => {
-        if (error) reject(error)
-        resolve(personas[steamId])
+        const errorArgs = ["CLIENT_ERROR_GETTING_PERSONA", 400, { clientError: error }] as const
+        if (error) {
+          console.log("NSTH: ", errorArgs)
+          resolve(bad(Fail.create(...errorArgs)))
+        }
+        resolve(nice(personas[steamId]))
       })
     })
+
+    if (error) return bad(error)
 
     const personaState: SteamAccountPersonaState = {
       accountName: this.accountName,
       profilePictureUrl: persona["avatar_url_medium"],
     }
 
-    return Promise.resolve([null, personaState])
+    return nice(personaState)
   }
 }
 

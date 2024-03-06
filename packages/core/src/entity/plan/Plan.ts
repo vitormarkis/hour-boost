@@ -21,7 +21,6 @@ export abstract class Plan {
       case "GOLD":
       case "SILVER":
       case "INFINITY-CUSTOM":
-        console.log({ name: props.name, type: props.type })
         if (props.type !== "INFINITY") {
           throw makeError("Invariant! Mismatch entre o tipo do plano e o nome", props)
         }

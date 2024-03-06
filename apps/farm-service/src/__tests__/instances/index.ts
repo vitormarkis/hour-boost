@@ -1,4 +1,5 @@
 import {
+  AddSteamAccount,
   ApplicationError,
   IDGeneratorUUID,
   PlanInfinity,
@@ -14,7 +15,7 @@ import { makeSACFactory } from "~/__tests__/factories"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
-import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
+import { AddSteamAccountUseCase, CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
@@ -125,6 +126,14 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const sacFactory = makeSACFactory(validSteamAccounts, publisher)
   const createUserUseCase = new CreateUserUseCase(usersRepository, userAuthentication, usersClusterStorage)
 
+  const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
+  const addSteamAccountUseCase = new AddSteamAccountUseCase(
+    addSteamAccount,
+    allUsersClientsStorage,
+    usersDAO,
+    checkSteamAccountOwnerStatusUseCase
+  )
+
   const userInstancesBuilder = new UserInstancesBuilder(allUsersClientsStorage)
 
   const farmGamesController = new FarmGamesController({
@@ -156,7 +165,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     }
     return userInstances
   }
-  async function addSteamAccount(
+  async function addSteamAccountInternally(
     userId: string,
     accountName: string,
     password: string,
@@ -223,6 +232,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     planRepository,
     stopFarmUseCase,
     farmGamesUseCase,
+    addSteamAccountUseCase,
     checkSteamAccountOwnerStatusUseCase,
     redis,
     planService,
@@ -236,7 +246,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     },
     sacFactory,
     createUser,
-    addSteamAccount,
+    addSteamAccountInternally,
     changeUserPlan,
     usePlan,
     resetSteamAccountsOfUser,

@@ -17,7 +17,7 @@ export class PersistFarmSessionHandler implements Observer {
     planId,
     pauseFarmCategory,
     when,
-    killSession,
+    isFinalizingSession,
     userId,
   }: UserCompleteFarmSessionCommand): Promise<void> {
     const [errorPersistingUsages] = await persistUsagesOnDatabase(
@@ -28,7 +28,7 @@ export class PersistFarmSessionHandler implements Observer {
     if (errorPersistingUsages) {
       return console.log(`[${when.toISOString()}]: Error persisting usages: `, pauseFarmCategory)
     }
-    if (killSession) {
+    if (isFinalizingSession) {
       const accountNameList =
         pauseFarmCategory.type === "STOP-ALL"
           ? pauseFarmCategory.accountNameList

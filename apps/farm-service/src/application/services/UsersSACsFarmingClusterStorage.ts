@@ -18,9 +18,9 @@ export class UsersSACsFarmingClusterStorage implements IUsersSACsFarmingClusterS
 
   constructor(private readonly userClusterBuilder: UserClusterBuilder) {}
 
-  stopAll(killSession: boolean) {
+  stopAll(isFinalizingSession: boolean) {
     for (const [_, userCluster] of this.usersCluster) {
-      userCluster.stopFarmAllAccounts({ killSession })
+      userCluster.stopFarmAllAccounts({ isFinalizingSession })
     }
   }
 

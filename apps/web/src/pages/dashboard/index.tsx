@@ -8,8 +8,11 @@ import { UserSession } from "core"
 import Head from "next/head"
 
 export type GetMeResponse = {
-  code: `USER-SESSION::${string}`
+  code: "USER-SESSION::CREATED" | "USER-SESSION::FOUND"
   userSession: UserSession
+  headers: {
+    "hb-identification": string
+  }
 }
 
 export const getServerSideProps = userProcedure({

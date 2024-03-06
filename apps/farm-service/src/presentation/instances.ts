@@ -1,4 +1,4 @@
-import { IDGeneratorUUID } from "core"
+import { IDGeneratorUUID, SteamAccountCredentials } from "core"
 import SteamUser from "steam-user"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
@@ -32,7 +32,7 @@ import {
   UsersRepositoryDatabase,
   SteamAccountClientStateCacheRedis,
 } from "~/infra/repository"
-import { ClerkAuthentication } from "~/infra/services"
+import { ClerkAuthentication, SteamUserMock } from "~/infra/services"
 import { RefreshGamesUseCase } from "~/presentation/presenters"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
@@ -49,6 +49,8 @@ import { ChangeUserPlanUseCase } from "~/application/use-cases/ChangeUserPlanUse
 import { PlanService } from "~/domain/services/PlanService"
 import { UserService } from "~/domain/services/UserService"
 import clerkClient from "@clerk/clerk-sdk-node"
+import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
+import { makeUserSteamMock } from "~/infra/services/makeUserSteamMock"
 
 const httpProxy = process.env.PROXY_URL
 
@@ -59,11 +61,13 @@ if (httpProxy) {
 let options: ConstructorParameters<typeof SteamUser>[0] = {
   enablePicsCache: true,
   autoRelogin: false,
+  protocol: SteamUser.EConnectionProtocol.WebSocket,
 }
 if (httpProxy) options.httpProxy = httpProxy
 
 console.log({ options })
 export const steamBuilder: SteamBuilder = {
+  // create: () => makeUserSteamMock(),
   create: () => new SteamUser(options),
 }
 
@@ -187,6 +191,7 @@ export const scheduleAutoRestartUseCase = new ScheduleAutoRestartUseCase(
 export const retrieveSessionAccountsUseCase = new RetrieveSessionListUseCase(
   steamAccountClientStateCacheRepository
 )
+export const stopFarmUseCase = new StopFarmUseCase(usersClusterStorage, planRepository)
 
 export const stagingGamesListService = new StagingGamesListService()
 

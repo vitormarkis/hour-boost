@@ -1,10 +1,20 @@
+import { Fail } from "core"
 import { Router } from "express"
 import { z } from "zod"
 import { AddMoreGamesToPlanUseCase } from "~/application/use-cases/AddMoreGamesToPlanUseCase"
 import { GetUsersAdminListUseCase } from "~/application/use-cases/GetUsersAdminListUseCase"
 import { ensureAdmin } from "~/inline-middlewares/ensureAdmin"
 import { validateBody } from "~/inline-middlewares/validate-payload"
-import { changeUserPlanToCustomUseCase, usersDAO, usersRepository } from "~/presentation/instances"
+import {
+  allUsersClientsStorage,
+  changeUserPlanToCustomUseCase,
+  planRepository,
+  steamAccountClientStateCacheRepository,
+  stopFarmUseCase,
+  usersClusterStorage,
+  usersDAO,
+  usersRepository,
+} from "~/presentation/instances"
 
 export const query_routerAdmin: Router = Router()
 
@@ -20,7 +30,11 @@ query_routerAdmin.get("/users-list", async function (req, res) {
 
 const addMoreGamesToPlanUseCase = new AddMoreGamesToPlanUseCase(
   usersRepository,
-  changeUserPlanToCustomUseCase
+  changeUserPlanToCustomUseCase,
+  allUsersClientsStorage,
+  usersClusterStorage,
+  steamAccountClientStateCacheRepository,
+  planRepository
 )
 
 query_routerAdmin.post("/add-more-games", async function (req, res) {
@@ -43,16 +57,20 @@ query_routerAdmin.post("/add-more-games", async function (req, res) {
   })
 
   if (error) {
-    switch (error.code) {
-      case "LIST::TRIMMING-ACCOUNTS":
-      case "LIST::UPDATING-CACHE":
-      case "SOME-USER-ACCOUNTS-DO-NOT-HAVE-SAC-IN-MEMORY":
-      case "USER-NOT-FOUND":
-      case "USER-STORAGE-NOT-FOUND":
-        return console.log({ error })
-      default:
-        error satisfies never
+    if ("code" in error) {
+      switch (error.code) {
+        case "LIST::TRIMMING-ACCOUNTS":
+        case "LIST::UPDATING-CACHE":
+        case "USER-NOT-FOUND":
+        case "USER-STORAGE-NOT-FOUND":
+          return console.log({ error })
+        case "LIST:ERROR-RESETING-FARM":
+          return console.log(error.payload)
+        default:
+          error satisfies never
+      }
     }
+    error satisfies never
   }
 
   return res.json({ usersAdminList, code: "SUCCESS" })

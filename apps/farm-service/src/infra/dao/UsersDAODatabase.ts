@@ -179,10 +179,6 @@ export class UsersDAODatabase implements UsersDAO {
     if (!dbUser) return null
 
     const userPlan = getCurrentPlanOrCreateOne(dbUser.plan ?? dbUser.custom_plan, dbUser.id_user)
-    console.log({
-      userPlan,
-      dbUser,
-    })
 
     const steamAccounts: SteamAccountSession[] = await Promise.all(
       dbUser.steamAccounts.map(async sa => {
@@ -200,14 +196,11 @@ export class UsersDAODatabase implements UsersDAO {
         )
       })
     )
-    console.log("2")
 
     const farmUsedTime = await getFarmUsedTime(dbUser.plan?.usages.map(databaseUsageToDomain) ?? null)
     if (farmUsedTime === null) console.log(`Farmed used time voltou como null. [${userId}]`)
-    console.log("3")
 
     const plan = userPlanToPlanSession(userPlan, farmUsedTime)
-    console.log("4", { planSession: plan })
 
     return {
       email: dbUser.email,

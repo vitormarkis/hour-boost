@@ -64,13 +64,13 @@ export class RemoveSteamAccountUseCase implements IRemoveSteamAccountUseCase {
     if (isAccountFarming) {
       const [errorPausingFarmOnAccount, usages] = userCluster.pauseFarmOnAccountSync({
         accountName,
-        killSession: true,
+        isFinalizingSession: true,
       })
       if (errorPausingFarmOnAccount) {
         return bad(
           new Fail({
             code: `PAUSE-FARM-ON-ACCOUNT::${errorPausingFarmOnAccount.code ?? "UNKNOWN"}`,
-            httpStatus: errorPausingFarmOnAccount.status,
+            httpStatus: errorPausingFarmOnAccount.httpStatus,
             payload: errorPausingFarmOnAccount.payload,
           })
         )

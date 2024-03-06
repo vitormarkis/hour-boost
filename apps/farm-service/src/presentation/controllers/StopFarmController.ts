@@ -1,4 +1,4 @@
-import { ApplicationError, Controller, HttpClient, UsersRepository } from "core"
+import { ApplicationError, Controller, Fail, GetError, HttpClient, UsersRepository } from "core"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 
 export namespace StopFarmHandle {
@@ -19,34 +19,32 @@ export class StopFarmController implements Controller<StopFarmHandle.Payload, St
   async handle({ payload }: APayload) {
     const { userId, accountName } = payload
     const user = await this.usersRepository.getByID(userId)
-    if (!user) return { json: { message: "Usuário não encontrado." }, status: 404 }
+    if (!user) return makeMessageFactory({ code: "NOT_FOUND", httpStatus: 404 })("Usuário não encontrado.")
 
     const [errorPausingFarm] = await this.stopFarmUseCase.execute({
       accountName,
       planId: user.plan.id_plan,
       username: user.username,
+      isFinalizingSession: true,
     })
 
-    if (errorPausingFarm instanceof ApplicationError) throw errorPausingFarm
-    if (errorPausingFarm?.code === "PLAN-NOT-FOUND") {
-      return {
-        json: {
-          message: `Plano com id [${errorPausingFarm.payload.givenPlanId}] não foi encontrado.`,
-          code: errorPausingFarm.code,
-        },
-        status: errorPausingFarm.httpStatus,
+    if (errorPausingFarm) {
+      const makeMessage = makeMessageFactory(errorPausingFarm)
+      if (errorPausingFarm instanceof ApplicationError) throw errorPausingFarm
+      switch (errorPausingFarm.code) {
+        case "PLAN-NOT-FOUND":
+          return makeMessage(`Plano com id [${errorPausingFarm.payload.givenPlanId}] não foi encontrado.`)
+        case "PAUSE-FARM-ON-ACCOUNT-NOT-FOUND":
+        case "TRIED-TO-STOP-FARM-ON-NON-FARMING-ACCOUNT":
+          return makeMessage("Você já não está farmando.")
+        case "DO-NOT-HAVE-ACCOUNTS-FARMING":
+          return makeMessage("Usuário não possui contas farmando.")
+        case "[Users-Cluster-Storage]:CLUSTER-NOT-FOUND":
+          return makeMessage("Aconteceu um erro, tente novamente mais tarde.", "ERROR", 400)
+        default:
+          errorPausingFarm satisfies never
       }
     }
-    if (errorPausingFarm?.code === "[Users-Cluster-Storage]:CLUSTER-NOT-FOUND") {
-      return {
-        json: {
-          message: "Aconteceu um erro, tente novamente mais tarde.",
-          code: "ERROR",
-        },
-        status: 400,
-      }
-    }
-    errorPausingFarm satisfies null
     return {
       json: {
         message: "Farm pausado com sucesso.",
@@ -58,3 +56,16 @@ export class StopFarmController implements Controller<StopFarmHandle.Payload, St
 }
 
 type APayload = HttpClient.Request<StopFarmHandle.Payload>
+
+type GenericFail = { code: string; httpStatus: number }
+function makeMessageFactory<T extends GenericFail>(error: T) {
+  return function makeMessage(message: string, code?: string, status?: number) {
+    return {
+      json: {
+        message,
+        code: code ?? error.code,
+      },
+      status: status ?? error.httpStatus,
+    }
+  }
+}

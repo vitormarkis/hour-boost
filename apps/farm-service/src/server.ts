@@ -38,13 +38,11 @@ import {
 import { query_routerAdmin } from "./presentation/routes/query/routes-admin"
 import { isProductionServerOn } from "./infra/helpers/isProductionServerOn"
 import { env } from "./env"
-env
 
 const app: Application = express()
 app.use(
   cors({
-    origin: process.env.CLIENT_URL!,
-    credentials: true,
+    origin: env.CLIENT_URL,
   })
 )
 app.use(express.json())
@@ -80,9 +78,15 @@ async function main() {
 
   const users = await usersRepository.findMany()
   restoreUsersSessionsUseCase.execute({ users })
-  await restoreAccountManySessionsUseCase.execute()
+  await restoreAccountManySessionsUseCase.execute({
+    batchOptions: {
+      batchAmount: 5,
+      noiseInSeconds: 5,
+      intervalInSeconds: 60 * 3, // 3 minutes
+    },
+  })
   // await restoreAccountManySessionsUseCase.execute({
-  //   whitelistAccountNames: [],
+  //   whitelistAccountNames: ["soulfault"],
   // })
 }
 

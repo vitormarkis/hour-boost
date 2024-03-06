@@ -1,11 +1,18 @@
 import { SteamAccountsDAO, UseCase } from "core"
 import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import { Logger } from "~/utils/Logger"
-import { nice } from "~/utils/helpers"
+import { ExecutePromisesInBatchProps, executePromisesInBatch } from "~/utils/executePromisesInBatch"
+import { bad, nice } from "~/utils/helpers"
 
-type RestoreAccountManySessionsUseCasePayload = Partial<{
-  whitelistAccountNames: string[]
-}>
+export type BatchOptions = Pick<
+  ExecutePromisesInBatchProps,
+  "batchAmount" | "noiseInSeconds" | "intervalInSeconds"
+>
+
+type RestoreAccountManySessionsUseCasePayload = {
+  whitelistAccountNames?: string[]
+  batchOptions: BatchOptions
+}
 
 export class RestoreAccountManySessionsUseCase {
   logger = new Logger("Restore-Account-Session")
@@ -15,7 +22,7 @@ export class RestoreAccountManySessionsUseCase {
     private readonly autoRestartCron: AutoRestartCron
   ) {}
 
-  async execute({ whitelistAccountNames } = {} as RestoreAccountManySessionsUseCasePayload) {
+  async execute({ whitelistAccountNames, batchOptions }: RestoreAccountManySessionsUseCasePayload) {
     const allAccountNameList = await this.steamAccountsDAO.listAccountNames({
       filter: { onlyOwnedAccounts: true },
     })
@@ -28,18 +35,26 @@ export class RestoreAccountManySessionsUseCase {
       accountNameList,
     })
 
-    const sessionRestartPromises = accountNameList.map(async accountName => {
-      const [errorAutoRestart] = await this.autoRestartCron.run({
+    const sessionRestartPromises = accountNameList.map(accountName => async () => {
+      const [errorAutoRestart, reslt] = await this.autoRestartCron.run({
         accountName,
         forceRestoreSessionOnApplication: true,
       })
+
       if (errorAutoRestart) {
-        console.log(`error restoring session [${accountName}]: `, errorAutoRestart)
+        console.log({ errorAutoRestart })
+        return bad(errorAutoRestart)
       }
+      return nice(reslt)
     })
 
-    await Promise.all(sessionRestartPromises)
+    await executePromisesInBatch({
+      ...batchOptions,
+      promiseList: sessionRestartPromises,
+    })
 
-    return nice()
+    return nice({
+      promisesAmount: sessionRestartPromises.length,
+    })
   }
 }

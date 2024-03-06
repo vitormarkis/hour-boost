@@ -24,6 +24,9 @@ export type GetError<T extends (...args: any[]) => any> = T extends (...args: an
     : never
   : never
 
+export type GetErrorByTuple<T> = T extends [infer E] ? E : never
+export type GetResultByTuple<T> = T extends [null, infer R] ? R : never
+
 export type GetResult<T extends (...args: any[]) => any> = T extends (...args: any) => Promise<infer R>
   ? R extends [null, infer Res]
     ? Res

@@ -44,9 +44,7 @@ export default function Cookies({ user }: UserSessionParams) {
 
   useEffect(() => {
     api
-      .get("/admin/users-list", {
-        withCredentials: true,
-      })
+      .get("/admin/users-list")
       .then(res => {
         setClientResponse({
           data: res.data,

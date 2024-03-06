@@ -16,7 +16,7 @@ import {
   PauseFarmOnAccountUsage,
 } from "~/application/services/FarmService"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { nice } from "~/utils/helpers"
+import { bad, nice } from "~/utils/helpers"
 
 const log = console.log
 console.log = () => {}
@@ -138,20 +138,20 @@ class FarmServiceImpl extends FarmService {
     this.farmWithAccountImpl(accountName)
     return nice(null)
   }
-  pauseFarmOnAccount(accountName: string): DataOrError<null> {
+  pauseFarmOnAccount(accountName: string) {
     const account = this.accountsFarming.get(accountName)
-    if (!account) return [new ApplicationError("Account not found", 404)]
+    if (!account) return bad(Fail.create("ACCOUNT-NOT-FARMING", 403))
     this.accountsFarming.set(accountName, {
       ...account,
       status: "IDDLE",
     })
-    return [null, null]
+    return nice(null)
   }
   protected stopFarmSync(): Usage[] {
     this.accountsFarming.clear()
     return []
   }
-  pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
+  pauseFarmOnAccountSync(accountName: string) {
     if (this.accountsFarming.size === 1) {
       this.status = "IDDLE"
     }
@@ -161,7 +161,7 @@ class FarmServiceImpl extends FarmService {
         acc.status = "IDDLE"
       }
     }
-    return [null, { type: "STOP-ALL", usages: [], accountNameList: [] }]
+    return nice({ type: "STOP-ALL", usages: [] as Usage[], accountNameList: [] as string[] })
   }
   getAccountsStatus(): AccountStatusList {
     let accountStatusList = {} as AccountStatusList

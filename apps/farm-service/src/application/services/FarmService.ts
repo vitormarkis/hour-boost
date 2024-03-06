@@ -1,7 +1,7 @@
 const log = console.log
 
 import { DataOrError, DataOrFail, Fail, PlanType, Usage } from "core"
-import { FarmServiceStatus } from "~/application/services"
+import { FarmInfinityService, FarmServiceStatus, FarmUsageService } from "~/application/services"
 import { Publisher } from "~/infra/queue"
 import { SteamAccountClient } from "./steam"
 
@@ -12,6 +12,9 @@ export type FarmServiceProps = {
   username: string
   publisher: Publisher
 }
+
+// const something = {} as FarmInfinityService | FarmUsageService
+// const [res] = something.pauseFarmOnAccountSync()
 
 export abstract class FarmService {
   protected readonly publisher: Publisher
@@ -47,24 +50,24 @@ export abstract class FarmService {
     return this.status
   }
 
-  stopFarmAllAccounts({ killSession }: { killSession: boolean }) {
-    this.stopFarm(killSession)
+  stopFarmAllAccounts({ isFinalizingSession }: { isFinalizingSession: boolean }) {
+    this.stopFarm(isFinalizingSession)
   }
 
   protected abstract publishCompleteFarmSession(
     pauseFarmCategory: PauseFarmOnAccountUsage,
-    killSession: boolean
+    isFinalizingSession: boolean
   ): void
 
   protected abstract getFarmingAccountsNameList(): string[]
   protected abstract startFarm(): DataOrFail<Fail>
-  protected abstract stopFarm(killSession: boolean): void
+  protected abstract stopFarm(isFinalizingSession: boolean): void
   protected abstract stopFarmSync(): Usage[]
-  abstract pauseFarmOnAccount(accountName: string, killSession: boolean): DataOrError<null>
+  abstract pauseFarmOnAccount(accountName: string, isFinalizingSession: boolean): DataOrFail<Fail, null>
   abstract pauseFarmOnAccountSync(
     accountName: string,
-    killSession: boolean
-  ): DataOrError<PauseFarmOnAccountUsage>
+    isFinalizingSession: boolean
+  ): DataOrFail<Fail, PauseFarmOnAccountUsage>
 
   getPlanId() {
     return this.planId

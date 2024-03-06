@@ -100,7 +100,7 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
 
       this.pauseFarmOnAccount({
         accountName: sac.accountName,
-        killSession: !this.shouldPersistSession,
+        isFinalizingSession: !this.shouldPersistSession,
       })
 
       const plan = await this.planRepository.getById(this.planId)
@@ -137,7 +137,7 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     return this.farmService.getAccountsStatus()
   }
 
-  stopFarmAllAccounts(props: { killSession: boolean }) {
+  stopFarmAllAccounts(props: { isFinalizingSession: boolean }) {
     this.sacList.stopFarmAllAccounts()
     this.farmService.stopFarmAllAccounts(props)
   }
@@ -225,39 +225,46 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
 
   private pauseFarmOnAccountImpl({
     accountName,
-    killSession = true,
-  }: NSUserCluster.PauseFarmOnAccountProps): DataOrError<null> {
-    if (this.sacList.list.size === 0)
-      return [new ApplicationError("Usuário não possui contas farmando.", 402)]
+    isFinalizingSession = true,
+  }: NSUserCluster.PauseFarmOnAccountProps) {
+    if (this.sacList.list.size === 0) {
+      return bad(Fail.create("DO-NOT-HAVE-ACCOUNTS-FARMING", 403))
+    }
+    // return [new ApplicationError("Usuário não possui contas farmando.", 402)]
     const sac = this.sacList.get(accountName)
-    if (!sac)
-      return [new ApplicationError(`NSTH: Usuário tentou pausar farm em uma conta que não estava farmando.`)]
+    if (!sac) {
+      return bad(Fail.create("TRIED-TO-STOP-FARM-ON-NON-FARMING-ACCOUNT", 403))
+    }
     // this.farmService.pauseFarmOnAccount(accountName)
-    if (killSession) {
+    if (isFinalizingSession) {
       sac.stopFarm()
       this.sacStateCacheRepository.save(sac.getCache())
     } else {
       sac.stopFarm_CLIENT_()
     }
     sac.stopFarm()
-    return [null, null]
+    return nice(null)
   }
 
-  pauseFarmOnAccount(props: NSUserCluster.PauseFarmOnAccountProps): DataOrError<null> {
+  pauseFarmOnAccount(props: NSUserCluster.PauseFarmOnAccountProps) {
     const [errorPausingFarm] = this.pauseFarmOnAccountImpl(props)
-    if (errorPausingFarm) return [errorPausingFarm]
-    const errorOrUsages = this.farmService.pauseFarmOnAccount(props.accountName, props.killSession ?? false)
-    return errorOrUsages
-  }
-
-  pauseFarmOnAccountSync(props: NSUserCluster.PauseFarmOnAccountProps): DataOrError<PauseFarmOnAccountUsage> {
-    const [errorPausingFarm] = this.pauseFarmOnAccountImpl(props)
-    if (errorPausingFarm) return [errorPausingFarm]
-    const errorOrUsages = this.farmService.pauseFarmOnAccountSync(
+    if (errorPausingFarm) return bad(errorPausingFarm)
+    const errorOrUsages = this.farmService.pauseFarmOnAccount(
       props.accountName,
-      props.killSession ?? false
+      props.isFinalizingSession ?? false
     )
     return errorOrUsages
+  }
+
+  pauseFarmOnAccountSync(props: NSUserCluster.PauseFarmOnAccountProps) {
+    const [errorPausingFarm] = this.pauseFarmOnAccountImpl(props)
+    if (errorPausingFarm) return bad(errorPausingFarm)
+    const [error, usages] = this.farmService.pauseFarmOnAccountSync(
+      props.accountName,
+      props.isFinalizingSession
+    )
+    if (error) return bad(error)
+    return nice(usages)
   }
 
   setFarmService(newFarmService: FarmUsageService | FarmInfinityService) {
@@ -293,7 +300,14 @@ export type UserClusterEvents = {
 export namespace NSUserCluster {
   export type PauseFarmOnAccountProps = {
     accountName: string
-    killSession?: boolean
+    /**
+     * Se true, significa que a sessão vai ser limpa no cache e no front vai constar que ele parou o farm.
+     *
+     * Se false, pressupõe que essa sessão será retomada em breve por quem está chamando ou um cron.
+     *
+     * Idealmente deve finalizar a sessão, drivers que façam sentido para o usuário, como ele mesmo quando chama stop farm, ou a Steam por meio de um disconnect.
+     */
+    isFinalizingSession: boolean
   }
 
   export type SessionTypeName = SessionType["type"]

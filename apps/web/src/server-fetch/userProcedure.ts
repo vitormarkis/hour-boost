@@ -2,9 +2,9 @@ import { GenerateNextCommandProps, generateNextCommand } from "@/util/generateNe
 import { getAuth } from "@clerk/nextjs/server"
 import { GetServerSideProps } from "next"
 import { getUserSession } from "./getUserSession"
-import { UserSessionParamsBroad } from "./types"
+import { UserSessionParamsMaybe } from "./types"
 
-export function userProcedure(options: GenerateNextCommandProps<UserSessionParamsBroad>["options"]) {
+export function userProcedure(options: GenerateNextCommandProps<UserSessionParamsMaybe>["options"]) {
   const handler: GetServerSideProps = async ctx => {
     const { getToken } = getAuth(ctx.req)
 
@@ -12,13 +12,17 @@ export function userProcedure(options: GenerateNextCommandProps<UserSessionParam
     if (error) throw error
     const { data, headers } = userResponse
 
+    console.log({ headers })
+
     if (headers["set-cookie"]) {
+      console.log({ setCookies: headers["set-cookie"] })
       ctx.res.setHeader("set-cookie", headers["set-cookie"])
     }
 
     return generateNextCommand({
       subject: {
         user: data?.userSession ?? null,
+        serverHeaders: data?.headers ?? null,
       },
       options,
     })

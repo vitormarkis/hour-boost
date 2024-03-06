@@ -1,7 +1,7 @@
 import { DataOrFail, IRefreshToken, SteamAccountClientStateCacheRepository } from "core"
 import { Logger } from "~/utils/Logger"
-import { nonNullable } from "~/utils/builders/nonNullable"
 import { Pretify, nice } from "~/utils/helpers"
+import { nonNullable } from "~/utils/nonNullable"
 
 export type RetrieveSessionListUseCasePayload = {
   whitelistAccountNames?: string[]

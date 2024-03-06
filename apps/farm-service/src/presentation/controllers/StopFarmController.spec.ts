@@ -79,7 +79,7 @@ describe("StopFarmController.spec test suite", () => {
       expect(json).toMatchObject({
         message: "Usuário não possui contas farmando.",
       })
-      expect(status).toBe(402)
+      expect(status).toBe(403)
       expect(Object.keys(i.usersClusterStorage.getAccountsStatus())).toStrictEqual(["user_vrsl"])
     })
   })

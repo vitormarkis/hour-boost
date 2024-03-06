@@ -29,7 +29,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   friendInstances = await i.createUser("friend")
   const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
   await i.changeUserPlan(diamondPlan)
-  await i.addSteamAccount(s.me.userId, s.me.accountName2, password)
+  await i.addSteamAccountInternally(s.me.userId, s.me.accountName2, password)
   farmGamesController = new FarmGamesController({
     allUsersClientsStorage: i.allUsersClientsStorage,
     usersRepository: i.usersRepository,
@@ -125,7 +125,7 @@ describe("2 infinity plan and 1 usage plan farming ", () => {
     let spyPublish: jest.SpyInstance
     beforeEach(async () => {
       spyPublish = import.meta.jest.spyOn(i.publisher, "publish")
-      stopAllFarms.execute({ killSession: false })
+      stopAllFarms.execute({ isFinalizingSession: false })
       await new Promise(setImmediate)
     })
 

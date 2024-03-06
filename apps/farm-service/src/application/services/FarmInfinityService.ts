@@ -45,14 +45,14 @@ export class FarmInfinityService extends FarmService {
 
   protected publishCompleteFarmSession(
     pauseFarmCategory: PauseFarmOnAccountUsage,
-    killSession: boolean
+    isFinalizingSession: boolean
   ): void {
     this.publisher.publish(
       new UserCompleteFarmSessionCommand({
         pauseFarmCategory,
         planId: this.planId,
         when: new Date(),
-        killSession,
+        isFinalizingSession,
         userId: this.userId,
       })
     )
@@ -85,14 +85,15 @@ export class FarmInfinityService extends FarmService {
     return usages
   }
 
-  private pauseFarmOnAccountImpl(accountName: string): DataOrError<Usage> {
+  private pauseFarmOnAccountImpl(accountName: string) {
     const account = this.getAccount(accountName)
     if (!account) {
-      return [
-        new ApplicationError(
-          `Tentativa de pausar farm na conta [${accountName}], mas ela não foi encontrada. Contas farmando: [${this.getFarmingAccountsNameList()}]`
-        ),
-      ]
+      return bad(
+        Fail.create("PAUSE-FARM-ON-ACCOUNT-NOT-FOUND", 403, {
+          accountName,
+          accountsFarming: this.getFarmingAccountsNameList(),
+        })
+      )
     }
     const when = new Date()
     const amountTime = getUsageAmountTimeFromDateRange(this.startedAt, when)
@@ -105,20 +106,20 @@ export class FarmInfinityService extends FarmService {
       user_id: this.userId,
     })
     this.farmingAccounts.delete(accountName)
-    return [null, usage]
+    return nice(usage)
   }
 
-  pauseFarmOnAccount(accountName: string, killSession: boolean): DataOrError<null> {
+  pauseFarmOnAccount(accountName: string, isFinalizingSession: boolean) {
     const [errorPausingFarmOnAccount, usage] = this.pauseFarmOnAccountImpl(accountName)
-    if (errorPausingFarmOnAccount) return [errorPausingFarmOnAccount]
-    this.publishCompleteFarmSession({ type: "STOP-ONE", usage, accountName }, killSession)
-    return [null, null]
+    if (errorPausingFarmOnAccount) return bad(errorPausingFarmOnAccount)
+    this.publishCompleteFarmSession({ type: "STOP-ONE", usage, accountName }, isFinalizingSession)
+    return nice(null)
   }
 
-  pauseFarmOnAccountSync(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
+  pauseFarmOnAccountSync(accountName: string) {
     const [errorPausingFarmOnAccount, usage] = this.pauseFarmOnAccountImpl(accountName)
-    if (errorPausingFarmOnAccount) return [errorPausingFarmOnAccount]
-    return [null, { type: "STOP-ONE", usage, accountName }]
+    if (errorPausingFarmOnAccount) return bad(errorPausingFarmOnAccount)
+    return nice({ type: "STOP-ONE", usage, accountName })
   }
 
   // pauseFarmOnAccount(accountName: string): DataOrError<PauseFarmOnAccountUsage> {
@@ -161,7 +162,7 @@ export class FarmInfinityService extends FarmService {
     return foundAccount ?? null
   }
 
-  protected stopFarm(killSession: boolean): void {
+  protected stopFarm(isFinalizingSession: boolean): void {
     const { usages } = this.stopFarmImpl()
     this.publishCompleteFarmSession(
       {
@@ -169,7 +170,7 @@ export class FarmInfinityService extends FarmService {
         usages,
         accountNameList: this.getFarmingAccountsNameList(),
       },
-      killSession
+      isFinalizingSession
     )
   }
 

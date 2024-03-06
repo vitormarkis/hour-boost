@@ -245,7 +245,7 @@ describe("FarmUsageService test suite", () => {
     const meFarmService = getFarmService(me)
     meFarmService.farmWithAccount(s.me.accountName2)
     import.meta.jest.advanceTimersByTime(1000 * 60) // 1 minute
-    meFarmService.stopFarmAllAccounts({ killSession: false })
+    meFarmService.stopFarmAllAccounts({ isFinalizingSession: false })
     const me2 = await getMe()
     expect((me2.plan as PlanUsage).usages.data).toHaveLength(1)
     expect((me2.plan as PlanUsage).getUsageLeft()).toBe(21540)
@@ -268,7 +268,7 @@ describe("FarmUsageService test suite", () => {
     meFarmService.farmWithAccount(s.me.accountName2)
     meFarmService.farmWithAccount(s.me.accountName)
     import.meta.jest.advanceTimersByTime(1000 * 60 * 60 * 6) // 6 horas
-    meFarmService.stopFarmAllAccounts({ killSession: false })
+    meFarmService.stopFarmAllAccounts({ isFinalizingSession: false })
     const { usageAmountInSeconds: usageAmount1 } = meFarmService.getAccountDetails(s.me.accountName2) ?? {}
     const { usageAmountInSeconds: usageAmount2 } = meFarmService.getAccountDetails(s.me.accountName) ?? {}
     expect(usageAmount1).toBe(21600 / 2)
@@ -285,7 +285,7 @@ describe("FarmUsageService test suite", () => {
     meFarmService.farmWithAccount(s.me.accountName)
     meFarmService.farmWithAccount(s.me.accountName3)
     import.meta.jest.advanceTimersByTime(1000 * 60 * 60 * 3) // 6 horas
-    meFarmService.stopFarmAllAccounts({ killSession: false })
+    meFarmService.stopFarmAllAccounts({ isFinalizingSession: false })
     const acc1Details = meFarmService.getAccountDetails(s.me.accountName2)
     const acc2Details = meFarmService.getAccountDetails(s.me.accountName)
     const acc3Details = meFarmService.getAccountDetails(s.me.accountName3)
@@ -428,7 +428,7 @@ describe("FarmUsageService test suite", () => {
                 }),
               ]),
             },
-            killSession: false,
+            isFinalizingSession: false,
             planId: me.plan.id_plan,
             when: new Date("2023-06-10T14:00:00Z"),
           }),

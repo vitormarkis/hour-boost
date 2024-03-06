@@ -20,15 +20,15 @@ export async function httpUserAdminActionSetGames(
         any,
         AxiosResponse<UserAdminActionSetGamesOutput>,
         UserAdminActionSetGamesPayload
-      >("/admin/add-more-games", payload, {
-        withCredentials: true,
-      })
+      >("/admin/add-more-games", payload)
 
       console.log({ data, status })
 
       return {
         status: 200,
-        data: { message: `Você mudou o limite de jogos farmados simultâneamente para ${payload.newMaxGamesAllowed}` },
+        data: {
+          message: `Você mudou o limite de jogos farmados simultâneamente para ${payload.newMaxGamesAllowed}`,
+        },
       }
     })()
   )

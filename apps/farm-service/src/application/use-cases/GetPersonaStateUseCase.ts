@@ -1,16 +1,21 @@
-import { SteamAccountPersonaState, DataOrError, SteamAccountClientStateCacheRepository } from "core"
+import { SteamAccountPersonaState, DataOrError, SteamAccountClientStateCacheRepository, DataOrFail, Fail } from "core"
 import { RefreshPersonaStateUseCase } from "~/application/use-cases/RefreshPersonaStateUseCase"
+import { nice } from "~/utils/helpers"
 
-export class GetPersonaStateUseCase {
+interface IGetPersonaStateUseCase {
+  execute(input: IGetPersonaState.Input): Promise<DataOrFail<Fail | Error, SteamAccountPersonaState>>
+}
+
+export class GetPersonaStateUseCase implements IGetPersonaStateUseCase {
   constructor(
     private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository,
     private readonly refreshPersonaState: RefreshPersonaStateUseCase
   ) {}
 
-  async execute(input: IGetPersonaState.Input): IGetPersonaState.Output {
+  async execute(input: IGetPersonaState.Input) {
     const foundPersona = await this.steamAccountClientStateCacheRepository.getPersona(input.accountName)
-    if (foundPersona) return [null, foundPersona]
-    return this.refreshPersonaState.execute(input)
+    if (foundPersona) return nice(foundPersona)
+    return await this.refreshPersonaState.execute(input)
   }
 }
 

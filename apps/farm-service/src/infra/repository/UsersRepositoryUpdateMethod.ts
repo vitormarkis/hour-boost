@@ -37,7 +37,6 @@ export function getPlanCreation(plan: PlanUsage | PlanInfinity) {
 
 export function updateUser(user: User) {
   const plan = createPlanToUpdate(user.plan)
-  console.log({ updatePlan: plan })
 
   const updateWithoutPlan: UpdateData = {
     email: user.email,
@@ -79,11 +78,28 @@ function createPlanToUpdate(plan: PlanUsage | PlanInfinity) {
         disconnect: true,
       },
       custom_plan: {
-        update: {
+        upsert: {
           where: {
             id_plan: plan.id_plan,
           },
-          data: {
+          update: {
+            maxGamesAllowed: plan.maxGamesAllowed,
+            maxSteamAccounts: plan.maxSteamAccounts,
+            maxUsageTime: "maxUsageTime" in plan ? plan.maxUsageTime : 0,
+            priceInCents: plan.price,
+            usages: {
+              connectOrCreate: plan.usages.data.map(u => ({
+                where: { id_usage: u.id_usage },
+                create: {
+                  amountTime: u.amountTime,
+                  createdAt: new Date(),
+                  id_usage: u.id_usage,
+                  accountName: u.accountName,
+                },
+              })),
+            },
+          },
+          create: {
             createdAt: new Date(),
             maxGamesAllowed: plan.maxGamesAllowed,
             maxSteamAccounts: plan.maxSteamAccounts,
@@ -115,11 +131,24 @@ function createPlanToUpdate(plan: PlanUsage | PlanInfinity) {
         disconnect: true,
       },
       plan: {
-        update: {
+        upsert: {
           where: {
             id_plan: plan.id_plan,
           },
-          data: {
+          update: {
+            usages: {
+              connectOrCreate: plan.usages.data.map(u => ({
+                where: { id_usage: u.id_usage },
+                create: {
+                  amountTime: u.amountTime,
+                  createdAt: new Date(),
+                  id_usage: u.id_usage,
+                  accountName: u.accountName,
+                },
+              })),
+            },
+          },
+          create: {
             createdAt: new Date(),
             id_plan: plan.id_plan,
             name: plan.name as PlanNormalName,

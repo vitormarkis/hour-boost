@@ -39,7 +39,7 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
     const value = JSON.stringify(state.toDTO())
     const key = this.KEY_STATE(state.accountName)
     this.logger.log(`setting state for ${state.accountName}`)
-    console.log(`REDIS COMMAND: "JSON.SET", ${key}, "$", ${value}`)
+    // console.log(`REDIS COMMAND: "JSON.SET", ${key}, "$", ${value}`)
     await this.redis.call("JSON.SET", key, "$", value)
   }
 

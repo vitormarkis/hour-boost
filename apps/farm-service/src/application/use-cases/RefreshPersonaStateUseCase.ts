@@ -1,10 +1,7 @@
-import {
-  ApplicationError,
-  DataOrError,
-  SteamAccountClientStateCacheRepository,
-  SteamAccountPersonaState,
-} from "core"
+import { DataOrFail, Fail, SteamAccountClientStateCacheRepository, SteamAccountPersonaState } from "core"
 import { AllUsersClientsStorage } from "~/application/services"
+import { EAppResults } from "~/application/use-cases"
+import { bad, nice } from "~/utils/helpers"
 
 export class RefreshPersonaStateUseCase {
   constructor(
@@ -12,23 +9,20 @@ export class RefreshPersonaStateUseCase {
     private readonly allUsersClientsStorage: AllUsersClientsStorage
   ) {}
 
-  async execute(input: IRefreshPersonaState.Input): IRefreshPersonaState.Output {
+  async execute(input: IRefreshPersonaState.Input) {
     const sac = this.allUsersClientsStorage.getAccountClient(input.userId, input.accountName)
     if (!sac) {
-      console.log({
-        users: this.allUsersClientsStorage.listUsers(),
-      })
-      return [
-        new ApplicationError(`Steam Account não encontrada para a conta ${input.accountName}`, 404, {
-          userId: input.userId,
-          accountName: input.accountName,
-        }),
-      ]
+      return bad(
+        Fail.create(EAppResults["SAC-NOT-FOUND"], 404, {
+          input,
+          existingAccounts: this.allUsersClientsStorage.listUsersKeys(),
+        })
+      )
     }
     const [error, persona] = await sac.getAccountPersona()
-    if (error) return [error]
+    if (error) return bad(error)
     await this.steamAccountClientStateCacheRepository.setPersona(input.accountName, persona)
-    return [null, persona]
+    return nice(persona)
   }
 }
 
@@ -37,5 +31,5 @@ export namespace IRefreshPersonaState {
     userId: string
     accountName: string
   }
-  export type Output = Promise<DataOrError<SteamAccountPersonaState>>
+  export type Output = Promise<DataOrFail<Fail, SteamAccountPersonaState>>
 }

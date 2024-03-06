@@ -18,7 +18,7 @@ export class StopAllFarmsController
     if (secret !== process.env.ACTIONS_SECRET) {
       throw new ApplicationError("Secret incorreta.")
     }
-    this.stopAllFarmsUseCase.execute({ killSession: false })
+    this.stopAllFarmsUseCase.execute({ isFinalizingSession: false })
 
     return {
       status: 200,

@@ -1,7 +1,7 @@
 import { CacheState, CacheStateDTO, DataOrFail, Fail, Mutable, PlanInfinity, PlanUsage } from "core"
 import { UsersSACsFarmingClusterStorage } from "~/application/services"
 import { SteamAccountClient } from "~/application/services/steam"
-import { SACGenericError, handleSteamClientError } from "~/application/use-cases"
+import { handleSteamClientError } from "~/application/use-cases"
 import { Publisher } from "~/infra/queue"
 import { FailGeneric } from "~/types/EventsApp.types"
 import { Pretify, bad, nice } from "~/utils/helpers"

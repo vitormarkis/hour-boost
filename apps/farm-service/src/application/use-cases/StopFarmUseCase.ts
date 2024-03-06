@@ -14,13 +14,13 @@ export class StopFarmUseCase implements IStopFarmUseCase {
   ) {}
 
   async execute(
-    { planId, accountName, username }: StopFarmUseCasePayload,
+    { planId, accountName, username, isFinalizingSession }: StopFarmUseCasePayload,
     options = { persistUsages: true } as Options
   ) {
     const [errorFindingUserCluster, userCluster] = this.usersClusterStorage.get(username)
     if (errorFindingUserCluster) return bad(errorFindingUserCluster)
 
-    const [errorPausingFarmOnAccount, usages] = userCluster.pauseFarmOnAccountSync({ accountName })
+    const [errorPausingFarmOnAccount, usages] = userCluster.pauseFarmOnAccountSync({ accountName, isFinalizingSession })
     if (errorPausingFarmOnAccount) return bad(errorPausingFarmOnAccount)
 
     if (options.persistUsages) {
@@ -36,6 +36,7 @@ export type StopFarmUseCasePayload = {
   planId: string
   username: string
   accountName: string
+  isFinalizingSession: boolean
 }
 
 interface IStopFarmUseCase {

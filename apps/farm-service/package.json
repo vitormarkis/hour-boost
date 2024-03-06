@@ -10,6 +10,7 @@
     "check": "tsc --noEmit",
     "build": "tsup src/server.ts --format esm",
     "build:check": "npm run check && tsup src/server.ts",
+    "tx": "tsx",
     "start": "node dist/server.js",
     "start:inspect": "node --inspect dist/src/server.js",
     "build:s": "npm run build && npm start",

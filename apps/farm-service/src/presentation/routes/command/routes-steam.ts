@@ -34,6 +34,7 @@ import {
   stagingGamesListService,
   steamAccountClientStateCacheRepository,
   steamAccountsRepository,
+  stopFarmUseCase,
   usersClusterStorage,
   usersDAO,
   usersRepository,
@@ -171,7 +172,6 @@ command_routerSteam.post(
     const perform = async () => {
       const { accountName } = req.body
 
-      const stopFarmUseCase = new StopFarmUseCase(usersClusterStorage, planRepository)
       const stopFarmController = new StopFarmController(stopFarmUseCase, usersRepository)
       return await stopFarmController.handle({
         payload: {

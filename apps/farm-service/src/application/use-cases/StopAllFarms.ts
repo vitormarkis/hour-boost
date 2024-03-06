@@ -3,7 +3,7 @@ import { UsersSACsFarmingClusterStorage } from "~/application/services"
 
 export namespace StopAllFarmsHandle {
   export type Payload = {
-    killSession: boolean
+    isFinalizingSession: boolean
   }
 
   export type Response = void
@@ -12,8 +12,8 @@ export namespace StopAllFarmsHandle {
 export class StopAllFarms implements UseCase<StopAllFarmsHandle.Payload, StopAllFarmsHandle.Response> {
   constructor(private readonly usersClusterStorage: UsersSACsFarmingClusterStorage) {}
 
-  execute({ killSession }: APayload) {
-    this.usersClusterStorage.stopAll(killSession)
+  execute({ isFinalizingSession }: APayload) {
+    this.usersClusterStorage.stopAll(isFinalizingSession)
   }
 }
 

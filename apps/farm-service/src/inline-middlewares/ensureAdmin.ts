@@ -7,7 +7,7 @@ import { MiddlewareResponse } from "./middleware-reponse"
 import { HBHeaders, HBHeadersType } from "./hb-headers-enum"
 
 export async function ensureAdmin(req: Request, res: Response) {
-  const hbIdentification = req.cookies[HBHeaders["hb-identification"]]
+  const hbIdentification = req.headers[HBHeaders["hb-identification"]] as string
 
   if (!hbIdentification) {
     return bad(

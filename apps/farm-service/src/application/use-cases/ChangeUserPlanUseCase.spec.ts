@@ -144,7 +144,7 @@ describe("user is farming test suite", () => {
     const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
     await i.changeUserPlan(diamondPlan)
 
-    await i.addSteamAccount(s.me.userId, s.me.accountName2, password)
+    await i.addSteamAccountInternally(s.me.userId, s.me.accountName2, password)
     expect(i.usersMemory.users.find(u => u.id_user === s.me.userId)?.steamAccounts.getAmount()).toBe(2)
 
     const res_farmGames = await farmGames(s.me.accountName, [100, 200, 300, 400, 500], s.me.userId)
@@ -213,6 +213,8 @@ describe("user is farming test suite", () => {
     )(s.me.accountName)
     expect(errorGettingSac).toBeNull()
     expect(sac?.getGamesPlaying()).toStrictEqual([100])
+    const state = await i.sacStateCacheRepository.get(s.me.accountName)
+    expect(state?.gamesPlaying).toStrictEqual([100])
   })
 
   test("should persist usages of trimmed steam account", async () => {
@@ -222,7 +224,7 @@ describe("user is farming test suite", () => {
     expect(user1?.usages.data).toStrictEqual([])
 
     await i.changeUserPlan(diamondPlan)
-    await i.addSteamAccount(s.me.userId, s.me.accountName2, password)
+    await i.addSteamAccountInternally(s.me.userId, s.me.accountName2, password)
 
     const res_farmGames = await farmGames(s.me.accountName, [100, 200, 300, 400, 500], s.me.userId)
     expect(res_farmGames.status).toBe(200)

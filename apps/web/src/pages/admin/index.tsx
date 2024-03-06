@@ -1,7 +1,8 @@
 import { HeaderDashboard } from "@/components/layouts/Header/header-dashboard"
 import { AdminUserListContent } from "@/components/layouts/pages/admin/components/AdminUserListContent"
 import { UserProvider } from "@/contexts/UserContext"
-import { UserSessionParams } from "@/server-fetch/types"
+import { api } from "@/lib/axios"
+import { UserSessionParams, UserSessionParamsMaybe } from "@/server-fetch/types"
 import { userProcedure } from "@/server-fetch/userProcedure"
 
 export const getServerSideProps = userProcedure({
@@ -10,7 +11,13 @@ export const getServerSideProps = userProcedure({
   },
 })
 
-export default function AdminDashboard({ user }: UserSessionParams) {
+export default function AdminDashboard({ user, serverHeaders }: UserSessionParams) {
+  for (const headerName in serverHeaders) {
+    api.defaults.headers.common[headerName] = serverHeaders[headerName]
+  }
+
+  console.log(api.defaults.headers, { serverHeaders })
+
   return (
     <UserProvider serverUser={user}>
       <HeaderDashboard

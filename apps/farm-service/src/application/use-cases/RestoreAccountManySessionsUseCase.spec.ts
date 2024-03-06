@@ -75,7 +75,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 }
 
 beforeEach(async () => {
-  import.meta.jest.useFakeTimers({ doNotFake: ["setTimeout"] })
+  import.meta.jest.useFakeTimers({ doNotFake: ["setTimeout", "setImmediate", "setInterval", "nextTick"] })
   console.log = () => {}
   await setupInstances({
     validSteamAccounts,
@@ -118,8 +118,15 @@ describe("2 accounts, one used all plan usage limit", () => {
     const spy_friendGamesPlayed = import.meta.jest.spyOn(friendSac.client, "gamesPlayed")
     const spy_friendFarmGames = import.meta.jest.spyOn(friendSac, "farmGames")
 
-    const [error] = await restoreAccountManySessionsUseCase.execute()
+    const [error, result] = await restoreAccountManySessionsUseCase.execute({
+      batchOptions: {
+        batchAmount: 99,
+        intervalInSeconds: 0,
+        noiseInSeconds: 0,
+      },
+    })
     expect(error).toBeNull()
+    expect(result.promisesAmount).toBe(2)
 
     const meAccountState = (await i.sacStateCacheRepository.get(s.me.accountName))!
     expect(meAccountState.isFarming()).toBe(false)
@@ -143,5 +150,5 @@ describe("2 accounts, one used all plan usage limit", () => {
       isFarming: false,
     }
     expect(meSac.getCache().toDTO()).toStrictEqual(finalMeDTO)
-  })
+  }, 999999)
 })

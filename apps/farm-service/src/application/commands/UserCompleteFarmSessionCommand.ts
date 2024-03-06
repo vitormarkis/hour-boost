@@ -7,14 +7,14 @@ export class UserCompleteFarmSessionCommand implements Command {
   when: Date
   planId: string
   pauseFarmCategory: PauseFarmOnAccountUsage
-  killSession: boolean
+  isFinalizingSession: boolean
   userId: string
 
   constructor(props: UserCompleteFarmSessionCommandProps) {
     this.when = props.when
     this.planId = props.planId
     this.pauseFarmCategory = props.pauseFarmCategory
-    this.killSession = props.killSession
+    this.isFinalizingSession = props.isFinalizingSession
     this.userId = props.userId
   }
 }
@@ -23,6 +23,6 @@ interface UserCompleteFarmSessionCommandProps {
   when: Date
   planId: string
   pauseFarmCategory: PauseFarmOnAccountUsage
-  killSession: boolean
+  isFinalizingSession: boolean
   userId: string
 }

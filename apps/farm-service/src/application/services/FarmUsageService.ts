@@ -11,7 +11,7 @@ import {
 import { EAppResults } from "~/application/use-cases"
 import { Publisher } from "~/infra/queue"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { bad, nice } from "~/utils/helpers"
+import { bad, nice, only } from "~/utils/helpers"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
 
@@ -52,7 +52,7 @@ export class FarmUsageService extends FarmService {
 
     this.emitter.on("service:max-usage-exceeded", () => {
       console.log("1. ouviu `service:max-usage-exceeded`: chamando stopFarmAllAccounts")
-      this.stopFarmAllAccounts({ killSession: true })
+      this.stopFarmAllAccounts({ isFinalizingSession: true })
     })
   }
 
@@ -149,7 +149,7 @@ export class FarmUsageService extends FarmService {
     return { usages }
   }
 
-  protected stopFarm(killSession: boolean): void {
+  protected stopFarm(isFinalizingSession: boolean): void {
     const { usages } = this.stopFarmImpl()
     this.publishCompleteFarmSession(
       {
@@ -157,7 +157,7 @@ export class FarmUsageService extends FarmService {
         usages,
         accountNameList: this.getFarmingAccountsNameList(),
       },
-      killSession
+      isFinalizingSession
     )
     clearInterval(this.farmingInterval)
   }
@@ -172,13 +172,13 @@ export class FarmUsageService extends FarmService {
     return !!(acc?.status === "FARMING")
   }
 
-  pauseFarmOnAccountSync(accountName: string, killSession?: boolean): DataOrError<PauseFarmOnAccountUsage> {
+  pauseFarmOnAccountSync(accountName: string, isFinalizingSession?: boolean) {
     if (this.getActiveFarmingAccountsAmount() === 1) {
       const usages = this.stopFarmSync()
-      return [null, { type: "STOP-ALL", usages, accountNameList: this.getFarmingAccountsNameList() }]
+      return nice({ type: "STOP-ALL", usages, accountNameList: this.getFarmingAccountsNameList() })
     }
     this.setAccountStatus(accountName, "IDDLE")
-    return [null, { type: "STOP-SILENTLY", accountName }]
+    return nice({ type: "STOP-SILENTLY", accountName })
   }
 
   private getFarmingAccountDetails(): FarmingAccountDetailsWithAccountName[] {
@@ -193,21 +193,21 @@ export class FarmUsageService extends FarmService {
     return farmingAccountDetails
   }
 
-  pauseFarmOnAccount(accountName: string, killSession: boolean): DataOrError<null> {
+  pauseFarmOnAccount(accountName: string, isFinalizingSession: boolean) {
     if (this.getActiveFarmingAccountsAmount() === 1) {
-      this.stopFarm(killSession)
+      this.stopFarm(isFinalizingSession)
     }
     this.setAccountStatus(accountName, "IDDLE")
-    return [null, null]
+    return nice(null)
   }
 
-  publishCompleteFarmSession(pauseFarmCategory: PauseFarmOnAccountUsage, killSession: boolean): void {
+  publishCompleteFarmSession(pauseFarmCategory: PauseFarmOnAccountUsage, isFinalizingSession: boolean): void {
     this.publisher.publish(
       new UserCompleteFarmSessionCommand({
         pauseFarmCategory,
         planId: this.planId,
         when: new Date(),
-        killSession,
+        isFinalizingSession,
         userId: this.userId,
       })
     )
