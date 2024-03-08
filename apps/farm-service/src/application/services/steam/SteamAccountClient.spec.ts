@@ -5,8 +5,11 @@ import { Publisher } from "~/infra/queue"
 import { SteamUserMock } from "~/infra/services/SteamUserMock"
 
 import {
+  type 
   CustomInstances,
+  type 
   MakeTestInstancesProps,
+  type 
   PrefixKeys,
   makeTestInstances,
   password,
@@ -21,7 +24,7 @@ let i = makeTestInstances({
   validSteamAccounts,
 })
 let meInstances = {} as PrefixKeys<"me">
-let friendInstances = {} as PrefixKeys<"friend">
+const friendInstances = {} as PrefixKeys<"friend">
 let logSpy: jest.SpyInstance
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {

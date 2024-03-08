@@ -1,11 +1,15 @@
 import {
+  type 
   AppAccountStatus,
   ApplicationError,
+  type 
   DataOrError,
+  type 
   SteamAccountClientStateCacheRepository,
+  type 
   UseCase,
 } from "core"
-import { AllUsersClientsStorage } from "~/application/services"
+import type { AllUsersClientsStorage } from "~/application/services"
 
 export namespace ChangeAccountStatusUseCaseHandle {
   export type Payload = {

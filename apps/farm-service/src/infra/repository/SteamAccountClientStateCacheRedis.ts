@@ -1,27 +1,32 @@
 import {
   AccountSteamGamesList,
   CacheState,
+  type 
   CacheStateDTO,
+  type 
   GameSession,
+  type 
   IRefreshToken,
+  type 
   InitProps,
+  type 
   SteamAccountClientStateCacheRepository,
+  type 
   SteamAccountPersonaState,
-  getCallStack,
 } from "core"
-import { Redis } from "ioredis"
+import type { Redis } from "ioredis"
 import { Logger } from "~/utils/Logger"
 
 export class SteamAccountClientStateCacheRedis implements SteamAccountClientStateCacheRepository {
   readonly logger: Logger
-  readonly KEY_STATE = (accountName: string) => accountName + ":state"
+  readonly KEY_STATE = (accountName: string) => `${accountName}:state`
   readonly KEY_REFRESH_TOKEN_LIST = "*:refreshToken"
-  readonly KEY_REFRESH_TOKEN = (accountName: string) => accountName + ":refreshToken"
-  readonly KEY_ACCOUNT_GAMES = (accountName: string) => accountName + ":sac:games"
-  readonly KEY_ACCOUNT_PERSONA = (accountName: string) => accountName + ":sac:persona"
+  readonly KEY_REFRESH_TOKEN = (accountName: string) => `${accountName}:refreshToken`
+  readonly KEY_ACCOUNT_GAMES = (accountName: string) => `${accountName}:sac:games`
+  readonly KEY_ACCOUNT_PERSONA = (accountName: string) => `${accountName}:sac:persona`
 
   constructor(private readonly redis: Redis) {
-    this.logger = new Logger(`State Redis`)
+    this.logger = new Logger("State Redis")
   }
 
   async get(accountName: string): Promise<CacheState | null> {
@@ -96,7 +101,7 @@ export class SteamAccountClientStateCacheRedis implements SteamAccountClientStat
   }
 
   async flushAll(): Promise<void> {
-    this.logger.log(`deleting all entries for in cache.`)
+    this.logger.log("deleting all entries for in cache.")
     await this.redis.flushall()
   }
 

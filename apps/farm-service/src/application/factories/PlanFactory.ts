@@ -1,4 +1,4 @@
-import { CustomUsagePlan, DiamondPlan, GoldPlan, GuestPlan, PlanUsage, SilverPlan } from "core"
+import { CustomUsagePlan, DiamondPlan, GoldPlan, GuestPlan, type PlanUsage, SilverPlan } from "core"
 
 export class PlanBuilder {
   constructor(private readonly ownerId: string) {}

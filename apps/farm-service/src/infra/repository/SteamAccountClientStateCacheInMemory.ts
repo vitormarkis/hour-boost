@@ -1,16 +1,19 @@
 import {
+  type 
   AccountSteamGamesList,
   CacheState,
+  type 
   IRefreshToken,
+  type 
   InitProps,
+  type 
   SteamAccountClientStateCacheRepository,
+  type 
   SteamAccountPersonaState,
-  getCallStack,
 } from "core"
-import { SACCacheInMemory } from "~/infra/repository/SACCacheInMemory"
-import { Logger } from "~/utils/Logger"
+import type { SACCacheInMemory } from "~/infra/repository/SACCacheInMemory"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import _ from "lodash"
+import { Logger } from "~/utils/Logger"
 
 export class SteamAccountClientStateCacheInMemory implements SteamAccountClientStateCacheRepository {
   protected readonly logger = new Logger("sac-cache-in-memory")
@@ -34,7 +37,7 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
   }
   get(accountName: string): Promise<CacheState | null> {
     if (accountName === s.me.accountName) {
-      this.logger.log(`getting from cache`, this.data.state.get(accountName))
+      this.logger.log("getting from cache", this.data.state.get(accountName))
     }
     const foundCache = this.data.state.get(accountName)
     return Promise.resolve(foundCache ? foundCache : null)
@@ -42,7 +45,7 @@ export class SteamAccountClientStateCacheInMemory implements SteamAccountClientS
   }
 
   async save(state: CacheState): Promise<void> {
-    this.logger.log(`salvando`, state)
+    this.logger.log("salvando", state)
     this.data.state.set(state.accountName, state)
     // this.data.state.set(state.accountName, state.toDTO())
   }

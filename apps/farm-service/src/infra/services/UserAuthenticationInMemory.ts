@@ -1,4 +1,4 @@
-import { IClerkUser, UserAuthentication } from "core"
+import type { IClerkUser, UserAuthentication } from "core"
 
 const makePlayingSession = () => {
   const playingSession = [] as string[]

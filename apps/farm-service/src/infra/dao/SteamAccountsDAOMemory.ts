@@ -1,5 +1,5 @@
-import { SteamAccountsDAO } from "core"
-import { SteamAccountsInMemory } from "../repository/SteamAccountsInMemory"
+import type { SteamAccountsDAO } from "core"
+import type { SteamAccountsInMemory } from "../repository/SteamAccountsInMemory"
 
 export class SteamAccountsDAOMemory implements SteamAccountsDAO {
   constructor(private readonly db: SteamAccountsInMemory) {}

@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client"
-import { SteamAccount, SteamAccountCredentials, SteamAccountsRepository } from "core"
+import type { PrismaClient } from "@prisma/client"
+import { SteamAccount, SteamAccountCredentials, type SteamAccountsRepository } from "core"
 
 export class SteamAccountsRepositoryDatabase implements SteamAccountsRepository {
   constructor(private readonly prisma: PrismaClient) {}

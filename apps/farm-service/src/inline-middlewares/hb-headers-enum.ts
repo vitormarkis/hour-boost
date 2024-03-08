@@ -1,5 +1,5 @@
-import { RoleName } from "core"
-import jwt from "jsonwebtoken"
+import type { RoleName } from "core"
+import type jwt from "jsonwebtoken"
 
 export const HBHeaders = {
   ["hb-identification"]: "hb-identification",

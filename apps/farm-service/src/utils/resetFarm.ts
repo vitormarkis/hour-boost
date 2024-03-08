@@ -1,10 +1,10 @@
-import { CacheState, Fail, PlanRepository, SteamAccountClientStateCacheRepository } from "core"
-import {
+import { type CacheState, Fail, type PlanRepository, type SteamAccountClientStateCacheRepository } from "core"
+import type {
   AllUsersClientsStorage,
   UserSACsFarmingCluster,
   UsersSACsFarmingClusterStorage,
 } from "~/application/services"
-import { SteamAccountClient } from "~/application/services/steam"
+import type { SteamAccountClient } from "~/application/services/steam"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 import { getSACOn_AllUsersClientsStorage_ByUserId } from "~/utils/getSAC"
 import { bad, nice } from "~/utils/helpers"
@@ -52,7 +52,7 @@ export function makeResetFarm({
       state,
       userCluster,
       username,
-      isFinalizingSession
+      isFinalizingSession,
     })
     return result
   }
@@ -88,7 +88,6 @@ export function resetFarm(stopFarmUseCase: StopFarmUseCase) {
       switch (error.code) {
         case "PAUSE-FARM-ON-ACCOUNT-NOT-FOUND":
         case "TRIED-TO-STOP-FARM-ON-NON-FARMING-ACCOUNT":
-          console.log("33: ", error.code, error.payload)
           break
         case "DO-NOT-HAVE-ACCOUNTS-FARMING":
         case "PLAN-NOT-FOUND":

@@ -1,5 +1,5 @@
-import { API_GET_RefreshAccountGames, Controller, HttpClient } from "core"
-import { RefreshGamesUseCase, RefreshGamesUseCaseProps } from "~/presentation/presenters/RefreshGamesUseCase"
+import type { API_GET_RefreshAccountGames, Controller, HttpClient } from "core"
+import type { RefreshGamesUseCase, RefreshGamesUseCaseProps } from "~/presentation/presenters/RefreshGamesUseCase"
 
 export class RefreshGamesController implements Controller<RefreshGames.Payload, RefreshGames.Response> {
   constructor(private readonly refreshGamesUseCase: RefreshGamesUseCase) {}

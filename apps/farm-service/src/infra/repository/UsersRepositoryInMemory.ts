@@ -1,6 +1,6 @@
-import { ApplicationError, User, UsersRepository } from "core"
-import { SteamAccountsInMemory } from "~/infra/repository/SteamAccountsInMemory"
-import { UsersInMemory } from "./UsersInMemory"
+import { ApplicationError, type User, type UsersRepository } from "core"
+import type { SteamAccountsInMemory } from "~/infra/repository/SteamAccountsInMemory"
+import type { UsersInMemory } from "./UsersInMemory"
 
 export class UsersRepositoryInMemory implements UsersRepository {
   constructor(
@@ -50,7 +50,7 @@ export class UsersRepositoryInMemory implements UsersRepository {
       throw new ApplicationError(
         "Usuário não encontrado.",
         404,
-        `repo em memory, tentou atualizar um usuário que não existia no banco de dados.`
+        "repo em memory, tentou atualizar um usuário que não existia no banco de dados."
       )
     this.usersMemory.users[foundUserIndex] = user
   }

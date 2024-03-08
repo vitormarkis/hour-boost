@@ -1,13 +1,15 @@
 import { LoginSteamWithCredentials } from "~/utils/LoginSteamWithCredentials"
 
-import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import {
-  makeTestInstances,
-  validSteamAccounts,
-  MakeTestInstancesProps,
+  type 
   CustomInstances,
+  type 
+  MakeTestInstancesProps,
+  makeTestInstances,
   password,
+  validSteamAccounts,
 } from "~/__tests__/instances"
+import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 const log = console.log
 // console.log = () => {}

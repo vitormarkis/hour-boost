@@ -1,5 +1,5 @@
-import { UseCase, User } from "core"
-import { UsersSACsFarmingClusterStorage } from "~/application/services"
+import type { UseCase, User } from "core"
+import type { UsersSACsFarmingClusterStorage } from "~/application/services"
 
 export namespace RestoreUsersSessionsUseCaseHandle {
   export type Payload = {

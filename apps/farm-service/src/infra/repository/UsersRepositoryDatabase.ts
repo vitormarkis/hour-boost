@@ -1,23 +1,17 @@
-import { PrismaClient } from "@prisma/client"
+import type { PrismaClient } from "@prisma/client"
+import type { Role, RoleName, Status, StatusName, UsersRepository } from "core"
 import {
   ActiveStatus,
   AdminRole,
   ApplicationError,
   BannedStatus,
   Purchase,
-  Role,
-  RoleName,
-  Status,
-  StatusName,
   SteamAccount,
   SteamAccountCredentials,
   SteamAccountList,
-  Usage,
   UsageList,
   User,
   UserRole,
-  UsersRepository,
-  getCallStack,
 } from "core"
 import { getCurrentPlanOrCreateOne } from "~/infra/mappers/databasePlanToDomain"
 import { databaseUsageToDomain } from "~/infra/mappers/databaseUsageToDomain"
@@ -75,13 +69,13 @@ export class UsersRepositoryDatabase implements UsersRepository {
 export function roleFactory(role: RoleName): Role {
   if (role === "ADMIN") return new AdminRole()
   if (role === "USER") return new UserRole()
-  throw new ApplicationError("Invalid role received: " + role)
+  throw new ApplicationError(`Invalid role received: ${role}`)
 }
 
 export function statusFactory(status: StatusName): Status {
   if (status === "ACTIVE") return new ActiveStatus()
   if (status === "BANNED") return new BannedStatus()
-  throw new ApplicationError("Invalid status received: " + status)
+  throw new ApplicationError(`Invalid status received: ${status}`)
 }
 
 function prismaUserFindManyToUserDomain(user: PrismaFindMany[number]): User {

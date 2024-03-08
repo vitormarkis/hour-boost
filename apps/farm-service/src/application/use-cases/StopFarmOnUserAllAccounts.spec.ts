@@ -1,19 +1,22 @@
+import { AddSteamAccount } from "core"
 import {
-  makeTestInstances,
-  validSteamAccounts,
-  PrefixKeys,
-  MakeTestInstancesProps,
+  type 
   CustomInstances,
+  type 
+  MakeTestInstancesProps,
+  type 
+  PrefixKeys,
+  makeTestInstances,
   password,
+  validSteamAccounts,
 } from "~/__tests__/instances"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { StopFarmOnUserAllAccounts } from "./StopFarmOnUserAllAccounts"
-import { StopFarmUseCase } from "./StopFarmUseCase"
 import { AddSteamAccountController, FarmGamesController } from "~/presentation/controllers"
+import { PlanBuilder } from "../factories/PlanFactory"
 import { AddSteamAccountUseCase } from "./AddSteamAccountUseCase"
 import { CheckSteamAccountOwnerStatusUseCase } from "./CheckSteamAccountOwnerStatusUseCase"
-import { AddSteamAccount } from "core"
-import { PlanBuilder } from "../factories/PlanFactory"
+import { StopFarmOnUserAllAccounts } from "./StopFarmOnUserAllAccounts"
+import { StopFarmUseCase } from "./StopFarmUseCase"
 
 const log = console.log
 // console.log = () => {}

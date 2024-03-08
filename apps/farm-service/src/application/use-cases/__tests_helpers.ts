@@ -1,6 +1,6 @@
-import { UsersRepository } from "core"
-import { RestoreAccountConnectionUseCase } from "~/application/use-cases"
-import { FarmGamesController, promiseHandler } from "~/presentation/controllers"
+import type { UsersRepository } from "core"
+import type { RestoreAccountConnectionUseCase } from "~/application/use-cases"
+import { type FarmGamesController, promiseHandler } from "~/presentation/controllers"
 
 export function makeFarmGames(farmGamesController: FarmGamesController) {
   return function farmGames(accountName: string, gamesID: number[], userId: string) {

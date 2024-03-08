@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client"
-import { SteamAccountsDAO } from "core"
+import type { PrismaClient } from "@prisma/client"
+import type { SteamAccountsDAO } from "core"
 
 export class SteamAccountsDAODatabase implements SteamAccountsDAO {
   constructor(private readonly prisma: PrismaClient) {}

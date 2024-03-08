@@ -1,6 +1,9 @@
 import {
+  type 
   CustomInstances,
+  type 
   MakeTestInstancesProps,
+  type 
   PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
@@ -8,12 +11,13 @@ import {
 import { RestoreAccountSessionUseCase } from "~/application/use-cases/RestoreAccountSessionUseCase"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
-import { GuestPlan, PlanUsage, Usage } from "core"
-import { RestoreAccountConnectionUseCase } from "./RestoreAccountConnectionUseCase"
+import { GuestPlan, type PlanUsage, Usage } from "core"
 import {
+  type 
   TEST_RestoreAccountConnection,
   makeRestoreAccountConnection,
 } from "~/application/use-cases/__tests_helpers"
+import { RestoreAccountConnectionUseCase } from "./RestoreAccountConnectionUseCase"
 
 const log = console.log
 // console.log = () => {}

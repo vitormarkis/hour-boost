@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client"
-import { Usage, UsagesRepository } from "core"
+import type { PrismaClient } from "@prisma/client"
+import type { Usage, UsagesRepository } from "core"
 
 export class UsagesRepositoryDatabase implements UsagesRepository {
   constructor(private readonly prisma: PrismaClient) {}

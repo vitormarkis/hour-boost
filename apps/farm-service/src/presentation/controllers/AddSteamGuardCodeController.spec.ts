@@ -3,7 +3,7 @@ import { AddSteamAccount } from "core"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { makeUser } from "~/utils/makeUser"
 
-import { CustomInstances, MakeTestInstancesProps, makeTestInstances, password } from "~/__tests__/instances"
+import { type CustomInstances, type MakeTestInstancesProps, makeTestInstances, password } from "~/__tests__/instances"
 import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { AddSteamAccountController, AddSteamGuardCodeController } from "~/presentation/controllers"

@@ -1,4 +1,4 @@
-import { CacheState, PlanInfinity, PlanUsage, User } from "core"
+import type { CacheState, PlanInfinity, PlanUsage, User } from "core"
 import { only } from "~/utils/helpers"
 import { updateCacheStates } from "~/utils/updateCacheStates"
 

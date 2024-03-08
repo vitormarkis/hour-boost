@@ -1,25 +1,34 @@
+import { appendFile } from "fs"
 import {
+  type 
   AccountGames,
   AccountSteamGamesList,
+  type 
   AppAccountStatus,
   ApplicationError,
   CacheState,
+  type 
   CacheStateDTO,
+  type 
   CacheStateHollow,
+  type 
   DataOrError,
+  type 
   DataOrFail,
   Fail,
+  type 
   GameSession,
+  type 
   IRefreshToken,
+  type 
   SteamAccountPersonaState,
 } from "core"
-import { appendFile } from "fs"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
-import { EventEmitter } from "~/application/services"
+import type { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
 import { getHeaderImageByGameId } from "~/consts"
-import { Publisher } from "~/infra/queue"
+import type { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
 import { Logger } from "~/utils/Logger"
 import { bad, nice } from "~/utils/helpers"
@@ -209,6 +218,10 @@ export class SteamAccountClient extends LastHandler {
   setAutoRestart(on: boolean) {
     if (this.autoRestart === on) return
     this.autoRestart = on
+  }
+
+  setFarmStartedAt(when: Date) {
+    this.cache.setFarmStartedAt(when)
   }
 
   getGamesPlaying() {

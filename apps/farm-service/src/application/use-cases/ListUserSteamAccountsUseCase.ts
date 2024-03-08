@@ -1,5 +1,5 @@
-import { DatabaseSteamAccount, ISteamAccountSession, SteamAccountPersonaState, UsersDAO } from "core"
-import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
+import type { DatabaseSteamAccount, ISteamAccountSession, SteamAccountPersonaState, UsersDAO } from "core"
+import type { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 
 export class ListUserSteamAccountsUseCase {
   constructor(

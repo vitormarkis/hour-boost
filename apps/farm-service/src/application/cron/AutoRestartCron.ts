@@ -1,18 +1,18 @@
-import {
+import type {
   DataOrFail,
-  Fail,
   PlanRepository,
   SteamAccountClientStateCacheRepository,
   SteamAccountsRepository,
   UsersDAO,
 } from "core"
-import { AllUsersClientsStorage } from "~/application/services"
+import { Fail } from "core"
+import type { AllUsersClientsStorage } from "~/application/services"
 import {
   EAppResults,
-  RestoreAccountConnectionUseCase,
-  RestoreAccountSessionUseCase,
+  type RestoreAccountConnectionUseCase,
+  type RestoreAccountSessionUseCase,
 } from "~/application/use-cases"
-import { FailGeneric } from "~/types/EventsApp.types"
+import type { FailGeneric } from "~/types/EventsApp.types"
 import { bad, nice } from "~/utils/helpers"
 
 export type AutoRestartCronPayload = {

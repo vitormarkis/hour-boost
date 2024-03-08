@@ -27,6 +27,15 @@ export class CacheState {
     this.status = props.status
   }
 
+  setFarmStartedAt(when: Date) {
+    if (!this.isFarming())
+      throw makeError("Invariant! Tentou setar farm started at sem mesmo estar farmando", {
+        when,
+        state: this.toDTO(),
+      })
+    this.farmStartedAt = when
+  }
+
   stageGames(gamesId: number[]) {
     this.gamesStaging = gamesId
   }

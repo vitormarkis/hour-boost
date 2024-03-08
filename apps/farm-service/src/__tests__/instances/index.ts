@@ -2,19 +2,23 @@ import {
   AddSteamAccount,
   ApplicationError,
   IDGeneratorUUID,
+  type 
   PlanInfinity,
   PlanUsage,
   SteamAccount,
   SteamAccountCredentials,
+  type 
   SteamAccountsRepository,
+  type 
   Usage,
+  type 
   User,
 } from "core"
-import Redis from "ioredis"
+import type Redis from "ioredis"
 import { makeSACFactory } from "~/__tests__/factories"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
-import { SteamAccountClient } from "~/application/services/steam"
+import type { SteamAccountClient } from "~/application/services/steam"
 import { AddSteamAccountUseCase, CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
@@ -35,7 +39,9 @@ import {
 import { SACCacheInMemory } from "~/infra/repository/SACCacheInMemory"
 import { SteamAccountsInMemory } from "~/infra/repository/SteamAccountsInMemory"
 import {
+  type 
   TestUserProperties,
+  type 
   TestUsers,
   UserAuthenticationInMemory,
   testUsers,
@@ -73,7 +79,7 @@ type CreateUserOptions = Partial<{
 
 export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomInstances) {
   const { validSteamAccounts = [] } = props ?? {}
-  let redis: Redis = {} as Redis
+  const redis: Redis = {} as Redis
   // redis = new Redis()
 
   const autoRestarterScheduler = new AutoRestarterScheduler()

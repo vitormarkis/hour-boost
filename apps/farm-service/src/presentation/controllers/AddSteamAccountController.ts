@@ -1,5 +1,5 @@
-import { AddSteamAccountHTTPResponse, Controller, HttpClient } from "core"
-import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
+import type { AddSteamAccountHTTPResponse, Controller, HttpClient } from "core"
+import type { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 
 export namespace AddSteamAccountHandle {
   export type Payload = {

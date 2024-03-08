@@ -1,16 +1,19 @@
 import { jest } from "@jest/globals"
 import {
+  type 
   CustomInstances,
+  type 
   MakeTestInstancesProps,
+  type 
   PrefixKeys,
   makeTestInstances,
   password,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { ensureExpectation } from "~/__tests__/utils"
-import { UserCompleteFarmSessionCommand } from "~/application/commands"
+import type { UserCompleteFarmSessionCommand } from "~/application/commands"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
-import { PauseFarmOnAccountUsage } from "~/application/services"
+import type { PauseFarmOnAccountUsage } from "~/application/services"
 import { StopAllFarms } from "~/application/use-cases"
 import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"

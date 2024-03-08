@@ -1,5 +1,5 @@
-import { API_GET_AccountGames, Controller, HttpClient } from "core"
-import {
+import type { API_GET_AccountGames, Controller, HttpClient } from "core"
+import type {
   GetUserSteamGamesUseCase,
   GetUserSteamGamesUseCaseProps,
 } from "~/application/use-cases/GetUserSteamGamesUseCase"

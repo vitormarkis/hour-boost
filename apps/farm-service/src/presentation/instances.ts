@@ -1,64 +1,62 @@
-import { IDGeneratorUUID, SteamAccountCredentials } from "core"
+import clerkClient from "@clerk/clerk-sdk-node"
+import { IDGeneratorUUID } from "core"
 import SteamUser from "steam-user"
+import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { TokenService } from "~/application/services/TokenService"
 import {
   CheckSteamAccountOwnerStatusUseCase,
+  FarmGamesUseCase,
   GetPersonaStateUseCase,
   GetUserSteamGamesUseCase,
   RefreshPersonaStateUseCase,
-  RestoreAccountSessionUseCase,
-  FarmGamesUseCase,
-  ScheduleAutoRestartUseCase,
-  RestoreAccountConnectionUseCase,
   RemoveSteamAccountUseCase,
+  RestoreAccountConnectionUseCase,
+  RestoreAccountSessionUseCase,
+  ScheduleAutoRestartUseCase,
 } from "~/application/use-cases"
-import { SteamBuilder } from "~/contracts/SteamBuilder"
+import { ChangeUserPlanToCustomUseCase } from "~/application/use-cases/ChangeUserPlanToCustomUseCase"
+import { ChangeUserPlanUseCase } from "~/application/use-cases/ChangeUserPlanUseCase"
+import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
+import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
+import type { SteamBuilder } from "~/contracts/SteamBuilder"
 import { AutoRestarterScheduler } from "~/domain/cron"
 import {
   LogSteamStartFarmHandler,
   LogSteamStopFarmHandler,
-  StartFarmPlanHandler,
   PersistFarmSessionHandler,
   ScheduleAutoRestartHandler,
+  StartFarmPlanHandler,
 } from "~/domain/handler"
+import { UpdateAccountCacheStateHandler } from "~/domain/handler/UpdateAccountCacheStateHandler"
+import { StagingGamesListService } from "~/domain/services"
+import { PlanService } from "~/domain/services/PlanService"
+import { UserService } from "~/domain/services/UserService"
 import { UsersDAODatabase } from "~/infra/dao"
+import { SteamAccountsDAODatabase } from "~/infra/dao/SteamAccountsDAODatabase"
 import { prisma } from "~/infra/libs"
 import { redis } from "~/infra/libs/redis"
 import { Publisher } from "~/infra/queue"
 import {
   PlanRepositoryDatabase,
+  SteamAccountClientStateCacheRedis,
   SteamAccountsRepositoryDatabase,
   UsersRepositoryDatabase,
-  SteamAccountClientStateCacheRedis,
 } from "~/infra/repository"
-import { ClerkAuthentication, SteamUserMock } from "~/infra/services"
+import { ClerkAuthentication } from "~/infra/services"
 import { RefreshGamesUseCase } from "~/presentation/presenters"
-import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
-import { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { UserClusterBuilder } from "~/utils/builders"
-import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
-import { SteamAccountsDAODatabase } from "~/infra/dao/SteamAccountsDAODatabase"
-import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
-import { StagingGamesListService } from "~/domain/services"
+import { EventEmitterBuilder, SteamAccountClientBuilder, UserClusterBuilder } from "~/utils/builders"
 import { SACStateCacheBuilder } from "~/utils/builders/SACStateCacheBuilder"
-import { TokenService } from "~/application/services/TokenService"
-import { UpdateAccountCacheStateHandler } from "~/domain/handler/UpdateAccountCacheStateHandler"
-import { ChangeUserPlanToCustomUseCase } from "~/application/use-cases/ChangeUserPlanToCustomUseCase"
-import { ChangeUserPlanUseCase } from "~/application/use-cases/ChangeUserPlanUseCase"
-import { PlanService } from "~/domain/services/PlanService"
-import { UserService } from "~/domain/services/UserService"
-import clerkClient from "@clerk/clerk-sdk-node"
-import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
-import { makeUserSteamMock } from "~/infra/services/makeUserSteamMock"
+import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 
 const httpProxy = process.env.PROXY_URL
 
 if (httpProxy) {
-  console.log(`Usando proxy ${httpProxy.slice(0, 18) + "*******"}`)
+  console.log(`Usando proxy ${httpProxy.slice(0, 18)}*******`)
 }
 
-let options: ConstructorParameters<typeof SteamUser>[0] = {
+const options: ConstructorParameters<typeof SteamUser>[0] = {
   enablePicsCache: true,
   autoRelogin: false,
   protocol: SteamUser.EConnectionProtocol.WebSocket,

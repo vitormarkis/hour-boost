@@ -1,8 +1,11 @@
 import { jest } from "@jest/globals"
-import { DiamondPlan, GuestPlan, SilverPlan, Usage } from "core"
+import { DiamondPlan, GuestPlan, SilverPlan, } from "core"
 import {
+  type 
   CustomInstances,
+  type 
   MakeTestInstancesProps,
+  type 
   PrefixKeys,
   makeTestInstances,
   password,
@@ -10,14 +13,14 @@ import {
 } from "~/__tests__/instances"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { FarmGamesController, StopFarmController } from "~/presentation/controllers"
+import { getAccountOnCache } from "~/utils/getAccount"
+import { getSACOn_AllUsersClientsStorage_ByUserId } from "~/utils/getSAC"
 import { isAccountFarmingOnClusterByUsername } from "~/utils/isAccount"
+import { RestoreAccountSessionUseCase } from "."
 import { PlanBuilder } from "../factories/PlanFactory"
 import { ChangeUserPlanUseCase } from "./ChangeUserPlanUseCase"
 import { RemoveSteamAccountUseCase } from "./RemoveSteamAccountUseCase"
 import { StopFarmUseCase } from "./StopFarmUseCase"
-import { getAccountOnCache } from "~/utils/getAccount"
-import { getSACOn_AllUsersClientsStorage_ByUserId } from "~/utils/getSAC"
-import { RestoreAccountSessionUseCase } from "."
 
 const log = console.log
 // console.log = () => {}
@@ -87,6 +90,27 @@ test("should change user plan from guest to diamond", async () => {
   const user2 = await i.usersRepository.getByID(s.me.userId)
   expect(user2?.plan).toBeInstanceOf(DiamondPlan)
 })
+
+// test.only("should not change plan to the same plan name", async () => {
+//   const user = await i.usersRepository.getByID(s.me.userId)
+//   expect(user?.plan).toBeInstanceOf(GuestPlan)
+//   if (!user) throw "no user"
+
+//   const initialId = user.plan.id_plan
+//   expect(user.plan.id_plan).toBe(initialId)
+//   const [errorChangingUserPlan] = await changeUserPlanUseCase.execute({
+//     newPlanName: "DIAMOND",
+//     user,
+//   })
+//   expect(errorChangingUserPlan).toBeNull()
+
+//   const [errorChangingUserPlan2] = await changeUserPlanUseCase.execute({
+//     newPlanName: "DIAMOND",
+//     user,
+//   })
+//   // expect(errorChangingUserPlan2).not.toBeNull()
+//   expect(user.plan.id_plan).toBe(initialId)
+// })
 
 test("should change user plan from silver to diamond", async () => {
   const silverPlan = new PlanBuilder(s.me.userId).infinity().silver()

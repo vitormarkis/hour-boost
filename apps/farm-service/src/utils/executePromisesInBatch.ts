@@ -1,6 +1,6 @@
-import { DataOrFail, Fail, GetError, GetResult } from "core"
+import { type DataOrFail, Fail, } from "core"
 import { sleep } from "~/utils"
-import { GetErrorByTuple, GetResultByTuple, bad, nice, only } from "~/utils/helpers"
+import { bad, nice, } from "~/utils/helpers"
 import { range } from "~/utils/range"
 
 export type ExecutePromisesInBatchProps<T extends DataOrFail<Fail> = DataOrFail<Fail>> = {

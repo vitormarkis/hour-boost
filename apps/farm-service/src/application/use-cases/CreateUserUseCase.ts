@@ -1,5 +1,5 @@
-import { User, UserAuthentication, UsersRepository } from "core"
-import { UsersSACsFarmingClusterStorage } from "~/application/services"
+import { User, type UserAuthentication, type UsersRepository } from "core"
+import type { UsersSACsFarmingClusterStorage } from "~/application/services"
 
 export class CreateUserUseCase {
   constructor(

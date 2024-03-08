@@ -1,5 +1,5 @@
-import { Command } from "~/application/commands"
-import { Observer } from "~/infra/queue/Observer"
+import type { Command } from "~/application/commands"
+import type { Observer } from "~/infra/queue/Observer"
 
 export class Publisher {
   observers: Observer[]

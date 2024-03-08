@@ -1,7 +1,7 @@
 import { SteamAccountClient } from "~/application/services/steam"
-import { Publisher } from "~/infra/queue"
-import { EventEmitterBuilder } from "~/utils/builders"
-import { Builder, SteamClientBuilder } from "~/utils/builders/builder.interface"
+import type { Publisher } from "~/infra/queue"
+import type { EventEmitterBuilder } from "~/utils/builders"
+import type { Builder, SteamClientBuilder } from "~/utils/builders/builder.interface"
 
 export class SteamAccountClientBuilder implements Builder<SteamAccountClient> {
   constructor(

@@ -1,13 +1,19 @@
 import {
+  type 
   DatabaseSteamAccount,
+  type 
   PlanInfinity,
   PlanUsage,
+  type 
   UserAdminPanelSession,
+  type 
   UserSession,
+  type 
   UserSessionShallow,
+  type 
   UsersDAO,
 } from "core"
-import { UsersInMemory } from "~/infra/repository"
+import type { UsersInMemory } from "~/infra/repository"
 
 export class UsersDAOInMemory implements UsersDAO {
   constructor(private readonly users: UsersInMemory) {}

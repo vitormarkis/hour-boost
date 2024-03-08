@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client"
-import { PlanInfinity, PlanRepository, PlanUsage } from "core"
+import type { PrismaClient } from "@prisma/client"
+import type { PlanInfinity, PlanRepository, PlanUsage } from "core"
 import { databasePlanToDomain } from "~/infra/mappers/databasePlanToDomain"
 
 export class PlanRepositoryDatabase implements PlanRepository {

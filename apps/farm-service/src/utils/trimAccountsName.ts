@@ -1,4 +1,4 @@
-import { PlanInfinity, PlanUsage, SteamAccount } from "core"
+import type { PlanInfinity, PlanUsage, SteamAccount } from "core"
 
 type TrimAccountsNameProps = {
   steamAccounts: SteamAccount[]

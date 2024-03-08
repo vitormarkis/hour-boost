@@ -1,9 +1,11 @@
 import {
-  makeTestInstances,
-  validSteamAccounts,
-  MakeTestInstancesProps,
+  type 
   CustomInstances,
+  type 
+  MakeTestInstancesProps,
+  makeTestInstances,
   password,
+  validSteamAccounts,
 } from "~/__tests__/instances"
 import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import {

@@ -1,4 +1,4 @@
-import { DataOrFail, Fail, UserAdminPanelSession, UsersDAO } from "core"
+import type { DataOrFail, Fail, UserAdminPanelSession, UsersDAO } from "core"
 import { nice } from "~/utils/helpers"
 
 export class GetUsersAdminListUseCase implements IGetUsersAdminListUseCase {

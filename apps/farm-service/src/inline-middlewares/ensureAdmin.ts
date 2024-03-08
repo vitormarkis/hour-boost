@@ -1,10 +1,10 @@
-import { DataOrFail, RoleName } from "core"
-import { Request, Response } from "express"
+import type { DataOrFail, } from "core"
+import type { Request, Response } from "express"
+import jwt from "jsonwebtoken"
 import { bad, nice } from "~/utils/helpers"
 import { safer } from "~/utils/safer"
-import jwt from "jsonwebtoken"
+import { HBHeaders, type HBHeadersType } from "./hb-headers-enum"
 import { MiddlewareResponse } from "./middleware-reponse"
-import { HBHeaders, HBHeadersType } from "./hb-headers-enum"
 
 export async function ensureAdmin(req: Request, res: Response) {
   const hbIdentification = req.headers[HBHeaders["hb-identification"]] as string

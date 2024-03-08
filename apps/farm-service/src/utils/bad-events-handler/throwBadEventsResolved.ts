@@ -1,6 +1,6 @@
-import { ApplicationError, HttpClient } from "core"
-import { EventParameters } from "~/infra/services/SteamUserMock"
-import {
+import { ApplicationError, type HttpClient } from "core"
+import type { EventParameters } from "~/infra/services/SteamUserMock"
+import type {
   EventMapperGeneric,
   EventParametersTimeout,
   FarmGamesEventsGenericResolve,
@@ -28,7 +28,7 @@ function handleBadEventSteamGuard(args: EventParameters["steamGuard"]): BadEvent
     interrupt: true,
     httpResponse: makeRes(
       202,
-      `Steam Guard requerido. Enviando para ${domain ? `e-mail com final ${domain}` : `seu celular.`}`
+      `Steam Guard requerido. Enviando para ${domain ? `e-mail com final ${domain}` : "seu celular."}`
     ),
   }
 }

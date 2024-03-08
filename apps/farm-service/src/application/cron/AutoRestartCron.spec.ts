@@ -1,11 +1,13 @@
 import {
+  type 
+  CustomInstances,
+  type 
+  MakeTestInstancesProps,
+  type 
+  PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
-  PrefixKeys,
-  MakeTestInstancesProps,
-  CustomInstances,
 } from "~/__tests__/instances"
-import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 const log = console.log
 console.log = () => {}

@@ -1,5 +1,5 @@
-import { AccountGames } from "core"
-import SteamUser, { EResult } from "steam-user"
+import type { AccountGames } from "core"
+import SteamUser from "steam-user"
 import { EventEmitter } from "~/application/services"
 import { allAccountGames } from "~/consts"
 import { playingSession } from "~/infra/services/UserAuthenticationInMemory"

@@ -1,11 +1,13 @@
 import { AddSteamAccount } from "core"
 import { connection } from "~/__tests__/connection"
 import {
-  makeTestInstances,
-  validSteamAccounts,
-  MakeTestInstancesProps,
+  type 
   CustomInstances,
+  type 
+  MakeTestInstancesProps,
+  makeTestInstances,
   password,
+  validSteamAccounts,
 } from "~/__tests__/instances"
 import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 import { RestoreAccountConnectionUseCase } from "~/application/use-cases/RestoreAccountConnectionUseCase"
@@ -20,7 +22,7 @@ console.log = () => {}
 let i = makeTestInstances({
   validSteamAccounts,
 })
-let meInstances = {}
+const meInstances = {}
 let restoreAccountConnectionUseCase: RestoreAccountConnectionUseCase
 let addSteamAccountController: AddSteamAccountController
 let farmGamesController: FarmGamesController

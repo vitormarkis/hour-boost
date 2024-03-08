@@ -1,5 +1,5 @@
-import { ApplicationError, Controller, HttpClient } from "core"
-import { StopAllFarms } from "~/application/use-cases"
+import { ApplicationError, type Controller, type HttpClient } from "core"
+import type { StopAllFarms } from "~/application/use-cases"
 
 export namespace StopAllFarmsHandle {
   export type Payload = {

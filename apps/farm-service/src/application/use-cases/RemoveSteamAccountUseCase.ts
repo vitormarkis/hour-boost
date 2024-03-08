@@ -1,18 +1,19 @@
 import {
-  DataOrError,
   Fail,
+  type 
   PlanRepository,
+  type 
   SteamAccountClientStateCacheRepository,
-  UseCase,
+  type 
   UsersRepository,
 } from "core"
-import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import type { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { EAppResults } from "~/application/use-cases/RestoreAccountSessionUseCase"
 import { persistUsagesOnDatabase } from "~/application/utils/persistUsagesOnDatabase"
-import { AutoRestarterScheduler } from "~/domain/cron"
+import type { AutoRestarterScheduler } from "~/domain/cron"
 
-import { ApplicationError, DataOrFail } from "core"
-import { nice, bad } from "~/utils/helpers"
+import type { DataOrFail } from "core"
+import { bad, nice } from "~/utils/helpers"
 
 export class RemoveSteamAccountUseCase implements IRemoveSteamAccountUseCase {
   private readonly codify = <const T extends string = string>(moduleCode: T) =>

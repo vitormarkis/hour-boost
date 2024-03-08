@@ -1,4 +1,4 @@
-import {
+import type {
   DataOrFail,
   Fail,
   GetError,
@@ -7,14 +7,13 @@ import {
   User,
   UsersRepository,
 } from "core"
-import { PlanService } from "~/domain/services/PlanService"
-import { UserService } from "~/domain/services/UserService"
+import type { PlanService } from "~/domain/services/PlanService"
+import type { UserService } from "~/domain/services/UserService"
 import { getUserSACs_OnStorage_ByUser } from "~/utils/getUser"
 import { bad, nice } from "~/utils/helpers"
 import { trimAccountsName } from "~/utils/trimAccountsName"
-import { RemoveSteamAccountUseCase, RestoreAccountSessionUseCase } from "."
-import { AllUsersClientsStorage } from "../services"
-import { nonNullable } from "~/utils/nonNullable"
+import type { RemoveSteamAccountUseCase, RestoreAccountSessionUseCase } from "."
+import type { AllUsersClientsStorage } from "../services"
 
 export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
   constructor(
@@ -36,7 +35,7 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
       steamAccounts: user.steamAccounts.data,
     })
 
-    let failsTrimmingAccount: Fail[] = []
+    const failsTrimmingAccount: Fail[] = []
     if (trimmingAccountsName.length) {
       for (const accountName of trimmingAccountsName) {
         const [error] = await this.removeSteamAccountUseCase.execute({
@@ -62,7 +61,7 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
     const currentSACStates = userSacList.map(sac => sac.getCache())
     const { updatedCacheStates } = this.userService.changePlan(user, newPlan, currentSACStates)
 
-    let fails: Fail[] = []
+    const fails: Fail[] = []
     for (const state of updatedCacheStates) {
       await this.steamAccountClientStateCacheRepository.save(state)
       const [error] = await this.restoreAccountSessionUseCase.execute({

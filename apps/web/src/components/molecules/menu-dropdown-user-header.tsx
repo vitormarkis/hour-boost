@@ -4,6 +4,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useUser } from "@/contexts/UserContext"
 import { cn } from "@/lib/utils"
 import { useClerk } from "@clerk/clerk-react"
 import { useRouter } from "next/router"
@@ -19,6 +20,7 @@ export const MenuDropdownUserHeader = React.forwardRef<
 >(function MenuDropdownUserHeaderComponent({ children, className, ...props }, ref) {
   const { signOut } = useClerk()
   const router = useRouter()
+  const userRole = useUser(user => user.role)
 
   return (
     <DropdownMenu>
@@ -40,6 +42,26 @@ export const MenuDropdownUserHeader = React.forwardRef<
         >
           Sair
         </DropdownMenuItem>
+        {userRole === "ADMIN" && !router.pathname.includes("/admin") && (
+          <DropdownMenuItem
+            className="focus:bg-accent focus:text-white"
+            onClick={async () => {
+              router.push("/admin")
+            }}
+          >
+            Painel Admin
+          </DropdownMenuItem>
+        )}
+        {router.pathname.includes("/admin") && (
+          <DropdownMenuItem
+            className="focus:bg-accent focus:text-white"
+            onClick={async () => {
+              router.push("/dashboard")
+            }}
+          >
+            Dashboard
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

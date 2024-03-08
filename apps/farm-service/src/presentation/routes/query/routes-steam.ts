@@ -1,5 +1,5 @@
-import { ClerkExpressRequireAuth, WithAuthProp } from "@clerk/clerk-sdk-node"
-import { Request, Response, Router } from "express"
+import { ClerkExpressRequireAuth, type WithAuthProp } from "@clerk/clerk-sdk-node"
+import { type Request, type Response, Router } from "express"
 import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 
 import z from "zod"
@@ -41,11 +41,12 @@ query_routerSteam.get(
   "/steam-accounts",
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
+    if (!req.auth.userId) return res.status(400).json({ message: "Unauthorized!" })
     const listSteamAccountsController = new ListSteamAccountsController(listUserSteamAccounts)
     const { json, status } = await promiseHandler(
       listSteamAccountsController.handle({
         payload: {
-          userId: req.auth.userId!,
+          userId: req.auth.userId,
         },
       })
     )
@@ -58,6 +59,7 @@ query_routerSteam.get(
   "/games",
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
+    if (!req.auth.userId) return res.status(400).json({ message: "Unauthorized!" })
     const query = z.object({ accountName: z.string() }).safeParse(req.query)
     if (!query.success) return res.status(400).json({ message: query.error })
     const { accountName } = query.data
@@ -67,7 +69,7 @@ query_routerSteam.get(
       getUserSteamGamesController.handle({
         payload: {
           accountName,
-          userId: req.auth.userId!,
+          userId: req.auth.userId,
         },
       })
     )
@@ -80,6 +82,7 @@ query_routerSteam.get(
   "/refresh-games",
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
+    if (!req.auth.userId) return res.status(400).json({ message: "Unauthorized!" })
     const query = z.object({ accountName: z.string() }).safeParse(req.query)
     if (!query.success) return res.status(400).json({ message: query.error })
     console.log({ query })
@@ -90,7 +93,7 @@ query_routerSteam.get(
       refreshGamesController.handle({
         payload: {
           accountName,
-          userId: req.auth.userId!,
+          userId: req.auth.userId,
         },
       })
     )

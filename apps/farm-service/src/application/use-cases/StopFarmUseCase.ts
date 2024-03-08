@@ -1,6 +1,6 @@
-import { ApplicationError, DataOrFail, Fail, PlanRepository } from "core"
+import type { ApplicationError, DataOrFail, Fail, PlanRepository } from "core"
 import { bad, nice } from "~/utils/helpers"
-import { UsersSACsFarmingClusterStorage } from "../services"
+import type { UsersSACsFarmingClusterStorage } from "../services"
 import { persistUsagesOnDatabase } from "../utils/persistUsagesOnDatabase"
 
 type Options = {
@@ -20,7 +20,10 @@ export class StopFarmUseCase implements IStopFarmUseCase {
     const [errorFindingUserCluster, userCluster] = this.usersClusterStorage.get(username)
     if (errorFindingUserCluster) return bad(errorFindingUserCluster)
 
-    const [errorPausingFarmOnAccount, usages] = userCluster.pauseFarmOnAccountSync({ accountName, isFinalizingSession })
+    const [errorPausingFarmOnAccount, usages] = userCluster.pauseFarmOnAccountSync({
+      accountName,
+      isFinalizingSession,
+    })
     if (errorPausingFarmOnAccount) return bad(errorPausingFarmOnAccount)
 
     if (options.persistUsages) {

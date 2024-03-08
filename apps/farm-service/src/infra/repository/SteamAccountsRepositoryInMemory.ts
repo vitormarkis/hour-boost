@@ -1,6 +1,6 @@
-import { SteamAccount, SteamAccountsRepository } from "core"
-import { SteamAccountsInMemory } from "~/infra/repository/SteamAccountsInMemory"
-import { UsersInMemory } from "~/infra/repository/UsersInMemory"
+import type { SteamAccount, SteamAccountsRepository } from "core"
+import type { SteamAccountsInMemory } from "~/infra/repository/SteamAccountsInMemory"
+import type { UsersInMemory } from "~/infra/repository/UsersInMemory"
 
 export class SteamAccountsRepositoryInMemory implements SteamAccountsRepository {
   constructor(

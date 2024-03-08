@@ -1,5 +1,5 @@
-import { PlanInfinity, PlanRepository, PlanUsage } from "core"
-import { UsersInMemory } from "./UsersInMemory"
+import type { PlanInfinity, PlanRepository, PlanUsage } from "core"
+import type { UsersInMemory } from "./UsersInMemory"
 
 export class PlanRepositoryInMemory implements PlanRepository {
   constructor(private readonly usersMemory: UsersInMemory) {}

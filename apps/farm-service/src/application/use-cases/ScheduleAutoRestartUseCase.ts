@@ -1,7 +1,7 @@
-import { DataOrFail, Fail } from "core"
 import { appendFile } from "fs"
-import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
-import { AutoRestarterScheduler } from "~/domain/cron"
+import { type DataOrFail, Fail } from "core"
+import type { AutoRestartCron } from "~/application/cron/AutoRestartCron"
+import type { AutoRestarterScheduler } from "~/domain/cron"
 import { Logger } from "~/utils/Logger"
 import { bad, nice } from "~/utils/helpers"
 

@@ -1,6 +1,6 @@
-import { DataOrFail, Fail, RoleName } from "core"
+import { type DataOrFail, Fail, type RoleName } from "core"
 import jwt from "jsonwebtoken"
-import { HBHeadersType } from "~/inline-middlewares/hb-headers-enum"
+import type { HBHeadersType } from "~/inline-middlewares/hb-headers-enum"
 import { bad, nice } from "~/utils/helpers"
 import { safer } from "~/utils/safer"
 

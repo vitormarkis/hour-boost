@@ -1,32 +1,31 @@
 import {
   ApplicationError,
-  DataOrError,
-  DataOrFail,
+  type DataOrError,
+  type DataOrFail,
   Fail,
   PlanInfinity,
-  PlanRepository,
-  PlanUsage,
-  SACStateCache,
-  SteamAccountClientStateCacheRepository,
-  SteamAccountsRepository,
+  type PlanRepository,
+  type PlanUsage,
+  type SACStateCache,
+  type SteamAccountClientStateCacheRepository,
+  type SteamAccountsRepository,
 } from "core"
 import { ErrorOccuredOnSteamClientCommand } from "~/application/commands"
-import { FarmServiceBuilder } from "~/application/factories"
+import type { FarmServiceBuilder } from "~/application/factories"
 import {
-  EventEmitter,
-  FarmInfinityService,
-  FarmService,
-  FarmUsageService,
-  PauseFarmOnAccountUsage,
+  type EventEmitter,
+  type FarmInfinityService,
+  type FarmService,
+  type FarmUsageService,
   SACList,
 } from "~/application/services"
-import { SteamAccountClient } from "~/application/services/steam"
-import { EAppResults, SACGenericError } from "~/application/use-cases"
-import { Publisher } from "~/infra/queue"
+import type { SteamAccountClient } from "~/application/services/steam"
+import { EAppResults, type SACGenericError } from "~/application/use-cases"
+import type { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
-import { StateCachePayloadFarmService } from "~/utils/builders/SACStateCacheBuilder"
-import { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { Pretify, bad, nice } from "~/utils/helpers"
+import type { StateCachePayloadFarmService } from "~/utils/builders/SACStateCacheBuilder"
+import type { UsageBuilder } from "~/utils/builders/UsageBuilder"
+import { type Pretify, bad, nice } from "~/utils/helpers"
 import { thisErrorShouldScheduleAutoRestarter } from "~/utils/shouldScheduleAutoRestater"
 
 export interface IUserSACsFarmingCluster {
@@ -147,7 +146,7 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
   }
 
   isFarming() {
-    let isFarmingSACs = this.sacList.hasAccountsFarming()
+    const isFarmingSACs = this.sacList.hasAccountsFarming()
     const isFarmingService = this.farmService.hasAccountsFarming()
     if (!isFarmingService && isFarmingSACs)
       throw new ApplicationError("Erro. SAC farmando, porém sem Farm Service!")
@@ -173,6 +172,9 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
       this.updateFarmService(plan, session)
     }
     const [errorFarming, result] = await this.farmWithAccountImpl(sac, accountName, gamesId)
+    if (!errorFarming && session.type === "CONTINUE-FROM-PREVIOUS") {
+      sac.setFarmStartedAt(session.farmStartedAt)
+    }
     await this.sacStateCacheRepository.save(sac.getCache())
     if (errorFarming) return bad(errorFarming)
     return nice(result)

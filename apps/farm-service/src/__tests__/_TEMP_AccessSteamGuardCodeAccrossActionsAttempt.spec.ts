@@ -1,11 +1,14 @@
 import {
+  type 
   CustomInstances,
+  type 
   MakeTestInstancesProps,
+  type 
   PrefixKeys,
   makeTestInstances,
   password,
 } from "~/__tests__/instances"
-import { SteamUserMock } from "~/infra/services"
+import type { SteamUserMock } from "~/infra/services"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { FarmGamesController, promiseHandler } from "~/presentation/controllers"
 import { sleep } from "~/utils"

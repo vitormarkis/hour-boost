@@ -1,9 +1,8 @@
-import {
-  CacheState,
+import type {
   AccountSteamGamesList,
+  CacheState,
   IRefreshToken,
   SteamAccountPersonaState,
-  CacheStateDTO,
 } from "core"
 
 export class SACCacheInMemory {

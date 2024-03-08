@@ -1,8 +1,8 @@
-import { PlanRepository, SteamAccountClientStateCacheRepository } from "core"
-import { UserCompleteFarmSessionCommand } from "~/application/commands"
-import { AllUsersClientsStorage } from "~/application/services"
+import type { PlanRepository, SteamAccountClientStateCacheRepository } from "core"
+import type { UserCompleteFarmSessionCommand } from "~/application/commands"
+import type { AllUsersClientsStorage } from "~/application/services"
 import { persistUsagesOnDatabase } from "~/application/utils/persistUsagesOnDatabase"
-import { EventNames, Observer } from "~/infra/queue"
+import type { EventNames, Observer } from "~/infra/queue"
 
 export class PersistFarmSessionHandler implements Observer {
   operation: EventNames = "user-complete-farm-session"

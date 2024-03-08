@@ -1,23 +1,25 @@
 import { CustomUsagePlan, PlanUsage } from "core"
 import {
+  type 
   CustomInstances,
+  type 
   MakeTestInstancesProps,
+  type 
   PrefixKeys,
   makeTestInstances,
   password,
   validSteamAccounts,
 } from "~/__tests__/instances"
+import { ensureExpectation } from "~/__tests__/utils"
+import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
+import { makeFarmGames } from "~/application/use-cases/__tests_helpers"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { AddSteamAccountUseCase, RestoreAccountSessionUseCase } from "."
+import { getSACOn_AllUsersClientsStorage_ByUserId } from "~/utils/getSAC"
+import { RestoreAccountSessionUseCase } from "."
 import { AddMoreGamesToPlanUseCase } from "./AddMoreGamesToPlanUseCase"
 import { ChangeUserPlanToCustomUseCase } from "./ChangeUserPlanToCustomUseCase"
 import { ChangeUserPlanUseCase } from "./ChangeUserPlanUseCase"
 import { RemoveSteamAccountUseCase } from "./RemoveSteamAccountUseCase"
-import { makeFarmGames } from "~/application/use-cases/__tests_helpers"
-import { ensureExpectation } from "~/__tests__/utils"
-import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
-import { getSACOn_AllUsersClientsStorage_ByUserId } from "~/utils/getSAC"
-import { nice } from "~/utils/helpers"
 const log = console.log
 // console.log = () => {}
 
@@ -107,7 +109,7 @@ test.only("should change from farming 30 games, to 2 games, and client should up
     mutatingUserId: s.me.userId,
     newMaxGamesAllowed: 30,
   })
-  if (error && error.code === "LIST:ERROR-RESETING-FARM") console.log(error.payload.errorsList.flat(Infinity))
+  if (error && error.code === "LIST:ERROR-RESETING-FARM") console.log(error.payload.errorsList.flat(Number.POSITIVE_INFINITY))
   expect(error).toBeNull()
 
   const spy_clientGamesPlayed = import.meta.jest.spyOn(meInstances.meSAC.client, "gamesPlayed")

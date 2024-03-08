@@ -1,6 +1,6 @@
-import { DataOrFail, PlanCustomName, PlanInfinity, PlanUsage, User } from "core"
+import type { DataOrFail, PlanCustomName, PlanInfinity, PlanUsage, User } from "core"
 import { bad, nice } from "~/utils/helpers"
-import { ChangeUserPlanUseCase } from "./ChangeUserPlanUseCase"
+import type { ChangeUserPlanUseCase } from "./ChangeUserPlanUseCase"
 
 export class ChangeUserPlanToCustomUseCase implements IChangeUserPlanToCustomUseCase {
   constructor(private readonly changeUserPlanUseCase: ChangeUserPlanUseCase) {}

@@ -1,5 +1,5 @@
-import { UserHasStartFarmingCommand } from "~/application/commands"
-import { EventNames, Observer } from "~/infra/queue"
+import type { UserHasStartFarmingCommand } from "~/application/commands"
+import type { EventNames, Observer } from "~/infra/queue"
 
 export class StartFarmPlanHandler implements Observer {
   operation: EventNames = "user-has-start-farming"

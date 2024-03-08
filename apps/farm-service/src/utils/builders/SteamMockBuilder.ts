@@ -1,6 +1,6 @@
-import { SteamAccountCredentials } from "core"
-import SteamUser from "steam-user"
-import { SteamBuilder } from "~/contracts"
+import type { SteamAccountCredentials } from "core"
+import type SteamUser from "steam-user"
+import type { SteamBuilder } from "~/contracts"
 import { SteamUserMock } from "~/infra/services"
 
 export class SteamUserMockBuilder implements SteamBuilder {

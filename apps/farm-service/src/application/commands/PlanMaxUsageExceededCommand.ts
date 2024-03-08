@@ -1,6 +1,6 @@
-import { CacheState, CacheStateDTO } from "core"
-import { Command } from "~/application/commands"
-import { EventNames } from "~/infra/queue"
+import type { CacheStateDTO } from "core"
+import type { Command } from "~/application/commands"
+import type { EventNames } from "~/infra/queue"
 
 export class PlanMaxUsageExceededCommand implements Command {
   operation: EventNames = "PLAN-MAX-USAGE-EXCEEDED"

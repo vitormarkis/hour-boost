@@ -1,4 +1,4 @@
-import { ApplicationError, HttpClient } from "core"
+import { ApplicationError, type HttpClient } from "core"
 
 export const promiseHandler = (async <T>(
   promise: T extends Promise<HttpClient.Response> ? T : never

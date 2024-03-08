@@ -1,4 +1,3 @@
-import { PlanType } from "core"
 
 export * from "./AllUsersClientsStorage"
 export * from "./FarmInfinityService"

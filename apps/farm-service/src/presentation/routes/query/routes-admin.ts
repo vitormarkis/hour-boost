@@ -1,4 +1,3 @@
-import { Fail } from "core"
 import { Router } from "express"
 import { z } from "zod"
 import { AddMoreGamesToPlanUseCase } from "~/application/use-cases/AddMoreGamesToPlanUseCase"
@@ -8,9 +7,9 @@ import { validateBody } from "~/inline-middlewares/validate-payload"
 import {
   allUsersClientsStorage,
   changeUserPlanToCustomUseCase,
+  changeUserPlanUseCase,
   planRepository,
   steamAccountClientStateCacheRepository,
-  stopFarmUseCase,
   usersClusterStorage,
   usersDAO,
   usersRepository,
@@ -19,7 +18,7 @@ import {
 export const query_routerAdmin: Router = Router()
 
 const getUsersAdminListUseCase = new GetUsersAdminListUseCase(usersDAO)
-query_routerAdmin.get("/users-list", async function (req, res) {
+query_routerAdmin.get("/users-list", async (req, res) => {
   const [noAdminRole] = await ensureAdmin(req, res)
   if (noAdminRole) return res.status(noAdminRole.status).json(noAdminRole.json)
 
@@ -37,7 +36,7 @@ const addMoreGamesToPlanUseCase = new AddMoreGamesToPlanUseCase(
   planRepository
 )
 
-query_routerAdmin.post("/add-more-games", async function (req, res) {
+query_routerAdmin.post("/add-more-games", async (req, res) => {
   const [noAdminRole] = await ensureAdmin(req, res)
   if (noAdminRole) return res.status(noAdminRole.status).json(noAdminRole.json)
 
@@ -74,4 +73,29 @@ query_routerAdmin.post("/add-more-games", async function (req, res) {
   }
 
   return res.json({ usersAdminList, code: "SUCCESS" })
+})
+
+query_routerAdmin.post("/change-user-plan", async (req, res) => {
+  const { secret } = req.body
+  if (secret !== process.env.ACTIONS_SECRET) {
+    return res.status(500).json({ message: "Unauthorized. :)" })
+  }
+
+  const [invalidBody, body] = validateBody(
+    req.body,
+    z.object({
+      newPlanName: z.enum(["DIAMOND", "GOLD", "GUEST", "SILVER", "INFINITY-CUSTOM", "USAGE-CUSTOM"]),
+      userId: z.string().min(1),
+    })
+  )
+  if (invalidBody) return res.status(invalidBody.status).json(invalidBody.json)
+  const { newPlanName, userId } = body
+
+  const user = await usersRepository.getByID(userId)
+  const [error, response] = await changeUserPlanUseCase.execute({
+    newPlanName,
+    user: user!,
+  })
+
+  return res.status(200).json(error ?? "sucesso")
 })

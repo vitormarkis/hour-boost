@@ -1,5 +1,5 @@
-import { Command } from "~/application/commands"
-import { EventNames } from "~/infra/queue"
+import type { Command } from "~/application/commands"
+import type { EventNames } from "~/infra/queue"
 
 interface UserHasStartFarmingCommandProps {
   planId: string

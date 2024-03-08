@@ -1,7 +1,7 @@
-import { CacheState, SteamAccountClientStateCacheRepository } from "core"
+import { CacheState, type SteamAccountClientStateCacheRepository } from "core"
 
-import { PlanMaxUsageExceededCommand } from "~/application/commands/PlanMaxUsageExceededCommand"
-import { EventNames, Observer } from "~/infra/queue"
+import type { PlanMaxUsageExceededCommand } from "~/application/commands/PlanMaxUsageExceededCommand"
+import type { EventNames, Observer } from "~/infra/queue"
 
 export class UpdateAccountCacheStateHandler implements Observer {
   operation: EventNames = "PLAN-MAX-USAGE-EXCEEDED"

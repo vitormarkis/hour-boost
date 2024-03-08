@@ -1,5 +1,5 @@
-import { AccountSteamGamesList, DataOrError, SteamAccountClientStateCacheRepository } from "core"
-import { AllUsersClientsStorage } from "~/application/services"
+import type { AccountSteamGamesList, DataOrError, SteamAccountClientStateCacheRepository } from "core"
+import type { AllUsersClientsStorage } from "~/application/services"
 
 export class RefreshGamesUseCase {
   constructor(

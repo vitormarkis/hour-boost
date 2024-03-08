@@ -1,7 +1,7 @@
-import { ErrorOccuredOnSteamClientCommand } from "~/application/commands"
-import { ScheduleAutoRestartUseCase } from "~/application/use-cases"
+import type { ErrorOccuredOnSteamClientCommand } from "~/application/commands"
+import type { ScheduleAutoRestartUseCase } from "~/application/use-cases"
 import { AUTO_RESTARTER_INTERVAL_IN_SECONDS } from "~/consts"
-import { EventNames, Observer } from "~/infra/queue"
+import type { EventNames, Observer } from "~/infra/queue"
 import { thisErrorShouldScheduleAutoRestarter } from "~/utils/shouldScheduleAutoRestater"
 
 export class ScheduleAutoRestartHandler implements Observer {

@@ -1,5 +1,5 @@
-import { DataOrFail } from "core"
-import { z } from "zod"
+import type { DataOrFail } from "core"
+import type { z } from "zod"
 import { bad, nice } from "~/utils/helpers"
 
 export function validateBody<TSchema extends z.ZodObject<any>>(body: Record<string, any>, schema: TSchema) {

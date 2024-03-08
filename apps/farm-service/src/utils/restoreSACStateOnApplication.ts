@@ -1,7 +1,7 @@
-import { CacheState, Fail } from "core"
-import { UserSACsFarmingCluster } from "~/application/services"
-import { SteamAccountClient } from "~/application/services/steam"
-import { SACGenericError, EAppResults } from "~/application/use-cases"
+import { type CacheState, Fail } from "core"
+import type { UserSACsFarmingCluster } from "~/application/services"
+import type { SteamAccountClient } from "~/application/services/steam"
+import { EAppResults, type SACGenericError } from "~/application/use-cases"
 import { env } from "~/env"
 import { bad, nice } from "~/utils/helpers"
 
@@ -25,6 +25,7 @@ export function restoreSACStateOnApplication(userCluster: UserSACsFarmingCluster
     sac.setStatus(state.status === "iddle" ? "online" : state.status)
 
     if (state.isFarming()) {
+      
       const [errorFarmWithAccount] = await userCluster.farmWithAccount({
         accountName: state.accountName,
         gamesId: state.gamesPlaying,

@@ -12,6 +12,7 @@ test("should change user plan", async () => {
   usersMemory.users.push(user)
   const planRepository = new PlanRepositoryInMemory(usersMemory)
   const plan = await planRepository.getById(user.plan.id_plan)
+  if (!plan) throw "plan not found"
   expect(plan?.usages.data).toStrictEqual([])
   const usage = Usage.create({
     accountName: "acc_name",
@@ -21,7 +22,7 @@ test("should change user plan", async () => {
     user_id: user.id_user,
   })
   plan?.use(usage)
-  usersMemory.assignPlan(plan!)
+  usersMemory.assignPlan(plan)
   const plan2 = await planRepository.getById(user.plan.id_plan)
   expect(plan2?.usages.data).toHaveLength(1)
 })

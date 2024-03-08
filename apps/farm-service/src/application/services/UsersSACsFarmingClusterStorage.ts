@@ -1,8 +1,8 @@
-import { ApplicationError, DataOrError, DataOrFail, Fail, PlanInfinity, PlanUsage } from "core"
-import { UserSACsFarmingCluster } from "~/application/services"
+import { ApplicationError, type DataOrFail, Fail, type PlanInfinity, type PlanUsage } from "core"
+import type { UserSACsFarmingCluster } from "~/application/services"
 import { EAppResults } from "~/application/use-cases"
-import { FailGeneric } from "~/types/EventsApp.types"
-import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
+import type { FailGeneric } from "~/types/EventsApp.types"
+import type { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
 import { bad, nice } from "~/utils/helpers"
 
 type Username = string
@@ -55,7 +55,7 @@ export class UsersSACsFarmingClusterStorage implements IUsersSACsFarmingClusterS
   }
 
   getAccountsStatus() {
-    let accountStatus: any = {}
+    const accountStatus: any = {}
     for (const [username, userCluster] of this.usersCluster) {
       accountStatus[username] = userCluster.getAccountsStatus()
     }

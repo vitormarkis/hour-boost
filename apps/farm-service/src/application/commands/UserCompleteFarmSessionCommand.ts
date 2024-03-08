@@ -1,6 +1,6 @@
-import { Command } from "~/application/commands"
-import { PauseFarmOnAccountUsage } from "~/application/services"
-import { EventNames } from "~/infra/queue"
+import type { Command } from "~/application/commands"
+import type { PauseFarmOnAccountUsage } from "~/application/services"
+import type { EventNames } from "~/infra/queue"
 
 export class UserCompleteFarmSessionCommand implements Command {
   operation: EventNames = "user-complete-farm-session"

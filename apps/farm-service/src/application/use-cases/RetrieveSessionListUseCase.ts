@@ -1,6 +1,6 @@
-import { DataOrFail, IRefreshToken, SteamAccountClientStateCacheRepository } from "core"
+import type { DataOrFail, IRefreshToken, SteamAccountClientStateCacheRepository } from "core"
 import { Logger } from "~/utils/Logger"
-import { Pretify, nice } from "~/utils/helpers"
+import { nice } from "~/utils/helpers"
 import { nonNullable } from "~/utils/nonNullable"
 
 export type RetrieveSessionListUseCasePayload = {

@@ -1,4 +1,4 @@
-import { PlanInfinity, PlanUsage, User } from "core"
+import type { PlanInfinity, PlanUsage, User } from "core"
 
 export class UsersInMemory {
   users: User[] = []

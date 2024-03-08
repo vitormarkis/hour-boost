@@ -1,4 +1,4 @@
-import { SteamAccount } from "core"
+import type { SteamAccount } from "core"
 
 export class SteamAccountsInMemory {
   steamAccounts: SteamAccount[] = []
@@ -21,7 +21,7 @@ export class SteamAccountsInMemory {
           id: sa.id_steamAccount,
         })),
       })
-      throw new Error(`NTSH: getById() tried to find account id but was not able to.`)
+      throw new Error("NTSH: getById() tried to find account id but was not able to.")
     }
     return foundSteamAccount
   }
@@ -62,7 +62,7 @@ export class SteamAccountsInMemory {
             id: sa.id_steamAccount,
           })),
         })
-        throw new Error(`NTSH: tried to find account id but was not able to.`)
+        throw new Error("NTSH: tried to find account id but was not able to.")
       }
       console.log(`Disowing ${steamAccount?.credentials.accountName}`)
       steamAccount.disown()

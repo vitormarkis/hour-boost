@@ -34,8 +34,8 @@ export type GetTuple<T extends (...args: any[]) => any> = T extends (...args: an
   ? R
   : never
 
-export type Pretify<T> = T extends Record<string, unknown> ? { [K in keyof T]: Pretify<T[K]> } & unknown : T
-export type Mutable<T> = T extends Record<string, unknown>
+export type Pretify<T> = T extends Record<string, any> ? { [K in keyof T]: Pretify<T[K]> } & unknown : T
+export type Mutable<T> = T extends Record<string, any>
   ? { -readonly [K in keyof T]: Mutable<T[K]> } & unknown
   : T
-export type Only<T extends any> = T extends Record<string, unknown> ? Pretify<Mutable<T>> : T
+export type Only<T extends any> = T extends Record<string, any> ? Pretify<Mutable<T>> : T

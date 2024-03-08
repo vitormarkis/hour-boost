@@ -1,6 +1,6 @@
-import { DataOrFail, Fail, PlanInfinity, PlanUsage } from "core"
-import { SteamAccountClient } from "~/application/services/steam"
-import { FailGeneric } from "~/types/EventsApp.types"
+import { type DataOrFail, Fail, type PlanInfinity, type PlanUsage } from "core"
+import type { SteamAccountClient } from "~/application/services/steam"
+import type { FailGeneric } from "~/types/EventsApp.types"
 import { bad, nice } from "~/utils/helpers"
 
 export class StagingGamesListService implements IStagingGamesListService {

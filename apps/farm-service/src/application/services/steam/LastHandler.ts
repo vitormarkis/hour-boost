@@ -1,4 +1,4 @@
-import { EventParameters } from "~/infra/services"
+import type { EventParameters } from "~/infra/services"
 
 const getGhostFunction = () => () => {}
 

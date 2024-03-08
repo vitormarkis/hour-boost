@@ -1,4 +1,4 @@
-import { ApplicationError, DataOrError } from "core"
+import { ApplicationError, type DataOrError } from "core"
 import { Logger } from "~/utils/Logger"
 import { bad, nice } from "~/utils/helpers"
 

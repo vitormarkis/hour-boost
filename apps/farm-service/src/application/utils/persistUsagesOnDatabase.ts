@@ -1,5 +1,5 @@
-import { Fail, PlanInfinity, PlanRepository, PlanUsage, Usage } from "core"
-import { PauseFarmOnAccountUsage } from "~/application/services"
+import { Fail, type PlanInfinity, type PlanRepository, type PlanUsage, type Usage } from "core"
+import type { PauseFarmOnAccountUsage } from "~/application/services"
 import { EAppResults } from "../use-cases"
 
 export async function persistUsagesOnDatabase(

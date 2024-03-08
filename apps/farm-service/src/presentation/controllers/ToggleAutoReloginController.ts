@@ -1,7 +1,6 @@
-import { ApplicationError, DataOrFail, HttpClient } from "core"
-import { ToggleAutoReloginUseCase } from "~/application/use-cases/ToggleAutoReloginUseCase"
-import { makeRes } from "~/utils"
-import { nice, only } from "~/utils/helpers"
+import type { HttpClient } from "core"
+import type { ToggleAutoReloginUseCase } from "~/application/use-cases/ToggleAutoReloginUseCase"
+import { only } from "~/utils/helpers"
 
 export type ToggleAutoReloginControllerPayload = {
   accountName: string

@@ -1,5 +1,5 @@
-import { SteamAccountPersonaState, DataOrError, SteamAccountClientStateCacheRepository, DataOrFail, Fail } from "core"
-import { RefreshPersonaStateUseCase } from "~/application/use-cases/RefreshPersonaStateUseCase"
+import type { DataOrError, DataOrFail, Fail, SteamAccountClientStateCacheRepository, SteamAccountPersonaState } from "core"
+import type { RefreshPersonaStateUseCase } from "~/application/use-cases/RefreshPersonaStateUseCase"
 import { nice } from "~/utils/helpers"
 
 interface IGetPersonaStateUseCase {

@@ -1,6 +1,6 @@
-import { DataOrFail, Fail, UsersDAO, UsersRepository } from "core"
-import { TokenService } from "~/application/services/TokenService"
-import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
+import { type DataOrFail, Fail, type UsersDAO, type UsersRepository } from "core"
+import type { TokenService } from "~/application/services/TokenService"
+import type { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { bad, nice } from "~/utils/helpers"
 
 export class GetMeController implements IGetMeController {

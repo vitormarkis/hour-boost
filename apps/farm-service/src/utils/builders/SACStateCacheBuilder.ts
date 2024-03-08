@@ -1,6 +1,6 @@
-import { AppAccountStatus, SACStateCache } from "core"
-import { Builder } from "~/utils/builders/builder.interface"
-import { Pretify } from "~/utils/helpers"
+import { type AppAccountStatus, SACStateCache } from "core"
+import type { Builder } from "~/utils/builders/builder.interface"
+import type { Pretify } from "~/utils/helpers"
 
 export type StateCachePayloadSAC = {
   gamesPlaying: number[]

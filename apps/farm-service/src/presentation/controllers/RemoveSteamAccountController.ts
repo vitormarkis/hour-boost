@@ -1,5 +1,5 @@
-import { Controller, HttpClient } from "core"
-import { RemoveSteamAccountUseCase } from "~/application/use-cases/RemoveSteamAccountUseCase"
+import type { Controller, HttpClient } from "core"
+import type { RemoveSteamAccountUseCase } from "~/application/use-cases/RemoveSteamAccountUseCase"
 import { makeRes } from "~/utils"
 
 export namespace RemoveSteamAccountControllerHandle {

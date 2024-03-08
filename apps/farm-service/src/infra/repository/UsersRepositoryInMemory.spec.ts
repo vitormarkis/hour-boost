@@ -6,7 +6,7 @@ import { makeUser } from "~/utils/makeUser"
 
 let usersMemory: UsersInMemory
 usersMemory = new UsersInMemory()
-let steamAccountsInMemory = new SteamAccountsInMemory()
+const steamAccountsInMemory = new SteamAccountsInMemory()
 // beforeEach(() => {
 //   usersMemory = new UsersInMemory()
 // })

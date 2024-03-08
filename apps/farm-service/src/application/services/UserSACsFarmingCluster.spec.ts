@@ -1,17 +1,20 @@
 import { jest } from "@jest/globals"
-import { CacheState, CacheStateDTO } from "core"
+import { CacheState, type CacheStateDTO } from "core"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import {
+  type 
   CustomInstances,
+  type 
   MakeTestInstancesProps,
+  type 
   PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { StateCachePayloadSAC } from "~/utils/builders/SACStateCacheBuilder"
+import type { StateCachePayloadSAC } from "~/utils/builders/SACStateCacheBuilder"
 
 const log = console.log
 console.log = () => {}

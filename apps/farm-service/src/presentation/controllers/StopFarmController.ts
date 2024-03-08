@@ -1,5 +1,5 @@
-import { ApplicationError, Controller, Fail, GetError, HttpClient, UsersRepository } from "core"
-import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
+import { ApplicationError, type Controller, type HttpClient, type UsersRepository } from "core"
+import type { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 
 export namespace StopFarmHandle {
   export type Payload = {

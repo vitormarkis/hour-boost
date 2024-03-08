@@ -1,11 +1,11 @@
-import { PlanInfinity, PlanUsage } from "core"
-import { CustomInstances, MakeTestInstancesProps, makeTestInstances, password } from "~/__tests__/instances"
+import type { PlanInfinity, PlanUsage } from "core"
+import { type CustomInstances, type MakeTestInstancesProps, makeTestInstances, password } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
 import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
-import { PrefixKeys } from "~/__tests__/instances"
+import type { PrefixKeys } from "~/__tests__/instances"
 import { FarmGamesController } from "~/presentation/controllers"
 
 const validSteamAccounts = [

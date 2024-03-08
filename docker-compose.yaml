@@ -11,5 +11,18 @@ services:
       - 8001:8001
     volumes:
       - ./.docker/cache:/data
+  mysql:
+    image: mysql:8.0.23
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: hourboost
+    ports:
+      - "3311:3306"
+    volumes:
+      - ./.docker/database:/var/lib/mysql
+
 volumes:
   cache:
+  mysql:

@@ -1,8 +1,8 @@
 import { jest } from "@jest/globals"
-import { CustomInstances, MakeTestInstancesProps, makeTestInstances } from "~/__tests__/instances"
-import { UsersSACsFarmingClusterStorage } from "~/application/services/UsersSACsFarmingClusterStorage"
+import { type CustomInstances, type MakeTestInstancesProps, makeTestInstances } from "~/__tests__/instances"
 // console.log = () => { }
-import { PrefixKeys } from "~/__tests__/instances"
+import type { PrefixKeys } from "~/__tests__/instances"
+import { UsersSACsFarmingClusterStorage } from "~/application/services/UsersSACsFarmingClusterStorage"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 const validSteamAccounts = [

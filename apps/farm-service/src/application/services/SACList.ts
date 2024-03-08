@@ -1,4 +1,4 @@
-import { SteamAccountClient } from "~/application/services/steam"
+import type { SteamAccountClient } from "~/application/services/steam"
 
 export class SACList {
   list: Map<string, SteamAccountClient> = new Map()

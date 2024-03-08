@@ -1,6 +1,6 @@
-import { StopFarmingCommand } from "~/application/commands/steam-client"
+import type { StopFarmingCommand } from "~/application/commands/steam-client"
 import { logDate } from "~/domain/handler"
-import { EventNames, Observer } from "~/infra/queue"
+import type { EventNames, Observer } from "~/infra/queue"
 
 export class LogSteamStopFarmHandler implements Observer {
   operation: EventNames = "STEAMCLIENT:stop-farming"

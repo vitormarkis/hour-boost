@@ -1,4 +1,4 @@
-import SteamUser from "steam-user"
+import type SteamUser from "steam-user"
 
 export interface Builder<T> {
   create(...args: any[]): T

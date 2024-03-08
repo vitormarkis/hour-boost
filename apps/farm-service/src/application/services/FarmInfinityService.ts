@@ -1,14 +1,17 @@
-import { ApplicationError, DataOrError, DataOrFail, Fail, PlanInfinity, PlanType, Usage } from "core"
+import { type DataOrError, Fail, type PlanInfinity, type PlanType, type Usage } from "core"
 import { UserCompleteFarmSessionCommand } from "~/application/commands"
 import {
+  type 
   AccountStatusList,
   FarmService,
+  type 
   NSFarmService,
+  type 
   PauseFarmOnAccountUsage,
 } from "~/application/services/FarmService"
 import { EAppResults } from "~/application/use-cases"
 import { getUsageAmountTimeFromDateRange } from "~/domain/utils/getUsageAmountTimeFromDateRange"
-import { Publisher } from "~/infra/queue"
+import type { Publisher } from "~/infra/queue"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { bad, nice } from "~/utils/helpers"
 
@@ -141,7 +144,7 @@ export class FarmInfinityService extends FarmService {
   }
 
   getFarmingAccounts(): DataOrError<NSFarmService.GetFarmingAccounts> {
-    let accountStatus = {} as NSFarmService.GetFarmingAccounts
+    const accountStatus = {} as NSFarmService.GetFarmingAccounts
     for (const [accountName] of this.farmingAccounts) {
       accountStatus[accountName] = "FARMING"
     }

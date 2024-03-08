@@ -1,17 +1,20 @@
-import { ApplicationError, DataOrError, DataOrFail, Fail, PlanType, PlanUsage, Usage } from "core"
+import { type DataOrError, Fail, type PlanType, type PlanUsage, type Usage } from "core"
 
 import { UserCompleteFarmSessionCommand, UserHasStartFarmingCommand } from "~/application/commands"
-import { EventEmitter, UserClusterEvents } from "~/application/services"
+import type { EventEmitter, UserClusterEvents } from "~/application/services"
 import {
+  type 
   AccountStatusList,
   FarmService,
+  type 
   NSFarmService,
+  type 
   PauseFarmOnAccountUsage,
 } from "~/application/services/FarmService"
 import { EAppResults } from "~/application/use-cases"
-import { Publisher } from "~/infra/queue"
+import type { Publisher } from "~/infra/queue"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { bad, nice, only } from "~/utils/helpers"
+import { bad, nice, } from "~/utils/helpers"
 
 export const FARMING_INTERVAL_IN_SECONDS = 1
 
@@ -77,7 +80,7 @@ export class FarmUsageService extends FarmService {
   }
 
   getFarmingAccounts(): DataOrError<NSFarmService.GetFarmingAccounts> {
-    let accountStatus = {} as NSFarmService.GetFarmingAccounts
+    const accountStatus = {} as NSFarmService.GetFarmingAccounts
     for (const [accountName, details] of this.accountsFarming) {
       accountStatus[accountName] = details.status
     }
@@ -269,7 +272,7 @@ export class FarmUsageService extends FarmService {
   }
 
   getAccountsStatus(): AccountStatusList {
-    let accountStatus: AccountStatusList = {}
+    const accountStatus: AccountStatusList = {}
     for (const [accountName, details] of this.accountsFarming) {
       accountStatus[accountName] = details.status
     }

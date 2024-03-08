@@ -1,19 +1,22 @@
 import { CustomUsagePlan, GuestPlan } from "core"
 import {
+  type 
+  CustomInstances,
+  type 
+  MakeTestInstancesProps,
+  type 
+  PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
-  PrefixKeys,
-  MakeTestInstancesProps,
-  CustomInstances,
 } from "~/__tests__/instances"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
+import { FarmGamesController } from "~/presentation/controllers"
+import { isAccountFarmingOnClusterByUsername } from "~/utils/isAccount"
+import { RestoreAccountSessionUseCase } from "."
 import { ChangeUserPlanToCustomUseCase } from "./ChangeUserPlanToCustomUseCase"
 import { ChangeUserPlanUseCase } from "./ChangeUserPlanUseCase"
 import { RemoveSteamAccountUseCase } from "./RemoveSteamAccountUseCase"
-import { RestoreAccountSessionUseCase } from "."
-import { FarmGamesController } from "~/presentation/controllers"
-import { isAccountFarmingOnCluster, isAccountFarmingOnClusterByUsername } from "~/utils/isAccount"
-import { TEST_FarmGames, makeFarmGames } from "./__tests_helpers"
+import { type TEST_FarmGames, makeFarmGames } from "./__tests_helpers"
 
 const log = console.log
 // console.log = () => {}

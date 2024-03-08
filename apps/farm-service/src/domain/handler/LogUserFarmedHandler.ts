@@ -1,5 +1,5 @@
-import { UserFarmedCommand } from "~/application/commands/UserFarmedCommand"
-import { EventNames, Observer } from "~/infra/queue"
+import type { UserFarmedCommand } from "~/application/commands/UserFarmedCommand"
+import type { EventNames, Observer } from "~/infra/queue"
 
 export class LogUserFarmedHandler implements Observer {
   operation: EventNames = "user-farmed"

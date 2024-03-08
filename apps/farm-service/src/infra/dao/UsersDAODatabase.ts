@@ -1,23 +1,36 @@
-import { PrismaClient } from "@prisma/client"
+import type { PrismaClient } from "@prisma/client"
 import {
+  type 
   DatabaseSteamAccount,
+  type 
   GameSession,
+  type 
   Persona,
+  type 
   PlanInfinity,
+  type 
   PlanRepository,
   PlanUsage,
+  type 
   PurchaseSession,
+  type 
   SteamAccountClientStateCacheRepository,
+  type 
   SteamAccountSession,
+  type 
   Usage,
+  type 
   UserAdminPanelSession,
+  type 
   UserSession,
+  type 
   UserSessionShallow,
+  type 
   UsersDAO,
 } from "core"
-import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
-import { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
-import { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
+import type { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import type { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
+import type { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 import { getCurrentPlanOrCreateOne } from "~/infra/mappers/databasePlanToDomain"
 import { databasePlanToSession } from "~/infra/mappers/databasePlanToSession"
 import { databaseUsageToDomain } from "~/infra/mappers/databaseUsageToDomain"
@@ -274,7 +287,7 @@ function makeSteamAccountFromDatabaseToSession(
   getUserSteamGamesUseCase: GetUserSteamGamesUseCase,
   allUsersClientsStorage: AllUsersClientsStorage
 ) {
-  return async function (sa: DBSteamAccount, dbUser: DBUser): Promise<SteamAccountSession> {
+  return async (sa: DBSteamAccount, dbUser: DBUser): Promise<SteamAccountSession> => {
     let games: GameSession[] | null
     let persona: Persona
     const [personaResponse, gamesResponse] = await Promise.all([

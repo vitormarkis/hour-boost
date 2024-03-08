@@ -1,7 +1,7 @@
-import { DataOrFail, GetError, PlanRepository, User } from "core"
+import type { DataOrFail, GetError, User } from "core"
 import { nice } from "~/utils/helpers"
-import { PauseFarmOnAccountUsage } from "../services"
-import { StopFarmUseCase } from "./StopFarmUseCase"
+import type { PauseFarmOnAccountUsage } from "../services"
+import type { StopFarmUseCase } from "./StopFarmUseCase"
 
 export class StopFarmOnUserAllAccounts implements IStopFarmOnUserAllAccounts {
   constructor(private readonly stopFarmUseCase: StopFarmUseCase) {}

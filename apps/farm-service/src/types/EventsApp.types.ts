@@ -1,5 +1,5 @@
-import { Fail } from "core"
-import { EventParameters } from "~/infra/services"
+import type { Fail } from "core"
+import type { EventParameters } from "~/infra/services"
 
 export type EventMapperGeneric = Record<string, any[]>
 

@@ -1,4 +1,4 @@
-import { CookieOptions, Response } from "express"
+import type { CookieOptions, Response } from "express"
 import { env } from "~/env"
 
 export function setCookie(res: Response, key: string, value: string, options = {} as CookieOptions) {

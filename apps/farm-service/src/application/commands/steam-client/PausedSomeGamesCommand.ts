@@ -1,5 +1,5 @@
-import { Command } from "~/application/commands/Command"
-import { EventNames } from "~/infra/queue"
+import type { Command } from "~/application/commands/Command"
+import type { EventNames } from "~/infra/queue"
 
 interface PausedSomeGamesCommandProps {
   when: Date

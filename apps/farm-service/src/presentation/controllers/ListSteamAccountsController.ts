@@ -1,5 +1,5 @@
-import { Controller, API_GET_SteamAccounts, HttpClient } from "core"
-import { ListUserSteamAccountsUseCase } from "~/application/use-cases/ListUserSteamAccountsUseCase"
+import type { API_GET_SteamAccounts, Controller, HttpClient } from "core"
+import type { ListUserSteamAccountsUseCase } from "~/application/use-cases/ListUserSteamAccountsUseCase"
 
 export namespace ListSteamAccountsHandle {
   export type Payload = {

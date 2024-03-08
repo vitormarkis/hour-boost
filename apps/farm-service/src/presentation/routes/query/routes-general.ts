@@ -1,4 +1,4 @@
-import { HttpClient } from "core"
+import type { HttpClient } from "core"
 import { Router } from "express"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { allUsersClientsStorage } from "~/presentation/instances"

@@ -1,5 +1,5 @@
 import { SteamAccountCredentials } from "core"
-import SteamUser from "steam-user"
+import type SteamUser from "steam-user"
 import { env } from "~/env"
 import { SteamUserMock } from "~/infra/services"
 

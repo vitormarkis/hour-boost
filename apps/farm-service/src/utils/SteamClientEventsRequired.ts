@@ -1,6 +1,6 @@
-import { SteamAccountClient } from "~/application/services/steam"
-import { EventParameters } from "~/infra/services"
-import { EventParametersTimeout, FarmGamesEventsResolve, SingleEventResolver } from "~/types/EventsApp.types"
+import type { SteamAccountClient } from "~/application/services/steam"
+import type { EventParameters } from "~/infra/services"
+import { type EventParametersTimeout, type FarmGamesEventsResolve, SingleEventResolver } from "~/types/EventsApp.types"
 
 type RequiredEventTimeoutNames = keyof (EventParameters & EventParametersTimeout)
 export type EventPromises = Partial<Record<RequiredEventTimeoutNames, boolean>>

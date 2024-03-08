@@ -1,12 +1,12 @@
-import { ApplicationError, HttpClient, UsersRepository } from "core"
+import { ApplicationError, type HttpClient, type UsersRepository } from "core"
 import SteamUser from "steam-user"
-import { AllUsersClientsStorage } from "~/application/services"
-import { SteamAccountClient } from "~/application/services/steam"
-import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
+import type { AllUsersClientsStorage } from "~/application/services"
+import type { SteamAccountClient } from "~/application/services/steam"
+import type { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { SingleEventResolver } from "~/types/EventsApp.types"
 import { areTwoArraysEqual, makeRes } from "~/utils"
 import { LoginSteamWithCredentials } from "~/utils/LoginSteamWithCredentials"
-import { GetResult, GetTuple } from "~/utils/helpers"
+import type { GetResult, GetTuple } from "~/utils/helpers"
 
 export namespace FarmGamesHandle {
   export type Payload = {

@@ -1,4 +1,4 @@
-import { Command } from "~/application/commands"
+import type { Command } from "~/application/commands"
 
 export type EventNames =
   | "user-has-start-farming"

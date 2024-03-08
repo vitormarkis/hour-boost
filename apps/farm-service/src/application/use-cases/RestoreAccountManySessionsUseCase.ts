@@ -1,7 +1,7 @@
-import { SteamAccountsDAO, UseCase } from "core"
-import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
+import type { SteamAccountsDAO, } from "core"
+import type { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import { Logger } from "~/utils/Logger"
-import { ExecutePromisesInBatchProps, executePromisesInBatch } from "~/utils/executePromisesInBatch"
+import { type ExecutePromisesInBatchProps, executePromisesInBatch } from "~/utils/executePromisesInBatch"
 import { bad, nice } from "~/utils/helpers"
 
 export type BatchOptions = Pick<

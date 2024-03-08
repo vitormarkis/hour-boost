@@ -1,4 +1,4 @@
-import { UserSACsFarmingCluster, UsersSACsFarmingClusterStorage } from "~/application/services"
+import type { UserSACsFarmingCluster, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { bad, nice } from "./helpers"
 
 export const isAccountFarmingOnCluster = (accountName: string, cluster: UserSACsFarmingCluster) => {

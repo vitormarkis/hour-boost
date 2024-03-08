@@ -1,8 +1,8 @@
-import { ApplicationError, DataOrError } from "core"
-import { SteamAccountClient } from "~/application/services/steam"
+import { ApplicationError, type DataOrError } from "core"
+import type { SteamAccountClient } from "~/application/services/steam"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
-import { EventPromises, SteamClientEventsRequired } from "~/utils/SteamClientEventsRequired"
-import { nice, bad } from "~/utils/helpers"
+import { type EventPromises, SteamClientEventsRequired } from "~/utils/SteamClientEventsRequired"
+import { bad, nice } from "~/utils/helpers"
 
 export type Payload = {
   sac: SteamAccountClient

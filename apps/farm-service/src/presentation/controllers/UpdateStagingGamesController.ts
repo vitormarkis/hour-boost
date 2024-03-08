@@ -1,5 +1,5 @@
-import { HttpClient } from "core"
-import { UpdateStagingGamesUseCase } from "~/application/use-cases/UpdateStagingGamesUseCase"
+import type { HttpClient } from "core"
+import type { UpdateStagingGamesUseCase } from "~/application/use-cases/UpdateStagingGamesUseCase"
 import { only } from "~/utils/helpers"
 
 export type UpdateStagingGamesControllerPayload = {

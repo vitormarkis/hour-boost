@@ -1,5 +1,5 @@
-import { ApplicationError, Controller, HttpClient } from "core"
-import { AllUsersClientsStorage } from "~/application/services"
+import { ApplicationError, type Controller, type HttpClient } from "core"
+import type { AllUsersClientsStorage } from "~/application/services"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { makeRes } from "~/utils"
 import { SteamClientEventsRequired } from "~/utils/SteamClientEventsRequired"

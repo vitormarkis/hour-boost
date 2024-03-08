@@ -16,7 +16,7 @@ export const env = {
       PORT: z
         .string()
         .length(4)
-        .transform(s => parseInt(s, 10))
+        .transform(s => Number.parseInt(s, 10))
         .pipe(z.number()),
       ACTIONS_SECRET: z.string().min(1),
     },

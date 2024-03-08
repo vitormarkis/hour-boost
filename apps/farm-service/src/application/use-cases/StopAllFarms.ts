@@ -1,5 +1,5 @@
-import { UseCase } from "core"
-import { UsersSACsFarmingClusterStorage } from "~/application/services"
+import type { UseCase } from "core"
+import type { UsersSACsFarmingClusterStorage } from "~/application/services"
 
 export namespace StopAllFarmsHandle {
   export type Payload = {

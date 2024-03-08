@@ -1,5 +1,5 @@
-import { StartFarmingCommand } from "~/application/commands/steam-client/StartFarmingCommand"
-import { EventNames, Observer } from "~/infra/queue"
+import type { StartFarmingCommand } from "~/application/commands/steam-client/StartFarmingCommand"
+import type { EventNames, Observer } from "~/infra/queue"
 
 export class LogSteamStartFarmHandler implements Observer {
   operation: EventNames = "STEAMCLIENT:start-farming"

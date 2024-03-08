@@ -1,7 +1,7 @@
-import { LooseAuthProp } from "@clerk/clerk-sdk-node"
+import type { LooseAuthProp } from "@clerk/clerk-sdk-node"
 import cors from "cors"
 import "dotenv/config"
-import express, { Application, NextFunction, Request, Response } from "express"
+import express, { type Application, type NextFunction, type Request, type Response } from "express"
 import { RestoreAccountManySessionsUseCase } from "~/application/use-cases/RestoreAccountManySessionsUseCase"
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
 import {
@@ -13,10 +13,11 @@ import {
 
 const log = console.log
 
-console.log = function () {
+console.log = function log() {
   const args = Array.from(arguments)
   const [date] = new Date().toISOString().split(".")
   args.unshift(date + ": ")
+  // @ts-expect-error
   log.apply(console, args)
 }
 
@@ -35,9 +36,9 @@ import {
   query_routerSteam,
   query_routerUser,
 } from "~/presentation/routes/query"
-import { query_routerAdmin } from "./presentation/routes/query/routes-admin"
-import { isProductionServerOn } from "./infra/helpers/isProductionServerOn"
 import { env } from "./env"
+import { query_routerAdmin } from "./presentation/routes/query/routes-admin"
+import { isProductionServerOn } from "~/infra/helpers/isProductionServerOn"
 
 const app: Application = express()
 app.use(

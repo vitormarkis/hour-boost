@@ -1,4 +1,4 @@
-import { CacheState, PlanInfinity, PlanUsage } from "core"
+import { CacheState, } from "core"
 
 type Limitations = {
   maxGamesAllowed: number
