@@ -2,17 +2,13 @@ import { AccountSteamGamesList } from "core"
 import { RefreshGamesUseCase } from "~/presentation/presenters/RefreshGamesUseCase"
 
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { FarmGamesController } from "~/presentation/controllers"
 
 const log = console.log
 console.log = () => {}
@@ -22,17 +18,11 @@ let i = makeTestInstances({
 })
 let meInstances = {} as PrefixKeys<"me">
 let refreshGamesUseCase: RefreshGamesUseCase
-let farmGamesController: FarmGamesController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   meInstances = await i.createUser("me")
   refreshGamesUseCase = new RefreshGamesUseCase(i.sacStateCacheRepository, i.allUsersClientsStorage)
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    usersRepository: i.usersRepository,
-    farmGamesUseCase: i.farmGamesUseCase,
-  })
 }
 
 beforeEach(async () => {
@@ -42,7 +32,7 @@ beforeEach(async () => {
 })
 
 test("should refresh account games", async () => {
-  await farmGamesController.handle({
+  await i.farmGamesController.handle({
     payload: { accountName: s.me.accountName, gamesID: [730], userId: s.me.userId },
   })
   console.log = log

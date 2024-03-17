@@ -117,6 +117,7 @@ command_routerSteam.post(
       allUsersClientsStorage,
       farmGamesUseCase,
       usersRepository,
+      hashService,
     })
     const { json, status } = await promiseHandler(
       startFarmController.handle({

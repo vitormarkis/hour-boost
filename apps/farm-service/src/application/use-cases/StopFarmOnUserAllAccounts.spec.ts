@@ -8,7 +8,7 @@ import {
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { AddSteamAccountController, FarmGamesController } from "~/presentation/controllers"
+import { AddSteamAccountController } from "~/presentation/controllers"
 import { PlanBuilder } from "../factories/PlanFactory"
 import { AddSteamAccountUseCase } from "./AddSteamAccountUseCase"
 import { CheckSteamAccountOwnerStatusUseCase } from "./CheckSteamAccountOwnerStatusUseCase"
@@ -24,7 +24,6 @@ let i = makeTestInstances({
 let meInstances = {} as PrefixKeys<"me">
 let stopFarmOnUserAllAccounts: StopFarmOnUserAllAccounts
 let stopFarmUseCase: StopFarmUseCase
-let farmGamesController: FarmGamesController
 let addSteamAccountController: AddSteamAccountController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
@@ -33,11 +32,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
   const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
   stopFarmOnUserAllAccounts = new StopFarmOnUserAllAccounts(stopFarmUseCase)
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    farmGamesUseCase: i.farmGamesUseCase,
-    usersRepository: i.usersRepository,
-  })
   const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(
     i.steamAccountsRepository
   )
@@ -67,7 +61,7 @@ beforeEach(async () => {
     },
   })
 
-  await farmGamesController.handle({
+  await i.farmGamesController.handle({
     payload: {
       accountName: s.me.accountName,
       gamesID: [308],
@@ -75,7 +69,7 @@ beforeEach(async () => {
     },
   })
 
-  await farmGamesController.handle({
+  await i.farmGamesController.handle({
     payload: {
       accountName: s.me.accountName2,
       gamesID: [700],

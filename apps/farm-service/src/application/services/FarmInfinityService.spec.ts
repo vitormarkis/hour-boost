@@ -1,15 +1,12 @@
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
+  type CustomInstances,
+  type MakeTestInstancesProps,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
-import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { FarmGamesController, StopFarmController, promiseHandler } from "~/presentation/controllers"
+import { StopFarmController, promiseHandler } from "~/presentation/controllers"
 import { StopFarmUseCase } from "../use-cases/StopFarmUseCase"
 
 const log = console.log
@@ -37,16 +34,8 @@ test("should ", async () => {
   const plan = new PlanBuilder(s.me.userId).infinity().diamond()
   await i.changeUserPlan(plan)
 
-  const farmGamesUseCase = new FarmGamesUseCase(i.usersClusterStorage)
-
-  const farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    usersRepository: i.usersRepository,
-    farmGamesUseCase: i.farmGamesUseCase,
-  })
-
   const { status, json } = await promiseHandler(
-    farmGamesController.handle({
+    i.farmGamesController.handle({
       payload: {
         accountName: s.me.accountName,
         gamesID: [100],
@@ -86,7 +75,7 @@ test("should ", async () => {
    */
 
   const res = await promiseHandler(
-    farmGamesController.handle({
+    i.farmGamesController.handle({
       payload: {
         accountName: s.me.accountName,
         gamesID: [100],

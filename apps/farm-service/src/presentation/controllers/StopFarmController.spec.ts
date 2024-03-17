@@ -1,16 +1,13 @@
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   password,
 } from "~/__tests__/instances"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { FarmGamesController, StopFarmController } from "~/presentation/controllers"
+import { StopFarmController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 import { SteamUserMockBuilder } from "~/utils/builders"
 
@@ -18,7 +15,6 @@ const log = console.log
 console.log = () => {}
 
 const validSteamAccounts = [{ accountName: "paco", password }]
-let farmGamesController: FarmGamesController
 let stopFarmController: StopFarmController
 
 let i = makeTestInstances({
@@ -29,11 +25,6 @@ let meInstances = {} as PrefixKeys<"me">
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   meInstances = await i.createUser("me")
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    usersRepository: i.usersRepository,
-    farmGamesUseCase: i.farmGamesUseCase,
-  })
   const stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
   stopFarmController = new StopFarmController(stopFarmUseCase, i.usersRepository)
 }
@@ -95,7 +86,7 @@ describe("StopFarmController.spec test suite", () => {
       )
 
       const { status } = await promiseHandler(
-        farmGamesController.handle({
+        i.farmGamesController.handle({
           payload: {
             accountName: s.me.accountName,
             gamesID: [99],

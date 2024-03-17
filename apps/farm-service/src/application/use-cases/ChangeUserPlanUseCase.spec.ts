@@ -1,18 +1,15 @@
 import { jest } from "@jest/globals"
-import { DiamondPlan, GuestPlan, SilverPlan, } from "core"
+import { DiamondPlan, GuestPlan, SilverPlan } from "core"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   password,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { FarmGamesController, StopFarmController } from "~/presentation/controllers"
+import { StopFarmController } from "~/presentation/controllers"
 import { getAccountOnCache } from "~/utils/getAccount"
 import { getSACOn_AllUsersClientsStorage_ByUserId } from "~/utils/getSAC"
 import { isAccountFarmingOnClusterByUsername } from "~/utils/isAccount"
@@ -35,7 +32,6 @@ let i = makeTestInstances({
 })
 let meInstances = {} as PrefixKeys<"me">
 let changeUserPlanUseCase: ChangeUserPlanUseCase
-let farmGamesController: FarmGamesController
 let stopFarmController: StopFarmController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
@@ -59,12 +55,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     restoreAccountSessionUseCase,
     i.userService
   )
-
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    farmGamesUseCase: i.farmGamesUseCase,
-    usersRepository: i.usersRepository,
-  })
 
   const stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
   stopFarmController = new StopFarmController(stopFarmUseCase, i.usersRepository)
@@ -91,26 +81,26 @@ test("should change user plan from guest to diamond", async () => {
   expect(user2?.plan).toBeInstanceOf(DiamondPlan)
 })
 
-// test.only("should not change plan to the same plan name", async () => {
-//   const user = await i.usersRepository.getByID(s.me.userId)
-//   expect(user?.plan).toBeInstanceOf(GuestPlan)
-//   if (!user) throw "no user"
+test.only("should not change plan to the same plan name", async () => {
+  const user = await i.usersRepository.getByID(s.me.userId)
+  expect(user?.plan).toBeInstanceOf(GuestPlan)
+  if (!user) throw "no user"
 
-//   const initialId = user.plan.id_plan
-//   expect(user.plan.id_plan).toBe(initialId)
-//   const [errorChangingUserPlan] = await changeUserPlanUseCase.execute({
-//     newPlanName: "DIAMOND",
-//     user,
-//   })
-//   expect(errorChangingUserPlan).toBeNull()
+  const initialId = user.plan.id_plan
+  expect(user.plan.id_plan).toBe(initialId)
+  const [errorChangingUserPlan] = await changeUserPlanUseCase.execute({
+    newPlanName: "DIAMOND",
+    user,
+  })
+  expect(errorChangingUserPlan).toBeNull()
 
-//   const [errorChangingUserPlan2] = await changeUserPlanUseCase.execute({
-//     newPlanName: "DIAMOND",
-//     user,
-//   })
-//   // expect(errorChangingUserPlan2).not.toBeNull()
-//   expect(user.plan.id_plan).toBe(initialId)
-// })
+  const [errorChangingUserPlan2] = await changeUserPlanUseCase.execute({
+    newPlanName: "DIAMOND",
+    user,
+  })
+  // expect(errorChangingUserPlan2).not.toBeNull()
+  expect(user.plan.id_plan).toBe(initialId)
+})
 
 test("should change user plan from silver to diamond", async () => {
   const silverPlan = new PlanBuilder(s.me.userId).infinity().silver()
@@ -281,7 +271,7 @@ describe("user is farming test suite", () => {
 })
 
 export function farmGames(accountName: string, gamesID: number[], userId: string) {
-  return farmGamesController.handle({
+  return i.farmGamesController.handle({
     payload: {
       accountName,
       gamesID,

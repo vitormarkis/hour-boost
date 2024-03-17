@@ -1,11 +1,8 @@
 import { jest } from "@jest/globals"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   password,
   validSteamAccounts,
@@ -17,7 +14,7 @@ import type { PauseFarmOnAccountUsage } from "~/application/services"
 import { StopAllFarms } from "~/application/use-cases"
 import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { FarmGamesController, StopAllFarmsController } from "~/presentation/controllers"
+import { StopAllFarmsController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 
 const log = console.log
@@ -30,7 +27,6 @@ let meInstances = {} as PrefixKeys<"me">
 let friendInstances = {} as PrefixKeys<"friend">
 let stopAllFarmsUseCase: StopAllFarms
 let stopAllFarmsController: StopAllFarmsController
-let farmGamesController: FarmGamesController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
@@ -38,11 +34,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   friendInstances = await i.createUser("friend")
   stopAllFarmsUseCase = new StopAllFarms(i.usersClusterStorage)
   stopAllFarmsController = new StopAllFarmsController(stopAllFarmsUseCase)
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    usersRepository: i.usersRepository,
-    farmGamesUseCase: i.farmGamesUseCase,
-  })
 }
 
 const OLD_ENV = process.env
@@ -70,12 +61,12 @@ test("1xUser -> 2 Account (Infinity); should persist 2 usages of 2 hours", async
   await i.addSteamAccountInternally(s.me.userId, s.me.accountName2, password)
 
   const farmAccount1 = await promiseHandler(
-    farmGamesController.handle({
+    i.farmGamesController.handle({
       payload: { accountName: s.me.accountName, gamesID: [1090], userId: s.me.userId },
     })
   )
   const farmAccount2 = await promiseHandler(
-    farmGamesController.handle({
+    i.farmGamesController.handle({
       payload: { accountName: s.me.accountName2, gamesID: [1090], userId: s.me.userId },
     })
   )
@@ -113,12 +104,12 @@ describe("Start 2 farming, and stop all farms test suite", () => {
 
     const spyPublish = jest.spyOn(i.publisher, "publish")
     await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: { accountName: s.me.accountName, gamesID: [1090], userId: s.me.userId },
       })
     )
     await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: { accountName: s.me.accountName2, gamesID: [1090], userId: s.me.userId },
       })
     )
@@ -139,12 +130,12 @@ describe("Start 2 farming, and stop all farms test suite", () => {
     const spyPublish = jest.spyOn(i.publisher, "publish")
 
     await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: { accountName: s.me.accountName, gamesID: [1090], userId: s.me.userId },
       })
     )
     await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: { accountName: s.friend.accountName, gamesID: [1090], userId: s.friend.userId },
       })
     )
@@ -186,12 +177,12 @@ describe("Start 2 farming, and stop all farms test suite", () => {
     const spyPublish = jest.spyOn(i.publisher, "publish")
 
     await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: { accountName: s.me.accountName, gamesID: [1090], userId: s.me.userId },
       })
     )
     await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: { accountName: s.friend.accountName, gamesID: [1090], userId: s.friend.userId },
       })
     )

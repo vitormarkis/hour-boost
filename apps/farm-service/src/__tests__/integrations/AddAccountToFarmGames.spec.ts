@@ -7,7 +7,7 @@ import {
 } from "~/__tests__/instances"
 import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { AddSteamAccountController, FarmGamesController, promiseHandler } from "~/presentation/controllers"
+import { AddSteamAccountController, promiseHandler } from "~/presentation/controllers"
 import { SteamUserMockBuilder } from "~/utils/builders"
 
 const validSteamAccounts = [
@@ -23,7 +23,6 @@ let i = makeTestInstances({
   validSteamAccounts,
 })
 let addSteamAccountController: AddSteamAccountController
-let farmGamesController: FarmGamesController
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   // meInstances = await i.createUser("me")
@@ -41,11 +40,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
 
   addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)
 
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    usersRepository: i.usersRepository,
-    farmGamesUseCase: i.farmGamesUseCase,
-  })
   i.steamAccountsMemory.disownSteamAccountsAll()
   i.usersMemory.dropAllSteamAccounts()
 }
@@ -85,7 +79,7 @@ describe("should register a new steam account in the storage after addition of a
 
     await i.usersRepository.getByID(s.me.userId)
     const { status: status2, json: json2 } = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           accountName: s.me.accountName,
           gamesID: [1029],

@@ -1,16 +1,12 @@
 import { CustomUsagePlan, GuestPlan } from "core"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { FarmGamesController } from "~/presentation/controllers"
 import { isAccountFarmingOnClusterByUsername } from "~/utils/isAccount"
 import { RestoreAccountSessionUseCase } from "."
 import { ChangeUserPlanToCustomUseCase } from "./ChangeUserPlanToCustomUseCase"
@@ -26,7 +22,6 @@ let i = makeTestInstances({
 })
 let meInstances = {} as PrefixKeys<"me">
 let changeUserPlanToCustomUseCase: ChangeUserPlanToCustomUseCase
-let farmGamesController: FarmGamesController
 let farmGames: TEST_FarmGames
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
@@ -51,12 +46,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     restoreAccountSessionUseCase,
     i.userService
   )
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    farmGamesUseCase: i.farmGamesUseCase,
-    usersRepository: i.usersRepository,
-  })
-  farmGames = makeFarmGames(farmGamesController)
+  farmGames = makeFarmGames(i.farmGamesController)
   changeUserPlanToCustomUseCase = new ChangeUserPlanToCustomUseCase(changeUserPlanUseCase)
 }
 

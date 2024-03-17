@@ -11,15 +11,15 @@ import { HashService } from "~/application/services/HashService"
 import type { SteamAccountClient } from "~/application/services/steam"
 import type { EventParameters } from "~/infra/services"
 import {
-  SingleEventResolver,
   type EventParametersTimeout,
   type FarmGamesEventsResolve,
+  SingleEventResolver,
 } from "~/types/EventsApp.types"
 import { Logger } from "~/utils/Logger"
 import { LoginSteamWithCredentials } from "~/utils/LoginSteamWithCredentials"
 import { LoginSteamWithToken } from "~/utils/LoginSteamWithToken"
 import type { EventPromises } from "~/utils/SteamClientEventsRequired"
-import { bad, nice, only, type GetTuple } from "~/utils/helpers"
+import { type GetTuple, bad, nice, only } from "~/utils/helpers"
 
 export type RestoreAccountConnectionUseCasePayload = {
   steamAccount: {

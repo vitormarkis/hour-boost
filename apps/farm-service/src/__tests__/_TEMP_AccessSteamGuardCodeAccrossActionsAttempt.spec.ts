@@ -1,16 +1,13 @@
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   password,
 } from "~/__tests__/instances"
 import type { SteamUserMock } from "~/infra/services"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import { FarmGamesController, promiseHandler } from "~/presentation/controllers"
+import { promiseHandler } from "~/presentation/controllers"
 import { sleep } from "~/utils"
 import { SteamUserMockBuilder } from "~/utils/builders"
 
@@ -23,16 +20,10 @@ let i = makeTestInstances({
   validSteamAccounts,
 })
 let meInstances = {} as PrefixKeys<"me">
-let farmGamesController: FarmGamesController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   meInstances = await i.createUser("me")
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    usersRepository: i.usersRepository,
-    farmGamesUseCase: i.farmGamesUseCase,
-  })
 }
 
 beforeEach(async () => {
@@ -44,7 +35,7 @@ beforeEach(async () => {
 
 test.only("should ask for the steam guard code", async () => {
   const response = await promiseHandler(
-    farmGamesController.handle({
+    i.farmGamesController.handle({
       payload: {
         userId: s.me.userId,
         accountName: s.me.accountName,
@@ -76,7 +67,7 @@ test.only("should ask for the steam guard code", async () => {
 
   // NOW should not ask for the steamGuard, even being on mobile, since last action saved the steam guard
   const response2 = await promiseHandler(
-    farmGamesController.handle({
+    i.farmGamesController.handle({
       payload: {
         userId: s.me.userId,
         accountName: s.me.accountName,

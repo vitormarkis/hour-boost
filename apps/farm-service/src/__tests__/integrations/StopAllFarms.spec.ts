@@ -1,12 +1,16 @@
 import type { PlanInfinity, PlanUsage } from "core"
-import { type CustomInstances, type MakeTestInstancesProps, makeTestInstances, password } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
 import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHandler"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
-import type { PrefixKeys } from "~/__tests__/instances"
-import { FarmGamesController } from "~/presentation/controllers"
+import {
+  CustomInstances,
+  MakeTestInstancesProps,
+  type PrefixKeys,
+  makeTestInstances,
+  password,
+} from "~/__tests__/instances"
 
 const validSteamAccounts = [
   { accountName: "paco", password },
@@ -20,7 +24,6 @@ console.log = () => {}
 let i = makeTestInstances({ validSteamAccounts })
 let meInstances = {} as PrefixKeys<"me">
 let friendInstances = {} as PrefixKeys<"friend">
-let farmGamesController: FarmGamesController
 let stopAllFarms: StopAllFarms
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
@@ -30,11 +33,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
   await i.changeUserPlan(diamondPlan)
   await i.addSteamAccountInternally(s.me.userId, s.me.accountName2, password)
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    usersRepository: i.usersRepository,
-    farmGamesUseCase: i.farmGamesUseCase,
-  })
   stopAllFarms = new StopAllFarms(i.usersClusterStorage)
 }
 
@@ -51,13 +49,13 @@ afterEach(async () => {
 
 describe("2 infinity plan and 1 usage plan farming ", () => {
   beforeEach(async () => {
-    await farmGamesController.handle({
+    await i.farmGamesController.handle({
       payload: { accountName: s.me.accountName, gamesID: [109230], userId: s.me.userId },
     })
-    await farmGamesController.handle({
+    await i.farmGamesController.handle({
       payload: { accountName: s.me.accountName2, gamesID: [109230], userId: s.me.userId },
     })
-    await farmGamesController.handle({
+    await i.farmGamesController.handle({
       payload: { accountName: s.friend.accountName, gamesID: [109230], userId: s.friend.userId },
     })
 

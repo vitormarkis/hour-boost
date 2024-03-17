@@ -1,17 +1,17 @@
 import { AddSteamAccount } from "core"
 import { connection } from "~/__tests__/connection"
 import {
+  type CustomInstances,
+  type MakeTestInstancesProps,
   makeTestInstances,
   password,
   validSteamAccounts,
-  type CustomInstances,
-  type MakeTestInstancesProps,
 } from "~/__tests__/instances"
 import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 import { RestoreAccountConnectionUseCase } from "~/application/use-cases/RestoreAccountConnectionUseCase"
 
 import { testUsers as s, setPlayingSession } from "~/infra/services/UserAuthenticationInMemory"
-import { AddSteamAccountController, FarmGamesController, promiseHandler } from "~/presentation/controllers"
+import { AddSteamAccountController, promiseHandler } from "~/presentation/controllers"
 import { SteamUserMockBuilder } from "~/utils/builders"
 
 const log = console.log
@@ -23,7 +23,6 @@ let i = makeTestInstances({
 const meInstances = {}
 let restoreAccountConnectionUseCase: RestoreAccountConnectionUseCase
 let addSteamAccountController: AddSteamAccountController
-let farmGamesController: FarmGamesController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
@@ -47,12 +46,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.sacStateCacheRepository,
     i.hashService
   )
-
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    usersRepository: i.usersRepository,
-    farmGamesUseCase: i.farmGamesUseCase,
-  })
 }
 
 describe("NOT MOBILE test suite", () => {
@@ -159,7 +152,7 @@ describe("NOT MOBILE test suite", () => {
     expect(res_addSteamAccount.status).toBe(201)
 
     const res_farmGamesOnAccount = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           accountName: s.me.accountName,
           gamesID: [707],
