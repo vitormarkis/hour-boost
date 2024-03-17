@@ -1,9 +1,8 @@
 import { ClerkExpressRequireAuth, type WithAuthProp } from "@clerk/clerk-sdk-node"
-import { AddSteamAccount, type HttpClient, appAccountStatusSchema } from "core"
-import { type Request, type Response, Router } from "express"
+import { AddSteamAccount, appAccountStatusSchema, type HttpClient } from "core"
+import { Router, type Request, type Response } from "express"
 import { z } from "zod"
 import {
-  AddSteamAccountUseCase,
   ChangeAccountStatusUseCase,
   RemoveSteamAccountUseCase,
   UpdateStagingGamesUseCase,
@@ -23,9 +22,9 @@ import { ToggleAutoReloginController } from "~/presentation/controllers/ToggleAu
 import { UpdateStagingGamesController } from "~/presentation/controllers/UpdateStagingGamesController"
 import { promiseHandler, promiseHandlerBroad } from "~/presentation/controllers/promiseHandler"
 import {
+  addSteamAccountUseCase,
   allUsersClientsStorage,
   autoRestarterScheduler,
-  checkSteamAccountOwnerStatusUseCase,
   farmGamesUseCase,
   hashService,
   idGenerator,
@@ -60,15 +59,6 @@ command_routerSteam.post(
   "/steam-accounts",
   ClerkExpressRequireAuth(),
   async (req: WithAuthProp<Request>, res: Response) => {
-    const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
-    const addSteamAccountUseCase = new AddSteamAccountUseCase(
-      addSteamAccount,
-      allUsersClientsStorage,
-      usersDAO,
-      checkSteamAccountOwnerStatusUseCase,
-      hashService
-    )
-
     const addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)
 
     const { json, status } = await promiseHandler(

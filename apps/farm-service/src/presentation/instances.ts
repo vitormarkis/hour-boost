@@ -1,5 +1,5 @@
 import clerkClient from "@clerk/clerk-sdk-node"
-import { IDGeneratorUUID } from "core"
+import { AddSteamAccount, IDGeneratorUUID } from "core"
 import SteamUser from "steam-user"
 import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import { FarmServiceBuilder } from "~/application/factories"
@@ -7,6 +7,7 @@ import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/applic
 import { HashService } from "~/application/services/HashService"
 import { TokenService } from "~/application/services/TokenService"
 import {
+  AddSteamAccountUseCase,
   CheckSteamAccountOwnerStatusUseCase,
   FarmGamesUseCase,
   GetPersonaStateUseCase,
@@ -193,6 +194,16 @@ export const retrieveSessionAccountsUseCase = new RetrieveSessionListUseCase(
 export const stopFarmUseCase = new StopFarmUseCase(usersClusterStorage, planRepository)
 
 export const stagingGamesListService = new StagingGamesListService()
+
+const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
+
+export const addSteamAccountUseCase = new AddSteamAccountUseCase(
+  addSteamAccount,
+  allUsersClientsStorage,
+  usersDAO,
+  checkSteamAccountOwnerStatusUseCase,
+  hashService
+)
 
 publisher.register(new StartFarmPlanHandler())
 publisher.register(
