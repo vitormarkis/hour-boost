@@ -33,7 +33,7 @@ beforeEach(async () => {
   )
 })
 
-test.only("should ask for the steam guard code", async () => {
+test("should ask for the steam guard code", async () => {
   const response = await promiseHandler(
     i.farmGamesController.handle({
       payload: {

@@ -3,18 +3,14 @@ import { CacheState, type CacheStateDTO } from "core"
 import SteamUser from "steam-user"
 import { connection } from "~/__tests__/connection"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
-import type { StateCachePayloadSAC } from "~/utils/builders/SACStateCacheBuilder"
 
 const log = console.log
 console.log = () => {}
@@ -41,7 +37,7 @@ afterAll(() => {
   jest.useRealTimers()
 })
 
-test.only("should NOT store persist farm session if NoConnection error is triggered AND account don't have autorelogin on", async () => {
+test("should NOT store persist farm session if NoConnection error is triggered AND account don't have autorelogin on", async () => {
   console.log = log
   const user = await i.usersRepository.getByID(s.me.userId)
   if (!user) throw user
@@ -80,7 +76,9 @@ test.only("should NOT store persist farm session if NoConnection error is trigge
 })
 
 test("should stop farming once interrupt occurs", async () => {
-  jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
+  jest
+    .useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
+    .setSystemTime(new Date("2024-06-10T10:00:00"))
 
   const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
   let xs = 0
@@ -119,7 +117,9 @@ test("should stop farming once interrupt occurs", async () => {
   expect(sacClientCalls[0]).toStrictEqual(["error", { eresult: SteamUser.EResult.NoConnection }])
 
   const sacEmitterCalls = sacEmitterSPY.mock.calls
-  const sacState = {
+  const sacState: CacheStateDTO = {
+    farmStartedAt: new Date("2024-06-10T10:00:00").getTime(),
+    isFarming: true,
     accountName: "paco",
     gamesPlaying: [100],
     gamesStaging: [],
@@ -140,7 +140,8 @@ test("should stop farming once interrupt occurs", async () => {
   console.log = () => {}
 })
 
-test("should get back farming once has session again", async () => {
+// não estou mais fazendo assim, agr relog é controlado
+test.skip("should get back farming once has session again", async () => {
   const meCluster = i.usersClusterStorage.getOrAdd(s.me.username, meInstances.me.plan)
   const sac = meInstances.meSAC
   const spySACEmitter = jest.spyOn(sac.emitter, "emit")
@@ -234,7 +235,8 @@ test("should check if account is farming properly", async () => {
   expect(meCluster.isAccountFarmingOnService(s.me.accountName)).toBe(true)
 })
 
-test("should start farm again when relog with state happens", async () => {
+// não estou mais fazendo assim, agr relog é controlado
+test.skip("should start farm again when relog with state happens", async () => {
   i = makeTestInstances({ validSteamAccounts })
   meInstances = await i.createUser("me")
   jest.useFakeTimers({ doNotFake: ["setImmediate", "nextTick", "setTimeout"] })
@@ -270,13 +272,15 @@ test("should start farm again when relog with state happens", async () => {
   expect(sacClientCalls[1]).toStrictEqual(["webSession"])
 
   const sacEmitterCalls = sacEmitterSPY.mock.calls
-  const sacState: StateCachePayloadSAC = {
+  const sacState: CacheStateDTO = {
     accountName: "paco",
     gamesPlaying: [100],
     gamesStaging: [],
     planId: meInstances.me.plan.id_plan,
     username: s.me.username,
     status: "offline",
+    farmStartedAt: new Date("2024-01-10T10:00:00.000Z").getTime(),
+    isFarming: true,
   }
   console.log = log
   console.log({ sacEmitterCalls })

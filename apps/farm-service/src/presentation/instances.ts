@@ -48,7 +48,6 @@ import {
 import { ClerkAuthentication } from "~/infra/services"
 import { RefreshGamesUseCase } from "~/presentation/presenters"
 import { EventEmitterBuilder, SteamAccountClientBuilder, UserClusterBuilder } from "~/utils/builders"
-import { SACStateCacheBuilder } from "~/utils/builders/SACStateCacheBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 
 const httpProxy = process.env.PROXY_URL
@@ -84,7 +83,6 @@ export const usersRepository = new UsersRepositoryDatabase(prisma)
 export const idGenerator = new IDGeneratorUUID()
 
 export const sacBuilder = new SteamAccountClientBuilder(emitterBuilder, publisher, steamUserBuilder)
-export const sacStateCacheBuilder = new SACStateCacheBuilder()
 
 export const farmServiceBuilder = new FarmServiceBuilder({
   publisher,

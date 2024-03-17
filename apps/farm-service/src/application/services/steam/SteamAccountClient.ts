@@ -1,26 +1,17 @@
 import { appendFile } from "fs"
 import {
-  type 
   AccountGames,
   AccountSteamGamesList,
-  type 
   AppAccountStatus,
   ApplicationError,
   CacheState,
-  type 
   CacheStateDTO,
-  type 
   CacheStateHollow,
-  type 
   DataOrError,
-  type 
   DataOrFail,
   Fail,
-  type 
   GameSession,
-  type 
   IRefreshToken,
-  type 
   SteamAccountPersonaState,
 } from "core"
 import SteamUser from "steam-user"
@@ -28,6 +19,7 @@ import { connection } from "~/__tests__/connection"
 import type { EventEmitter } from "~/application/services"
 import { LastHandler } from "~/application/services/steam"
 import { getHeaderImageByGameId } from "~/consts"
+import { env } from "~/env"
 import type { Publisher } from "~/infra/queue"
 import { areTwoArraysEqual } from "~/utils"
 import { Logger } from "~/utils/Logger"
@@ -173,7 +165,7 @@ export class SteamAccountClient extends LastHandler {
       this.setLastArguments("disconnected", args)
     })
 
-    if (process.env.NODE_ENV === "DEV") {
+    if (env.NODE_ENV === "DEV") {
       connection.on("break", ({ relog = true, replaceRefreshToken = false } = {}) => {
         this.logger.log(`Emitting noConnection error of user ${this.accountName} for the cluster.`)
         this.client.emit("error", { eresult: SteamUser.EResult.NoConnection })

@@ -39,7 +39,7 @@ afterAll(() => {
 })
 
 describe("List test suite", () => {
-  test.only("should list one account iddle after pausing farm", async () => {
+  test("should list one account iddle after pausing farm", async () => {
     // const meCluster = i.userClusterBuilder.create(s.me.username, meInstances.me.plan)
     const meCluster = usersClusterStorage.add(s.me.username, meInstances.me.plan)
     meCluster.addSAC(meInstances.meSAC)
@@ -61,7 +61,7 @@ describe("List test suite", () => {
     })
   })
 
-  test.only("should LIST two farming accounts", async () => {
+  test("should LIST two farming accounts", async () => {
     // console.log = log
     // console.log(await i.planRepository.list())
     const meCluster = usersClusterStorage.add(s.me.username, meInstances.me.plan)
@@ -95,7 +95,7 @@ describe("List test suite", () => {
     })
   })
 
-  test.only("should create new farm service", async () => {
+  test("should create new farm service", async () => {
     const spy_planRepository_getById = jest.spyOn(i.planRepository, "getById")
     const meCluster = usersClusterStorage.add(s.me.username, meInstances.me.plan)
     const spy_meCluster_setFarmService = jest.spyOn(meCluster, "setFarmService")

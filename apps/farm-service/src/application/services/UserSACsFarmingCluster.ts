@@ -23,9 +23,8 @@ import type { SteamAccountClient } from "~/application/services/steam"
 import { EAppResults, type SACGenericError } from "~/application/use-cases"
 import type { Publisher } from "~/infra/queue"
 import { Logger } from "~/utils/Logger"
-import type { StateCachePayloadFarmService } from "~/utils/builders/SACStateCacheBuilder"
 import type { UsageBuilder } from "~/utils/builders/UsageBuilder"
-import { type Pretify, bad, nice } from "~/utils/helpers"
+import { bad, nice } from "~/utils/helpers"
 import { thisErrorShouldScheduleAutoRestarter } from "~/utils/shouldScheduleAutoRestater"
 
 export interface IUserSACsFarmingCluster {
@@ -124,12 +123,6 @@ export class UserSACsFarmingCluster implements IUserSACsFarmingCluster {
     return nice({
       userCluster: this as UserSACsFarmingCluster,
     })
-  }
-
-  getInnerState(): Pretify<StateCachePayloadFarmService> {
-    return {
-      farmStartedAt: this.farmService.startedAt,
-    }
   }
 
   getAccountsStatus() {

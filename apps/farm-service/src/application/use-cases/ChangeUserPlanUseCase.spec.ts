@@ -81,7 +81,7 @@ test("should change user plan from guest to diamond", async () => {
   expect(user2?.plan).toBeInstanceOf(DiamondPlan)
 })
 
-test.only("should not change plan to the same plan name", async () => {
+test("should not change plan to the same plan name", async () => {
   const user = await i.usersRepository.getByID(s.me.userId)
   expect(user?.plan).toBeInstanceOf(GuestPlan)
   if (!user) throw "no user"

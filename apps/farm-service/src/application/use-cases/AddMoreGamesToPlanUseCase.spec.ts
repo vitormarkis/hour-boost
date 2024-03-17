@@ -1,11 +1,8 @@
 import { CustomUsagePlan, PlanUsage } from "core"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   password,
   validSteamAccounts,
@@ -102,14 +99,15 @@ test("should change usage plan to CUSTOM usage plan and increase max games allow
   expect(userPlan2?.maxGamesAllowed).toBe(30)
 })
 
-test.only("should change from farming 30 games, to 2 games, and client should update so", async () => {
+test("should change from farming 30 games, to 2 games, and client should update so", async () => {
   const userKeys = i.allUsersClientsStorage.listUsersKeys()
   expect(userKeys).toStrictEqual(["id_123"])
   const [error] = await addMoreGamesToPlanUseCase.execute({
     mutatingUserId: s.me.userId,
     newMaxGamesAllowed: 30,
   })
-  if (error && error.code === "LIST:ERROR-RESETING-FARM") console.log(error.payload.errorsList.flat(Number.POSITIVE_INFINITY))
+  if (error && error.code === "LIST:ERROR-RESETING-FARM")
+    console.log(error.payload.errorsList.flat(Number.POSITIVE_INFINITY))
   expect(error).toBeNull()
 
   const spy_clientGamesPlayed = import.meta.jest.spyOn(meInstances.meSAC.client, "gamesPlayed")

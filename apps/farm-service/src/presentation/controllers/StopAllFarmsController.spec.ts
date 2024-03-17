@@ -18,7 +18,7 @@ import { StopAllFarmsController } from "~/presentation/controllers"
 import { promiseHandler } from "~/presentation/controllers/promiseHandler"
 
 const log = console.log
-console.log = () => {}
+// console.log = () => {}
 
 let i = makeTestInstances({
   validSteamAccounts,

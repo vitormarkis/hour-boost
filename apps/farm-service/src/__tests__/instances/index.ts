@@ -43,7 +43,6 @@ import {
 } from "~/infra/services/UserAuthenticationInMemory"
 import { FarmGamesController } from "~/presentation/controllers"
 import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders"
-import { SACStateCacheBuilder } from "~/utils/builders/SACStateCacheBuilder"
 import { SteamUserMockBuilder } from "~/utils/builders/SteamMockBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
@@ -85,7 +84,6 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const sacCacheInMemory = new SACCacheInMemory()
   const sacStateCacheRepository = new SteamAccountClientStateCacheInMemory(sacCacheInMemory)
   const usageBuilder = new UsageBuilder()
-  const sacStateCacheBuilder = new SACStateCacheBuilder()
   // const sacStateCacheRepository = new SteamAccountClientStateCacheRedis(redis)
   const emitterBuilder = new EventEmitterBuilder()
   const userService = new UserService()
@@ -143,7 +141,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     allUsersClientsStorage,
     usersRepository,
     farmGamesUseCase,
-    hashService
+    hashService,
   })
 
   async function createUser<P extends TestUsers>(userPrefix: P, options?: CreateUserOptions) {
@@ -177,10 +175,11 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   ) {
     const user = await usersRepository.getByID(userId)
     if (!user) throw new Error("addSteamAccount(): INSTANCES TEST Usuário não existe.")
+    const [, encryptedPassword] = hashService.encrypt(password)
     const steamAccount = SteamAccount.restore({
       credentials: SteamAccountCredentials.restore({
         accountName,
-        password,
+        password: encryptedPassword,
       }),
       id_steamAccount: id_steamAccount ?? idGenerator.makeID(),
       ownerId: userId,
@@ -226,7 +225,6 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     userClusterBuilder,
     emitterBuilder,
     usageBuilder,
-    sacStateCacheBuilder,
     sacBuilder,
     usersDAO,
     steamAccountsDAO,
