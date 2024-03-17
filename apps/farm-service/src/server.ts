@@ -3,8 +3,8 @@ import prefix from "console-stamp"
 import cookieParser from "cookie-parser"
 import cors from "cors"
 import "dotenv/config"
-import express from "express"
 import type { Application, NextFunction, Request, Response } from "express"
+import express from "express"
 import { RestoreAccountManySessionsUseCase } from "~/application/use-cases/RestoreAccountManySessionsUseCase"
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
 import { isProductionServerOn } from "~/infra/helpers/isProductionServerOn"
@@ -65,15 +65,14 @@ const restoreAccountManySessionsUseCase = new RestoreAccountManySessionsUseCase(
 )
 
 async function main() {
-  // if (env.NODE_ENV !== "PRODUCTION") {
-  //   const is = await isProductionServerOn()
-  //   if (is) throw new Error("PROD SERVER ON")
-  // }
+  if (env.NODE_ENV !== "PRODUCTION") {
+    const is = await isProductionServerOn()
+    if (is) throw new Error("PROD SERVER ON")
+  }
 
   const users = await usersRepository.findMany()
   restoreUsersSessionsUseCase.execute({ users })
   await restoreAccountManySessionsUseCase.execute({
-    whitelistAccountNames: ["versalebackup"],
     batchOptions: {
       batchAmount: 5,
       noiseInSeconds: 5,
