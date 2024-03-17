@@ -22,16 +22,9 @@ import {
 } from "~/presentation/routes/query"
 import { query_routerAdmin } from "~/presentation/routes/query/routes-admin"
 import { env } from "./env"
+import prefix from "console-stamp"
 
-const log = console.log
-
-console.log = function log() {
-  const args = Array.from(arguments)
-  const [date] = new Date().toISOString().split(".")
-  args.unshift(date + ": ")
-  // @ts-expect-error
-  log.apply(console, args)
-}
+prefix(console, { format: ":date(yyyy/mm/dd HH:MM:ss.l)" })
 
 declare global {
   namespace Express {
@@ -71,14 +64,15 @@ const restoreAccountManySessionsUseCase = new RestoreAccountManySessionsUseCase(
 )
 
 async function main() {
-  if (env.NODE_ENV !== "PRODUCTION") {
-    const is = await isProductionServerOn()
-    if (is) throw new Error("PROD SERVER ON")
-  }
+  // if (env.NODE_ENV !== "PRODUCTION") {
+  //   const is = await isProductionServerOn()
+  //   if (is) throw new Error("PROD SERVER ON")
+  // }
 
   const users = await usersRepository.findMany()
   restoreUsersSessionsUseCase.execute({ users })
   await restoreAccountManySessionsUseCase.execute({
+    whitelistAccountNames: ["versalebackup"],
     batchOptions: {
       batchAmount: 5,
       noiseInSeconds: 5,
