@@ -5,6 +5,7 @@ const makeSteamAccountGeneric = (accountName: string, id_steamAccount: string = 
   SteamAccount.restore({
     id_steamAccount,
     ownerId,
+    autoRelogin: false,
     credentials: SteamAccountCredentials.create({
       accountName,
       password: "acc_pass",

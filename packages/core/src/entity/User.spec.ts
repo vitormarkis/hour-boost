@@ -1,6 +1,6 @@
 import { User, makeID, UserRole, ActiveStatus } from "core/entity"
 import { SteamAccountList } from "core/entity/SteamAccountList"
-import { GuestPlan, SilverPlan } from "core/entity/plan"
+import { GuestPlan, SilverPlan, UsageList } from "core/entity/plan"
 
 test("should create user with default values", async () => {
   const user = User.create({
@@ -35,7 +35,7 @@ test("should restore user with default values", async () => {
     role: new UserRole(),
     status: new ActiveStatus(),
     steamAccounts: new SteamAccountList(),
-    usages: [],
+    usages: new UsageList(),
   })
   expect(user).toHaveProperty("username")
   expect(user).toHaveProperty("id_user")

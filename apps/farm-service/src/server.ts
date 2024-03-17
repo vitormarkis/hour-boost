@@ -1,15 +1,27 @@
 import type { LooseAuthProp } from "@clerk/clerk-sdk-node"
+import cookieParser from "cookie-parser"
 import cors from "cors"
 import "dotenv/config"
 import express, { type Application, type NextFunction, type Request, type Response } from "express"
 import { RestoreAccountManySessionsUseCase } from "~/application/use-cases/RestoreAccountManySessionsUseCase"
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
+import { isProductionServerOn } from "~/infra/helpers/isProductionServerOn"
 import {
   autoRestartCron,
   steamAccountsDAO,
   usersClusterStorage,
   usersRepository,
 } from "~/presentation/instances"
+import { command_routerSteam } from "~/presentation/routes/command"
+import { command_routerPlan } from "~/presentation/routes/command/routes-plan"
+import {
+  query_routerGeneral,
+  query_routerPlan,
+  query_routerSteam,
+  query_routerUser,
+} from "~/presentation/routes/query"
+import { query_routerAdmin } from "~/presentation/routes/query/routes-admin"
+import { env } from "./env"
 
 const log = console.log
 
@@ -26,19 +38,6 @@ declare global {
     interface Request extends LooseAuthProp {}
   }
 }
-
-import cookieParser from "cookie-parser"
-import { command_routerSteam } from "~/presentation/routes/command"
-import { command_routerPlan } from "~/presentation/routes/command/routes-plan"
-import {
-  query_routerGeneral,
-  query_routerPlan,
-  query_routerSteam,
-  query_routerUser,
-} from "~/presentation/routes/query"
-import { env } from "./env"
-import { query_routerAdmin } from "./presentation/routes/query/routes-admin"
-import { isProductionServerOn } from "~/infra/helpers/isProductionServerOn"
 
 const app: Application = express()
 app.use(
