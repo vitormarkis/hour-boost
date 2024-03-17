@@ -13,6 +13,7 @@ export const env = {
       TOKEN_IDENTIFICATION_HASH: z.string().min(1),
       CLIENT_URL: z.string().url(),
       COOKIE_DOMAIN: z.string().includes("."),
+      HASH_SECRET: z.string().min(1),
       PORT: z
         .string()
         .length(4)

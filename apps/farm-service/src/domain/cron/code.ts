@@ -35,7 +35,8 @@ const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClu
 const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
   i.allUsersClientsStorage,
   i.usersClusterStorage,
-  i.sacStateCacheRepository
+  i.sacStateCacheRepository,
+  i.hashService
 )
 const autoRestartCron = new AutoRestartCron(
   i.allUsersClientsStorage,

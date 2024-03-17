@@ -1,11 +1,8 @@
 import { CacheState, type CacheStateDTO, type PlanUsage, Usage } from "core"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
@@ -60,7 +57,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
     i.allUsersClientsStorage,
     i.usersClusterStorage,
-    i.sacStateCacheRepository
+    i.sacStateCacheRepository,
+    i.hashService
   )
   const autoRestartCron = new AutoRestartCron(
     i.allUsersClientsStorage,

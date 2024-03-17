@@ -1,18 +1,14 @@
 import { CacheState, type CacheStateDTO } from "core"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { RestoreAccountConnectionUseCase } from "~/application/use-cases"
 import {
-  type 
-  TEST_RestoreAccountConnection,
+  type TEST_RestoreAccountConnection,
   makeRestoreAccountConnection,
 } from "~/application/use-cases/__tests_helpers"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
@@ -34,7 +30,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
     i.allUsersClientsStorage,
     i.usersClusterStorage,
-    i.sacStateCacheRepository
+    i.sacStateCacheRepository,
+    i.hashService
   )
 
   restoreAccountConnection = makeRestoreAccountConnection(restoreAccountConnectionUseCase, i.usersRepository)

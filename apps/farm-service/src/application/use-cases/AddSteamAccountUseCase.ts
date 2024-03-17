@@ -63,7 +63,7 @@ export class AddSteamAccountUseCase
       autoRestart: false,
     })
 
-    const [errorEncrypting, hashPassword] = await this.hashService.encrypt(password)
+    const [errorEncrypting, hashPassword] = this.hashService.encrypt(password)
     if (errorEncrypting) return bad(errorEncrypting)
 
     if (sac.logged) {
@@ -136,7 +136,7 @@ export class AddSteamAccountUseCase
     if (eventsPromisesResolved.type === "loggedOn") {
       const { steamAccountId } = await this.addSteamAccount.execute({
         accountName,
-        password,
+        password: hashPassword,
         userId,
       })
 

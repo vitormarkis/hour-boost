@@ -70,6 +70,7 @@ export const steamBuilder: SteamBuilder = {
   create: () => new SteamUser(options),
 }
 
+export const hashService = new HashService()
 export const steamUserBuilder = steamBuilder
 const usageBuilder = new UsageBuilder()
 export const publisher = new Publisher()
@@ -169,7 +170,8 @@ export const steamAccountsDAO = new SteamAccountsDAODatabase(prisma)
 export const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
   allUsersClientsStorage,
   usersClusterStorage,
-  steamAccountClientStateCacheRepository
+  steamAccountClientStateCacheRepository,
+  hashService
 )
 
 export const autoRestartCron = new AutoRestartCron(
@@ -193,7 +195,6 @@ export const retrieveSessionAccountsUseCase = new RetrieveSessionListUseCase(
 export const stopFarmUseCase = new StopFarmUseCase(usersClusterStorage, planRepository)
 
 export const stagingGamesListService = new StagingGamesListService()
-export const hashService = new HashService()
 
 publisher.register(new StartFarmPlanHandler())
 publisher.register(

@@ -1,8 +1,6 @@
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
+  type CustomInstances,
+  type MakeTestInstancesProps,
   makeTestInstances,
   password,
   validSteamAccounts,
@@ -34,7 +32,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
     i.allUsersClientsStorage,
     i.usersClusterStorage,
-    i.sacStateCacheRepository
+    i.sacStateCacheRepository,
+    i.hashService
   )
   const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
   autoRestartCron = new AutoRestartCron(

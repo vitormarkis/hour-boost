@@ -306,10 +306,14 @@ class UserInstancesBuilder implements IUserInstancesBuilder {
 }
 
 export function makeSteamAccount(ownerId: string, accountName: string) {
+  const hashService = new HashService()
+  const [error, encryptedPassword] = hashService.encrypt(password)
+
+  if (error) throw error
   return SteamAccount.create({
     credentials: SteamAccountCredentials.create({
       accountName,
-      password,
+      password: encryptedPassword,
     }),
     idGenerator,
     ownerId,

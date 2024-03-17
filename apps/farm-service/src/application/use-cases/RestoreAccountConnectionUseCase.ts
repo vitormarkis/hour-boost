@@ -7,14 +7,19 @@ import type {
 } from "core"
 import SteamUser from "steam-user"
 import type { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { HashService } from "~/application/services/HashService"
 import type { SteamAccountClient } from "~/application/services/steam"
 import type { EventParameters } from "~/infra/services"
-import { type EventParametersTimeout, type FarmGamesEventsResolve, SingleEventResolver } from "~/types/EventsApp.types"
+import {
+  SingleEventResolver,
+  type EventParametersTimeout,
+  type FarmGamesEventsResolve,
+} from "~/types/EventsApp.types"
 import { Logger } from "~/utils/Logger"
 import { LoginSteamWithCredentials } from "~/utils/LoginSteamWithCredentials"
 import { LoginSteamWithToken } from "~/utils/LoginSteamWithToken"
 import type { EventPromises } from "~/utils/SteamClientEventsRequired"
-import { type GetTuple, bad, nice, only } from "~/utils/helpers"
+import { bad, nice, only, type GetTuple } from "~/utils/helpers"
 
 export type RestoreAccountConnectionUseCasePayload = {
   steamAccount: {
@@ -41,7 +46,8 @@ export class RestoreAccountConnectionUseCase implements IRestorAccountConnection
   constructor(
     private readonly allUsersClientsStorage: AllUsersClientsStorage,
     private readonly usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage,
-    private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository
+    private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository,
+    private readonly hashService: HashService
   ) {}
 
   async execute({ steamAccount, user }: RestoreAccountConnectionUseCasePayload) {
@@ -112,10 +118,12 @@ export class RestoreAccountConnectionUseCase implements IRestorAccountConnection
     }
 
     this.logger.log(`session wasn't found or failed, trying with credentials`)
+    const [, decryptedPassword] = this.hashService.decrypt(password)
+
     const loginSteamWithCredentialsResult = await this.loginSteamWithCredentials.execute({
       sac,
       accountName,
-      password,
+      password: decryptedPassword,
       trackEvents,
     })
 
@@ -139,12 +147,18 @@ export class RestoreAccountConnectionUseCase implements IRestorAccountConnection
   }
 }
 
-export class ClientAppResult<const TCode = string, const TFatal = boolean> {
+export class ClientAppResult<
+  const TCode = string,
+  const TFatal = boolean,
+  const TPayload extends Record<string, unknown> | undefined = Record<string, unknown>,
+> {
   readonly fatal: TFatal
   readonly code: TCode
-  constructor(props: { fatal: TFatal; code: TCode }) {
+  readonly payload: TPayload
+  constructor(props: { fatal: TFatal; code: TCode; payload?: TPayload }) {
     this.fatal = props.fatal
     this.code = props.code
+    this.payload = props.payload ?? (undefined as TPayload)
   }
 }
 
@@ -167,7 +181,6 @@ const handleLoginSteamWithCredentialsResult = (
 ) => {
   const [errorLoggin] = loginSteamWithCredentialsResult
   if (errorLoggin) {
-    console.log({errorLoggin})
     if (errorLoggin.payload instanceof SingleEventResolver) {
       const { type } = errorLoggin.payload
       if (type === "steamGuard") {
@@ -217,7 +230,9 @@ export function handleSteamClientError(error: SACGenericError) {
   if (isNotFatalError(error)) {
     return only(new ClientAppResult({ code: "KNOWN-ERROR", fatal: false }))
   }
-  return only(new ClientAppResult({ code: "UNKNOWN-CLIENT-ERROR", fatal: true }))
+  return only(
+    new ClientAppResult({ code: "UNKNOWN-CLIENT-ERROR", fatal: true, payload: { eresult: error.eresult } })
+  )
 }
 
 handleSteamClientError satisfies (...args: any[]) => ClientAppResult

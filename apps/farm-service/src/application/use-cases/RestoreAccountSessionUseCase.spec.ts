@@ -1,10 +1,7 @@
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
@@ -13,8 +10,7 @@ import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
 import { GuestPlan, type PlanUsage, Usage } from "core"
 import {
-  type 
-  TEST_RestoreAccountConnection,
+  type TEST_RestoreAccountConnection,
   makeRestoreAccountConnection,
 } from "~/application/use-cases/__tests_helpers"
 import { RestoreAccountConnectionUseCase } from "./RestoreAccountConnectionUseCase"
@@ -38,7 +34,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
     i.allUsersClientsStorage,
     i.usersClusterStorage,
-    i.sacStateCacheRepository
+    i.sacStateCacheRepository,
+    i.hashService
   )
   restoreAccountConnection = makeRestoreAccountConnection(restoreAccountConnectionUseCase, i.usersRepository)
   restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)

@@ -1,11 +1,11 @@
 import { AddSteamAccount } from "core"
 import { connection } from "~/__tests__/connection"
 import {
-  type CustomInstances,
-  type MakeTestInstancesProps,
   makeTestInstances,
   password,
   validSteamAccounts,
+  type CustomInstances,
+  type MakeTestInstancesProps,
 } from "~/__tests__/instances"
 import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 import { RestoreAccountConnectionUseCase } from "~/application/use-cases/RestoreAccountConnectionUseCase"
@@ -15,7 +15,7 @@ import { AddSteamAccountController, FarmGamesController, promiseHandler } from "
 import { SteamUserMockBuilder } from "~/utils/builders"
 
 const log = console.log
-console.log = () => {}
+// console.log = () => {}
 
 let i = makeTestInstances({
   validSteamAccounts,
@@ -44,7 +44,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(
     i.allUsersClientsStorage,
     i.usersClusterStorage,
-    i.sacStateCacheRepository
+    i.sacStateCacheRepository,
+    i.hashService
   )
 
   farmGamesController = new FarmGamesController({
@@ -62,6 +63,7 @@ describe("NOT MOBILE test suite", () => {
   })
 
   test("should NOT restore session if account is already logged", async () => {
+    console.log = log
     const { status } = await promiseHandler(
       addSteamAccountController.handle({
         payload: {

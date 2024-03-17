@@ -1,4 +1,12 @@
-import { CacheState, type CacheStateDTO, type DataOrFail, Fail, type Mutable, type PlanInfinity, type PlanUsage } from "core"
+import {
+  CacheState,
+  type CacheStateDTO,
+  type DataOrFail,
+  Fail,
+  type Mutable,
+  type PlanInfinity,
+  type PlanUsage,
+} from "core"
 import type { UsersSACsFarmingClusterStorage } from "~/application/services"
 import type { SteamAccountClient } from "~/application/services/steam"
 import { handleSteamClientError } from "~/application/use-cases"
@@ -47,7 +55,14 @@ export class RestoreAccountSessionUseCase implements IRestoreAccountSessionUseCa
       if (errorRestoringOnApplication.code === "UNKNOWN-CLIENT-ERROR") {
         const error = handleSteamClientError(errorRestoringOnApplication.payload)
         if (error) {
-          return bad(new Fail({ code: error.code, payload: error }))
+          return bad(
+            new Fail({
+              code: error.code,
+              payload: {
+                eresult: error.payload.eresult,
+              },
+            })
+          )
         }
       }
       if (errorRestoringOnApplication.code === "[FarmUsageService]:PLAN-MAX-USAGE-EXCEEDED") {
