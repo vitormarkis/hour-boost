@@ -1,14 +1,11 @@
 import { jest } from "@jest/globals"
 import { GuestPlan, PlanUsage, Usage } from "core"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
 } from "~/__tests__/instances"
 import { ensureExpectation } from "~/__tests__/utils"
 import type { UserCompleteFarmSessionCommand } from "~/application/commands"
@@ -18,7 +15,6 @@ import { PersistFarmSessionHandler } from "~/domain/handler/PersistFarmSessionHa
 import type { Observer } from "~/infra/queue"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { StopFarmController, promiseHandler } from "~/presentation/controllers"
-import { FarmGamesController } from "~/presentation/controllers/FarmGamesController"
 import { SteamUserMockBuilder } from "~/utils/builders"
 jest.setTimeout(1000)
 
@@ -29,17 +25,11 @@ let i = makeTestInstances({
   validSteamAccounts,
 })
 let meInstances = {} as PrefixKeys<"me">
-let farmGamesController: FarmGamesController
 let stopFarmController: StopFarmController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   meInstances = await i.createUser("me")
-  farmGamesController = new FarmGamesController({
-    allUsersClientsStorage: i.allUsersClientsStorage,
-    usersRepository: i.usersRepository,
-    farmGamesUseCase: i.farmGamesUseCase,
-  })
   const stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
   stopFarmController = new StopFarmController(stopFarmUseCase, i.usersRepository)
 }
@@ -61,7 +51,7 @@ describe("mobile", () => {
 
   test("should ask for steam guard if the account has mobile steam guard", async () => {
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -93,7 +83,7 @@ describe("not mobile", () => {
 
   test("should start the farm", async () => {
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -116,7 +106,7 @@ describe("not mobile", () => {
     await i.changeUserPlan(diamondPlan)
 
     const responseFarmGames = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -129,7 +119,7 @@ describe("not mobile", () => {
 
     // console.log = log
     const responseUpdateGames = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -149,7 +139,7 @@ describe("not mobile", () => {
 
   test("should return 404 when not registered user is provided", async () => {
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: "RANDOM_ID_SDFIWI",
           accountName: s.me.accountName,
@@ -168,7 +158,7 @@ describe("not mobile", () => {
 
   test("should reject if steam account don't exists", async () => {
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: "RANDOM_STEAM_ACCOUNT_ID",
@@ -207,7 +197,7 @@ describe("not mobile", () => {
     expect((dbUser?.plan as PlanUsage).getUsageLeft()).toBe(0)
     expect((dbUser?.plan as PlanUsage).getUsageTotal()).toBe(21600)
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -251,7 +241,7 @@ describe("not mobile", () => {
 
   test("should return message informing if no new games were added", async () => {
     const response1 = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -266,7 +256,7 @@ describe("not mobile", () => {
     })
 
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -285,7 +275,7 @@ describe("not mobile", () => {
 
   test("should REJECT if user attempts for farm more games than his plan allows", async () => {
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -304,7 +294,7 @@ describe("not mobile", () => {
 
   test("should retrieve the credentials info from database, login and start farm", async () => {
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -332,7 +322,7 @@ describe("not mobile", () => {
     await i.usePlan(s.me.userId, allUsage)
 
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: user.id_user,
           accountName: s.me.accountName,
@@ -366,7 +356,7 @@ describe("not mobile", () => {
     await i.usePlan(s.me.userId, allUsage)
 
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: user.id_user,
           accountName: s.me.accountName,
@@ -401,7 +391,7 @@ describe("not mobile", () => {
     expect((meInstances.me.plan as PlanUsage).getUsageTotal()).toBe(21600)
 
     const res = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -417,7 +407,7 @@ describe("not mobile", () => {
     await i.usersRepository.update(me2)
 
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -435,7 +425,7 @@ describe("not mobile", () => {
   test("should NOT ADD new SAC if the account already exists on storage and is not farming", async () => {
     await i.sacStateCacheRepository.flushAll()
     const responseFarm1 = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -460,7 +450,7 @@ describe("not mobile", () => {
     expect(responseStopFarm1.status).toBe(200)
 
     const responseFarm2 = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,
@@ -474,7 +464,7 @@ describe("not mobile", () => {
   // test("should start farm", async () => {
   //   jest.useFakeTimers({ doNotFake: ["setTimeout"] })
   //   const spyPublish = jest.spyOn(i.publisher, "publish")
-  //   const promise = farmGamesController.handle({
+  //   const promise i.= farmGamesController.handle({
   //     payload: {
   //       userId: s.me.userId,
   //       accountName: s.me.accountName,
@@ -514,7 +504,7 @@ describe("not mobile", () => {
   test("should farm with type plan USAGE and persist", async () => {
     jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
     const responseFarm1 = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: { userId: s.me.userId, accountName: s.me.accountName, gamesID: [10892] },
       })
     )
@@ -541,7 +531,7 @@ describe("not mobile", () => {
 
     jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
     const responseFarm1 = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: { userId: s.me.userId, accountName: s.me.accountName, gamesID: [10892] },
       })
     )
@@ -564,7 +554,7 @@ describe("not mobile", () => {
   test("should log the amount time when persist USAGE farm session", async () => {
     jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
     const responseFarm1 = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: { userId: s.me.userId, accountName: s.me.accountName, gamesID: [10892] },
       })
     )
@@ -596,7 +586,7 @@ test("should log the amount time when persist INFINITY farm session", async () =
 
   jest.useFakeTimers({ doNotFake: ["setImmediate", "setTimeout"] })
   const responseFarm1 = await promiseHandler(
-    farmGamesController.handle({
+    i.farmGamesController.handle({
       payload: { userId: s.me.userId, accountName: s.me.accountName, gamesID: [10892] },
     })
   )
@@ -623,7 +613,7 @@ describe("no users on steam database", () => {
 
   test("should reject when account that don't exists on steam database is somehow", async () => {
     const response = await promiseHandler(
-      farmGamesController.handle({
+      i.farmGamesController.handle({
         payload: {
           userId: s.me.userId,
           accountName: s.me.accountName,

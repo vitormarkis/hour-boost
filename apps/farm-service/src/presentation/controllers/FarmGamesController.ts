@@ -1,12 +1,13 @@
 import { ApplicationError, type HttpClient, type UsersRepository } from "core"
 import SteamUser from "steam-user"
 import type { AllUsersClientsStorage } from "~/application/services"
+import { HashService } from "~/application/services/HashService"
 import type { SteamAccountClient } from "~/application/services/steam"
 import type { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { SingleEventResolver } from "~/types/EventsApp.types"
 import { areTwoArraysEqual, makeRes } from "~/utils"
 import { LoginSteamWithCredentials } from "~/utils/LoginSteamWithCredentials"
-import type { GetResult, GetTuple } from "~/utils/helpers"
+import { type GetResult, type GetTuple } from "~/utils/helpers"
 
 export namespace FarmGamesHandle {
   export type Payload = {
@@ -26,12 +27,14 @@ export class FarmGamesController implements IFarmGamesController {
   private readonly usersRepository: UsersRepository
   private readonly allUsersClientsStorage: AllUsersClientsStorage
   private readonly farmGamesUseCase: FarmGamesUseCase
+  private readonly hashService: HashService
   private readonly debugger = new ModuleDebugger("FarmGamesController")
 
   constructor(props: FarmGamesControllerProps) {
     this.usersRepository = props.usersRepository
     this.allUsersClientsStorage = props.allUsersClientsStorage
     this.farmGamesUseCase = props.farmGamesUseCase
+    this.hashService = props.hashService
   }
 
   async handle({ payload }: APayload) {
@@ -60,12 +63,18 @@ export class FarmGamesController implements IFarmGamesController {
     })
     this.debugger.log({ sacLogged: sac.logged, sac })
     const sacWasNotFarming = sac.isFarming()
+
+    const [errorDecrypting, decryptedPassword] = this.hashService.decrypt(
+      steamAccountDomain.credentials.password
+    )
+    if (errorDecrypting) throw new ApplicationError("Falha ao decryptar senha.")
+
     if (!sac.logged) {
       const loginSteamClientAwaitEvents = new LoginSteamWithCredentials()
       const loginSteamClientResult = await loginSteamClientAwaitEvents.execute({
         sac,
         accountName,
-        password: steamAccountDomain.credentials.password,
+        password: decryptedPassword,
         trackEvents: {
           loggedOn: true,
           steamGuard: true,
@@ -192,6 +201,7 @@ type FarmGamesControllerProps = {
   usersRepository: UsersRepository
   allUsersClientsStorage: AllUsersClientsStorage
   farmGamesUseCase: FarmGamesUseCase
+  hashService: HashService
 }
 
 class ModuleDebugger {
