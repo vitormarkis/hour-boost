@@ -4,6 +4,7 @@ import SteamUser from "steam-user"
 import { AutoRestartCron } from "~/application/cron/AutoRestartCron"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { HashService } from "~/application/services/HashService"
 import { TokenService } from "~/application/services/TokenService"
 import {
   CheckSteamAccountOwnerStatusUseCase,
@@ -192,6 +193,7 @@ export const retrieveSessionAccountsUseCase = new RetrieveSessionListUseCase(
 export const stopFarmUseCase = new StopFarmUseCase(usersClusterStorage, planRepository)
 
 export const stagingGamesListService = new StagingGamesListService()
+export const hashService = new HashService()
 
 publisher.register(new StartFarmPlanHandler())
 publisher.register(

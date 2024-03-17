@@ -1,20 +1,17 @@
 import {
-  type 
-  AddSteamAccount,
-  type 
-  AddSteamAccountHTTPResponse,
+  type AddSteamAccount,
+  type AddSteamAccountHTTPResponse,
   ApplicationError,
-  type 
-  DataOrError,
-  type 
-  UseCase,
-  type 
-  UsersDAO,
+  type DataOrError,
+  type UseCase,
+  type UsersDAO,
 } from "core"
 import type { AllUsersClientsStorage } from "~/application/services"
+import { HashService } from "~/application/services/HashService"
 import type { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { EVENT_PROMISES_TIMEOUT_IN_SECONDS } from "~/consts"
 import { SteamClientEventsRequired } from "~/utils/SteamClientEventsRequired"
+import { bad } from "~/utils/helpers"
 
 export namespace AddSteamAccountUseCaseHandle {
   export type Payload = {
@@ -34,7 +31,8 @@ export class AddSteamAccountUseCase
     private readonly addSteamAccount: AddSteamAccount,
     private readonly allUsersClientsStorage: AllUsersClientsStorage,
     private readonly usersDAO: UsersDAO,
-    private readonly checkSteamAccountOwnerStatusUseCase: CheckSteamAccountOwnerStatusUseCase
+    private readonly checkSteamAccountOwnerStatusUseCase: CheckSteamAccountOwnerStatusUseCase,
+    private readonly hashService: HashService
   ) {}
 
   async execute({ accountName, password, userId, authCode }: APayload): AResponse {
@@ -65,10 +63,13 @@ export class AddSteamAccountUseCase
       autoRestart: false,
     })
 
+    const [errorEncrypting, hashPassword] = await this.hashService.encrypt(password)
+    if (errorEncrypting) return bad(errorEncrypting)
+
     if (sac.logged) {
       const { steamAccountId } = await this.addSteamAccount.execute({
         accountName,
-        password,
+        password: hashPassword,
         userId,
       })
 

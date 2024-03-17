@@ -27,6 +27,7 @@ import {
   autoRestarterScheduler,
   checkSteamAccountOwnerStatusUseCase,
   farmGamesUseCase,
+  hashService,
   idGenerator,
   planRepository,
   stagingGamesListService,
@@ -64,7 +65,8 @@ command_routerSteam.post(
       addSteamAccount,
       allUsersClientsStorage,
       usersDAO,
-      checkSteamAccountOwnerStatusUseCase
+      checkSteamAccountOwnerStatusUseCase,
+      hashService
     )
 
     const addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)

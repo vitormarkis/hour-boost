@@ -28,7 +28,8 @@ const addSteamAccountUseCase = new AddSteamAccountUseCase(
   addSteamAccount,
   i.allUsersClientsStorage,
   i.usersDAO,
-  i.checkSteamAccountOwnerStatusUseCase
+  i.checkSteamAccountOwnerStatusUseCase,
+  i.hashService
 )
 const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
 const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(

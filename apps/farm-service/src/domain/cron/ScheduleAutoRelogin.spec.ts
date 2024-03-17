@@ -2,10 +2,8 @@ import { jest } from "@jest/globals"
 import { AddSteamAccount } from "core"
 import { connection } from "~/__tests__/connection"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
+  type CustomInstances,
+  type MakeTestInstancesProps,
   makeTestInstances,
   password,
   validSteamAccounts,
@@ -96,7 +94,8 @@ describe("ScheduleAutoRestartUseCase test suite", () => {
       addSteamAccount,
       i.allUsersClientsStorage,
       i.usersDAO,
-      checkSteamAccountOwnerStatusUseCase
+      checkSteamAccountOwnerStatusUseCase,
+      i.hashService
     )
     const [errorAddingAccount] = await addSteamAccountUseCase.execute({
       accountName: s.me.accountName,
@@ -132,7 +131,8 @@ describe("ScheduleAutoRestartUseCase test suite", () => {
       addSteamAccount,
       i.allUsersClientsStorage,
       i.usersDAO,
-      checkSteamAccountOwnerStatusUseCase
+      checkSteamAccountOwnerStatusUseCase,
+      i.hashService
     )
     const [errorAddingAccount] = await addSteamAccountUseCase.execute({
       accountName: s.me.accountName,

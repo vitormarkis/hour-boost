@@ -1,8 +1,10 @@
 import type { LooseAuthProp } from "@clerk/clerk-sdk-node"
+import prefix from "console-stamp"
 import cookieParser from "cookie-parser"
 import cors from "cors"
 import "dotenv/config"
-import express, { type Application, type NextFunction, type Request, type Response } from "express"
+import express from "express"
+import type { Application, NextFunction, Request, Response } from "express"
 import { RestoreAccountManySessionsUseCase } from "~/application/use-cases/RestoreAccountManySessionsUseCase"
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
 import { isProductionServerOn } from "~/infra/helpers/isProductionServerOn"
@@ -22,7 +24,6 @@ import {
 } from "~/presentation/routes/query"
 import { query_routerAdmin } from "~/presentation/routes/query/routes-admin"
 import { env } from "./env"
-import prefix from "console-stamp"
 
 prefix(console, { format: ":date(yyyy/mm/dd HH:MM:ss.l)" })
 

@@ -2,22 +2,19 @@ import {
   AddSteamAccount,
   ApplicationError,
   IDGeneratorUUID,
-  type 
-  PlanInfinity,
+  type PlanInfinity,
   PlanUsage,
   SteamAccount,
   SteamAccountCredentials,
-  type 
-  SteamAccountsRepository,
-  type 
-  Usage,
-  type 
-  User,
+  type SteamAccountsRepository,
+  type Usage,
+  type User,
 } from "core"
 import type Redis from "ioredis"
 import { makeSACFactory } from "~/__tests__/factories"
 import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
+import { HashService } from "~/application/services/HashService"
 import type { SteamAccountClient } from "~/application/services/steam"
 import { AddSteamAccountUseCase, CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
@@ -39,10 +36,8 @@ import {
 import { SACCacheInMemory } from "~/infra/repository/SACCacheInMemory"
 import { SteamAccountsInMemory } from "~/infra/repository/SteamAccountsInMemory"
 import {
-  type 
-  TestUserProperties,
-  type 
-  TestUsers,
+  type TestUserProperties,
+  type TestUsers,
   UserAuthenticationInMemory,
   testUsers,
 } from "~/infra/services/UserAuthenticationInMemory"
@@ -121,6 +116,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const stopFarmUseCase = new StopFarmUseCase(usersClusterStorage, planRepository)
   const farmGamesUseCase = new FarmGamesUseCase(usersClusterStorage)
   const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(steamAccountsRepository)
+  const hashService = new HashService()
   const allUsersClientsStorage = new AllUsersClientsStorage(
     sacBuilder,
     sacStateCacheRepository,
@@ -137,7 +133,8 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     addSteamAccount,
     allUsersClientsStorage,
     usersDAO,
-    checkSteamAccountOwnerStatusUseCase
+    checkSteamAccountOwnerStatusUseCase,
+    hashService
   )
 
   const userInstancesBuilder = new UserInstancesBuilder(allUsersClientsStorage)
@@ -243,6 +240,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     redis,
     planService,
     userService,
+    hashService,
     idGenerator,
     userAuthentication,
     farmGamesController,

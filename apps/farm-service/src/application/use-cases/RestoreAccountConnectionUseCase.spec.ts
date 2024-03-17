@@ -1,10 +1,8 @@
 import { AddSteamAccount } from "core"
 import { connection } from "~/__tests__/connection"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
+  type CustomInstances,
+  type MakeTestInstancesProps,
   makeTestInstances,
   password,
   validSteamAccounts,
@@ -38,7 +36,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     addSteamAccount,
     i.allUsersClientsStorage,
     i.usersDAO,
-    i.checkSteamAccountOwnerStatusUseCase
+    i.checkSteamAccountOwnerStatusUseCase,
+    i.hashService
   )
 
   addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)

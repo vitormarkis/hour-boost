@@ -1,5 +1,10 @@
 import { AddSteamAccount } from "core"
-import { type CustomInstances, type MakeTestInstancesProps, makeTestInstances, password } from "~/__tests__/instances"
+import {
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  makeTestInstances,
+  password,
+} from "~/__tests__/instances"
 import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { AddSteamAccountController, FarmGamesController, promiseHandler } from "~/presentation/controllers"
@@ -30,7 +35,8 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     addSteamAccount,
     i.allUsersClientsStorage,
     i.usersDAO,
-    i.checkSteamAccountOwnerStatusUseCase
+    i.checkSteamAccountOwnerStatusUseCase,
+    i.hashService
   )
 
   addSteamAccountController = new AddSteamAccountController(addSteamAccountUseCase)
