@@ -3,7 +3,7 @@ import { Plan } from "core/entity/plan/Plan"
 import { makeError } from "core/utils/throw"
 
 export class EditablePlan implements IEditablePlan {
-  constructor(readonly plan: Plan) {}
+  constructor(private readonly plan: Plan) {}
 
   setMaxAccountsAmount(amount: number): void {
     if (amount < 0 || amount > 2) {

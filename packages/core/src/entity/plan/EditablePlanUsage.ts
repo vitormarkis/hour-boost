@@ -5,8 +5,8 @@ import { makeError } from "core/utils/throw"
 
 export class EditablePlanUsage implements IEditablePlanUsage {
   constructor(
-    readonly plan: PlanUsage,
-    readonly editablePlan: EditablePlan
+    private readonly plan: PlanUsage,
+    private readonly editablePlan: EditablePlan
   ) {}
 
   setMaxGamesAmount(amount: number): void {
