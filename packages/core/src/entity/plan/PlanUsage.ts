@@ -5,7 +5,7 @@ import { Usage } from "../../entity/plan/Usage"
 
 export abstract class PlanUsage extends Plan {
   readonly name: PlanUsageName
-  readonly maxUsageTime: number
+  maxUsageTime: number
 
   constructor(props: PlanUsageConstructorProps) {
     super({
