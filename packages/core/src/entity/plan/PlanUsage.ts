@@ -1,6 +1,6 @@
 import { UsageList } from "core/entity/plan/UsageList"
 import { UsageUsedMoreThanPlanAllows } from "../../entity/exceptions"
-import { Plan, PlanUsageName } from "../../entity/plan/Plan"
+import { Plan, PlanCreateProps, PlanUsageName } from "../../entity/plan/Plan"
 import { Usage } from "../../entity/plan/Usage"
 
 export abstract class PlanUsage extends Plan {
@@ -67,6 +67,21 @@ export abstract class PlanUsage extends Plan {
   }
 }
 
+export type PlanUsageConstructorProps = {
+  id_plan: string
+  name: PlanUsageName
+  price: number
+  ownerId: string
+  maxSteamAccounts: number
+  maxGamesAllowed: number
+  maxUsageTime: number
+  autoRestarter: boolean
+  usages: UsageList
+  custom: boolean
+}
+
+export type PlanUsageCreateProps = PlanCreateProps
+
 export type PlanUsageRestoreProps = {
   id_plan: string
   ownerId: string
@@ -79,21 +94,4 @@ export type PlanUsageRestoreFromCustomProps = PlanUsageRestoreProps & {
   autoRestarter: boolean
   maxUsageTime: number
   price: number
-}
-
-export type PlanUsageCreateProps = {
-  ownerId: string
-}
-
-export type PlanUsageConstructorProps = {
-  id_plan: string
-  name: PlanUsageName
-  price: number
-  ownerId: string
-  maxSteamAccounts: number
-  maxGamesAllowed: number
-  maxUsageTime: number
-  autoRestarter: boolean
-  usages: UsageList
-  custom: boolean
 }
