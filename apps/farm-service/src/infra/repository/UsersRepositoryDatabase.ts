@@ -16,6 +16,7 @@ import {
 import { getCurrentPlanOrCreateOne } from "~/infra/mappers/databasePlanToDomain"
 import { databaseUsageToDomain } from "~/infra/mappers/databaseUsageToDomain"
 import { getPlanCreation, updateUser } from "~/infra/repository/UsersRepositoryUpdateMethod"
+import { toSQL, toSQLDate } from "~/utils/toSQL"
 
 export class UsersRepositoryDatabase implements UsersRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -53,6 +54,28 @@ export class UsersRepositoryDatabase implements UsersRepository {
       },
       data: updateUser(user),
     })
+
+    if (user.steamAccounts.data.length > 0) {
+      await this.prisma.$queryRawUnsafe(`
+        INSERT INTO steam_accounts (owner_id, accountName, createdAt, id_steamAccount, password, autoRelogin)
+        VALUES ${user.steamAccounts.data
+          .map(sa =>
+            toSQL([
+              sa.ownerId,
+              sa.credentials.accountName,
+              toSQLDate(new Date()),
+              sa.id_steamAccount,
+              sa.credentials.password,
+              sa.autoRelogin ? 1 : 0,
+            ])
+          )
+          .join(", ")} as new
+        ON DUPLICATE KEY UPDATE
+          owner_id = new.owner_id,
+          password = new.password,
+          autoRelogin = new.autoRelogin;
+        `)
+    }
   }
 
   async getByID(userId: string): Promise<User | null> {

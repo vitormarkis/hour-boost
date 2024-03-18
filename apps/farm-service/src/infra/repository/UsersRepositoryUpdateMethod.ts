@@ -55,15 +55,6 @@ export function updateUser(user: User) {
     username: user.username,
     steamAccounts: {
       disconnect: user.steamAccounts.getTrashIDs().map(id => ({ id_steamAccount: id })),
-      connectOrCreate: user.steamAccounts.data.map(sa => ({
-        where: { accountName: sa.credentials.accountName },
-        create: {
-          accountName: sa.credentials.accountName,
-          createdAt: new Date(),
-          id_steamAccount: sa.id_steamAccount,
-          password: sa.credentials.password,
-        },
-      })),
     },
   }
 

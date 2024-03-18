@@ -20,6 +20,8 @@ export const env = {
         .transform(s => Number.parseInt(s, 10))
         .pipe(z.number()),
       ACTIONS_SECRET: z.string().min(1),
+      STOP_ENDPOINT: z.string().url(),
+      SECRET: z.string().min(1),
     },
     runtimeEnv: process.env,
     // runtimeEnvStrict: {
