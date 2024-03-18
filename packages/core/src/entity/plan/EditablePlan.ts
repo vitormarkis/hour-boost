@@ -11,6 +11,7 @@ export class EditablePlan implements IEditablePlan {
         amount,
       })
     }
+    if (!this.plan.custom) this.plan.custom = true
     this.plan.maxSteamAccounts = amount
   }
 
@@ -20,6 +21,7 @@ export class EditablePlan implements IEditablePlan {
         amount,
       })
     }
+    if (!this.plan.custom) this.plan.custom = true
     this.plan.maxGamesAllowed = amount
   }
 }

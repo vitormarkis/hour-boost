@@ -23,6 +23,7 @@ export class EditablePlanUsage implements IEditablePlanUsage {
         amount,
       })
     }
+    if (!this.plan.custom) this.plan.custom = true
     this.plan.maxUsageTime += amount
   }
 }
