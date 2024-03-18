@@ -22,9 +22,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# logs
+# farm service
 apps/farm-service/logs 
-apps/farm-service/prisma/script.ts
+apps/farm-service/src/scripts/*
 
 # local env files
 .env
