@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `plans` MODIFY `type` ENUM('INFINITY', 'USAGE') NOT NULL DEFAULT 'USAGE';
