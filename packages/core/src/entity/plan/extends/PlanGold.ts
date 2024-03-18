@@ -1,8 +1,7 @@
-import { PlanCreateProps, PlanProps } from "../Plan"
-import { makeID } from "../../generateID"
-import { PlanInfinity, PlanInfinityRestoreProps } from "../../../entity/plan/PlanInfinity"
 import { UsageList } from "core/entity/plan/UsageList"
-import { PlanInvariant } from "./CustomUsagePlan"
+import { PlanInfinity, PlanInfinityRestoreProps } from "../../../entity/plan/PlanInfinity"
+import { makeID } from "../../generateID"
+import { PlanCreateProps, PlanProps } from "../Plan"
 
 export class GoldPlan extends PlanInfinity {
   private constructor(props: PlanProps) {

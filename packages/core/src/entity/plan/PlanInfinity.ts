@@ -1,10 +1,8 @@
 import { Usage } from "core/entity/plan/Usage"
-import { Plan, PlanInfinityName } from "../../entity/plan/Plan"
 import { UsageList } from "core/entity/plan/UsageList"
-import { PlanSetters } from "./extends"
+import { Plan, PlanInfinityName } from "../../entity/plan/Plan"
 
 export class PlanInfinity extends Plan {
-  custom: boolean
   readonly name: PlanInfinityName
 
   constructor(props: PlanInfinityAllProps) {
@@ -15,10 +13,6 @@ export class PlanInfinity extends Plan {
     })
     this.name = props.name
     this.custom = props.custom
-  }
-
-  isCustom(): this is PlanSetters {
-    return this.custom
   }
 
   use(usage: Usage): void {

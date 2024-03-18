@@ -1,10 +1,9 @@
-import { PlanCreateProps, PlanProps } from "../Plan"
-import { makeID } from "../../generateID"
-import { PlanInfinity, PlanInfinityRestoreProps } from "../PlanInfinity"
 import { UsageList } from "core/entity/plan/UsageList"
-import { PlanInvariant } from "./CustomUsagePlan"
+import { makeID } from "../../generateID"
+import { PlanCreateProps, PlanProps } from "../Plan"
+import { PlanInfinity, PlanInfinityRestoreProps } from "../PlanInfinity"
 
-export class DiamondPlan extends PlanInfinity implements PlanInvariant {
+export class DiamondPlan extends PlanInfinity {
   private constructor(props: PlanProps) {
     super({
       ...props,
