@@ -1,37 +1,24 @@
 import type { PrismaClient } from "@prisma/client"
 import {
-  type 
-  DatabaseSteamAccount,
-  type 
-  GameSession,
-  type 
-  Persona,
-  type 
-  PlanInfinity,
-  type 
-  PlanRepository,
+  type DatabaseSteamAccount,
+  type GameSession,
+  type Persona,
+  type PlanInfinity,
+  type PlanRepository,
   PlanUsage,
-  type 
-  PurchaseSession,
-  type 
-  SteamAccountClientStateCacheRepository,
-  type 
-  SteamAccountSession,
-  type 
-  Usage,
-  type 
-  UserAdminPanelSession,
-  type 
-  UserSession,
-  type 
-  UserSessionShallow,
-  type 
-  UsersDAO,
+  type PurchaseSession,
+  type SteamAccountClientStateCacheRepository,
+  type SteamAccountSession,
+  type Usage,
+  type UserAdminPanelSession,
+  type UserSession,
+  type UserSessionShallow,
+  type UsersDAO,
 } from "core"
 import type { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import type { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 import type { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
-import { getCurrentPlanOrCreateOne } from "~/infra/mappers/databasePlanToDomain"
+import { databasePlanToDomain } from "~/infra/mappers/databasePlanToDomain"
 import { databasePlanToSession } from "~/infra/mappers/databasePlanToSession"
 import { databaseUsageToDomain } from "~/infra/mappers/databaseUsageToDomain"
 
@@ -95,7 +82,7 @@ export class UsersDAODatabase implements UsersDAO {
 
     const finalResultPromises = usersAdminListDatabase.map(async user => {
       if (!user.plan && !user.custom_plan) throw new Error("Plan does not exists.")
-      const userPlan = getCurrentPlanOrCreateOne(user.plan ?? user.custom_plan, user.id_user)
+      const userPlan = databasePlanToDomain(user.plan)
 
       const farmUsedTime = await getFarmUsedTime(user.plan?.usages.map(databaseUsageToDomain) ?? null)
 
@@ -141,7 +128,7 @@ export class UsersDAODatabase implements UsersDAO {
     const foundUser = await this.prisma.user.findUnique({
       where: { id_user: userId },
       select: {
-        plan: { include: { usages: true } },
+        plan: { include: { usages: true, customPlan: true } },
         custom_plan: { include: { usages: true } },
         id_user: true,
         username: true,
@@ -150,7 +137,7 @@ export class UsersDAODatabase implements UsersDAO {
 
     return foundUser
       ? {
-          plan: getCurrentPlanOrCreateOne(foundUser.plan ?? foundUser.custom_plan, foundUser.id_user),
+          plan: databasePlanToDomain(foundUser.plan),
           userId: foundUser.id_user,
           username: foundUser.username,
         }
@@ -175,7 +162,7 @@ export class UsersDAODatabase implements UsersDAO {
     const dbUser = await this.prisma.user.findUnique({
       where: { id_user: userId },
       include: {
-        plan: { include: { usages: true } },
+        plan: { include: { usages: true, customPlan: true } },
         custom_plan: { include: { usages: true } },
         purchases: { select: { id_Purchase: true } },
         steamAccounts: {
@@ -191,7 +178,8 @@ export class UsersDAODatabase implements UsersDAO {
 
     if (!dbUser) return null
 
-    const userPlan = getCurrentPlanOrCreateOne(dbUser.plan ?? dbUser.custom_plan, dbUser.id_user)
+    const planDomain = databasePlanToDomain(dbUser.plan)
+    const userPlan = databasePlanToSession(planDomain)
 
     const steamAccounts: SteamAccountSession[] = await Promise.all(
       dbUser.steamAccounts.map(async sa => {
@@ -385,7 +373,7 @@ function getUserAdminListDatabase(prisma: PrismaClient) {
       username: true,
       role: true,
       profilePic: true,
-      plan: { include: { usages: true } },
+      plan: { include: { usages: true, customPlan: true } },
       custom_plan: { include: { usages: true } },
       purchases: { select: { id_Purchase: true } },
       status: true,

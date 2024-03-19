@@ -13,7 +13,7 @@ import {
   User,
   UserRole,
 } from "core"
-import { getCurrentPlanOrCreateOne } from "~/infra/mappers/databasePlanToDomain"
+import { databasePlanToDomain } from "~/infra/mappers/databasePlanToDomain"
 import { databaseUsageToDomain } from "~/infra/mappers/databaseUsageToDomain"
 import { getPlanCreation, updateUser } from "~/infra/repository/UsersRepositoryUpdateMethod"
 import { toSQL, toSQLDate } from "~/utils/toSQL"
@@ -102,7 +102,7 @@ export function statusFactory(status: StatusName): Status {
 }
 
 function prismaUserFindManyToUserDomain(user: PrismaFindMany[number]): User {
-  const userPlan = getCurrentPlanOrCreateOne(user.plan ?? user.custom_plan, user.id_user)
+  const userPlan = databasePlanToDomain(user.plan)
 
   const steamAccounts: SteamAccountList = new SteamAccountList({
     data: user.steamAccounts.map(sa =>
@@ -158,7 +158,8 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
     ),
   })
 
-  const userPlan = getCurrentPlanOrCreateOne(dbUser.plan ?? dbUser.custom_plan, dbUser.id_user)
+  const userPlan = databasePlanToDomain(dbUser.plan)
+
   return User.restore({
     email: dbUser.email,
     id_user: dbUser.id_user,
@@ -179,21 +180,17 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
   })
 }
 
-export type IGetUserProps = { userId: string } | { username: string }
+export type IGetUserProps = { userId: string }
 export type PrismaFindMany = Awaited<ReturnType<typeof prismaFindMany>>
 export type PrismaGetUser = Awaited<ReturnType<typeof prismaGetUser>>
+export type PrismaPlan = NonNullable<PrismaGetUser>["plan"]
 export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
   return prisma.user.findUnique({
-    where:
-      "username" in props
-        ? {
-            username: props.username,
-          }
-        : {
-            id_user: props.userId,
-          },
+    where: {
+      id_user: props.userId,
+    },
     include: {
-      plan: { include: { usages: true } },
+      plan: { include: { usages: true, customPlan: true } },
       custom_plan: { include: { usages: true } },
       purchases: true,
       steamAccounts: true,
@@ -205,7 +202,7 @@ export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
 export function prismaFindMany(prisma: PrismaClient) {
   return prisma.user.findMany({
     include: {
-      plan: { include: { usages: true } },
+      plan: { include: { usages: true, customPlan: true } },
       custom_plan: { include: { usages: true } },
       steamAccounts: true,
       purchases: true,

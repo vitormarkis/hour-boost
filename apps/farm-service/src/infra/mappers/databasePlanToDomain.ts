@@ -1,27 +1,21 @@
-import type { CustomPlan, Plan as PrismaPlan, Usage as PrismaUsage } from "@prisma/client"
 import {
   ApplicationError,
-  CustomInfinityPlan,
-  CustomUsagePlan,
   DiamondPlan,
   GoldPlan,
   GuestPlan,
-  type 
   PlanInfinity,
-  type 
   PlanInfinityName,
-  type 
+  PlanInfinityRestoreFromCustomProps,
   PlanInfinityRestoreProps,
-  type 
   PlanUsage,
-  type 
   PlanUsageName,
-  type 
+  PlanUsageRestoreFromCustomProps,
   PlanUsageRestoreProps,
   SilverPlan,
-  UsageList,
+  makeError,
 } from "core"
-import { databaseUsageToDomain } from "~/infra/mappers/databaseUsageToDomain"
+import { databaseUsageListToDomain } from "~/infra/mappers/databaseUsageToDomain"
+import { PrismaPlan } from "~/infra/repository"
 
 export function makeInfinityPlan(planProps: PlanInfinityRestoreProps & PlanName["INFINITY"]): PlanInfinity {
   if (planProps.name === "DIAMOND") return DiamondPlan.restore(planProps)
@@ -31,89 +25,77 @@ export function makeInfinityPlan(planProps: PlanInfinityRestoreProps & PlanName[
   throw new ApplicationError("Invalid plan assignment")
 }
 
-export function makeCustomInfinityPlan(plan: PlanInfinity): CustomInfinityPlan {
-  return CustomInfinityPlan.fromPlan(plan, plan.price)
-}
-
-export function makeCustomUsagePlan(plan: PlanUsage): CustomUsagePlan {
-  return CustomUsagePlan.fromPlan(plan, plan.price)
-}
-
 export function makeUsagePlan(planProps: PlanUsageRestoreProps & PlanName["USAGE"]): PlanUsage {
   if (planProps.name === "GUEST") return GuestPlan.restore(planProps)
   console.log(`makeUsagePlan: Tried to assign this invalid planProps: `, planProps)
   throw new ApplicationError("Invalid plan assignment")
 }
 
-export function getCurrentPlanOrCreateOne(
-  dbUserPlan: ((PrismaPlan | CustomPlan) & { usages: PrismaUsage[] }) | null,
-  userId: string
-) {
-  // if (!dbUserPlan) return GuestPlan.create({ ownerId: userId })
-  if (!dbUserPlan) throw new Error("db user plan provided is null")
-  return databasePlanToDomain(dbUserPlan)
-}
-
-type RestoreInfinity = Parameters<typeof CustomInfinityPlan.restore>[0]
-type RestoreUsage = Parameters<typeof CustomUsagePlan.restore>[0]
 export type CommonKeys<T1, T2> = {
   [K in keyof T1 & keyof T2]: T1[K] & T2[K]
 }
 
-export function makeCustomPlan(customPlan: CustomPlan & { usages: PrismaUsage[] }) {
-  const commonProps: CommonKeys<RestoreInfinity, RestoreUsage> = {
-    id_plan: customPlan.id_plan,
-    maxGamesAllowed: customPlan.maxGamesAllowed,
-    maxSteamAccounts: customPlan.maxSteamAccounts,
-    ownerId: customPlan.ownerId!,
-    price: customPlan.priceInCents,
-    usages: new UsageList({
-      data: customPlan.usages.map(databaseUsageToDomain),
-    }),
+export function databasePlanToDomain(plan: PrismaPlan): PlanUsage | PlanInfinity {
+  if (!plan) throw makeError("Usuário sem plano!", { plan })
+  if (!plan.ownerId) throw makeError("Plano sem dono", { plan })
+  if (plan.customPlan) {
+    const restoreFromCustomInfinityProps: PlanInfinityRestoreFromCustomProps = {
+      autoRestarter: plan.customPlan.autoRelogin,
+      id_plan: plan.id_plan,
+      maxGamesAllowed: plan.customPlan.maxGamesAllowed,
+      maxSteamAccounts: plan.customPlan.maxSteamAccounts,
+      price: plan.customPlan.priceInCents,
+      ownerId: plan.ownerId,
+      usages: databaseUsageListToDomain(plan.usages),
+    }
+    const restoreFromCustomUsageProps: PlanUsageRestoreFromCustomProps = {
+      autoRestarter: plan.customPlan.autoRelogin,
+      id_plan: plan.id_plan,
+      maxGamesAllowed: plan.customPlan.maxGamesAllowed,
+      maxSteamAccounts: plan.customPlan.maxSteamAccounts,
+      maxUsageTime: plan.customPlan.maxUsageTime,
+      price: plan.customPlan.priceInCents,
+      ownerId: plan.ownerId,
+      usages: databaseUsageListToDomain(plan.usages),
+    }
+    switch (plan.name) {
+      case "DIAMOND":
+        return DiamondPlan.restoreFromCustom(restoreFromCustomInfinityProps)
+      case "GOLD":
+        return GoldPlan.restoreFromCustom(restoreFromCustomInfinityProps)
+      case "SILVER":
+        return SilverPlan.restoreFromCustom(restoreFromCustomInfinityProps)
+      case "GUEST":
+        return GuestPlan.restoreFromCustom(restoreFromCustomUsageProps)
+      default:
+        plan.name satisfies never
+    }
   }
 
-  switch (customPlan.type) {
-    case "INFINITY":
-      return CustomInfinityPlan.restore({
-        ...commonProps,
-        autoRestarter: customPlan.autoRelogin,
-      })
-    case "USAGE":
-      return CustomUsagePlan.restore({
-        ...commonProps,
-        maxUsageTime: customPlan.maxUsageTime,
-      })
-    default:
-      throw new Error(`Invariant! Restore invalid custom plan with props: [${JSON.stringify(customPlan)}]`)
+  const restoreInfinityProps: PlanInfinityRestoreProps = {
+    id_plan: plan.id_plan,
+    ownerId: plan.ownerId,
+    usages: databaseUsageListToDomain(plan.usages),
   }
-}
 
-export function databasePlanToDomain(dbUserPlan: (PrismaPlan | CustomPlan) & { usages: PrismaUsage[] }) {
-  switch (dbUserPlan.name) {
-    case "CUSTOM_INFINITY_PLAN":
-    case "CUSTOM_USAGE_PLAN":
-      return makeCustomPlan(dbUserPlan)
+  const restoreUsageProps: PlanUsageRestoreProps = {
+    id_plan: plan.id_plan,
+    ownerId: plan.ownerId,
+    usages: databaseUsageListToDomain(plan.usages),
+  }
+  switch (plan.name) {
     case "DIAMOND":
+      return DiamondPlan.restore(restoreInfinityProps)
     case "GOLD":
+      return GoldPlan.restore(restoreInfinityProps)
     case "SILVER":
-      return makeInfinityPlan({
-        id_plan: dbUserPlan.id_plan,
-        name: dbUserPlan.name as PlanInfinityName,
-        ownerId: dbUserPlan.ownerId!,
-        usages: new UsageList(),
-      })
+      return SilverPlan.restore(restoreInfinityProps)
     case "GUEST":
-      return makeUsagePlan({
-        id_plan: dbUserPlan.id_plan,
-        name: dbUserPlan.name as PlanUsageName,
-        ownerId: dbUserPlan.ownerId!,
-        usages: new UsageList({
-          data: dbUserPlan.usages.map(databaseUsageToDomain),
-        }),
-      })
-
+      return GuestPlan.restore(restoreUsageProps)
     default:
-      throw new ApplicationError("Invalid plan data from database")
+      plan.name satisfies never
+
+      throw makeError("Caso impossível!", { plan })
   }
 }
 
