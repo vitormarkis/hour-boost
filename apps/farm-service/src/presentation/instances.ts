@@ -18,7 +18,6 @@ import {
   RestoreAccountSessionUseCase,
   ScheduleAutoRestartUseCase,
 } from "~/application/use-cases"
-import { ChangeUserPlanToCustomUseCase } from "~/application/use-cases/ChangeUserPlanToCustomUseCase"
 import { ChangeUserPlanUseCase } from "~/application/use-cases/ChangeUserPlanUseCase"
 import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
@@ -163,7 +162,6 @@ export const changeUserPlanUseCase = new ChangeUserPlanUseCase(
   restoreAccountSessionUseCase,
   userService
 )
-export const changeUserPlanToCustomUseCase = new ChangeUserPlanToCustomUseCase(changeUserPlanUseCase)
 export const steamAccountsDAO = new SteamAccountsDAODatabase(prisma)
 
 export const restoreAccountConnectionUseCase = new RestoreAccountConnectionUseCase(

@@ -1,5 +1,5 @@
-import type { $Enums, Prisma } from "@prisma/client"
-import type { PlanCustomName, PlanInfinity, PlanNormalName, PlanUsage, User } from "core"
+import type { Prisma } from "@prisma/client"
+import type { PlanInfinity, PlanUsage, User } from "core"
 
 type UpdateData = Prisma.XOR<Prisma.UserUpdateInput, Prisma.UserUncheckedUpdateInput>
 type CreateData = Prisma.XOR<Prisma.UserCreateInput, Prisma.UserUncheckedCreateInput>
@@ -11,7 +11,7 @@ export function getPlanCreation(plan: PlanUsage | PlanInfinity) {
         create: {
           createdAt: new Date(),
           id_plan: plan.id_plan,
-          name: mapCustomPlanName_toPrisma(plan.name as PlanCustomName),
+          name: "CUSTOM_USAGE_PLAN",
           type: plan.type,
           maxGamesAllowed: plan.maxGamesAllowed,
           maxSteamAccounts: plan.maxSteamAccounts,
@@ -27,7 +27,7 @@ export function getPlanCreation(plan: PlanUsage | PlanInfinity) {
       create: {
         createdAt: new Date(),
         id_plan: plan.id_plan,
-        name: plan.name as PlanNormalName,
+        name: plan.name,
         type: plan.type,
       },
     },
@@ -97,7 +97,7 @@ function createPlanToUpdate(plan: PlanUsage | PlanInfinity) {
             priceInCents: plan.price,
             autoRelogin: plan.autoRestarter,
             id_plan: plan.id_plan,
-            name: mapCustomPlanName_toPrisma(plan.name as PlanCustomName),
+            name: "CUSTOM_USAGE_PLAN",
             type: plan.type,
             usages: {
               connectOrCreate: plan.usages.data.map(u => ({
@@ -141,7 +141,7 @@ function createPlanToUpdate(plan: PlanUsage | PlanInfinity) {
         create: {
           createdAt: new Date(),
           id_plan: plan.id_plan,
-          name: plan.name as PlanNormalName,
+          name: plan.name,
           type: plan.type,
           usages: {
             connectOrCreate: plan.usages.data.map(u => ({
@@ -159,13 +159,4 @@ function createPlanToUpdate(plan: PlanUsage | PlanInfinity) {
     },
   }
   return dbPlan
-}
-
-export function mapCustomPlanName_toPrisma(planName: PlanCustomName): $Enums.PlanNameCustom {
-  switch (planName) {
-    case "INFINITY-CUSTOM":
-      return "CUSTOM_INFINITY_PLAN"
-    case "USAGE-CUSTOM":
-      return "CUSTOM_USAGE_PLAN"
-  }
 }

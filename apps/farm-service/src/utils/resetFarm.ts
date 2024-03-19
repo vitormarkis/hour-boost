@@ -1,4 +1,4 @@
-import { Fail, type CacheState, type PlanRepository, type SteamAccountClientStateCacheRepository } from "core"
+import { type CacheState, Fail, type PlanRepository, type SteamAccountClientStateCacheRepository } from "core"
 import type {
   AllUsersClientsStorage,
   UserSACsFarmingCluster,

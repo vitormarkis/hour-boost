@@ -6,7 +6,6 @@ import { ensureAdmin } from "~/inline-middlewares/ensureAdmin"
 import { validateBody } from "~/inline-middlewares/validate-payload"
 import {
   allUsersClientsStorage,
-  changeUserPlanToCustomUseCase,
   changeUserPlanUseCase,
   planRepository,
   steamAccountClientStateCacheRepository,
@@ -29,7 +28,6 @@ query_routerAdmin.get("/users-list", async (req, res) => {
 
 const addMoreGamesToPlanUseCase = new AddMoreGamesToPlanUseCase(
   usersRepository,
-  changeUserPlanToCustomUseCase,
   allUsersClientsStorage,
   usersClusterStorage,
   steamAccountClientStateCacheRepository,
@@ -58,8 +56,6 @@ query_routerAdmin.post("/add-more-games", async (req, res) => {
   if (error) {
     if ("code" in error) {
       switch (error.code) {
-        case "LIST::TRIMMING-ACCOUNTS":
-        case "LIST::UPDATING-CACHE":
         case "USER-NOT-FOUND":
         case "USER-STORAGE-NOT-FOUND":
           return console.log({ error })
@@ -84,7 +80,7 @@ query_routerAdmin.post("/change-user-plan", async (req, res) => {
   const [invalidBody, body] = validateBody(
     req.body,
     z.object({
-      newPlanName: z.enum(["DIAMOND", "GOLD", "GUEST", "SILVER", "INFINITY-CUSTOM", "USAGE-CUSTOM"]),
+      newPlanName: z.enum(["DIAMOND", "GOLD", "GUEST", "SILVER"]),
       userId: z.string().min(1),
     })
   )
@@ -92,7 +88,7 @@ query_routerAdmin.post("/change-user-plan", async (req, res) => {
   const { newPlanName, userId } = body
 
   const user = await usersRepository.getByID(userId)
-  const [error, response] = await changeUserPlanUseCase.execute({
+  const [error] = await changeUserPlanUseCase.execute({
     newPlanName,
     user: user!,
   })
