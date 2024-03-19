@@ -10,9 +10,12 @@ import { BadgePlanInfo, BadgePlanType } from "./components"
 
 export function UserPlanStatus() {
   const _planName = useUser(user => user.plan.name)
-  const planName = getPlanName(_planName)
+  const planCustom = useUser(user => user.plan.custom)
+  console.log({ custom: planCustom })
+  const planName = getPlanName(_planName, planCustom)
   const _planIsUsage = useUser(user => planIsUsage(user.plan))
   const maxGamesAllowed = useUser(user => user.plan.maxGamesAllowed)
+  const maxSteamAccounts = useUser(user => user.plan.maxSteamAccounts)
   const maxUsageTime = useUser(user => (planIsUsage(user.plan) ? user.plan.maxUsageTime : 0))
   const farmUsedTime = useUser(user => (planIsUsage(user.plan) ? user.plan.farmUsedTime : 0))
   const maxUsage = _planIsUsage ? getTimePast(maxUsageTime) : getTimePastInfinity()
@@ -59,7 +62,9 @@ export function UserPlanStatus() {
             >
               <HoverCardTrigger asChild>
                 <BadgePlanInfo.Root className="hover:cursor-pointer hover:ring-2 hover:ring-slate-900/70">
-                  <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">1</BadgePlanInfo.Number>
+                  <BadgePlanInfo.Number className="border-slate-700 bg-slate-800">
+                    {maxSteamAccounts}
+                  </BadgePlanInfo.Number>
                   <BadgePlanInfo.SubWrapper className="border-slate-700 bg-slate-600 text-slate-300">
                     <BadgePlanInfo.Icon className="fill-slate-200">
                       <IconUser />

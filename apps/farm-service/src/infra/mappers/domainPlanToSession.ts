@@ -1,4 +1,4 @@
-import { PlanInfinity, type PlanInfinitySession, PlanUsage, type PlanUsageSession, Usage } from "core"
+import { PlanInfinity, PlanUsage, Usage, type PlanInfinitySession, type PlanUsageSession } from "core"
 
 export function domainPlanToSession(plan: PlanUsage | PlanInfinity): PlanUsageSession | PlanInfinitySession {
   if (!plan) throw new Error("Plan does not exists.")
@@ -13,6 +13,7 @@ export function domainPlanToSession(plan: PlanUsage | PlanInfinity): PlanUsageSe
       maxUsageTime: plan.maxUsageTime,
       name: plan.name,
       type: "USAGE",
+      custom: plan.custom,
     }
     return usagePlan
   } else {
@@ -23,6 +24,7 @@ export function domainPlanToSession(plan: PlanUsage | PlanInfinity): PlanUsageSe
       maxSteamAccounts: plan.maxSteamAccounts,
       name: plan.name,
       type: "INFINITY",
+      custom: plan.custom,
     }
     return infinityPlan
   }

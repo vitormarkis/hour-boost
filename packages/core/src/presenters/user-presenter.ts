@@ -60,6 +60,7 @@ export interface PlanSession {
   maxSteamAccounts: number
   maxGamesAllowed: number
   autoRestarter: boolean
+  custom: boolean
 }
 
 export interface PlanUsageSession extends PlanSession {

@@ -1,11 +1,13 @@
 import type { PrismaClient } from "@prisma/client"
 import {
+  PlanInfinity,
+  PlanInfinitySession,
+  PlanUsage,
+  PlanUsageSession,
   type DatabaseSteamAccount,
   type GameSession,
   type Persona,
-  type PlanInfinity,
   type PlanRepository,
-  PlanUsage,
   type PurchaseSession,
   type SteamAccountClientStateCacheRepository,
   type SteamAccountSession,
@@ -176,6 +178,8 @@ export class UsersDAODatabase implements UsersDAO {
     const planDomain = databasePlanToDomain(dbUser.plan)
     const plan = domainPlanToSession(planDomain)
 
+    console.log({ dbUserPlan: dbUser.plan, plan })
+
     const steamAccounts: SteamAccountSession[] = await Promise.all(
       dbUser.steamAccounts.map(async sa => {
         return this.steamAccountFromDatabaseToSession(
@@ -224,26 +228,39 @@ export class UsersDAODatabase implements UsersDAO {
   }
 }
 
-function userPlanToPlanSession(userPlan: PlanUsage | PlanInfinity, farmUsedTime: number | null) {
-  return userPlan instanceof PlanUsage
-    ? {
-        id_plan: userPlan.id_plan,
-        autoRestarter: userPlan.autoRestarter,
-        maxGamesAllowed: userPlan.maxGamesAllowed,
-        maxSteamAccounts: userPlan.maxSteamAccounts,
-        maxUsageTime: userPlan.maxUsageTime,
-        name: userPlan.name,
-        type: userPlan.type as "USAGE",
-        farmUsedTime: farmUsedTime ?? 0,
-      }
-    : {
-        id_plan: userPlan.id_plan,
-        autoRestarter: userPlan.autoRestarter,
-        maxGamesAllowed: userPlan.maxGamesAllowed,
-        maxSteamAccounts: userPlan.maxSteamAccounts,
-        name: userPlan.name,
-        type: userPlan.type as "INFINITY",
-      }
+export function userPlanToPlanSession(
+  userPlan: PlanUsage | PlanInfinity,
+  farmUsedTime: number | null
+): PlanUsageSession | PlanInfinitySession {
+  if (userPlan instanceof PlanUsage) {
+    const planSession: PlanUsageSession = {
+      id_plan: userPlan.id_plan,
+      autoRestarter: userPlan.autoRestarter,
+      maxGamesAllowed: userPlan.maxGamesAllowed,
+      maxSteamAccounts: userPlan.maxSteamAccounts,
+      maxUsageTime: userPlan.maxUsageTime,
+      name: userPlan.name,
+      type: userPlan.type as "USAGE",
+      farmUsedTime: farmUsedTime ?? 0,
+      custom: userPlan.custom,
+    }
+    return planSession
+  }
+  if (userPlan instanceof PlanInfinity) {
+    const planSession: PlanInfinitySession = {
+      id_plan: userPlan.id_plan,
+      autoRestarter: userPlan.autoRestarter,
+      maxGamesAllowed: userPlan.maxGamesAllowed,
+      maxSteamAccounts: userPlan.maxSteamAccounts,
+      name: userPlan.name,
+      type: userPlan.type as "INFINITY",
+      custom: userPlan.custom,
+    }
+
+    return planSession
+  }
+
+  throw new Error("Invariant! Plano não é nem usage nem infinity.")
 }
 
 type DBSteamAccount = {
