@@ -6,21 +6,8 @@ type CreateData = Prisma.XOR<Prisma.UserCreateInput, Prisma.UserUncheckedCreateI
 
 export function getPlanCreation(plan: PlanUsage | PlanInfinity) {
   if (plan.custom) {
-    return {
-      custom_plan: {
-        create: {
-          createdAt: new Date(),
-          id_plan: plan.id_plan,
-          name: "CUSTOM_USAGE_PLAN",
-          type: plan.type,
-          maxGamesAllowed: plan.maxGamesAllowed,
-          maxSteamAccounts: plan.maxSteamAccounts,
-          maxUsageTime: "maxUsageTime" in plan ? plan.maxUsageTime : 0,
-          priceInCents: plan.price,
-          autoRelogin: plan.autoRestarter,
-        },
-      },
-    } satisfies Pick<CreateData, "plan" | "custom_plan">
+    throw new Error("TODO Implement persist custom plan")
+    return {} satisfies Pick<CreateData, "plan">
   }
   return {
     plan: {
@@ -31,7 +18,7 @@ export function getPlanCreation(plan: PlanUsage | PlanInfinity) {
         type: plan.type,
       },
     },
-  } satisfies Pick<CreateData, "plan" | "custom_plan">
+  } satisfies Pick<CreateData, "plan">
 }
 
 export function updateUser(user: User) {
@@ -62,64 +49,16 @@ export function updateUser(user: User) {
 }
 
 function createPlanToUpdate(plan: PlanUsage | PlanInfinity) {
+  throw new Error("TODO Implement persist custom plan")
   if (plan.custom) {
-    const dbPlan: Pick<UpdateData, "plan" | "custom_plan"> = {
+    const dbPlan: Pick<UpdateData, "plan"> = {
       plan: {
         disconnect: true,
-      },
-      custom_plan: {
-        upsert: {
-          where: {
-            ownerId: plan.ownerId,
-          },
-          update: {
-            maxGamesAllowed: plan.maxGamesAllowed,
-            maxSteamAccounts: plan.maxSteamAccounts,
-            maxUsageTime: "maxUsageTime" in plan ? plan.maxUsageTime : 0,
-            priceInCents: plan.price,
-            usages: {
-              connectOrCreate: plan.usages.data.map(u => ({
-                where: { id_usage: u.id_usage },
-                create: {
-                  amountTime: u.amountTime,
-                  createdAt: new Date(),
-                  id_usage: u.id_usage,
-                  accountName: u.accountName,
-                },
-              })),
-            },
-          },
-          create: {
-            createdAt: new Date(),
-            maxGamesAllowed: plan.maxGamesAllowed,
-            maxSteamAccounts: plan.maxSteamAccounts,
-            maxUsageTime: "maxUsageTime" in plan ? plan.maxUsageTime : 0,
-            priceInCents: plan.price,
-            autoRelogin: plan.autoRestarter,
-            id_plan: plan.id_plan,
-            name: "CUSTOM_USAGE_PLAN",
-            type: plan.type,
-            usages: {
-              connectOrCreate: plan.usages.data.map(u => ({
-                where: { id_usage: u.id_usage },
-                create: {
-                  amountTime: u.amountTime,
-                  createdAt: new Date(),
-                  id_usage: u.id_usage,
-                  accountName: u.accountName,
-                },
-              })),
-            },
-          },
-        },
       },
     }
     return dbPlan
   }
-  const dbPlan: Pick<UpdateData, "plan" | "custom_plan"> = {
-    custom_plan: {
-      disconnect: true,
-    },
+  const dbPlan: Pick<UpdateData, "plan"> = {
     plan: {
       upsert: {
         where: {

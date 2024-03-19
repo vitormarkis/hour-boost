@@ -196,7 +196,6 @@ export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
           },
     include: {
       plan: { include: { usages: true, customPlan: true } },
-      custom_plan: { include: { usages: true } },
       purchases: true,
       steamAccounts: true,
       usages: true,
@@ -208,7 +207,6 @@ export function prismaFindMany(prisma: PrismaClient) {
   return prisma.user.findMany({
     include: {
       plan: { include: { usages: true, customPlan: true } },
-      custom_plan: { include: { usages: true } },
       steamAccounts: true,
       purchases: true,
       usages: true,

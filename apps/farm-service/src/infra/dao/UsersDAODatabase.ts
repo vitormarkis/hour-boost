@@ -47,7 +47,6 @@ export class UsersDAODatabase implements UsersDAO {
       where: { id_user: userId },
       include: {
         plan: { include: { usages: true, customPlan: true } },
-        custom_plan: { include: { usages: true } },
         purchases: { select: { id_Purchase: true } },
         steamAccounts: {
           select: {
@@ -80,13 +79,10 @@ export class UsersDAODatabase implements UsersDAO {
     const usersAdminListDatabase = await getUserAdminListDatabase(this.prisma)
 
     const finalResultPromises = usersAdminListDatabase.map(async user => {
-      if (!user.plan && !user.custom_plan) throw new Error("Plan does not exists.")
       const plan = databasePlanToDomain(user.plan)
 
-      if (!user.plan && !user.custom_plan) throw new Error("Plan does not exists.")
       const steamAccounts = await Promise.all(
         user.steamAccounts.map(async sa => {
-          if (!user.plan && !user.custom_plan) throw new Error("Plan does not exists.")
           return this.steamAccountFromDatabaseToSession(
             {
               accountName: sa.accountName,
@@ -94,7 +90,7 @@ export class UsersDAODatabase implements UsersDAO {
             },
             {
               id_user: user.id_user,
-              id_plan: (user.plan ?? user.custom_plan!).id_plan,
+              id_plan: plan.id_plan,
               username: user.username,
               plan: { usages: user.plan?.usages.map(databaseUsageToDomain) ?? null },
             }
@@ -126,7 +122,6 @@ export class UsersDAODatabase implements UsersDAO {
       where: { id_user: userId },
       select: {
         plan: { include: { usages: true, customPlan: true } },
-        custom_plan: { include: { usages: true } },
         id_user: true,
         username: true,
       },
@@ -160,7 +155,6 @@ export class UsersDAODatabase implements UsersDAO {
       where: { id_user: userId },
       include: {
         plan: { include: { usages: true, customPlan: true } },
-        custom_plan: { include: { usages: true } },
         purchases: { select: { id_Purchase: true } },
         steamAccounts: {
           select: {
@@ -189,7 +183,7 @@ export class UsersDAODatabase implements UsersDAO {
           },
           {
             id_user: userId,
-            id_plan: dbUser.plan?.id_plan ?? dbUser.custom_plan?.id_plan!,
+            id_plan: planDomain.id_plan,
             username: dbUser.username,
             plan: { usages: dbUser.plan?.usages.map(databaseUsageToDomain) ?? null },
           }
@@ -373,7 +367,6 @@ function getUserAdminListDatabase(prisma: PrismaClient) {
       role: true,
       profilePic: true,
       plan: { include: { usages: true, customPlan: true } },
-      custom_plan: { include: { usages: true } },
       purchases: { select: { id_Purchase: true } },
       status: true,
       steamAccounts: {
