@@ -1,4 +1,4 @@
-import { CustomUsagePlan, DiamondPlan, GoldPlan, GuestPlan, type PlanUsage, SilverPlan } from "core"
+import { DiamondPlan, GoldPlan, GuestPlan, SilverPlan } from "core"
 
 export class PlanBuilder {
   constructor(private readonly ownerId: string) {}
@@ -18,9 +18,6 @@ class UsagePlanBuilder {
     return GuestPlan.create({
       ownerId: this.ownerId,
     })
-  }
-  custom(plan: PlanUsage) {
-    return CustomUsagePlan.fromPlan(plan, plan.price)
   }
 }
 

@@ -1,4 +1,4 @@
-import { CustomUsagePlan, PlanUsage } from "core"
+import { PlanUsage } from "core"
 import {
   type CustomInstances,
   type MakeTestInstancesProps,
@@ -95,7 +95,8 @@ test("should change usage plan to CUSTOM usage plan and increase max games allow
   expect(error).toBeNull()
 
   const userPlan2 = await i.planRepository.getById(meInstances.me.plan.id_plan)
-  expect(userPlan2).toBeInstanceOf(CustomUsagePlan)
+  expect("").toBe("TO-DO")
+  // expect(userPlan2).toBeInstanceOf(CustomUsagePlan)
   expect(userPlan2?.maxGamesAllowed).toBe(30)
 })
 
