@@ -1,11 +1,11 @@
 import type { PrismaClient } from "@prisma/client"
 import {
+  PlanUsage,
   type DatabaseSteamAccount,
   type GameSession,
   type Persona,
   type PlanInfinity,
   type PlanRepository,
-  PlanUsage,
   type PurchaseSession,
   type SteamAccountClientStateCacheRepository,
   type SteamAccountSession,
@@ -19,8 +19,8 @@ import type { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/a
 import type { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 import type { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
 import { databasePlanToDomain } from "~/infra/mappers/databasePlanToDomain"
-import { databasePlanToSession } from "~/infra/mappers/databasePlanToSession"
 import { databaseUsageToDomain } from "~/infra/mappers/databaseUsageToDomain"
+import { domainPlanToSession } from "~/infra/mappers/domainPlanToSession"
 
 export class UsersDAODatabase implements UsersDAO {
   steamAccountFromDatabaseToSession: SteamAccountFromDatabaseToSession
@@ -44,7 +44,7 @@ export class UsersDAODatabase implements UsersDAO {
     const dbUser = await this.prisma.user.findUnique({
       where: { id_user: userId },
       include: {
-        plan: { include: { usages: true } },
+        plan: { include: { usages: true, customPlan: true } },
         custom_plan: { include: { usages: true } },
         purchases: { select: { id_Purchase: true } },
         steamAccounts: {
@@ -60,15 +60,12 @@ export class UsersDAODatabase implements UsersDAO {
 
     if (!dbUser) return null
 
-    const userPlanDB = dbUser.plan ?? dbUser.custom_plan
-    const farmUsedTime = await getFarmUsedTime(userPlanDB?.usages.map(databaseUsageToDomain) ?? null)
-    1
-    if (!dbUser.plan && !dbUser.custom_plan) throw new Error("Plan does not exists.")
+    const planDomain = databasePlanToDomain(dbUser.plan)
 
     const result: UserSessionShallow = {
       email: dbUser.email,
       id: dbUser.id_user,
-      plan: databasePlanToSession(dbUser.plan ?? dbUser.custom_plan!, farmUsedTime),
+      plan: domainPlanToSession(planDomain),
       profilePic: dbUser.profilePic,
       role: dbUser.role,
       status: dbUser.status,
@@ -82,9 +79,7 @@ export class UsersDAODatabase implements UsersDAO {
 
     const finalResultPromises = usersAdminListDatabase.map(async user => {
       if (!user.plan && !user.custom_plan) throw new Error("Plan does not exists.")
-      const userPlan = databasePlanToDomain(user.plan)
-
-      const farmUsedTime = await getFarmUsedTime(user.plan?.usages.map(databaseUsageToDomain) ?? null)
+      const plan = databasePlanToDomain(user.plan)
 
       if (!user.plan && !user.custom_plan) throw new Error("Plan does not exists.")
       const steamAccounts = await Promise.all(
@@ -108,7 +103,7 @@ export class UsersDAODatabase implements UsersDAO {
       const result: UserAdminPanelSession = {
         id_user: user.id_user,
         username: user.username,
-        plan: userPlanToPlanSession(userPlan, farmUsedTime),
+        plan: domainPlanToSession(plan),
         profilePicture: user.profilePic,
         purchases: user.purchases.map(map_purchasesFromDatabaseToSession),
         role: user.role,
@@ -179,7 +174,7 @@ export class UsersDAODatabase implements UsersDAO {
     if (!dbUser) return null
 
     const planDomain = databasePlanToDomain(dbUser.plan)
-    const userPlan = databasePlanToSession(planDomain)
+    const plan = domainPlanToSession(planDomain)
 
     const steamAccounts: SteamAccountSession[] = await Promise.all(
       dbUser.steamAccounts.map(async sa => {
@@ -197,11 +192,6 @@ export class UsersDAODatabase implements UsersDAO {
         )
       })
     )
-
-    const farmUsedTime = await getFarmUsedTime(dbUser.plan?.usages.map(databaseUsageToDomain) ?? null)
-    if (farmUsedTime === null) console.log(`Farmed used time voltou como null. [${userId}]`)
-
-    const plan = userPlanToPlanSession(userPlan, farmUsedTime)
 
     return {
       email: dbUser.email,
@@ -340,14 +330,6 @@ function getDefaultPersona(): Persona {
   return {
     profilePictureUrl: null,
   }
-}
-
-async function getFarmUsedTime(usages: Usage[] | null) {
-  return usages
-    ? usages.reduce((acc, item) => {
-        return acc + item.amountTime
-      }, 0)
-    : 0
 }
 
 function map_purchasesFromDatabaseToSession(purchaseDB: UserAdminListDatabasePurchase): PurchaseSession {

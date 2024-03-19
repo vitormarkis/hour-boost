@@ -180,15 +180,20 @@ export function prismaUserToDomain(dbUser: PrismaGetUser) {
   })
 }
 
-export type IGetUserProps = { userId: string }
+export type IGetUserProps = { userId: string } | { username: string }
 export type PrismaFindMany = Awaited<ReturnType<typeof prismaFindMany>>
 export type PrismaGetUser = Awaited<ReturnType<typeof prismaGetUser>>
 export type PrismaPlan = NonNullable<PrismaGetUser>["plan"]
 export function prismaGetUser(prisma: PrismaClient, props: IGetUserProps) {
   return prisma.user.findUnique({
-    where: {
-      id_user: props.userId,
-    },
+    where:
+      "username" in props
+        ? {
+            username: props.username,
+          }
+        : {
+            id_user: props.userId,
+          },
     include: {
       plan: { include: { usages: true, customPlan: true } },
       custom_plan: { include: { usages: true } },
