@@ -1,10 +1,9 @@
 import type { $Enums, } from "@prisma/client"
 import {
-  type 
-  PlanInfinitySession,
+  PlanInfinity,
+  type PlanInfinitySession,
   PlanUsage,
-  type 
-  PlanUsageSession,
+  type PlanUsageSession,
 } from "core"
 import { databasePlanToDomain } from "~/infra/mappers/databasePlanToDomain"
 
@@ -42,7 +41,7 @@ type Usages = {
 }
 
 export function databasePlanToSession(
-  plan: (DBPlan | DBCustomPlan) & Usages,
+  plan: PlanUsage | PlanInfinity
   farmUsedTime: number
 ): PlanUsageSession | PlanInfinitySession {
   if (!plan) throw new Error("Plan does not exists.")
