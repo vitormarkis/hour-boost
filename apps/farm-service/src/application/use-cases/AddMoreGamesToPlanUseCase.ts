@@ -1,29 +1,20 @@
 import {
-  type 
   DataOrFail,
+  EditablePlan,
   Fail,
-  type 
-  GetError,
-  type 
   PlanRepository,
-  type 
-  PlanSetters,
-  type 
   SteamAccountClientStateCacheRepository,
-  type 
   UsersRepository,
 } from "core"
 import type { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { getUserSACs_OnStorage_ByUser_UpdateStates } from "~/utils/getUser"
-import { bad, nice } from "~/utils/helpers"
-import { type ResetFarm, makeResetFarm } from "~/utils/resetFarm"
-import { EAppResults, } from "."
-import type { ChangeUserPlanToCustomUseCase } from "./ChangeUserPlanToCustomUseCase"
+import { GetError, bad, nice } from "~/utils/helpers"
+import { makeResetFarm, type ResetFarm } from "~/utils/resetFarm"
+import { EAppResults } from "."
 
 export class AddMoreGamesToPlanUseCase implements IAddMoreGamesToPlanUseCase {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly changeUserPlanToCustomUseCase: ChangeUserPlanToCustomUseCase,
     private readonly allUsersClientsStorage: AllUsersClientsStorage,
     private readonly usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage,
     private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository,
@@ -44,13 +35,10 @@ export class AddMoreGamesToPlanUseCase implements IAddMoreGamesToPlanUseCase {
         Fail.create(EAppResults["USER-NOT-FOUND"], 404, { givenUserId: mutatingUserId, foundUser: user })
       )
     }
-    if (!user.plan.isCustom()) {
-      const [error, userWithCustomPlan] = await this.changeUserPlanToCustomUseCase.execute({ user })
-      if (error) return bad(error)
-      user = userWithCustomPlan
-    }
 
-    setMaxGamesAllowed(newMaxGamesAllowed, user.plan as unknown as PlanSetters)
+    const editablePlan = new EditablePlan(user.plan)
+    editablePlan.setMaxGamesAmount(newMaxGamesAllowed)
+
     const [error, updatedCacheStates] = getUserSACs_OnStorage_ByUser_UpdateStates(
       user,
       this.allUsersClientsStorage,
@@ -86,8 +74,4 @@ export type AddMoreGamesToPlanUseCasePayload = {
 
 interface IAddMoreGamesToPlanUseCase {
   execute(...args: any[]): Promise<DataOrFail<any>>
-}
-
-function setMaxGamesAllowed(newMaxGamesAllowed: number, planSetters: PlanSetters) {
-  planSetters.setMaxGamesAllowed(newMaxGamesAllowed)
 }

@@ -1,4 +1,4 @@
-import { type CacheState, Fail, type PlanRepository, type SteamAccountClientStateCacheRepository } from "core"
+import { Fail, type CacheState, type PlanRepository, type SteamAccountClientStateCacheRepository } from "core"
 import type {
   AllUsersClientsStorage,
   UserSACsFarmingCluster,
@@ -88,8 +88,8 @@ export function resetFarm(stopFarmUseCase: StopFarmUseCase) {
       switch (error.code) {
         case "PAUSE-FARM-ON-ACCOUNT-NOT-FOUND":
         case "TRIED-TO-STOP-FARM-ON-NON-FARMING-ACCOUNT":
-          break
         case "DO-NOT-HAVE-ACCOUNTS-FARMING":
+          break
         case "PLAN-NOT-FOUND":
         case "[Users-Cluster-Storage]:CLUSTER-NOT-FOUND":
           return bad(error)
