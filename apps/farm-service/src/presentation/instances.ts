@@ -19,6 +19,7 @@ import {
   ScheduleAutoRestartUseCase,
 } from "~/application/use-cases"
 import { ChangeUserPlanUseCase } from "~/application/use-cases/ChangeUserPlanUseCase"
+import { FlushUpdateSteamAccountUseCase } from "~/application/use-cases/FlushUpdateSteamAccountUseCase"
 import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 import type { SteamBuilder } from "~/contracts/SteamBuilder"
@@ -49,6 +50,7 @@ import { ClerkAuthentication } from "~/infra/services"
 import { RefreshGamesUseCase } from "~/presentation/presenters"
 import { EventEmitterBuilder, SteamAccountClientBuilder, UserClusterBuilder } from "~/utils/builders"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
+import { makeResetFarm } from "~/utils/resetFarm"
 
 const httpProxy = process.env.PROXY_URL
 
@@ -177,6 +179,19 @@ export const autoRestartCron = new AutoRestartCron(
   restoreAccountConnectionUseCase,
   restoreAccountSessionUseCase,
   usersDAO,
+  steamAccountClientStateCacheRepository
+)
+
+export const resetFarm = makeResetFarm({
+  allUsersClientsStorage,
+  planRepository,
+  steamAccountClientStateCacheRepository,
+  usersSACsFarmingClusterStorage: usersClusterStorage,
+})
+export const flushUpdateSteamAccountUseCase = new FlushUpdateSteamAccountUseCase(
+  resetFarm,
+  allUsersClientsStorage,
+  usersRepository,
   steamAccountClientStateCacheRepository
 )
 

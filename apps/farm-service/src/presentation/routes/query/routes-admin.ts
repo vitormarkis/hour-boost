@@ -5,11 +5,8 @@ import { GetUsersAdminListUseCase } from "~/application/use-cases/GetUsersAdminL
 import { ensureAdmin } from "~/inline-middlewares/ensureAdmin"
 import { validateBody } from "~/inline-middlewares/validate-payload"
 import {
-  allUsersClientsStorage,
   changeUserPlanUseCase,
-  planRepository,
-  steamAccountClientStateCacheRepository,
-  usersClusterStorage,
+  flushUpdateSteamAccountUseCase,
   usersDAO,
   usersRepository,
 } from "~/presentation/instances"
@@ -28,10 +25,7 @@ query_routerAdmin.get("/users-list", async (req, res) => {
 
 const addMoreGamesToPlanUseCase = new AddMoreGamesToPlanUseCase(
   usersRepository,
-  allUsersClientsStorage,
-  usersClusterStorage,
-  steamAccountClientStateCacheRepository,
-  planRepository
+  flushUpdateSteamAccountUseCase
 )
 
 query_routerAdmin.post("/add-more-games", async (req, res) => {

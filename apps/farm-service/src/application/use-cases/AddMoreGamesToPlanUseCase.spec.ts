@@ -44,10 +44,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   // })
   addMoreGamesToPlanUseCase = new AddMoreGamesToPlanUseCase(
     i.usersRepository,
-    i.allUsersClientsStorage,
-    i.usersClusterStorage,
-    i.sacStateCacheRepository,
-    i.planRepository
+    i.flushUpdateSteamAccountUseCase
   )
 }
 

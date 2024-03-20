@@ -19,6 +19,7 @@ import type { SteamAccountClient } from "~/application/services/steam"
 import { AddSteamAccountUseCase, CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
+import { FlushUpdateSteamAccountUseCase } from "~/application/use-cases/FlushUpdateSteamAccountUseCase"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 import { AutoRestarterScheduler } from "~/domain/cron"
 import { PlanService } from "~/domain/services/PlanService"
@@ -46,6 +47,7 @@ import { EventEmitterBuilder, SteamAccountClientBuilder } from "~/utils/builders
 import { SteamUserMockBuilder } from "~/utils/builders/SteamMockBuilder"
 import { UsageBuilder } from "~/utils/builders/UsageBuilder"
 import { UserClusterBuilder } from "~/utils/builders/UserClusterBuilder"
+import { makeResetFarm } from "~/utils/resetFarm"
 
 export const password = "pass"
 export const validSteamAccounts: SteamAccountCredentials[] = [
@@ -143,6 +145,20 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     farmGamesUseCase,
     hashService,
   })
+
+  const resetFarm = makeResetFarm({
+    allUsersClientsStorage,
+    planRepository,
+    steamAccountClientStateCacheRepository: sacStateCacheRepository,
+    usersSACsFarmingClusterStorage: usersClusterStorage,
+  })
+
+  const flushUpdateSteamAccountUseCase = new FlushUpdateSteamAccountUseCase(
+    resetFarm,
+    allUsersClientsStorage,
+    usersRepository,
+    sacStateCacheRepository
+  )
 
   async function createUser<P extends TestUsers>(userPrefix: P, options?: CreateUserOptions) {
     const { persistSteamAccounts = true } = options ?? {}
@@ -242,6 +258,8 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     hashService,
     idGenerator,
     userAuthentication,
+    resetFarm,
+    flushUpdateSteamAccountUseCase,
     farmGamesController,
     async makeUserInstances<P extends TestUsers>(prefix: P, props: TestUserProperties) {
       const user = await createUserUseCase.execute(props.userId)
