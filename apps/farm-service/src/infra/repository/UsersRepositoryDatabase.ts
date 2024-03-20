@@ -55,6 +55,20 @@ export class UsersRepositoryDatabase implements UsersRepository {
       data: updateUser(user),
     })
 
+    if (!user.plan.custom) {
+      const exists = await this.prisma.customPlan_NEW.findUnique({
+        where: { originalPlanId: user.plan.id_plan },
+        select: { id_plan: true },
+      })
+      if (exists) {
+        await this.prisma.customPlan_NEW.delete({ where: { originalPlanId: user.plan.id_plan } }).catch()
+      }
+    }
+
+    // if (!user.plan.custom) {
+    //   await this.prisma.customPlan_NEW.delete({ where: { originalPlanId: user.plan.id_plan } }).catch()
+    // }
+
     if (user.steamAccounts.data.length > 0) {
       await this.prisma.$queryRawUnsafe(`
         INSERT INTO steam_accounts (owner_id, accountName, createdAt, id_steamAccount, password, autoRelogin)

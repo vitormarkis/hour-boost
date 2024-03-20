@@ -1,4 +1,4 @@
-import { PlanInfinity, PlanUsage, Usage, type PlanInfinitySession, type PlanUsageSession } from "core"
+import { PlanInfinity, PlanInfinitySession, PlanUsage, PlanUsageSession, Usage } from "core"
 
 export function domainPlanToSession(plan: PlanUsage | PlanInfinity): PlanUsageSession | PlanInfinitySession {
   if (!plan) throw new Error("Plan does not exists.")
