@@ -15,6 +15,7 @@ export function useUserAdminActionSetGames(getApi: () => Promise<AxiosInstance>)
     mutationKey: ECacheKeys.setGames,
     mutationFn: async (...args) => httpUserAdminActionSetGames(...args, getApi),
     onSuccess(_, variables) {
+      queryClient.invalidateQueries({ queryKey: ECacheKeys["USER-ADMIN-ITEM-LIST"] })
       queryClient.setQueryData<UserAdminPanelSession[]>(ECacheKeys["USER-ADMIN-ITEM-LIST"], users => {
         return setGamesLimitMutateUser(users, variables)
       })
