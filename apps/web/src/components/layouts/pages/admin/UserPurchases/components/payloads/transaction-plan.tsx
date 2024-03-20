@@ -14,8 +14,9 @@ export const PurchasePayloadTransactionPlan = React.forwardRef<
 >(function PurchasePayloadTransactionPlanComponent({ payload, ...props }, ref) {
   const { from, to } = payload
 
-  const fromPlanName = getPlanName(from.planType)
-  const toPlanName = getPlanName(to.planType)
+  // TO-DO
+  const fromPlanName = getPlanName(from.planType, false)
+  const toPlanName = getPlanName(to.planType, false)
 
   return (
     <>

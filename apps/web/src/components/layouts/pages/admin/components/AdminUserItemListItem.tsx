@@ -29,6 +29,7 @@ export type UserAdminItemListItemProps = {
 
 export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
   const username = useUserAdminListItem(userId, user => user.username)
+  const planCustom = useUserAdminListItem(userId, user => user.plan.custom)
   const planNameDomain = useUserAdminListItem(userId, user => user.plan.name)
   const status = useUserAdminListItem(userId, user => user.status)
   const typedThisUsernameAtom = useMemo(
@@ -38,7 +39,7 @@ export function UserAdminItemListItem({ userId }: UserAdminItemListItemProps) {
   const shouldHide = useAtomValue(typedThisUsernameAtom)
   const isBanned = React.useMemo(() => status === "BANNED", [status])
 
-  const planName = getPlanName(planNameDomain)
+  const planName = getPlanName(planNameDomain, planCustom)
 
   return (
     <UserAdminIdProvider userId={userId}>
