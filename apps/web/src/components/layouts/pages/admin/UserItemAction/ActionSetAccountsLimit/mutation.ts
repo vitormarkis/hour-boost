@@ -18,8 +18,8 @@ export function useUserAdminActionSetAccounts(getApi: () => Promise<AxiosInstanc
       queryClient.invalidateQueries({ queryKey: ECacheKeys["USER-ADMIN-ITEM-LIST"] })
       queryClient.setQueryData<UserAdminPanelSession[]>(ECacheKeys["USER-ADMIN-ITEM-LIST"], users => {
         return produce(users, users => {
-          const user = users!.find(u => u.id_user === variables.userId)!
-          user.plan.maxSteamAccounts = variables.newAccountsLimit
+          const user = users!.find(u => u.id_user === variables.mutatingUserId)!
+          user.plan.maxSteamAccounts = variables.newMaxSteamAccountsAllowed
         })
       })
     },

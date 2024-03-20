@@ -53,11 +53,11 @@ export const ActionSetAccountsLimitMenuSubContent = React.forwardRef<
     if (isSure) {
       mutationSetAccounts.mutate(
         {
-          newAccountsLimit: inputValueMaxAccounts,
-          userId,
+          newMaxSteamAccountsAllowed: inputValueMaxAccounts,
+          mutatingUserId: userId,
         },
         {
-          onSuccess([undesired, message], { newAccountsLimit }) {
+          onSuccess([undesired, message]) {
             if (undesired) {
               toast[undesired.type](undesired.message)
               return
