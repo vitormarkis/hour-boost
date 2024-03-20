@@ -8,8 +8,6 @@ export const CommandTrigger: React.FC<PropsWithChildren & { value: number }> = (
     <Slot
       onClick={() => {
         // addMoreHours(value)
-        console.log("adding ", value)
-        console.log("adicionando mais horas")
       }}
     >
       {children}

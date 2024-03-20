@@ -21,10 +21,6 @@ export class UsersInMemory {
         console.log(`adding usage with ${usage.amountTime} seconds to user ${user.username}`)
         user.usages.add(usage)
       })
-      console.log({
-        userPlanUsages: user.plan.usages.data.map(u => u.id_usage),
-        userUsages: user.usages.data.map(u => u.id_usage),
-      })
     }
   }
 }

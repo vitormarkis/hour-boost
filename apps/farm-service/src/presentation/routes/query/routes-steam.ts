@@ -85,7 +85,6 @@ query_routerSteam.get(
     if (!req.auth.userId) return res.status(400).json({ message: "Unauthorized!" })
     const query = z.object({ accountName: z.string() }).safeParse(req.query)
     if (!query.success) return res.status(400).json({ message: query.error })
-    console.log({ query })
     const { accountName } = query.data
 
     const refreshGamesController = new RefreshGamesController(refreshGamesUseCase)

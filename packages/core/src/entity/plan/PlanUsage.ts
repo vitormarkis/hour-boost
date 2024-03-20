@@ -52,17 +52,11 @@ export abstract class PlanUsage extends Plan {
   }
 
   isFarmAvailable() {
-    console.log(this.usages)
     const amountUsedSoFar = this.usages.data.reduce((amount, usage) => {
       amount + usage.amountTime
       return amount
     }, 0)
-    console.log("CALCULANDO SE FARM ESTA DISPONIVEL? DOMAIN")
 
-    console.log({
-      usageTime: this.maxUsageTime,
-      amountUsedSoFar,
-    })
     return amountUsedSoFar < this.maxUsageTime
   }
 }

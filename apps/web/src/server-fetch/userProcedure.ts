@@ -12,10 +12,7 @@ export function userProcedure(options: GenerateNextCommandProps<UserSessionParam
     if (error) throw error
     const { data, headers } = userResponse
 
-    console.log({ headers })
-
     if (headers["set-cookie"]) {
-      console.log({ setCookies: headers["set-cookie"] })
       ctx.res.setHeader("set-cookie", headers["set-cookie"])
     }
 

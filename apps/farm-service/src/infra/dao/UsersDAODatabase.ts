@@ -172,8 +172,6 @@ export class UsersDAODatabase implements UsersDAO {
     const planDomain = databasePlanToDomain(dbUser.plan)
     const plan = domainPlanToSession(planDomain)
 
-    console.log({ dbUserPlan: dbUser.plan, plan })
-
     const steamAccounts: SteamAccountSession[] = await Promise.all(
       dbUser.steamAccounts.map(async sa => {
         return this.steamAccountFromDatabaseToSession(

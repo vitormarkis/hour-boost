@@ -1,8 +1,8 @@
-import { UserAdminActionSetGamesPayload } from "./controller"
-import { IntentionCodes } from "./types"
 import { DataOrMessage, MessageMaker } from "@/util/DataOrMessage"
 import { resolvePromiseToMessage } from "@/util/resolvePromiseToMessage"
 import { AxiosInstance, AxiosResponse } from "axios"
+import { UserAdminActionSetGamesPayload } from "./controller"
+import { IntentionCodes } from "./types"
 
 type UserAdminActionSetGamesOutput = {
   message: string
@@ -21,8 +21,6 @@ export async function httpUserAdminActionSetGames(
         AxiosResponse<UserAdminActionSetGamesOutput>,
         UserAdminActionSetGamesPayload
       >("/admin/add-more-games", payload)
-
-      console.log({ data, status })
 
       return {
         status: 200,

@@ -63,7 +63,6 @@ const options: ConstructorParameters<typeof SteamUser>[0] = {
 }
 if (httpProxy) options.httpProxy = httpProxy
 
-console.log({ options })
 export const steamBuilder: SteamBuilder = {
   // create: () => makeUserSteamMock(),
   create: () => new SteamUser(options),

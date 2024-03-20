@@ -11,7 +11,6 @@ import { BadgePlanInfo, BadgePlanType } from "./components"
 export function UserPlanStatus() {
   const _planName = useUser(user => user.plan.name)
   const planCustom = useUser(user => user.plan.custom)
-  console.log({ custom: planCustom })
   const planName = getPlanName(_planName, planCustom)
   const _planIsUsage = useUser(user => planIsUsage(user.plan))
   const maxGamesAllowed = useUser(user => user.plan.maxGamesAllowed)

@@ -1,12 +1,12 @@
-import { UserAdminPanelSession } from "core"
-import { UserAdminActionSetGamesPayload } from "./controller"
-import { httpUserAdminActionSetGames } from "./httpRequest"
-import { IntentionCodes } from "./types"
+import { ECacheKeys } from "@/mutations/queryKeys"
 import { DataOrMessage } from "@/util/DataOrMessage"
 import { DefaultError, useMutation, useQueryClient } from "@tanstack/react-query"
 import { AxiosInstance } from "axios"
+import { UserAdminPanelSession } from "core"
 import { produce } from "immer"
-import { ECacheKeys } from "@/mutations/queryKeys"
+import { UserAdminActionSetGamesPayload } from "./controller"
+import { httpUserAdminActionSetGames } from "./httpRequest"
+import { IntentionCodes } from "./types"
 
 export function useUserAdminActionSetGames(getApi: () => Promise<AxiosInstance>) {
   const queryClient = useQueryClient()
@@ -16,7 +16,6 @@ export function useUserAdminActionSetGames(getApi: () => Promise<AxiosInstance>)
     mutationFn: async (...args) => httpUserAdminActionSetGames(...args, getApi),
     onSuccess(_, variables) {
       queryClient.setQueryData<UserAdminPanelSession[]>(ECacheKeys["USER-ADMIN-ITEM-LIST"], users => {
-        console.log("setting admin item list, updating max allowed games")
         return setGamesLimitMutateUser(users, variables)
       })
     },

@@ -1,6 +1,5 @@
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -10,19 +9,19 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-import React, { useState } from "react"
-import { cn } from "@/lib/utils"
-import { twc } from "react-twc"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { useUserAdminActionBanUser } from "../mutation"
-import { toast } from "sonner"
 import { IconArrowClockwise } from "@/components/icons/IconArrowClockwise"
-import { isMutationPending } from "../../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import { ECacheKeys } from "@/mutations/queryKeys"
-import { useUserAdminListItem } from "../../hooks/useUserAdminListItem"
-import { useUserAdminItemId } from "../../UserItemAction/context"
 import { atom, useAtom, useSetAtom } from "jotai"
+import React, { useState } from "react"
+import { twc } from "react-twc"
+import { toast } from "sonner"
+import { isMutationPending } from "../../UserItemAction/ActionSetGamesLimit/components/MenuSubContent"
+import { useUserAdminItemId } from "../../UserItemAction/context"
+import { useUserAdminListItem } from "../../hooks/useUserAdminListItem"
+import { useUserAdminActionBanUser } from "../mutation"
 
 const inputAtom = atom("")
 const hasTypedHourboostAtom = atom(get => get(inputAtom) === "HOURBOOST")
@@ -88,8 +87,6 @@ export const ConfirmButton = React.forwardRef<React.ElementRef<typeof Button>, C
     const isBanningUser = isMutationPending(ECacheKeys.banUser(userId))
 
     const handleBanUser = () => {
-      console.log("rodou")
-
       banUserMutation.mutate(
         {
           userId,

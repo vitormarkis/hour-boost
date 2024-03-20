@@ -63,7 +63,6 @@ export const ActionSetAccountsLimitMenuSubContent = React.forwardRef<
               return
             }
             toast.success(message)
-            console.log(`accounts set to [${newAccountsLimit}]`)
           },
         }
       )

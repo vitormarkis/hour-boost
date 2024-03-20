@@ -23,7 +23,6 @@ export class RemoveSteamAccountControllerController
 
   async handle({ payload }: APayload): AResponse {
     const { steamAccountId, userId, accountName, username } = payload
-    console.log("remove steam account payload -> ", payload)
     const [errorRemovingAccount] = await this.removeSteamAccountUseCase.execute({
       steamAccountId,
       userId,

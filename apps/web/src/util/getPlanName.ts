@@ -8,9 +8,5 @@ export function getPlanName(planName: PlanAllNames, custom?: boolean): string {
     SILVER: "Prata",
   }
 
-  console.log({
-    planName: planNamesMapper[planName],
-    custom: `${planNamesMapper[planName]}${custom ? "*" : ""}`,
-  })
   return `${planNamesMapper[planName]}${custom ? "*" : ""}`
 }

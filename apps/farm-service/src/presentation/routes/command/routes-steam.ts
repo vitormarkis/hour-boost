@@ -84,7 +84,6 @@ command_routerSteam.delete(
       removeSteamAccountUseCase
     )
 
-    console.log("0. calling remove steam account controller")
     const { status, json } = await promiseHandler(
       removeSteamAccountControllerController.handle({
         payload: {
