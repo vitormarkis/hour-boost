@@ -8,6 +8,7 @@ import { validateBody } from "~/inline-middlewares/validate-payload"
 import {
   changeUserPlanUseCase,
   flushUpdateSteamAccountUseCase,
+  trimSteamAccountsUseCase,
   usersDAO,
   usersRepository,
 } from "~/presentation/instances"
@@ -68,7 +69,8 @@ query_routerAdmin.post("/add-more-games", async (req, res) => {
 
 const setMaxSteamAccountsUseCase = new SetMaxSteamAccountsUseCase(
   usersRepository,
-  flushUpdateSteamAccountUseCase
+  flushUpdateSteamAccountUseCase,
+  trimSteamAccountsUseCase
 )
 
 query_routerAdmin.post("/set-max-steam-accounts", async (req, res) => {
@@ -96,6 +98,7 @@ query_routerAdmin.post("/set-max-steam-accounts", async (req, res) => {
         case "USER-NOT-FOUND":
         case "USER-STORAGE-NOT-FOUND":
           return console.log({ error })
+        case "LIST::TRIMMING-ACCOUNTS":
         case "LIST:ERROR-RESETING-FARM":
           return console.log(error.payload)
         default:

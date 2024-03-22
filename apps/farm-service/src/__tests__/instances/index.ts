@@ -16,11 +16,17 @@ import { FarmServiceBuilder } from "~/application/factories"
 import { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { HashService } from "~/application/services/HashService"
 import type { SteamAccountClient } from "~/application/services/steam"
-import { AddSteamAccountUseCase, CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases"
+import {
+  AddSteamAccountUseCase,
+  CheckSteamAccountOwnerStatusUseCase,
+  RemoveSteamAccountUseCase,
+} from "~/application/use-cases"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { FlushUpdateSteamAccountUseCase } from "~/application/use-cases/FlushUpdateSteamAccountUseCase"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
+import { TrimSteamAccountsUseCase } from "~/application/use-cases/TrimSteamAccountsUseCase"
+import { makeFarmGames } from "~/application/use-cases/__tests_helpers"
 import { AutoRestarterScheduler } from "~/domain/cron"
 import { PlanService } from "~/domain/services/PlanService"
 import { UserService } from "~/domain/services/UserService"
@@ -128,7 +134,16 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const sacFactory = makeSACFactory(validSteamAccounts, publisher)
   const createUserUseCase = new CreateUserUseCase(usersRepository, userAuthentication, usersClusterStorage)
 
-  const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
+  const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
+    usersRepository,
+    allUsersClientsStorage,
+    sacStateCacheRepository,
+    usersClusterStorage,
+    planRepository,
+    autoRestarterScheduler
+  )
+  const trimSteamAccountsUseCase = new TrimSteamAccountsUseCase(removeSteamAccountUseCase)
+  const addSteamAccount = new AddSteamAccount(usersRepository, idGenerator)
   const addSteamAccountUseCase = new AddSteamAccountUseCase(
     addSteamAccount,
     allUsersClientsStorage,
@@ -153,6 +168,7 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     usersSACsFarmingClusterStorage: usersClusterStorage,
   })
 
+  const farmGames = makeFarmGames(farmGamesController)
   const flushUpdateSteamAccountUseCase = new FlushUpdateSteamAccountUseCase(
     resetFarm,
     allUsersClientsStorage,
@@ -160,6 +176,19 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     sacStateCacheRepository
   )
 
+  /**
+   * Creates a:
+   *
+   * User user instance
+   *
+   * User Cluster Storage
+   *
+   * Creates the steam account associated to this user.
+   *
+   * VIA PARAMS: Saves this steam account on the database.
+   *
+   * Returns User, one steam account, and their SACs.
+   */
   async function createUser<P extends TestUsers>(userPrefix: P, options?: CreateUserOptions) {
     const { persistSteamAccounts = true } = options ?? {}
     console.log("test instances index > creating user and storing on repo")
@@ -249,8 +278,11 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     steamAccountsRepository,
     planRepository,
     stopFarmUseCase,
+    farmGames,
     farmGamesUseCase,
+    farmGamesController,
     addSteamAccountUseCase,
+    trimSteamAccountsUseCase,
     checkSteamAccountOwnerStatusUseCase,
     redis,
     planService,
@@ -260,7 +292,6 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     userAuthentication,
     resetFarm,
     flushUpdateSteamAccountUseCase,
-    farmGamesController,
     async makeUserInstances<P extends TestUsers>(prefix: P, props: TestUserProperties) {
       const user = await createUserUseCase.execute(props.userId)
       return userInstancesBuilder.create(prefix, props, user)

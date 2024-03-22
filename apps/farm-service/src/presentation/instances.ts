@@ -22,6 +22,7 @@ import { ChangeUserPlanUseCase } from "~/application/use-cases/ChangeUserPlanUse
 import { FlushUpdateSteamAccountUseCase } from "~/application/use-cases/FlushUpdateSteamAccountUseCase"
 import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
+import { TrimSteamAccountsUseCase } from "~/application/use-cases/TrimSteamAccountsUseCase"
 import type { SteamBuilder } from "~/contracts/SteamBuilder"
 import { AutoRestarterScheduler } from "~/domain/cron"
 import {
@@ -154,14 +155,15 @@ export const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
 export const userService = new UserService()
 export const planService = new PlanService()
 export const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(usersClusterStorage, publisher)
+export const trimSteamAccountsUseCase = new TrimSteamAccountsUseCase(removeSteamAccountUseCase)
 export const changeUserPlanUseCase = new ChangeUserPlanUseCase(
   allUsersClientsStorage,
   usersRepository,
   planService,
   steamAccountClientStateCacheRepository,
-  removeSteamAccountUseCase,
   restoreAccountSessionUseCase,
-  userService
+  userService,
+  trimSteamAccountsUseCase
 )
 export const steamAccountsDAO = new SteamAccountsDAODatabase(prisma)
 
@@ -207,7 +209,7 @@ export const stopFarmUseCase = new StopFarmUseCase(usersClusterStorage, planRepo
 
 export const stagingGamesListService = new StagingGamesListService()
 
-const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
+const addSteamAccount = new AddSteamAccount(usersRepository, idGenerator)
 
 export const addSteamAccountUseCase = new AddSteamAccountUseCase(
   addSteamAccount,
