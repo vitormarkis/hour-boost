@@ -25,7 +25,7 @@ test("should trim steam accounts", async () => {
     }),
   ]
   const trimmingAccountsName = trimAccountsName({
-    newPlan,
+    plan: newPlan,
     steamAccounts,
   })
 
