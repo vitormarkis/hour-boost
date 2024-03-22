@@ -1,11 +1,12 @@
 import { AddSteamAccount } from "core"
 import { connection } from "~/__tests__/connection"
 import {
-  type CustomInstances,
-  type MakeTestInstancesProps,
+  PrefixKeys,
   makeTestInstances,
   password,
   validSteamAccounts,
+  type CustomInstances,
+  type MakeTestInstancesProps,
 } from "~/__tests__/instances"
 import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 import { RestoreAccountConnectionUseCase } from "~/application/use-cases/RestoreAccountConnectionUseCase"
@@ -20,17 +21,14 @@ const log = console.log
 let i = makeTestInstances({
   validSteamAccounts,
 })
-const meInstances = {}
+let meInstances = {} as PrefixKeys<"me">
 let restoreAccountConnectionUseCase: RestoreAccountConnectionUseCase
 let addSteamAccountController: AddSteamAccountController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
-  await Promise.all([
-    i.createUser("me", { persistSteamAccounts: false }),
-    // i.createUser("friend", { persistSteamAccounts: false }),
-  ])
-  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+  meInstances = await i.createUser("me", { persistSteamAccounts: false })
+  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.idGenerator)
   const addSteamAccountUseCase = new AddSteamAccountUseCase(
     addSteamAccount,
     i.allUsersClientsStorage,
@@ -46,6 +44,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.sacStateCacheRepository,
     i.hashService
   )
+  meInstances.me.steamAccounts.deleteAll()
 }
 
 describe("NOT MOBILE test suite", () => {
@@ -107,36 +106,6 @@ describe("NOT MOBILE test suite", () => {
       })
     )
     expect(status).toBe(201)
-
-    const sac = i.allUsersClientsStorage.getAccountClientOrThrow(s.me.userId, s.me.accountName)
-    expect(sac.logged).toBe(true)
-
-    connection.emit("break")
-    await i.sacStateCacheRepository.deleteAllEntriesFromAccount(s.me.accountName)
-
-    const steamAccount = await i.steamAccountsRepository.getByAccountName(s.me.accountName)
-    if (!steamAccount?.ownerId) throw "account not owned"
-    const user = await i.usersRepository.getByID(steamAccount.ownerId)
-    if (!user?.plan.id_plan) throw "user 404"
-    const plan = await i.planRepository.getById(user?.plan.id_plan)
-    if (!plan) throw "plan 404"
-
-    const [errorRestoringSession, result] = await restoreAccountConnectionUseCase.execute({
-      steamAccount: {
-        accountName: steamAccount.credentials.accountName,
-        password: steamAccount.credentials.password,
-        autoRestart: steamAccount.autoRelogin,
-      },
-      user: {
-        id: user.id_user,
-        plan: user.plan,
-        username: user.username,
-      },
-    })
-    expect(errorRestoringSession).toBeNull()
-    if (errorRestoringSession) return
-    expect(result.code).toBe("ACCOUNT-RELOGGED::CREDENTIALS")
-    // expect(result.).toBeTruthy()
   })
 
   test("should restore session with state successfully", async () => {

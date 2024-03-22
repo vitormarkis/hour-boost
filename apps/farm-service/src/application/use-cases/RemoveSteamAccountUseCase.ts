@@ -1,18 +1,14 @@
 import {
   Fail,
-  type 
   PlanRepository,
-  type 
   SteamAccountClientStateCacheRepository,
-  type 
   UsersRepository,
+  type DataOrFail,
 } from "core"
 import type { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import { EAppResults } from "~/application/use-cases/RestoreAccountSessionUseCase"
 import { persistUsagesOnDatabase } from "~/application/utils/persistUsagesOnDatabase"
 import type { AutoRestarterScheduler } from "~/domain/cron"
-
-import type { DataOrFail } from "core"
 import { bad, nice } from "~/utils/helpers"
 
 export class RemoveSteamAccountUseCase implements IRemoveSteamAccountUseCase {
@@ -95,7 +91,9 @@ export class RemoveSteamAccountUseCase implements IRemoveSteamAccountUseCase {
 
     const steamAccount = user.steamAccounts.data[steamAccountIndex]
     steamAccount.autoRelogin = false
-    user.steamAccounts.remove(steamAccountId)
+    steamAccount.ownerId = null
+    const [errorRemovingSteamAccount] = user.steamAccounts.remove(steamAccountId)
+    if (errorRemovingSteamAccount) return bad(errorRemovingSteamAccount)
     await this.usersRepository.update(user)
 
     await this.steamAccountClientStateCacheRepository.deleteAllEntriesFromAccount(accountName)
