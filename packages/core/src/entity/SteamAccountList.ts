@@ -1,5 +1,6 @@
 import { SteamAccount } from "core/entity"
-import { ApplicationError } from "core/entity/exceptions"
+import { Fail } from "core/entity/exceptions"
+import { bad, nice } from "core/utils"
 
 export class SteamAccountList {
   readonly data: SteamAccount[]
@@ -16,10 +17,10 @@ export class SteamAccountList {
 
   remove(steamAccountID: string) {
     const steamAccountIndex = this.data.findIndex(u => u.id_steamAccount === steamAccountID)
-    if (steamAccountIndex === -1)
-      throw new ApplicationError("Falha ao remover Steam Account. Steam Account não encontrada.", 404)
+    if (steamAccountIndex === -1) return bad(Fail.create("STEAM_ACCOUNT_NOT_FOUND", 404))
     this.trash.push(this.data[steamAccountIndex])
     this.data.splice(steamAccountIndex, 1)
+    return nice()
   }
 
   removeAll() {

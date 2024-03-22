@@ -1,5 +1,5 @@
 import { SteamAccount, SteamAccountCredentials } from "core/entity"
-import { SteamAccountList, SteamAccountList as steamAccountList } from "core/entity/SteamAccountList"
+import { SteamAccountList } from "core/entity/SteamAccountList"
 
 const makeSteamAccountGeneric = (accountName: string, id_steamAccount: string = "123", ownerId: string) =>
   SteamAccount.restore({
@@ -23,7 +23,8 @@ test("should move SteamAccount to the trash", async () => {
   steamAccountList.add(removedSteamAccount)
   steamAccountList.add(makeSteamAccount("vitor", "abc"))
   expect(steamAccountList.data).toHaveLength(3)
-  steamAccountList.remove("234")
+  const [error] = steamAccountList.remove("234")
+  expect(error).toBeNull()
   expect(steamAccountList.data).toHaveLength(2)
   expect(steamAccountList.trash).toStrictEqual([removedSteamAccount])
   expect(steamAccountList.getIDs()).toStrictEqual(["1", "abc"])

@@ -1,4 +1,4 @@
-import { type SteamAccount, makeError } from "core"
+import { makeError, type SteamAccount } from "core"
 
 export class SteamAccountsInMemory {
   steamAccounts: SteamAccount[] = []
@@ -11,11 +11,12 @@ export class SteamAccountsInMemory {
     return this.steamAccounts.map(sa => sa.credentials.accountName)
   }
 
-  getById(steamAccountId: string) {
-    const foundSteamAccount = this.steamAccounts.find(sa => sa.id_steamAccount === steamAccountId)
+  getByAccountName(accountName: string) {
+    const foundSteamAccount = this.steamAccounts.find(sa => sa.credentials.accountName === accountName)
     if (!foundSteamAccount) {
+      // return null
       throw makeError("NTSH: getById() tried to find account id but was not able to.", {
-        steamAccountId,
+        steamAccountId: accountName,
         accountsInMemory: this.steamAccounts.map(sa => ({
           accountName: sa.credentials.accountName,
           id: sa.id_steamAccount,
@@ -38,7 +39,7 @@ export class SteamAccountsInMemory {
   addOrUpdate(steamAccount: SteamAccount) {
     if (this.accountNamesInDB.includes(steamAccount.credentials.accountName)) {
       this.steamAccounts = this.steamAccounts.map(sa =>
-        sa.id_steamAccount === steamAccount.id_steamAccount ? steamAccount : sa
+        sa.credentials.accountName === steamAccount.credentials.accountName ? steamAccount : sa
       )
       return
     }
@@ -49,9 +50,14 @@ export class SteamAccountsInMemory {
     for (const removedSteamAccount of ids) {
       const steamAccount = this.steamAccounts.find(sa => sa.id_steamAccount === removedSteamAccount)
       if (!steamAccount) {
-        throw new Error("NTSH: tried to find account id but was not able to.")
+        throw makeError("NTSH: tried to find account id but was not able to.", {
+          givenId: removedSteamAccount,
+          accountsInMemory: this.steamAccounts.map(sa => ({
+            accountName: sa.credentials.accountName,
+            id: sa.id_steamAccount,
+          })),
+        })
       }
-      console.log(`Disowing ${steamAccount?.credentials.accountName}`)
       steamAccount.disown()
       this.steamAccounts = this.steamAccounts.map(sa =>
         sa.credentials.accountName === steamAccount.credentials.accountName ? steamAccount : sa

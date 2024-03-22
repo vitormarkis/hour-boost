@@ -15,19 +15,20 @@ export class UsersRepositoryInMemory implements UsersRepository {
   async getByID(userId: string): Promise<User | null> {
     const user = this.usersMemory.users.find(u => u.id_user === userId)
     if (!user) return null
-    return this.appendSteamAccounts(user)
+    for (const usage of user.plan.usages.data) {
+      user.usages.add(usage)
+    }
+    return this.attachDBSteamAccountsToUser(user)
   }
 
-  private appendSteamAccounts(user: User): User {
-    const steamAccountIDList = user.steamAccounts.getIDs()
+  private attachDBSteamAccountsToUser(user: User): User {
+    const steamAccountNameList = user.steamAccounts.data.map(sa => sa.credentials.accountName)
     user.steamAccounts.deleteAll()
-    for (const id of steamAccountIDList) {
+    for (const accountName of steamAccountNameList) {
       try {
-        const foundSteamAccount = this.steamAccountsMemory.getById(id)
-        user.addSteamAccount(foundSteamAccount)
-      } catch (e) {
-        console.log("trying to find ")
-      }
+        const foundSteamAccount = this.steamAccountsMemory.getByAccountName(accountName)
+        user.steamAccounts.add(foundSteamAccount)
+      } catch (error) {}
     }
     return user
   }

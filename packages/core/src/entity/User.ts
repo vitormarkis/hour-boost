@@ -1,6 +1,6 @@
 import {
   ActiveStatus,
-  ApplicationError,
+  Fail,
   GuestPlan,
   PlanInfinity,
   PlanUsage,
@@ -12,6 +12,7 @@ import {
   UserRole,
 } from "core/entity"
 import { SteamAccountList } from "core/entity/SteamAccountList"
+import { bad, nice } from "core/utils"
 
 export class User {
   readonly id_user: string
@@ -67,12 +68,13 @@ export class User {
       return sa.credentials.accountName === steamAccount.credentials.accountName
     })
     if (alreadyHasSteamAccountWithThisAccountName) {
-      throw new ApplicationError("Você já possui essa conta cadastrada!")
+      return bad(Fail.create("ALREADY_HAS_ACCOUNT_WITH_THIS_NAME", 403))
     }
     if (currentUserSteamAccounts >= this.plan.maxSteamAccounts) {
-      throw new ApplicationError("Você já adicionou o máximo de contas que seu plano permite!")
+      return bad(Fail.create("ACCOUNTS_LIMIT_REACHED", 400))
     }
     this.steamAccounts.add(steamAccount)
+    return nice()
   }
 }
 
