@@ -1,4 +1,4 @@
-import { makeError, type SteamAccount } from "core"
+import { type SteamAccount, makeError } from "core"
 
 export class SteamAccountsInMemory {
   steamAccounts: SteamAccount[] = []

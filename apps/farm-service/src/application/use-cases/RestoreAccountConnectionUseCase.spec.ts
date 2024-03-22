@@ -1,12 +1,12 @@
 import { AddSteamAccount } from "core"
 import { connection } from "~/__tests__/connection"
 import {
+  type CustomInstances,
+  type MakeTestInstancesProps,
   PrefixKeys,
   makeTestInstances,
   password,
   validSteamAccounts,
-  type CustomInstances,
-  type MakeTestInstancesProps,
 } from "~/__tests__/instances"
 import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 import { RestoreAccountConnectionUseCase } from "~/application/use-cases/RestoreAccountConnectionUseCase"
