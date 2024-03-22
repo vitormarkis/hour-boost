@@ -38,7 +38,7 @@ import {
   usersRepository,
 } from "~/presentation/instances"
 
-export const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
+export const addSteamAccount = new AddSteamAccount(usersRepository, idGenerator)
 const stopAllFarmsUseCase = new StopAllFarms(usersClusterStorage)
 const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
   usersRepository,

@@ -9,7 +9,6 @@ import {
 } from "~/__tests__/instances"
 import { ensureExpectation } from "~/__tests__/utils"
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
-import { makeFarmGames } from "~/application/use-cases/__tests_helpers"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { getSACOn_AllUsersClientsStorage_ByUserId } from "~/utils/getSAC"
 import { AddMoreGamesToPlanUseCase } from "./AddMoreGamesToPlanUseCase"
@@ -87,8 +86,7 @@ test("should change from farming 30 games, to 2 games, and client should update 
   expect(spy_clientGamesPlayed).not.toHaveBeenCalledWith(
     expect.arrayContaining([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
   )
-  const farmGames = makeFarmGames(i.farmGamesController)
-  const response = await farmGames(s.me.accountName, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], s.me.userId)
+  const response = await i.farmGames(s.me.accountName, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], s.me.userId)
   ensureExpectation(200, response)
   expect(spy_clientGamesPlayed).toHaveBeenCalledWith(expect.arrayContaining([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
 

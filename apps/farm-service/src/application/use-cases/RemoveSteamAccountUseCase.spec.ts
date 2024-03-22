@@ -32,7 +32,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   const accountId = meInstances.me.steamAccounts.data[0].id_steamAccount
   meInstances.me.steamAccounts.remove(accountId)
   checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(i.steamAccountsRepository)
-  addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+  addSteamAccount = new AddSteamAccount(i.usersRepository, i.idGenerator)
   addSteamAccountUseCase = new AddSteamAccountUseCase(
     addSteamAccount,
     i.allUsersClientsStorage,

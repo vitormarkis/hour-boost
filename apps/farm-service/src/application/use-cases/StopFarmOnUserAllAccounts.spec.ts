@@ -30,7 +30,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   i = makeTestInstances(props, customInstances)
   meInstances = await i.createUser("me")
   stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
-  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.idGenerator)
   stopFarmOnUserAllAccounts = new StopFarmOnUserAllAccounts(stopFarmUseCase)
   const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(
     i.steamAccountsRepository

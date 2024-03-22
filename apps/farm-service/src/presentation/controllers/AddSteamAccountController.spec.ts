@@ -29,7 +29,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.createUser("friend", { persistSteamAccounts: false }),
   ])
 
-  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.idGenerator)
   const addSteamAccountUseCase = new AddSteamAccountUseCase(
     addSteamAccount,
     i.allUsersClientsStorage,
@@ -154,7 +154,7 @@ describe("AddSteamAccountController test suite", () => {
         const dbMe2 = await i.usersRepository.getByID(s.me.userId)
         expect(dbMe2?.steamAccounts.data).toHaveLength(2)
         expect(json).toStrictEqual({
-          message: "Você já adicionou o máximo de contas que seu plano permite!",
+          message: "Limite de contas alcançado.",
         })
         expect(status).toBe(400)
       })
