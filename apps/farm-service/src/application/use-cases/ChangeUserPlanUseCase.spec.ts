@@ -13,9 +13,7 @@ import { StopFarmController } from "~/presentation/controllers"
 import { getAccountOnCache } from "~/utils/getAccount"
 import { getSACOn_AllUsersClientsStorage_ByUserId } from "~/utils/getSAC"
 import { isAccountFarmingOnClusterByUsername } from "~/utils/isAccount"
-import { RestoreAccountSessionUseCase } from "."
 import { PlanBuilder } from "../factories/PlanFactory"
-import { ChangeUserPlanUseCase } from "./ChangeUserPlanUseCase"
 import { StopFarmUseCase } from "./StopFarmUseCase"
 
 const log = console.log
@@ -30,23 +28,11 @@ let i = makeTestInstances({
   validSteamAccounts,
 })
 let meInstances = {} as PrefixKeys<"me">
-let changeUserPlanUseCase: ChangeUserPlanUseCase
 let stopFarmController: StopFarmController
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
   meInstances = await i.createUser("me")
-  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
-  changeUserPlanUseCase = new ChangeUserPlanUseCase(
-    i.allUsersClientsStorage,
-    i.usersRepository,
-    i.planService,
-    i.sacStateCacheRepository,
-    restoreAccountSessionUseCase,
-    i.userService,
-    i.trimSteamAccountsUseCase
-  )
-
   const stopFarmUseCase = new StopFarmUseCase(i.usersClusterStorage, i.planRepository)
   stopFarmController = new StopFarmController(stopFarmUseCase, i.usersRepository)
 }
@@ -62,7 +48,7 @@ test("should change user plan from guest to diamond", async () => {
   expect(user?.plan).toBeInstanceOf(GuestPlan)
   if (!user) throw "no user"
 
-  const [errorChangingUserPlan] = await changeUserPlanUseCase.execute({
+  const [errorChangingUserPlan] = await i.changeUserPlanUseCase.execute({
     newPlanName: "DIAMOND",
     user,
   })
@@ -79,7 +65,7 @@ test("should change user plan from silver to diamond", async () => {
   expect(user?.plan).toBeInstanceOf(SilverPlan)
   if (!user) throw "no user"
 
-  const [errorChangingUserPlan] = await changeUserPlanUseCase.execute({
+  const [errorChangingUserPlan] = await i.changeUserPlanUseCase.execute({
     newPlanName: "DIAMOND",
     user,
   })
@@ -112,7 +98,7 @@ describe("user is farming test suite", () => {
     expect(user?.plan).toBeInstanceOf(DiamondPlan)
     if (!user) throw "no user"
 
-    const [errorChangingUserPlan] = await changeUserPlanUseCase.execute({
+    const [errorChangingUserPlan] = await i.changeUserPlanUseCase.execute({
       newPlanName: "GUEST",
       user,
     })
@@ -154,7 +140,7 @@ describe("user is farming test suite", () => {
     expect(user?.plan).toBeInstanceOf(DiamondPlan)
     if (!user) throw "no user"
 
-    const [errorChangingUserPlan] = await changeUserPlanUseCase.execute({
+    const [errorChangingUserPlan] = await i.changeUserPlanUseCase.execute({
       newPlanName: "GUEST",
       user,
     })
@@ -181,7 +167,7 @@ describe("user is farming test suite", () => {
     expect(user?.plan).toBeInstanceOf(DiamondPlan)
     if (!user) throw "no user"
 
-    const [errorChangingUserPlan] = await changeUserPlanUseCase.execute({
+    const [errorChangingUserPlan] = await i.changeUserPlanUseCase.execute({
       newPlanName: "GUEST",
       user,
     })
@@ -198,7 +184,11 @@ describe("user is farming test suite", () => {
   })
 
   test("should persist usages of trimmed steam account", async () => {
-    jest.useFakeTimers({ doNotFake: ["setTimeout"] }).setSystemTime(new Date("2024-01-10T10:00:00.000Z"))
+    jest
+      .useFakeTimers({
+        doNotFake: ["setTimeout"],
+      })
+      .setSystemTime(new Date("2024-01-10T10:00:00.000Z"))
     const diamondPlan = new PlanBuilder(s.me.userId).infinity().diamond()
     const user1 = await i.usersRepository.getByID(s.me.userId)
     expect(user1?.usages.data).toStrictEqual([])
@@ -227,7 +217,7 @@ describe("user is farming test suite", () => {
       [s.me.accountName2]: "FARMING",
     })
     expect(user1?.usages.data).toStrictEqual([])
-    const [errorChangingUserPlan] = await changeUserPlanUseCase.execute({
+    const [errorChangingUserPlan] = await i.changeUserPlanUseCase.execute({
       newPlanName: "GUEST",
       user,
     })

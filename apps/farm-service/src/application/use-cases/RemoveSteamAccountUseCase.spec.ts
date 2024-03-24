@@ -8,7 +8,6 @@ import {
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
-import { RemoveSteamAccountUseCase } from "~/application/use-cases"
 import { CheckSteamAccountOwnerStatusUseCase } from "~/application/use-cases/"
 import { AddSteamAccountUseCase } from "~/application/use-cases/AddSteamAccountUseCase"
 import { ToggleAutoReloginUseCase } from "~/application/use-cases/ToggleAutoReloginUseCase"
@@ -21,7 +20,6 @@ let i = makeTestInstances({
   validSteamAccounts,
 })
 let meInstances = {} as PrefixKeys<"me">
-let removeSteamAccountUseCase: RemoveSteamAccountUseCase
 let addSteamAccount: AddSteamAccount
 let addSteamAccountUseCase: AddSteamAccountUseCase
 let checkSteamAccountOwnerStatusUseCase: CheckSteamAccountOwnerStatusUseCase
@@ -39,14 +37,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
     i.usersDAO,
     checkSteamAccountOwnerStatusUseCase,
     i.hashService
-  )
-  removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
-    i.usersRepository,
-    i.allUsersClientsStorage,
-    i.sacStateCacheRepository,
-    i.usersClusterStorage,
-    i.planRepository,
-    i.autoRestarterScheduler
   )
   i.steamAccountsMemory.disownSteamAccountsAll()
   i.usersMemory.dropAllSteamAccounts()
@@ -68,11 +58,9 @@ test("should remove steam account", async () => {
   const account1 = await i.steamAccountsRepository.getByAccountName(s.me.accountName)
   expect(account1?.ownerId).toBe(s.me.userId)
 
-  const [error] = await removeSteamAccountUseCase.execute({
+  const [error] = await i.removeSteamAccountUseCase.execute({
     accountName: s.me.accountName,
-    steamAccountId: accountId,
     userId: s.me.userId,
-    username: s.me.username,
   })
   if (error) throw error
   const account2 = await i.steamAccountsRepository.getByAccountName(s.me.accountName)
@@ -106,11 +94,9 @@ test("should remove steam account and set auto restarter as false", async () => 
   expect(errorTogglingRelogin).toBeNull()
   expect((await i.steamAccountsRepository.getByAccountName(s.me.accountName))?.autoRelogin).toBe(true)
 
-  const [error] = await removeSteamAccountUseCase.execute({
+  const [error] = await i.removeSteamAccountUseCase.execute({
     accountName: s.me.accountName,
-    steamAccountId: accountId,
     userId: s.me.userId,
-    username: s.me.username,
   })
   if (error) throw error
   const account2 = await i.steamAccountsRepository.getByAccountName(s.me.accountName)
@@ -132,11 +118,9 @@ test("should remove steam account and logoff client", async () => {
   expect(account1?.ownerId).toBe(s.me.userId)
   expect(spy).toHaveBeenCalledTimes(0)
 
-  const [error] = await removeSteamAccountUseCase.execute({
+  const [error] = await i.removeSteamAccountUseCase.execute({
     accountName: s.me.accountName,
-    steamAccountId: accountId,
     userId: s.me.userId,
-    username: s.me.username,
   })
   if (error) throw error
   const account2 = await i.steamAccountsRepository.getByAccountName(s.me.accountName)

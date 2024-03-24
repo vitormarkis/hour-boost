@@ -10,7 +10,6 @@ import {
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { filterUserAccounts } from "~/utils/filterUserAccounts"
-import { SetMaxSteamAccountsUseCase } from "./SetMaxSteamAccountsUseCase"
 const log = console.log
 // console.log = () => {}
 
@@ -18,7 +17,6 @@ let i = makeTestInstances({
   validSteamAccounts,
 })
 let meInstances = {} as PrefixKeys<"me">
-let setMaxSteamAccountsUseCase: SetMaxSteamAccountsUseCase
 
 async function setupInstances(props?: MakeTestInstancesProps, customInstances?: CustomInstances) {
   i = makeTestInstances(props, customInstances)
@@ -28,11 +26,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   const users = await i.usersRepository.findMany()
   restoreUsersSessionsUseCase.execute({ users })
 
-  setMaxSteamAccountsUseCase = new SetMaxSteamAccountsUseCase(
-    i.usersRepository,
-    i.flushUpdateSteamAccountUseCase,
-    i.trimSteamAccountsUseCase
-  )
 }
 
 beforeEach(async () => {
@@ -49,7 +42,7 @@ test("should change usage plan to CUSTOM usage plan and increase max steamAccoun
   expect(userPlan?.custom).toBe(false)
   expect(userPlan?.maxSteamAccounts).toBe(1)
 
-  const [error] = await setMaxSteamAccountsUseCase.execute({
+  const [error] = await i.setMaxSteamAccountsUseCase.execute({
     mutatingUserId: s.me.userId,
     newMaxSteamAccountsAllowed: 2,
   })
@@ -61,7 +54,7 @@ test("should change usage plan to CUSTOM usage plan and increase max steamAccoun
 })
 
 test("should change usage plan to CUSTOM usage plan and increase max steamAccounts allowed to 2", async () => {
-  const [_error] = await setMaxSteamAccountsUseCase.execute({
+  const [_error] = await i.setMaxSteamAccountsUseCase.execute({
     mutatingUserId: s.me.userId,
     newMaxSteamAccountsAllowed: 2,
   })
@@ -86,7 +79,7 @@ test("should change usage plan to CUSTOM usage plan and increase max steamAccoun
   })
   expect(user?.steamAccounts.data).toHaveLength(2)
 
-  const [error] = await setMaxSteamAccountsUseCase.execute({
+  const [error] = await i.setMaxSteamAccountsUseCase.execute({
     mutatingUserId: s.me.userId,
     newMaxSteamAccountsAllowed: 1,
   })

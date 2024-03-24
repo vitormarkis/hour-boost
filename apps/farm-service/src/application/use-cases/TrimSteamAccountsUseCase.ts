@@ -1,45 +1,32 @@
-import { DataOrFail, Fail, PlanInfinity, PlanUsage, SteamAccount } from "core"
-import { RemoveSteamAccountUseCase } from "~/application/use-cases"
+import { DataOrFail, Fail, UsersRepository } from "core"
+import { uc } from "~/application/use-cases/helpers"
+import { TrimSteamAccounts } from "~/domain/utils/trim-steam-accounts"
 import { bad, nice } from "~/utils/helpers"
-import { trimAccountsName } from "~/utils/trimAccountsName"
 
 interface ITrimSteamAccountsUseCase {
   execute(props: Input): Promise<DataOrFail<Fail>>
 }
 
 export class TrimSteamAccountsUseCase implements ITrimSteamAccountsUseCase {
-  constructor(private readonly removeSteamAccountUseCase: RemoveSteamAccountUseCase) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly trimSteamAccounts: TrimSteamAccounts
+  ) {}
 
-  async execute({ plan, steamAccounts, userId, username }: Input) {
-    const trimmingAccountsName = trimAccountsName({
-      plan,
-      steamAccounts,
+  async execute({ userId }: Input) {
+    const [errorGettingUser, user] = await uc.getUser(this.usersRepository, userId)
+    if (errorGettingUser) return bad(errorGettingUser)
+
+    const [errorTrimmingAccounts] = await this.trimSteamAccounts.execute({
+      user,
     })
 
-    const failsTrimmingAccount: Fail[] = []
-    if (trimmingAccountsName.length) {
-      for (const accountName of trimmingAccountsName) {
-        const [error] = await this.removeSteamAccountUseCase.execute({
-          accountName,
-          steamAccountId: steamAccounts.find(sa => sa.credentials.accountName === accountName)!
-            .id_steamAccount,
-          userId,
-          username,
-        })
+    if (errorTrimmingAccounts) return bad(errorTrimmingAccounts)
 
-        if (error) failsTrimmingAccount.push(error)
-      }
-    }
-
-    if (failsTrimmingAccount.length)
-      return bad(Fail.create("LIST::TRIMMING-ACCOUNTS", 400, failsTrimmingAccount))
     return nice()
   }
 }
 
 type Input = {
   userId: string
-  username: string
-  plan: PlanUsage | PlanInfinity
-  steamAccounts: SteamAccount[]
 }

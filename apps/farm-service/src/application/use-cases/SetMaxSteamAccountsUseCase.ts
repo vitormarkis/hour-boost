@@ -1,31 +1,24 @@
 import { DataOrFail, EditablePlan, Fail, UsersRepository } from "core"
 import { FlushUpdateSteamAccountUseCase } from "~/application/use-cases/FlushUpdateSteamAccountUseCase"
-import { TrimSteamAccountsUseCase } from "~/application/use-cases/TrimSteamAccountsUseCase"
+import { uc } from "~/application/use-cases/helpers"
+import { TrimSteamAccounts } from "~/domain/utils/trim-steam-accounts"
 import { bad, nice } from "~/utils/helpers"
-import { EAppResults } from "."
 
 export class SetMaxSteamAccountsUseCase implements ISetMaxSteamAccountsUseCase {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly flushUpdateSteamAccountUseCase: FlushUpdateSteamAccountUseCase,
-    private readonly trimSteamAccountsUseCase: TrimSteamAccountsUseCase
+    private readonly trimSteamAccounts: TrimSteamAccounts
   ) {}
 
   async execute({ mutatingUserId, newMaxSteamAccountsAllowed }: SetMaxSteamAccountsUseCasePayload) {
-    const user = await this.usersRepository.getByID(mutatingUserId)
-    if (!user) {
-      return bad(
-        Fail.create(EAppResults["USER-NOT-FOUND"], 404, { givenUserId: mutatingUserId, foundUser: user })
-      )
-    }
+    const [errorGettingUser, user] = await uc.getUser(this.usersRepository, mutatingUserId)
+    if (errorGettingUser) return bad(errorGettingUser)
 
     const editablePlan = new EditablePlan(user.plan)
     editablePlan.setMaxAccountsAmount(newMaxSteamAccountsAllowed)
-    const [errorTrimmingAccounts] = await this.trimSteamAccountsUseCase.execute({
-      plan: user.plan,
-      steamAccounts: user.steamAccounts.data,
-      userId: user.id_user,
-      username: user.username,
+    const [errorTrimmingAccounts] = await this.trimSteamAccounts.execute({
+      user,
     })
     if (errorTrimmingAccounts) return bad(errorTrimmingAccounts)
 
@@ -33,6 +26,7 @@ export class SetMaxSteamAccountsUseCase implements ISetMaxSteamAccountsUseCase {
       user,
     })
     if (error) return bad(error)
+    await this.usersRepository.update(user)
 
     return nice(user)
   }

@@ -44,3 +44,19 @@ export const env = {
     return this.NODE_ENV === "PRODUCTION"
   },
 }
+
+// export const env = {
+//   NODE_ENV: "DEV",
+//   CLERK_SECRET_KEY: "test",
+//   DATABASE_URL: "test",
+//   REDIS_UPSTASH_TLS: "test",
+//   TOKEN_IDENTIFICATION_HASH: "test",
+//   CLIENT_URL: "http://localhost:3000",
+//   COOKIE_DOMAIN: ".hourboost.com.br",
+//   ACTIONS_SECRET: "test",
+//   EXAMPLE_ACCOUNT_NAME: "test",
+//   EXAMPLE_ACCOUNT_PASSWORD: "test",
+//   PORT: 4000,
+//   HASH_SECRET: "test",
+//   STOP_ENDPOINT: "http://localhost:4000/farm/stop/all",
+//   SECRET: "test",

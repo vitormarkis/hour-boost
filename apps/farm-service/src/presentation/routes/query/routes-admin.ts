@@ -2,13 +2,12 @@ import { Router } from "express"
 import { z } from "zod"
 import { AddMoreGamesToPlanUseCase } from "~/application/use-cases/AddMoreGamesToPlanUseCase"
 import { GetUsersAdminListUseCase } from "~/application/use-cases/GetUsersAdminListUseCase"
-import { SetMaxSteamAccountsUseCase } from "~/application/use-cases/SetMaxSteamAccountsUseCase"
 import { ensureAdmin } from "~/inline-middlewares/ensureAdmin"
 import { validateBody } from "~/inline-middlewares/validate-payload"
 import {
   changeUserPlanUseCase,
   flushUpdateSteamAccountUseCase,
-  trimSteamAccountsUseCase,
+  setMaxSteamAccountsUseCase,
   usersDAO,
   usersRepository,
 } from "~/presentation/instances"
@@ -66,12 +65,6 @@ query_routerAdmin.post("/add-more-games", async (req, res) => {
 
   return res.json({ usersAdminList, code: "SUCCESS" })
 })
-
-const setMaxSteamAccountsUseCase = new SetMaxSteamAccountsUseCase(
-  usersRepository,
-  flushUpdateSteamAccountUseCase,
-  trimSteamAccountsUseCase
-)
 
 query_routerAdmin.post("/set-max-steam-accounts", async (req, res) => {
   const [noAdminRole] = await ensureAdmin(req, res)

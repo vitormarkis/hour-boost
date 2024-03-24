@@ -21,6 +21,7 @@ import {
 import { ChangeUserPlanUseCase } from "~/application/use-cases/ChangeUserPlanUseCase"
 import { FlushUpdateSteamAccountUseCase } from "~/application/use-cases/FlushUpdateSteamAccountUseCase"
 import { RetrieveSessionListUseCase } from "~/application/use-cases/RetrieveSessionListUseCase"
+import { SetMaxSteamAccountsUseCase } from "~/application/use-cases/SetMaxSteamAccountsUseCase"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 import { TrimSteamAccountsUseCase } from "~/application/use-cases/TrimSteamAccountsUseCase"
 import type { SteamBuilder } from "~/contracts/SteamBuilder"
@@ -36,6 +37,8 @@ import { UpdateAccountCacheStateHandler } from "~/domain/handler/UpdateAccountCa
 import { StagingGamesListService } from "~/domain/services"
 import { PlanService } from "~/domain/services/PlanService"
 import { UserService } from "~/domain/services/UserService"
+import { TrimSteamAccounts } from "~/domain/utils/trim-steam-accounts"
+import { RemoveSteamAccount } from "~/features/remove-steam-account/domain"
 import { UsersDAODatabase } from "~/infra/dao"
 import { SteamAccountsDAODatabase } from "~/infra/dao/SteamAccountsDAODatabase"
 import { prisma } from "~/infra/libs"
@@ -144,18 +147,23 @@ export const usersDAO = new UsersDAODatabase(
   allUsersClientsStorage,
   planRepository
 )
+export const removeSteamAccount = new RemoveSteamAccount(
+  allUsersClientsStorage,
+  usersClusterStorage,
+  autoRestarterScheduler
+)
+
 export const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
   usersRepository,
-  allUsersClientsStorage,
   steamAccountClientStateCacheRepository,
-  usersClusterStorage,
   planRepository,
-  autoRestarterScheduler
+  removeSteamAccount
 )
 export const userService = new UserService()
 export const planService = new PlanService()
 export const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(usersClusterStorage, publisher)
-export const trimSteamAccountsUseCase = new TrimSteamAccountsUseCase(removeSteamAccountUseCase)
+export const trimSteamAccounts = new TrimSteamAccounts(removeSteamAccount)
+export const trimSteamAccountsUseCase = new TrimSteamAccountsUseCase(usersRepository, trimSteamAccounts)
 export const changeUserPlanUseCase = new ChangeUserPlanUseCase(
   allUsersClientsStorage,
   usersRepository,
@@ -163,7 +171,8 @@ export const changeUserPlanUseCase = new ChangeUserPlanUseCase(
   steamAccountClientStateCacheRepository,
   restoreAccountSessionUseCase,
   userService,
-  trimSteamAccountsUseCase
+  trimSteamAccounts,
+  planRepository
 )
 export const steamAccountsDAO = new SteamAccountsDAODatabase(prisma)
 
@@ -235,3 +244,12 @@ publisher.register(new LogSteamStartFarmHandler())
 publisher.register(new UpdateAccountCacheStateHandler(steamAccountClientStateCacheRepository))
 publisher.register(new ScheduleAutoRestartHandler(scheduleAutoRestartUseCase))
 // publisher.register(new LogUserCompleteFarmSessionHandler())
+
+/**
+ * Locals
+ */
+export const setMaxSteamAccountsUseCase = new SetMaxSteamAccountsUseCase(
+  usersRepository,
+  flushUpdateSteamAccountUseCase,
+  trimSteamAccounts
+)

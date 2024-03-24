@@ -20,16 +20,21 @@ import {
   AddSteamAccountUseCase,
   CheckSteamAccountOwnerStatusUseCase,
   RemoveSteamAccountUseCase,
+  RestoreAccountSessionUseCase,
 } from "~/application/use-cases"
+import { ChangeUserPlanUseCase } from "~/application/use-cases/ChangeUserPlanUseCase"
 import { CreateUserUseCase } from "~/application/use-cases/CreateUserUseCase"
 import { FarmGamesUseCase } from "~/application/use-cases/FarmGamesUseCase"
 import { FlushUpdateSteamAccountUseCase } from "~/application/use-cases/FlushUpdateSteamAccountUseCase"
+import { SetMaxSteamAccountsUseCase } from "~/application/use-cases/SetMaxSteamAccountsUseCase"
 import { StopFarmUseCase } from "~/application/use-cases/StopFarmUseCase"
 import { TrimSteamAccountsUseCase } from "~/application/use-cases/TrimSteamAccountsUseCase"
 import { makeFarmGames } from "~/application/use-cases/__tests_helpers"
 import { AutoRestarterScheduler } from "~/domain/cron"
 import { PlanService } from "~/domain/services/PlanService"
 import { UserService } from "~/domain/services/UserService"
+import { TrimSteamAccounts } from "~/domain/utils/trim-steam-accounts"
+import { RemoveSteamAccount } from "~/features/remove-steam-account/domain"
 import { UsersDAOInMemory } from "~/infra/dao"
 import { SteamAccountsDAOMemory } from "~/infra/dao/SteamAccountsDAOMemory"
 import { Publisher } from "~/infra/queue"
@@ -134,15 +139,20 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const sacFactory = makeSACFactory(validSteamAccounts, publisher)
   const createUserUseCase = new CreateUserUseCase(usersRepository, userAuthentication, usersClusterStorage)
 
-  const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
-    usersRepository,
+  const removeSteamAccount = new RemoveSteamAccount(
     allUsersClientsStorage,
-    sacStateCacheRepository,
     usersClusterStorage,
-    planRepository,
     autoRestarterScheduler
   )
-  const trimSteamAccountsUseCase = new TrimSteamAccountsUseCase(removeSteamAccountUseCase)
+
+  const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
+    usersRepository,
+    sacStateCacheRepository,
+    planRepository,
+    removeSteamAccount
+  )
+  const trimSteamAccounts = new TrimSteamAccounts(removeSteamAccount)
+  const trimSteamAccountsUseCase = new TrimSteamAccountsUseCase(usersRepository, trimSteamAccounts)
   const addSteamAccount = new AddSteamAccount(usersRepository, idGenerator)
   const addSteamAccountUseCase = new AddSteamAccountUseCase(
     addSteamAccount,
@@ -174,6 +184,25 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     allUsersClientsStorage,
     usersRepository,
     sacStateCacheRepository
+  )
+
+  const setMaxSteamAccountsUseCase = new SetMaxSteamAccountsUseCase(
+    usersRepository,
+    flushUpdateSteamAccountUseCase,
+    trimSteamAccounts
+  )
+
+  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(usersClusterStorage, publisher)
+
+  const changeUserPlanUseCase = new ChangeUserPlanUseCase(
+    allUsersClientsStorage,
+    usersRepository,
+    planService,
+    sacStateCacheRepository,
+    restoreAccountSessionUseCase,
+    userService,
+    trimSteamAccounts,
+    planRepository
   )
 
   /**
@@ -282,8 +311,13 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
     farmGamesUseCase,
     farmGamesController,
     addSteamAccountUseCase,
+    removeSteamAccount,
+    removeSteamAccountUseCase,
     trimSteamAccountsUseCase,
+    setMaxSteamAccountsUseCase,
     checkSteamAccountOwnerStatusUseCase,
+    restoreAccountSessionUseCase,
+    changeUserPlanUseCase,
     redis,
     planService,
     userService,
