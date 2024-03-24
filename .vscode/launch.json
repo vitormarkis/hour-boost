@@ -9,6 +9,21 @@
         "<node_internals>/**"
       ],
       "type": "node"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Jest: current file",
+      "envFile": "${workspaceFolder}/apps/farm-service/.env",
+      "runtimeArgs": ["--experimental-vm-modules", "--nolazy"],
+      //"env": { "NODE_ENV": "test" },
+      "program": "${workspaceFolder}/apps/farm-service/node_modules/jest/bin/jest",
+      "args": ["--config", "./apps/farm-service/jest.config.ts", "--runInBand", "--verbose", "${fileBasenameNoExtension}"],
+      "console": "integratedTerminal",
+      "disableOptimisticBPs": true,
+      "windows": {
+        "program": "${workspaceFolder}/apps/farm-service/node_modules/jest/bin/jest"
+      }
     }
   ]
 }
