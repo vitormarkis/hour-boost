@@ -1,8 +1,15 @@
 import { PlanInfinity, PlanUsage, User } from "core"
 
-export const filterUserAccounts = (user: User) => ({
+export const filterUserAccounts = (user: User, ownerId?: "ownerId") => ({
   username: user.username,
-  userSteamAccounts: user.steamAccounts.data.map(sa => sa.credentials.accountName),
+  userSteamAccounts: user.steamAccounts.data.map(sa =>
+    ownerId
+      ? sa.credentials.accountName
+      : {
+          accountName: sa.credentials.accountName,
+          ownerId: sa.ownerId,
+        }
+  ),
 })
 export const filterPlanUsages = (plan: PlanUsage | PlanInfinity) => ({
   planname: plan.name,
