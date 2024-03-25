@@ -37,6 +37,7 @@ export class PlanRepositoryDatabase implements PlanRepository {
                 createdAt: u.createdAt,
                 id_usage: u.id_usage,
                 accountName: u.accountName,
+                user_id: u.user_id,
               },
             }
           }),

@@ -59,7 +59,6 @@ export class RemoveSteamAccount implements IRemoveSteamAccount {
 
     const steamAccount = user.steamAccounts.data[steamAccountIndex]
     steamAccount.autoRelogin = false
-    steamAccount.ownerId = null
     const [errorRemovingSteamAccount] = user.steamAccounts.remove(steamAccount.id_steamAccount)
     if (errorRemovingSteamAccount) return bad(errorRemovingSteamAccount)
 
