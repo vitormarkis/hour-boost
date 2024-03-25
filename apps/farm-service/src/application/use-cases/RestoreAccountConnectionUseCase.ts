@@ -10,6 +10,7 @@ import type { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/a
 import { HashService } from "~/application/services/HashService"
 import type { SteamAccountClient } from "~/application/services/steam"
 import type { EventParameters } from "~/infra/services"
+import { __recoveringAccounts } from "~/momentarily"
 import {
   type EventParametersTimeout,
   type FarmGamesEventsResolve,
@@ -71,6 +72,8 @@ export class RestoreAccountConnectionUseCase implements IRestorAccountConnection
     let sac = this.allUsersClientsStorage.getAccountClient(userId, accountName)
     if (sac && sac.logged) {
       this.logger.log(`[${accountName}] sac is logged already`)
+
+      __recoveringAccounts.delete(steamAccount.accountName)
       return nice(
         new ClientAppResultWithSAC({
           code: "ACCOUNT-IS-LOGGED-ALREADY",
@@ -106,6 +109,7 @@ export class RestoreAccountConnectionUseCase implements IRestorAccountConnection
       })
 
       if (!errorLogginWithToken) {
+        __recoveringAccounts.delete(steamAccount.accountName)
         return nice(
           new ClientAppResultWithSAC({
             code: "ACCOUNT-RELOGGED::TOKEN",
@@ -137,6 +141,7 @@ export class RestoreAccountConnectionUseCase implements IRestorAccountConnection
 
     if (!sac.logged) throw new Error("tried to return a valid sac, but wasn't logged in")
 
+    __recoveringAccounts.delete(steamAccount.accountName)
     return nice(
       new ClientAppResultWithSAC({
         code: "ACCOUNT-RELOGGED::CREDENTIALS",
@@ -191,6 +196,7 @@ const handleLoginSteamWithCredentialsResult = (
     }
     return bad(errorLoggin)
   }
+
   return nice()
 }
 

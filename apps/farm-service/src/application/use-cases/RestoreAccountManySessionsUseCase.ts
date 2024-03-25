@@ -1,5 +1,6 @@
-import type { SteamAccountsDAO, } from "core"
+import type { SteamAccountsDAO } from "core"
 import type { AutoRestartCron } from "~/application/cron/AutoRestartCron"
+import { __recoveringAccounts } from "~/momentarily"
 import { Logger } from "~/utils/Logger"
 import { type ExecutePromisesInBatchProps, executePromisesInBatch } from "~/utils/executePromisesInBatch"
 import { bad, nice } from "~/utils/helpers"
@@ -26,6 +27,7 @@ export class RestoreAccountManySessionsUseCase {
     const allAccountNameList = await this.steamAccountsDAO.listAccountNames({
       filter: { onlyOwnedAccounts: true },
     })
+    allAccountNameList.forEach(accountName => __recoveringAccounts.add(accountName))
     const accountNameList = whitelistAccountNames
       ? allAccountNameList.filter(accName => whitelistAccountNames.includes(accName))
       : allAccountNameList
@@ -35,8 +37,24 @@ export class RestoreAccountManySessionsUseCase {
       accountNameList,
     })
 
-    const sessionRestartPromises = accountNameList.map(accountName => async () => {
-      const [errorAutoRestart, reslt] = await this.autoRestartCron.run({
+    const sessionRestart = getSessionRestart(this.autoRestartCron, accountNameList)
+
+    await executePromisesInBatch({
+      ...batchOptions,
+      promiseList: sessionRestart,
+    })
+
+    return nice({
+      promisesAmount: sessionRestart.length,
+    })
+  }
+}
+
+const getSessionRestart = (autoRestartCron: AutoRestartCron, accountNameList: string[]) => {
+  return accountNameList.map(accountName => ({
+    accountName,
+    getPromise: async () => {
+      const [errorAutoRestart, reslt] = await autoRestartCron.run({
         accountName,
         forceRestoreSessionOnApplication: true,
       })
@@ -46,15 +64,8 @@ export class RestoreAccountManySessionsUseCase {
         return bad(errorAutoRestart)
       }
       return nice(reslt)
-    })
-
-    await executePromisesInBatch({
-      ...batchOptions,
-      promiseList: sessionRestartPromises,
-    })
-
-    return nice({
-      promisesAmount: sessionRestartPromises.length,
-    })
-  }
+    },
+  }))
 }
+
+export type SessionRestart = ReturnType<typeof getSessionRestart>[number]

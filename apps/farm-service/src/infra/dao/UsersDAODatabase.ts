@@ -23,6 +23,7 @@ import type { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSt
 import { databasePlanToDomain } from "~/infra/mappers/databasePlanToDomain"
 import { databaseUsageToDomain } from "~/infra/mappers/databaseUsageToDomain"
 import { domainPlanToSession } from "~/infra/mappers/domainPlanToSession"
+import { __recoveringAccounts } from "~/momentarily"
 
 export class UsersDAODatabase implements UsersDAO {
   steamAccountFromDatabaseToSession: SteamAccountFromDatabaseToSession
@@ -39,7 +40,8 @@ export class UsersDAODatabase implements UsersDAO {
     this.steamAccountFromDatabaseToSession = makeSteamAccountFromDatabaseToSession(
       getPersonaStateUseCase,
       getUserSteamGamesUseCase,
-      allUsersClientsStorage
+      allUsersClientsStorage,
+      steamAccountClientStateCacheRepository
     )
   }
   async getByIDShallow(userId: string): Promise<UserSessionShallow | null> {
@@ -272,7 +274,8 @@ type DBUser = {
 function makeSteamAccountFromDatabaseToSession(
   getPersonaStateUseCase: GetPersonaStateUseCase,
   getUserSteamGamesUseCase: GetUserSteamGamesUseCase,
-  allUsersClientsStorage: AllUsersClientsStorage
+  allUsersClientsStorage: AllUsersClientsStorage,
+  steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository
 ) {
   return async (sa: DBSteamAccount, dbUser: DBUser): Promise<SteamAccountSession> => {
     let games: GameSession[] | null
@@ -299,10 +302,28 @@ function makeSteamAccountFromDatabaseToSession(
     // const { farmStartedAt } = cluster.getInnerState()
 
     const sac = allUsersClientsStorage.getAccountClient(dbUser.id_user, sa.accountName)
-    if (!sac)
+    if (!sac) {
+      if (__recoveringAccounts.has(sa.accountName)) {
+        const cache = await steamAccountClientStateCacheRepository.get(sa.accountName)
+        if (!cache) throw new Error("Cache not found.")
+        if (cache.status === "iddle") throw new Error("SAC state status iddle being sent to the client")
+        return Promise.resolve({
+          accountName: sa.accountName,
+          games,
+          id_steamAccount: sa.id_steamAccount,
+          farmingGames: cache.gamesPlaying,
+          stagingGames: cache.gamesStaging,
+          farmedTimeInSeconds: 0,
+          farmStartedAt: cache.farmStartedAt?.toISOString() ?? null,
+          status: cache.status,
+          autoRelogin: false,
+          ...persona,
+        } as const)
+      }
       throw new Error(
         `Sac not found for user ${sa.accountName}, but has users: [${allUsersClientsStorage.listUsersKeys()}]`
       )
+    }
     const cacheStateDTO = sac.getCache().toDTO()
     const { accountName, gamesPlaying, gamesStaging, status } = cacheStateDTO
     const farmStartedAt = cacheStateDTO.farmStartedAt

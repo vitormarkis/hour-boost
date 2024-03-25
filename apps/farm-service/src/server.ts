@@ -7,6 +7,7 @@ import type { Application, NextFunction, Request, Response } from "express"
 import express from "express"
 import { RestoreAccountManySessionsUseCase } from "~/application/use-cases/RestoreAccountManySessionsUseCase"
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
+import { __recoveringAccounts } from "~/momentarily"
 import {
   autoRestartCron,
   steamAccountsDAO,
@@ -55,6 +56,10 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     message: "Something went wrong.",
     err,
   })
+})
+
+app.get("/recovering-accounts", (req, res) => {
+  res.json({ __recoveringAccounts: Array.from(__recoveringAccounts) })
 })
 
 const restoreUsersSessionsUseCase = new RestoreUsersSessionsUseCase(usersClusterStorage)
