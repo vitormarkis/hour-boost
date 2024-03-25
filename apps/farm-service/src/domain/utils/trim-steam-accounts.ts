@@ -4,13 +4,13 @@ import { bad, nice } from "~/utils/helpers"
 import { trimAccountsName } from "~/utils/trimAccountsName"
 
 interface ITrimSteamAccounts {
-  execute(props: Input): Promise<DataOrFail<Fail>>
+  execute(props: Input): DataOrFail<Fail>
 }
 
 export class TrimSteamAccounts implements ITrimSteamAccounts {
   constructor(private readonly removeSteamAccount: RemoveSteamAccount) {}
 
-  async execute({ user }: Input) {
+  execute({ user }: Input) {
     const trimmingAccountsName = trimAccountsName({
       plan: user.plan,
       steamAccounts: user.steamAccounts.data,

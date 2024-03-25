@@ -25,7 +25,6 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   const restoreUsersSessionsUseCase = new RestoreUsersSessionsUseCase(i.usersClusterStorage)
   const users = await i.usersRepository.findMany()
   restoreUsersSessionsUseCase.execute({ users })
-
 }
 
 beforeEach(async () => {

@@ -42,7 +42,7 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
     const currentSACStates = userSacList.map(sac => sac.getCache())
     const { updatedCacheStates } = this.userService.changePlan(user, newPlan, currentSACStates)
 
-    const [errorTrimmingSteamAccounts, trimSteamAccountsInfo] = await this.trimSteamAccounts.execute({
+    const [errorTrimmingSteamAccounts, trimSteamAccountsInfo] = this.trimSteamAccounts.execute({
       user,
     })
     if (errorTrimmingSteamAccounts) return bad(errorTrimmingSteamAccounts)

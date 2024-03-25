@@ -17,7 +17,7 @@ export class TrimSteamAccountsUseCase implements ITrimSteamAccountsUseCase {
     const [errorGettingUser, user] = await uc.getUser(this.usersRepository, userId)
     if (errorGettingUser) return bad(errorGettingUser)
 
-    const [errorTrimmingAccounts] = await this.trimSteamAccounts.execute({
+    const [errorTrimmingAccounts] = this.trimSteamAccounts.execute({
       user,
     })
 
