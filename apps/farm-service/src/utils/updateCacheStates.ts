@@ -1,25 +1,21 @@
-import { CacheState, } from "core"
-
-type Limitations = {
-  maxGamesAllowed: number
-}
+import { CacheState, PlanInfinity, PlanUsage } from "core"
 
 type UpdateCacheStatesProps = {
-  limitations: Limitations
+  plan: PlanUsage | PlanInfinity
   currentSACStates: CacheState[]
 }
 
-export function updateCacheStates({ currentSACStates, limitations }: UpdateCacheStatesProps) {
-  return currentSACStates.map(updateCacheState(limitations))
+export function updateCacheStates({ currentSACStates, plan }: UpdateCacheStatesProps) {
+  return currentSACStates.map(updateCacheState(plan))
 }
-export function updateCacheState(limitations: Limitations) {
+export function updateCacheState(plan: PlanUsage | PlanInfinity) {
   return (state: CacheState) =>
     CacheState.restore({
       accountName: state.accountName,
       farmStartedAt: state.farmStartedAt,
-      gamesPlaying: state.gamesPlaying.slice(0, limitations.maxGamesAllowed),
-      gamesStaging: state.gamesStaging.slice(0, limitations.maxGamesAllowed),
-      planId: state.planId,
+      gamesPlaying: state.gamesPlaying.slice(0, plan.maxGamesAllowed),
+      gamesStaging: state.gamesStaging.slice(0, plan.maxGamesAllowed),
+      planId: plan.id_plan,
       status: state.status,
       username: state.username,
     })

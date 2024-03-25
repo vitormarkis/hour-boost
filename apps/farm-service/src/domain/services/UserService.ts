@@ -5,9 +5,7 @@ import { updateCacheStates } from "~/utils/updateCacheStates"
 export class UserService {
   changePlan(user: User, newPlan: PlanInfinity | PlanUsage, currentSACStates: CacheState[]) {
     const updatedCacheStates: CacheState[] = updateCacheStates({
-      limitations: {
-        maxGamesAllowed: newPlan.maxGamesAllowed
-      },
+      plan: newPlan,
       currentSACStates: currentSACStates,
     })
     user.assignPlan(newPlan)

@@ -16,9 +16,7 @@ export function getUserSACs_OnStorage_ByUser_UpdateStates(
   const currentSACStates = userSacList.filter(nonNullable).map(sac => sac.getCache())
   const updatedCacheStates = updateCacheStates({
     currentSACStates,
-    limitations: {
-      maxGamesAllowed: plan.maxGamesAllowed,
-    },
+    plan,
   })
 
   return nice(updatedCacheStates)
