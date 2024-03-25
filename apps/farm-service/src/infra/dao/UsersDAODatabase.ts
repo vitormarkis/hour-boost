@@ -317,6 +317,7 @@ function makeSteamAccountFromDatabaseToSession(
           farmStartedAt: cache.farmStartedAt?.toISOString() ?? null,
           status: cache.status,
           autoRelogin: false,
+          isRestoringConnection: true,
           ...persona,
         } as const)
       }
@@ -349,6 +350,7 @@ function makeSteamAccountFromDatabaseToSession(
       farmStartedAt,
       status,
       autoRelogin: sac.autoRestart ?? false,
+      isRestoringConnection: false,
       ...persona,
     })
   }

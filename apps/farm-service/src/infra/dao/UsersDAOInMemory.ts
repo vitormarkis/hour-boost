@@ -34,6 +34,7 @@ export class UsersDAOInMemory implements UsersDAO {
         stagingGames: [],
         farmingGames: [],
         farmStartedAt: null,
+        isRestoringConnection: false,
       }))
 
       const finalUser: UserAdminPanelSession = {
@@ -135,6 +136,7 @@ export class UsersDAOInMemory implements UsersDAO {
       role: foundUser.role.name,
       status: foundUser.status.name,
       steamAccounts: foundUser.steamAccounts.data.map(sa => ({
+        isRestoringConnection: false,
         status: "online",
         accountName: sa.credentials.accountName,
         id_steamAccount: sa.id_steamAccount,

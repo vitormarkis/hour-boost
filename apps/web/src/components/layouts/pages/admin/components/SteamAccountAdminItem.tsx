@@ -1,13 +1,13 @@
-import React, { CSSProperties, PropsWithChildren, createContext, useContext, useEffect } from "react"
-import { cn } from "@/lib/utils"
-import { SteamAccountSession } from "core"
-import { ImagesGrid, ImagesGridContent, ImagesGridIconWrapper } from "./ImagesGrid"
-import { IMG_USER_PLACEHOLDER } from "@/consts"
-import { useUserAdminListItem } from "../hooks/useUserAdminListItem"
-import { useUserAdminItemId } from "../UserItemAction/context"
+import { TimeSince } from "@/components/atoms/TimeSince"
 import { IconJoystick } from "@/components/icons/IconJoystick"
 import { IconScrollText } from "@/components/icons/IconScrollText"
-import { TimeSince } from "@/components/atoms/TimeSince"
+import { IMG_USER_PLACEHOLDER } from "@/consts"
+import { cn } from "@/lib/utils"
+import { SteamAccountSession } from "core"
+import React, { PropsWithChildren, createContext, useContext } from "react"
+import { useUserAdminItemId } from "../UserItemAction/context"
+import { useUserAdminListItem } from "../hooks/useUserAdminListItem"
+import { ImagesGrid, ImagesGridContent, ImagesGridIconWrapper } from "./ImagesGrid"
 import { SeeGamesSheet } from "./SeeGamesSheet"
 
 export type SteamAccountAdminItemProps = React.ComponentPropsWithoutRef<"div"> & {}
@@ -19,6 +19,7 @@ const SteamAccountAdminItem = React.forwardRef<React.ElementRef<"div">, SteamAcc
     const status = useSteamAccountAdminItem(sa => sa.status)
     const farmedTimeInSeconds = useSteamAccountAdminItem(sa => sa.farmedTimeInSeconds)
     const farmStartedAt = useSteamAccountAdminItem(sa => sa.farmStartedAt)
+    const isRestoringConnection = useSteamAccountAdminItem(sa => sa.isRestoringConnection)
 
     return (
       <div
@@ -26,6 +27,7 @@ const SteamAccountAdminItem = React.forwardRef<React.ElementRef<"div">, SteamAcc
         className={cn("pl-[--sa-padding-left]", className)}
         ref={ref}
       >
+        {isRestoringConnection && <div className="absolute inset-0 bg-[#f00]" />}
         <div className="flex h-[--container-height] cursor-pointer select-none items-center bg-black/10 hover:bg-slate-900/50">
           <div className="pr-2">
             <div className="grid h-[--container-height] w-[--container-height] place-items-center">
