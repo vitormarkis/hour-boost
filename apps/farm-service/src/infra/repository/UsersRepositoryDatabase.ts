@@ -70,24 +70,25 @@ export class UsersRepositoryDatabase implements UsersRepository {
     // }
 
     if (user.steamAccounts.data.length > 0) {
+      const VALUES = user.steamAccounts.data
+        .map(sa =>
+          toSQL([
+            sa.ownerId,
+            sa.credentials.accountName,
+            toSQLDate(new Date()),
+            sa.id_steamAccount,
+            sa.credentials.password,
+            sa.autoRelogin ? 1 : 0,
+          ])
+        )
+        .join(", ")
       await this.prisma.$queryRawUnsafe(`
         INSERT INTO steam_accounts (owner_id, accountName, createdAt, id_steamAccount, password, autoRelogin)
-        VALUES ${user.steamAccounts.data
-          .map(sa =>
-            toSQL([
-              sa.ownerId,
-              sa.credentials.accountName,
-              toSQLDate(new Date()),
-              sa.id_steamAccount,
-              sa.credentials.password,
-              sa.autoRelogin ? 1 : 0,
-            ])
-          )
-          .join(", ")} as new
+        VALUES ${VALUES}
         ON DUPLICATE KEY UPDATE
-          owner_id = new.owner_id,
-          password = new.password,
-          autoRelogin = new.autoRelogin;
+          owner_id = VALUES(owner_id),
+          password = VALUES(password),
+          autoRelogin = VALUES(autoRelogin);
         `)
     }
   }
