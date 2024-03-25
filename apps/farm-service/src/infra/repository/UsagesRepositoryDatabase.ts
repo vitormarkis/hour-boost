@@ -12,6 +12,7 @@ export class UsagesRepositoryDatabase implements UsagesRepository {
         id_usage: usage.id_usage,
         plan_id: usage.plan_id,
         accountName: usage.accountName,
+        user_id: usage.user_id,
       },
     })
 

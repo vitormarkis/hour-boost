@@ -1,39 +1,28 @@
 import type { PrismaClient } from "@prisma/client"
 import {
-  type 
-  DatabaseSteamAccount,
-  type 
-  GameSession,
-  type 
-  Persona,
-  type 
+  type DatabaseSteamAccount,
+  type GameSession,
+  type Persona,
   PlanInfinity,
-  type 
-  PlanRepository,
+  PlanInfinitySession,
+  type PlanRepository,
   PlanUsage,
-  type 
-  PurchaseSession,
-  type 
-  SteamAccountClientStateCacheRepository,
-  type 
-  SteamAccountSession,
-  type 
-  Usage,
-  type 
-  UserAdminPanelSession,
-  type 
-  UserSession,
-  type 
-  UserSessionShallow,
-  type 
-  UsersDAO,
+  PlanUsageSession,
+  type PurchaseSession,
+  type SteamAccountClientStateCacheRepository,
+  type SteamAccountSession,
+  type Usage,
+  type UserAdminPanelSession,
+  type UserSession,
+  type UserSessionShallow,
+  type UsersDAO,
 } from "core"
 import type { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
 import type { GetPersonaStateUseCase } from "~/application/use-cases/GetPersonaStateUseCase"
 import type { GetUserSteamGamesUseCase } from "~/application/use-cases/GetUserSteamGamesUseCase"
-import { getCurrentPlanOrCreateOne } from "~/infra/mappers/databasePlanToDomain"
-import { databasePlanToSession } from "~/infra/mappers/databasePlanToSession"
+import { databasePlanToDomain } from "~/infra/mappers/databasePlanToDomain"
 import { databaseUsageToDomain } from "~/infra/mappers/databaseUsageToDomain"
+import { domainPlanToSession } from "~/infra/mappers/domainPlanToSession"
 
 export class UsersDAODatabase implements UsersDAO {
   steamAccountFromDatabaseToSession: SteamAccountFromDatabaseToSession
@@ -57,8 +46,7 @@ export class UsersDAODatabase implements UsersDAO {
     const dbUser = await this.prisma.user.findUnique({
       where: { id_user: userId },
       include: {
-        plan: { include: { usages: true } },
-        custom_plan: { include: { usages: true } },
+        plan: { include: { usages: true, customPlan: true } },
         purchases: { select: { id_Purchase: true } },
         steamAccounts: {
           select: {
@@ -73,15 +61,12 @@ export class UsersDAODatabase implements UsersDAO {
 
     if (!dbUser) return null
 
-    const userPlanDB = dbUser.plan ?? dbUser.custom_plan
-    const farmUsedTime = await getFarmUsedTime(userPlanDB?.usages.map(databaseUsageToDomain) ?? null)
-    1
-    if (!dbUser.plan && !dbUser.custom_plan) throw new Error("Plan does not exists.")
+    const planDomain = databasePlanToDomain(dbUser.plan)
 
     const result: UserSessionShallow = {
       email: dbUser.email,
       id: dbUser.id_user,
-      plan: databasePlanToSession(dbUser.plan ?? dbUser.custom_plan!, farmUsedTime),
+      plan: domainPlanToSession(planDomain),
       profilePic: dbUser.profilePic,
       role: dbUser.role,
       status: dbUser.status,
@@ -94,15 +79,10 @@ export class UsersDAODatabase implements UsersDAO {
     const usersAdminListDatabase = await getUserAdminListDatabase(this.prisma)
 
     const finalResultPromises = usersAdminListDatabase.map(async user => {
-      if (!user.plan && !user.custom_plan) throw new Error("Plan does not exists.")
-      const userPlan = getCurrentPlanOrCreateOne(user.plan ?? user.custom_plan, user.id_user)
+      const plan = databasePlanToDomain(user.plan)
 
-      const farmUsedTime = await getFarmUsedTime(user.plan?.usages.map(databaseUsageToDomain) ?? null)
-
-      if (!user.plan && !user.custom_plan) throw new Error("Plan does not exists.")
       const steamAccounts = await Promise.all(
         user.steamAccounts.map(async sa => {
-          if (!user.plan && !user.custom_plan) throw new Error("Plan does not exists.")
           return this.steamAccountFromDatabaseToSession(
             {
               accountName: sa.accountName,
@@ -110,7 +90,7 @@ export class UsersDAODatabase implements UsersDAO {
             },
             {
               id_user: user.id_user,
-              id_plan: (user.plan ?? user.custom_plan!).id_plan,
+              id_plan: plan.id_plan,
               username: user.username,
               plan: { usages: user.plan?.usages.map(databaseUsageToDomain) ?? null },
             }
@@ -121,7 +101,7 @@ export class UsersDAODatabase implements UsersDAO {
       const result: UserAdminPanelSession = {
         id_user: user.id_user,
         username: user.username,
-        plan: userPlanToPlanSession(userPlan, farmUsedTime),
+        plan: domainPlanToSession(plan),
         profilePicture: user.profilePic,
         purchases: user.purchases.map(map_purchasesFromDatabaseToSession),
         role: user.role,
@@ -141,8 +121,7 @@ export class UsersDAODatabase implements UsersDAO {
     const foundUser = await this.prisma.user.findUnique({
       where: { id_user: userId },
       select: {
-        plan: { include: { usages: true } },
-        custom_plan: { include: { usages: true } },
+        plan: { include: { usages: true, customPlan: true } },
         id_user: true,
         username: true,
       },
@@ -150,7 +129,7 @@ export class UsersDAODatabase implements UsersDAO {
 
     return foundUser
       ? {
-          plan: getCurrentPlanOrCreateOne(foundUser.plan ?? foundUser.custom_plan, foundUser.id_user),
+          plan: databasePlanToDomain(foundUser.plan),
           userId: foundUser.id_user,
           username: foundUser.username,
         }
@@ -175,8 +154,7 @@ export class UsersDAODatabase implements UsersDAO {
     const dbUser = await this.prisma.user.findUnique({
       where: { id_user: userId },
       include: {
-        plan: { include: { usages: true } },
-        custom_plan: { include: { usages: true } },
+        plan: { include: { usages: true, customPlan: true } },
         purchases: { select: { id_Purchase: true } },
         steamAccounts: {
           select: {
@@ -191,7 +169,8 @@ export class UsersDAODatabase implements UsersDAO {
 
     if (!dbUser) return null
 
-    const userPlan = getCurrentPlanOrCreateOne(dbUser.plan ?? dbUser.custom_plan, dbUser.id_user)
+    const planDomain = databasePlanToDomain(dbUser.plan)
+    const plan = domainPlanToSession(planDomain)
 
     const steamAccounts: SteamAccountSession[] = await Promise.all(
       dbUser.steamAccounts.map(async sa => {
@@ -202,18 +181,13 @@ export class UsersDAODatabase implements UsersDAO {
           },
           {
             id_user: userId,
-            id_plan: dbUser.plan?.id_plan ?? dbUser.custom_plan?.id_plan!,
+            id_plan: planDomain.id_plan,
             username: dbUser.username,
             plan: { usages: dbUser.plan?.usages.map(databaseUsageToDomain) ?? null },
           }
         )
       })
     )
-
-    const farmUsedTime = await getFarmUsedTime(dbUser.plan?.usages.map(databaseUsageToDomain) ?? null)
-    if (farmUsedTime === null) console.log(`Farmed used time voltou como null. [${userId}]`)
-
-    const plan = userPlanToPlanSession(userPlan, farmUsedTime)
 
     return {
       email: dbUser.email,
@@ -246,26 +220,39 @@ export class UsersDAODatabase implements UsersDAO {
   }
 }
 
-function userPlanToPlanSession(userPlan: PlanUsage | PlanInfinity, farmUsedTime: number | null) {
-  return userPlan instanceof PlanUsage
-    ? {
-        id_plan: userPlan.id_plan,
-        autoRestarter: userPlan.autoRestarter,
-        maxGamesAllowed: userPlan.maxGamesAllowed,
-        maxSteamAccounts: userPlan.maxSteamAccounts,
-        maxUsageTime: userPlan.maxUsageTime,
-        name: userPlan.name,
-        type: userPlan.type as "USAGE",
-        farmUsedTime: farmUsedTime ?? 0,
-      }
-    : {
-        id_plan: userPlan.id_plan,
-        autoRestarter: userPlan.autoRestarter,
-        maxGamesAllowed: userPlan.maxGamesAllowed,
-        maxSteamAccounts: userPlan.maxSteamAccounts,
-        name: userPlan.name,
-        type: userPlan.type as "INFINITY",
-      }
+export function userPlanToPlanSession(
+  userPlan: PlanUsage | PlanInfinity,
+  farmUsedTime: number | null
+): PlanUsageSession | PlanInfinitySession {
+  if (userPlan instanceof PlanUsage) {
+    const planSession: PlanUsageSession = {
+      id_plan: userPlan.id_plan,
+      autoRestarter: userPlan.autoRestarter,
+      maxGamesAllowed: userPlan.maxGamesAllowed,
+      maxSteamAccounts: userPlan.maxSteamAccounts,
+      maxUsageTime: userPlan.maxUsageTime,
+      name: userPlan.name,
+      type: userPlan.type as "USAGE",
+      farmUsedTime: farmUsedTime ?? 0,
+      custom: userPlan.custom,
+    }
+    return planSession
+  }
+  if (userPlan instanceof PlanInfinity) {
+    const planSession: PlanInfinitySession = {
+      id_plan: userPlan.id_plan,
+      autoRestarter: userPlan.autoRestarter,
+      maxGamesAllowed: userPlan.maxGamesAllowed,
+      maxSteamAccounts: userPlan.maxSteamAccounts,
+      name: userPlan.name,
+      type: userPlan.type as "INFINITY",
+      custom: userPlan.custom,
+    }
+
+    return planSession
+  }
+
+  throw new Error("Invariant! Plano não é nem usage nem infinity.")
 }
 
 type DBSteamAccount = {
@@ -354,14 +341,6 @@ function getDefaultPersona(): Persona {
   }
 }
 
-async function getFarmUsedTime(usages: Usage[] | null) {
-  return usages
-    ? usages.reduce((acc, item) => {
-        return acc + item.amountTime
-      }, 0)
-    : 0
-}
-
 function map_purchasesFromDatabaseToSession(purchaseDB: UserAdminListDatabasePurchase): PurchaseSession {
   return {
     id_Purchase: purchaseDB.id_Purchase,
@@ -385,8 +364,7 @@ function getUserAdminListDatabase(prisma: PrismaClient) {
       username: true,
       role: true,
       profilePic: true,
-      plan: { include: { usages: true } },
-      custom_plan: { include: { usages: true } },
+      plan: { include: { usages: true, customPlan: true } },
       purchases: { select: { id_Purchase: true } },
       status: true,
       steamAccounts: {

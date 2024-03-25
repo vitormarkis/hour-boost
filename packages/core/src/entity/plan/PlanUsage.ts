@@ -1,15 +1,13 @@
-import { Usage } from "../../entity/plan/Usage"
-import { Plan, PlanUsageName } from "../../entity/plan/Plan"
-import { UsageUsedMoreThanPlanAllows } from "../../entity/exceptions"
 import { UsageList } from "core/entity/plan/UsageList"
-import { PlanSetters } from "./extends"
+import { UsageUsedMoreThanPlanAllows } from "../../entity/exceptions"
+import { Plan, PlanCreateProps, PlanUsageName } from "../../entity/plan/Plan"
+import { Usage } from "../../entity/plan/Usage"
 
 export abstract class PlanUsage extends Plan {
   readonly name: PlanUsageName
-  readonly maxUsageTime: number
-  custom: boolean
+  maxUsageTime: number
 
-  constructor(props: PlanUsageAllProps) {
+  constructor(props: PlanUsageConstructorProps) {
     super({
       ...props,
       type: "USAGE",
@@ -37,10 +35,6 @@ export abstract class PlanUsage extends Plan {
     this.usages.remove(usageID)
   }
 
-  isCustom(): this is PlanSetters {
-    return this.custom
-  }
-
   use(usage: Usage): void | UsageUsedMoreThanPlanAllows {
     if (usage.amountTime + this.getUsageTotal() > this.maxUsageTime) {
       const usageWithRemainingUsageLeft = Usage.restore({
@@ -58,20 +52,29 @@ export abstract class PlanUsage extends Plan {
   }
 
   isFarmAvailable() {
-    console.log(this.usages)
     const amountUsedSoFar = this.usages.data.reduce((amount, usage) => {
       amount + usage.amountTime
       return amount
     }, 0)
-    console.log("CALCULANDO SE FARM ESTA DISPONIVEL? DOMAIN")
 
-    console.log({
-      usageTime: this.maxUsageTime,
-      amountUsedSoFar,
-    })
     return amountUsedSoFar < this.maxUsageTime
   }
 }
+
+export type PlanUsageConstructorProps = {
+  id_plan: string
+  name: PlanUsageName
+  price: number
+  ownerId: string
+  maxSteamAccounts: number
+  maxGamesAllowed: number
+  maxUsageTime: number
+  autoRestarter: boolean
+  usages: UsageList
+  custom: boolean
+}
+
+export type PlanUsageCreateProps = PlanCreateProps
 
 export type PlanUsageRestoreProps = {
   id_plan: string
@@ -79,19 +82,10 @@ export type PlanUsageRestoreProps = {
   usages: UsageList
 }
 
-export type PlanUsageCreateProps = {
-  ownerId: string
-}
-
-export type PlanUsageAllProps = {
-  id_plan: string
-  name: PlanUsageName
-  price: number
-  ownerId: string
-  maxSteamAccounts: number
+export type PlanUsageRestoreFromCustomProps = PlanUsageRestoreProps & {
   maxGamesAllowed: number
+  maxSteamAccounts: number
   autoRestarter: boolean
   maxUsageTime: number
-  usages: UsageList
-  custom: boolean
+  price: number
 }

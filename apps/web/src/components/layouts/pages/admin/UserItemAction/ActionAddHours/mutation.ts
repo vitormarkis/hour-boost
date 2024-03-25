@@ -1,15 +1,14 @@
+import { api } from "@/lib/axios"
 import { ECacheKeys } from "@/mutations/queryKeys"
+import { DataOrMessage } from "@/util/DataOrMessage"
+import { planIsUsage } from "@/util/thisPlanIsUsage"
+import { useAuth } from "@clerk/clerk-react"
+import { DefaultError, useMutation, useQueryClient } from "@tanstack/react-query"
+import { UserAdminPanelSession } from "core"
+import { produce } from "immer"
 import { UserAdminActionAddHoursPayload } from "./controller"
 import { httpUserAdminActionAddHours } from "./httpRequest"
 import { IntentionCodes } from "./types"
-import { DataOrMessage } from "@/util/DataOrMessage"
-import { DefaultError, useMutation, useQueryClient } from "@tanstack/react-query"
-import { AxiosInstance } from "axios"
-import { UserAdminPanelSession } from "core"
-import { produce } from "immer"
-import { api } from "@/lib/axios"
-import { useAuth } from "@clerk/clerk-react"
-import { planIsUsage } from "@/util/thisPlanIsUsage"
 
 export function useUserAdminActionAddHours() {
   const queryClient = useQueryClient()
@@ -19,6 +18,7 @@ export function useUserAdminActionAddHours() {
     mutationKey: ECacheKeys.addHours,
     mutationFn: async (...args) => httpUserAdminActionAddHours(...args, getAPI),
     onSuccess(_, variables) {
+      queryClient.invalidateQueries({ queryKey: ECacheKeys["USER-ADMIN-ITEM-LIST"] })
       queryClient.setQueryData<UserAdminPanelSession[]>(ECacheKeys["USER-ADMIN-ITEM-LIST"], users => {
         return produce(users, users => {
           const user = users!.find(u => u.id_user === variables.userId)!

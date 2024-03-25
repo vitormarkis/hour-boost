@@ -1,9 +1,9 @@
-import { z } from "zod"
-import { Usage } from "../../entity/plan/Usage"
 import { UsageList } from "core/entity/plan"
 import { makeError } from "core/utils/throw"
+import { Usage } from "../../entity/plan/Usage"
 
 export abstract class Plan {
+  custom: boolean
   id_plan: string
   readonly name: PlanAllNames
   maxSteamAccounts: number
@@ -20,13 +20,11 @@ export abstract class Plan {
       case "DIAMOND":
       case "GOLD":
       case "SILVER":
-      case "INFINITY-CUSTOM":
         if (props.type !== "INFINITY") {
           throw makeError("Invariant! Mismatch entre o tipo do plano e o nome", props)
         }
         break
       case "GUEST":
-      case "USAGE-CUSTOM":
         if (props.type !== "USAGE") {
           throw makeError("Invariant! Mismatch entre o tipo do plano e o nome", props)
         }
@@ -43,6 +41,7 @@ export abstract class Plan {
     this._status = props.status
     this.usages = props.usages
     this.price = props.price
+    this.custom = props.custom
   }
 
   abstract use(usage: Usage): void
@@ -81,17 +80,13 @@ export type PlanAllProps = {
   type: PlanType
   status: PlanStatus
   usages: UsageList
+  custom: boolean
 }
 
 export type PlanAllNames = PlanInfinityName | PlanUsageName
 export type PlanStatus = "FARMING" | "IDDLE"
-export type PlanCustomName = Extract<PlanAllNames, "USAGE-CUSTOM" | "INFINITY-CUSTOM">
-export type PlanNormalName = Exclude<PlanAllNames, "USAGE-CUSTOM" | "INFINITY-CUSTOM">
 
-export const planUsageNameSchema = z.enum(["GUEST", "USAGE-CUSTOM"])
-export type PlanUsageName = z.infer<typeof planUsageNameSchema>
-
-export const planInfinityNameSchema = z.enum(["SILVER", "GOLD", "DIAMOND", "INFINITY-CUSTOM"])
-export type PlanInfinityName = z.infer<typeof planInfinityNameSchema>
+export type PlanUsageName = "GUEST"
+export type PlanInfinityName = "SILVER" | "GOLD" | "DIAMOND"
 
 export type PlanType = "INFINITY" | "USAGE"

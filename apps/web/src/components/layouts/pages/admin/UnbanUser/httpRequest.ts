@@ -1,8 +1,8 @@
-import { UserAdminActionUnbanUserPayload } from "./controller"
-import { IntentionCodes } from "./types"
 import { DataOrMessage, MessageMaker } from "@/util/DataOrMessage"
 import { resolvePromiseToMessage } from "@/util/resolvePromiseToMessage"
-import { AxiosInstance, AxiosResponse } from "axios"
+import { AxiosInstance } from "axios"
+import { UserAdminActionUnbanUserPayload } from "./controller"
+import { IntentionCodes } from "./types"
 
 type UserAdminActionUnbanUserOutput = {
   message: string

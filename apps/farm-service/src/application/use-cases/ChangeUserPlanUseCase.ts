@@ -1,18 +1,20 @@
-import type {
-  DataOrFail,
+import {
+  type DataOrFail,
   Fail,
-  GetError,
-  PlanAllNames,
-  SteamAccountClientStateCacheRepository,
-  User,
-  UsersRepository,
+  type GetError,
+  type PlanAllNames,
+  PlanRepository,
+  type SteamAccountClientStateCacheRepository,
+  type User,
+  type UsersRepository,
 } from "core"
+import { persistUsagesOnDatabase } from "~/application/utils/persistUsagesOnDatabase"
 import type { PlanService } from "~/domain/services/PlanService"
 import type { UserService } from "~/domain/services/UserService"
+import { TrimSteamAccounts } from "~/domain/utils/trim-steam-accounts"
 import { getUserSACs_OnStorage_ByUser } from "~/utils/getUser"
 import { bad, nice } from "~/utils/helpers"
-import { trimAccountsName } from "~/utils/trimAccountsName"
-import type { RemoveSteamAccountUseCase, RestoreAccountSessionUseCase } from "."
+import type { RestoreAccountSessionUseCase } from "."
 import type { AllUsersClientsStorage } from "../services"
 
 export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
@@ -21,48 +23,57 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
     private readonly usersRepository: UsersRepository,
     private readonly planService: PlanService,
     private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository,
-    private readonly removeSteamAccountUseCase: RemoveSteamAccountUseCase,
     private readonly restoreAccountSessionUseCase: RestoreAccountSessionUseCase,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly trimSteamAccounts: TrimSteamAccounts,
+    private readonly planRepository: PlanRepository
   ) {}
 
   private async executeImpl({ user, newPlanName }: ChangeUserPlanUseCasePayload) {
     const [errorChangingPlan, newPlan] = this.planService.createPlan({ currentPlan: user.plan, newPlanName })
     if (errorChangingPlan) return bad(errorChangingPlan)
 
-    const trimmingAccountsName = trimAccountsName({
-      newPlan,
-      steamAccounts: user.steamAccounts.data,
-    })
-
-    const failsTrimmingAccount: Fail[] = []
-    if (trimmingAccountsName.length) {
-      for (const accountName of trimmingAccountsName) {
-        const [error] = await this.removeSteamAccountUseCase.execute({
-          accountName,
-          steamAccountId: user.steamAccounts.data.find(sa => sa.credentials.accountName === accountName)!
-            .id_steamAccount,
-          userId: user.id_user,
-          username: user.username,
-        })
-
-        if (error) failsTrimmingAccount.push(error)
-      }
-    }
-
-    if (failsTrimmingAccount.length) return bad({ code: "LIST::TRIMMING-ACCOUNTS", failsTrimmingAccount })
-
     const [errorGettingUserSACList, userSacList] = getUserSACs_OnStorage_ByUser(
       user,
       this.allUsersClientsStorage
     )
-    if (errorGettingUserSACList) return bad(errorGettingUserSACList)
+    if (errorGettingUserSACList) return bad(Fail.create(errorGettingUserSACList.code, 400))
 
     const currentSACStates = userSacList.map(sac => sac.getCache())
     const { updatedCacheStates } = this.userService.changePlan(user, newPlan, currentSACStates)
 
+    const [errorTrimmingSteamAccounts, trimSteamAccountsInfo] = this.trimSteamAccounts.execute({
+      user,
+    })
+    if (errorTrimmingSteamAccounts) return bad(errorTrimmingSteamAccounts)
+
+    const persistUsagesList = await Promise.all(
+      trimSteamAccountsInfo.removeSteamAccountsResults.map(([error, value]) => {
+        if (error) return bad(error)
+        if (value.stopFarmUsages) {
+          persistUsagesOnDatabase(user.plan.id_plan, value.stopFarmUsages, this.planRepository)
+        }
+        return nice()
+      })
+    )
+
+    const persistUsagesListErrorsOnly = persistUsagesList.filter(
+      ([persistUsageResultError]) => !!persistUsageResultError
+    )
+    if (persistUsagesListErrorsOnly.length) {
+      const persistUsagesListErrorsOnlyExtracted = persistUsagesListErrorsOnly.map(([error]) => bad(error))
+      return bad(
+        Fail.create("COULD-NOT-PERSIST-ACCOUNT-USAGE", 400, {
+          persistUsagesListErrors: persistUsagesListErrorsOnlyExtracted,
+        })
+      )
+    }
+
     const fails: Fail[] = []
-    for (const state of updatedCacheStates) {
+    const updatedCacheStatesFiltered = updatedCacheStates.filter(c =>
+      user.steamAccounts.data.map(sa => sa.credentials.accountName).includes(c.accountName)
+    )
+    for (const state of updatedCacheStatesFiltered) {
       await this.steamAccountClientStateCacheRepository.save(state)
       const [error] = await this.restoreAccountSessionUseCase.execute({
         plan: newPlan,
@@ -92,10 +103,13 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
 
     if (fails.length) {
       console.log("NSTH: had a list to restore account session, but some failed", fails)
-      return bad({ code: "LIST::UPDATING-CACHE", fails })
+      return bad(Fail.create("LIST::UPDATING-CACHE", 400, fails))
     }
 
     await this.usersRepository.update(user)
+    for (const accountName of trimSteamAccountsInfo.trimmingAccountsName) {
+      await this.steamAccountClientStateCacheRepository.deleteAllEntriesFromAccount(accountName)
+    }
     return nice()
   }
 
@@ -112,6 +126,7 @@ export class ChangeUserPlanUseCase implements IChangeUserPlanUseCase {
       case "LIST::TRIMMING-ACCOUNTS":
       case "LIST::UPDATING-CACHE":
       case "USER-STORAGE-NOT-FOUND":
+      case "COULD-NOT-PERSIST-ACCOUNT-USAGE":
         return bad(error)
     }
   }
@@ -123,9 +138,6 @@ export type ChangeUserPlanUseCasePayload = {
 }
 
 interface IChangeUserPlanUseCase {
-  execute(...args: any[]): Promise<DataOrFail<any>>
+  execute(...args: any[]): Promise<DataOrFail<Fail>>
   handleFail(...args: any[]): DataOrFail<any>
-}
-function hasOnlyTruthyValues<T>(value: (NonNullable<T> | null)[]): value is NonNullable<T>[] {
-  return !value.includes(null)
 }

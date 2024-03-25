@@ -1,17 +1,17 @@
 import { IDGenerator } from "core/contracts"
-import { ApplicationError, SteamAccount, SteamAccountCredentials } from "core/entity"
-import { SteamAccountsRepository, UsersRepository } from "core/repository"
+import { Fail, SteamAccount, SteamAccountCredentials } from "core/entity"
+import { UsersRepository } from "core/repository"
+import { bad, nice } from "core/utils"
 
 export class AddSteamAccount {
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly steamAccountsRepository: SteamAccountsRepository,
     private readonly idGenerator: IDGenerator
   ) {}
 
-  async execute(input: AddSteamAccountInput): Promise<AddSteamAccountOutput> {
+  async execute(input: AddSteamAccountInput) {
     const user = await this.usersRepository.getByID(input.userId)
-    if (!user) throw new ApplicationError("No user found!", 404)
+    if (!user) return bad(Fail.create("USER_NOT_FOUND", 404))
     const newSteamAccount = SteamAccount.create({
       idGenerator: this.idGenerator,
       credentials: SteamAccountCredentials.create({
@@ -20,11 +20,12 @@ export class AddSteamAccount {
       }),
       ownerId: user.id_user,
     })
-    user.addSteamAccount(newSteamAccount)
+    const [error] = user.addSteamAccount(newSteamAccount)
+    if (error) return bad(error)
     await this.usersRepository.update(user)
-    return {
+    return nice({
       steamAccountId: newSteamAccount.id_steamAccount,
-    }
+    })
   }
 }
 

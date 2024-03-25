@@ -8,17 +8,10 @@ export class PlanRepositoryDatabase implements PlanRepository {
   async getByUserId(userId: string): Promise<PlanUsage | PlanInfinity | null> {
     const plan = await this.prisma.plan.findUnique({
       where: { ownerId: userId },
-      include: { usages: true },
+      include: { usages: true, customPlan: true },
     })
 
-    if (plan) return databasePlanToDomain(plan)
-
-    const customPlan = await this.prisma.customPlan.findUnique({
-      where: { ownerId: userId },
-      include: { usages: true },
-    })
-
-    return customPlan ? databasePlanToDomain(customPlan) : null
+    return plan ? databasePlanToDomain(plan) : null
   }
 
   async list(): Promise<(PlanUsage | PlanInfinity)[]> {
@@ -44,6 +37,7 @@ export class PlanRepositoryDatabase implements PlanRepository {
                 createdAt: u.createdAt,
                 id_usage: u.id_usage,
                 accountName: u.accountName,
+                user_id: u.user_id,
               },
             }
           }),
@@ -55,16 +49,9 @@ export class PlanRepositoryDatabase implements PlanRepository {
   async getById(planId: string): Promise<PlanUsage | PlanInfinity | null> {
     const plan = await this.prisma.plan.findUnique({
       where: { id_plan: planId },
-      include: { usages: true },
+      include: { usages: true, customPlan: true },
     })
 
-    if (plan) return databasePlanToDomain(plan)
-
-    const customPlan = await this.prisma.customPlan.findUnique({
-      where: { id_plan: planId },
-      include: { usages: true },
-    })
-
-    return customPlan ? databasePlanToDomain(customPlan) : null
+    return plan ? databasePlanToDomain(plan) : null
   }
 }

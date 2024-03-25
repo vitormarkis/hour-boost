@@ -1,4 +1,4 @@
-import { CustomUsagePlan, PlanUsage } from "core"
+import { PlanUsage } from "core"
 import {
   type CustomInstances,
   type MakeTestInstancesProps,
@@ -9,14 +9,9 @@ import {
 } from "~/__tests__/instances"
 import { ensureExpectation } from "~/__tests__/utils"
 import { RestoreUsersSessionsUseCase } from "~/application/use-cases/RestoreUsersSessionsUseCase"
-import { makeFarmGames } from "~/application/use-cases/__tests_helpers"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { getSACOn_AllUsersClientsStorage_ByUserId } from "~/utils/getSAC"
-import { RestoreAccountSessionUseCase } from "."
 import { AddMoreGamesToPlanUseCase } from "./AddMoreGamesToPlanUseCase"
-import { ChangeUserPlanToCustomUseCase } from "./ChangeUserPlanToCustomUseCase"
-import { ChangeUserPlanUseCase } from "./ChangeUserPlanUseCase"
-import { RemoveSteamAccountUseCase } from "./RemoveSteamAccountUseCase"
 const log = console.log
 // console.log = () => {}
 
@@ -41,37 +36,14 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   const users = await i.usersRepository.findMany()
   restoreUsersSessionsUseCase.execute({ users })
 
-  const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
-    i.usersRepository,
-    i.allUsersClientsStorage,
-    i.sacStateCacheRepository,
-    i.usersClusterStorage,
-    i.planRepository,
-    i.autoRestarterScheduler
-  )
-  const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(i.usersClusterStorage, i.publisher)
-  const changeUserPlanUseCase = new ChangeUserPlanUseCase(
-    i.allUsersClientsStorage,
-    i.usersRepository,
-    i.planService,
-    i.sacStateCacheRepository,
-    removeSteamAccountUseCase,
-    restoreAccountSessionUseCase,
-    i.userService
-  )
   // const farmGamesController = new FarmGamesController({
   //   allUsersClientsStorage: i.allUsersClientsStorage,
   //   farmGamesUseCase: i.farmGamesUseCase,
   //   usersRepository: i.usersRepository,
   // })
-  const changeUserPlanToCustomUseCase = new ChangeUserPlanToCustomUseCase(changeUserPlanUseCase)
   addMoreGamesToPlanUseCase = new AddMoreGamesToPlanUseCase(
     i.usersRepository,
-    changeUserPlanToCustomUseCase,
-    i.allUsersClientsStorage,
-    i.usersClusterStorage,
-    i.sacStateCacheRepository,
-    i.planRepository
+    i.flushUpdateSteamAccountUseCase
   )
 }
 
@@ -95,7 +67,7 @@ test("should change usage plan to CUSTOM usage plan and increase max games allow
   expect(error).toBeNull()
 
   const userPlan2 = await i.planRepository.getById(meInstances.me.plan.id_plan)
-  expect(userPlan2).toBeInstanceOf(CustomUsagePlan)
+  expect(userPlan2?.custom).toBe(true)
   expect(userPlan2?.maxGamesAllowed).toBe(30)
 })
 
@@ -114,8 +86,7 @@ test("should change from farming 30 games, to 2 games, and client should update 
   expect(spy_clientGamesPlayed).not.toHaveBeenCalledWith(
     expect.arrayContaining([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
   )
-  const farmGames = makeFarmGames(i.farmGamesController)
-  const response = await farmGames(s.me.accountName, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], s.me.userId)
+  const response = await i.farmGames(s.me.accountName, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], s.me.userId)
   ensureExpectation(200, response)
   expect(spy_clientGamesPlayed).toHaveBeenCalledWith(expect.arrayContaining([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
 

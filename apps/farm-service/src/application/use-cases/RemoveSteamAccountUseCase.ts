@@ -1,85 +1,41 @@
 import {
+  type DataOrFail,
   Fail,
-  type 
   PlanRepository,
-  type 
   SteamAccountClientStateCacheRepository,
-  type 
   UsersRepository,
 } from "core"
-import type { AllUsersClientsStorage, UsersSACsFarmingClusterStorage } from "~/application/services"
-import { EAppResults } from "~/application/use-cases/RestoreAccountSessionUseCase"
+import { uc } from "~/application/use-cases/helpers"
 import { persistUsagesOnDatabase } from "~/application/utils/persistUsagesOnDatabase"
-import type { AutoRestarterScheduler } from "~/domain/cron"
-
-import type { DataOrFail } from "core"
+import { RemoveSteamAccount } from "~/features/remove-steam-account/domain"
 import { bad, nice } from "~/utils/helpers"
 
 export class RemoveSteamAccountUseCase implements IRemoveSteamAccountUseCase {
-  private readonly codify = <const T extends string = string>(moduleCode: T) =>
-    `[RemoveSteamAccountUseCase]:${moduleCode}` as const
   constructor(
     private readonly usersRepository: UsersRepository,
-    private readonly allUsersClientsStorage: AllUsersClientsStorage,
     private readonly steamAccountClientStateCacheRepository: SteamAccountClientStateCacheRepository,
-    private readonly usersSACsFarmingClusterStorage: UsersSACsFarmingClusterStorage,
     private readonly planRepository: PlanRepository,
-    private readonly autoRestarterScheduler: AutoRestarterScheduler
+    private readonly removeSteamAccount: RemoveSteamAccount
   ) {}
 
-  async execute({ accountName, steamAccountId, userId, username }: RemoveSteamAccountUseCasePayload) {
-    const user = await this.usersRepository.getByID(userId)
-    if (!user) {
-      const fail = new Fail({
-        code: EAppResults["USER-NOT-FOUND"],
-        httpStatus: 404,
-        payload: {
-          givenUserId: userId,
-        },
-      })
-      return bad(fail)
-    }
-    const steamAccountIndex = user.steamAccounts.data.findIndex(
-      acc => acc.credentials.accountName === accountName
-    )
-    if (steamAccountIndex < 0) {
-      const fail = new Fail({
-        code: EAppResults["STEAM-ACCOUNT-NOT-FOUND"],
-        httpStatus: 404,
-        payload: {
-          foundSteamAccountsOnUser: user.steamAccounts.data.map(acc => acc.credentials.accountName),
-          givenAccountName: accountName,
-        },
-      })
+  async execute({ accountName, userId }: RemoveSteamAccountUseCasePayload) {
+    const [errorGettingUser, user] = await uc.getUser(this.usersRepository, userId)
+    if (errorGettingUser) return bad(errorGettingUser)
 
-      return bad(fail)
-    }
+    const [errorRemovingSteamAccount, info] = this.removeSteamAccount.execute({
+      accountName,
+      user,
+    })
 
-    const [errorFindingCluster, userCluster] = this.usersSACsFarmingClusterStorage.get(username)
-    if (errorFindingCluster) return bad(errorFindingCluster)
+    if (errorRemovingSteamAccount) return bad(errorRemovingSteamAccount)
 
-    const isAccountFarming = userCluster.isAccountFarmingOnService(accountName)
+    const { stopFarmUsages } = info
 
-    this.autoRestarterScheduler.stopCron(accountName)
-
-    if (isAccountFarming) {
-      const [errorPausingFarmOnAccount, usages] = userCluster.pauseFarmOnAccountSync({
-        accountName,
-        isFinalizingSession: true,
-      })
-      if (errorPausingFarmOnAccount) {
-        return bad(
-          new Fail({
-            code: `PAUSE-FARM-ON-ACCOUNT::${errorPausingFarmOnAccount.code ?? "UNKNOWN"}`,
-            httpStatus: errorPausingFarmOnAccount.httpStatus,
-            payload: errorPausingFarmOnAccount.payload,
-          })
-        )
-      }
-
+    // was farming
+    if (stopFarmUsages) {
       const [errorPersistingUsages] = await persistUsagesOnDatabase(
         user.plan.id_plan,
-        usages,
+        stopFarmUsages,
         this.planRepository
       )
       if (errorPersistingUsages) {
@@ -93,24 +49,15 @@ export class RemoveSteamAccountUseCase implements IRemoveSteamAccountUseCase {
       }
     }
 
-    const steamAccount = user.steamAccounts.data[steamAccountIndex]
-    steamAccount.autoRelogin = false
-    user.steamAccounts.remove(steamAccountId)
     await this.usersRepository.update(user)
-
     await this.steamAccountClientStateCacheRepository.deleteAllEntriesFromAccount(accountName)
-
-    this.allUsersClientsStorage.removeSteamAccount(userId, accountName)
-    userCluster.removeSAC(accountName)
     return nice()
   }
 }
 
 export type RemoveSteamAccountUseCasePayload = {
   userId: string
-  steamAccountId: string
   accountName: string
-  username: string
 }
 
 interface IRemoveSteamAccountUseCase {

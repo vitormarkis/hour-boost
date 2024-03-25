@@ -5,12 +5,9 @@ import { GetUsersAdminListUseCase } from "~/application/use-cases/GetUsersAdminL
 import { ensureAdmin } from "~/inline-middlewares/ensureAdmin"
 import { validateBody } from "~/inline-middlewares/validate-payload"
 import {
-  allUsersClientsStorage,
-  changeUserPlanToCustomUseCase,
   changeUserPlanUseCase,
-  planRepository,
-  steamAccountClientStateCacheRepository,
-  usersClusterStorage,
+  flushUpdateSteamAccountUseCase,
+  setMaxSteamAccountsUseCase,
   usersDAO,
   usersRepository,
 } from "~/presentation/instances"
@@ -29,11 +26,7 @@ query_routerAdmin.get("/users-list", async (req, res) => {
 
 const addMoreGamesToPlanUseCase = new AddMoreGamesToPlanUseCase(
   usersRepository,
-  changeUserPlanToCustomUseCase,
-  allUsersClientsStorage,
-  usersClusterStorage,
-  steamAccountClientStateCacheRepository,
-  planRepository
+  flushUpdateSteamAccountUseCase
 )
 
 query_routerAdmin.post("/add-more-games", async (req, res) => {
@@ -58,12 +51,49 @@ query_routerAdmin.post("/add-more-games", async (req, res) => {
   if (error) {
     if ("code" in error) {
       switch (error.code) {
-        case "LIST::TRIMMING-ACCOUNTS":
-        case "LIST::UPDATING-CACHE":
         case "USER-NOT-FOUND":
         case "USER-STORAGE-NOT-FOUND":
           return console.log({ error })
         case "LIST:ERROR-RESETING-FARM":
+          return console.log(error.payload)
+        default:
+          error satisfies never
+      }
+    }
+    error satisfies never
+  }
+
+  return res.json({ usersAdminList, code: "SUCCESS" })
+})
+
+query_routerAdmin.post("/set-max-steam-accounts", async (req, res) => {
+  const [noAdminRole] = await ensureAdmin(req, res)
+  if (noAdminRole) return res.status(noAdminRole.status).json(noAdminRole.json)
+
+  const [invalidBody, body] = validateBody(
+    req.body,
+    z.object({
+      newMaxSteamAccountsAllowed: z.number().min(1).max(2, "Um usuário pode ter no máximo 2 contas."),
+      mutatingUserId: z.string().min(1),
+    })
+  )
+  if (invalidBody) return res.status(invalidBody.status).json(invalidBody.json)
+  const { newMaxSteamAccountsAllowed, mutatingUserId } = body
+
+  const [error, usersAdminList] = await setMaxSteamAccountsUseCase.execute({
+    newMaxSteamAccountsAllowed,
+    mutatingUserId,
+  })
+
+  if (error) {
+    if ("code" in error) {
+      switch (error.code) {
+        case "USER-NOT-FOUND":
+        case "USER-STORAGE-NOT-FOUND":
+          return console.log({ error })
+        case "LIST::TRIMMING-ACCOUNTS":
+        case "LIST:ERROR-RESETING-FARM":
+        case "COULD-NOT-PERSIST-ACCOUNT-USAGE":
           return console.log(error.payload)
         default:
           error satisfies never
@@ -84,7 +114,7 @@ query_routerAdmin.post("/change-user-plan", async (req, res) => {
   const [invalidBody, body] = validateBody(
     req.body,
     z.object({
-      newPlanName: z.enum(["DIAMOND", "GOLD", "GUEST", "SILVER", "INFINITY-CUSTOM", "USAGE-CUSTOM"]),
+      newPlanName: z.enum(["DIAMOND", "GOLD", "GUEST", "SILVER"]),
       userId: z.string().min(1),
     })
   )
@@ -92,7 +122,7 @@ query_routerAdmin.post("/change-user-plan", async (req, res) => {
   const { newPlanName, userId } = body
 
   const user = await usersRepository.getByID(userId)
-  const [error, response] = await changeUserPlanUseCase.execute({
+  const [error] = await changeUserPlanUseCase.execute({
     newPlanName,
     user: user!,
   })

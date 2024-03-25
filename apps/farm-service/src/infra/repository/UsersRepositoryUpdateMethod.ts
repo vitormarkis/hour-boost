@@ -1,45 +1,91 @@
-import type { $Enums, Prisma } from "@prisma/client"
-import type { PlanCustomName, PlanInfinity, PlanNormalName, PlanUsage, User } from "core"
+import type { Prisma } from "@prisma/client"
+import { type PlanInfinity, PlanUsage, type User, makeID } from "core"
 
 type UpdateData = Prisma.XOR<Prisma.UserUpdateInput, Prisma.UserUncheckedUpdateInput>
 type CreateData = Prisma.XOR<Prisma.UserCreateInput, Prisma.UserUncheckedCreateInput>
 
 export function getPlanCreation(plan: PlanUsage | PlanInfinity) {
-  if (plan.custom) {
-    return {
-      custom_plan: {
-        create: {
-          createdAt: new Date(),
-          id_plan: plan.id_plan,
-          name: mapCustomPlanName_toPrisma(plan.name as PlanCustomName),
-          type: plan.type,
-          maxGamesAllowed: plan.maxGamesAllowed,
-          maxSteamAccounts: plan.maxSteamAccounts,
-          maxUsageTime: "maxUsageTime" in plan ? plan.maxUsageTime : 0,
-          priceInCents: plan.price,
-          autoRelogin: plan.autoRestarter,
-        },
-      },
-    } satisfies Pick<CreateData, "plan" | "custom_plan">
-  }
   return {
     plan: {
       create: {
         createdAt: new Date(),
         id_plan: plan.id_plan,
-        name: plan.name as PlanNormalName,
+        name: plan.name,
         type: plan.type,
+        customPlan: plan.custom
+          ? {
+              connectOrCreate: {
+                where: { originalPlanId: plan.id_plan },
+                create: {
+                  createdAt: new Date(),
+                  id_plan: makeID(),
+                  maxGamesAllowed: plan.maxGamesAllowed,
+                  maxSteamAccounts: plan.maxSteamAccounts,
+                  maxUsageTime: plan instanceof PlanUsage ? plan.maxUsageTime : 0,
+                  priceInCents: plan.price,
+                  autoRelogin: plan.autoRestarter,
+                },
+              },
+            }
+          : undefined,
       },
     },
-  } satisfies Pick<CreateData, "plan" | "custom_plan">
+  } satisfies Pick<CreateData, "plan">
 }
 
 export function updateUser(user: User) {
-  const plan = createPlanToUpdate(user.plan)
+  const plan = user.plan
 
   const updateWithoutPlan: UpdateData = {
     email: user.email,
-    ...plan,
+    plan: {
+      update: {
+        where: {
+          ownerId: plan.ownerId,
+        },
+        data: {
+          createdAt: new Date(),
+          customPlan: plan.custom
+            ? {
+                upsert: {
+                  where: { originalPlanId: plan.id_plan },
+                  create: {
+                    autoRelogin: plan.autoRestarter,
+                    maxGamesAllowed: plan.maxGamesAllowed,
+                    maxSteamAccounts: plan.maxSteamAccounts,
+                    maxUsageTime: plan instanceof PlanUsage ? plan.maxUsageTime : 0,
+                    priceInCents: plan.price,
+                    createdAt: new Date(),
+                    id_plan: makeID(),
+                  },
+                  update: {
+                    autoRelogin: plan.autoRestarter,
+                    maxGamesAllowed: plan.maxGamesAllowed,
+                    maxSteamAccounts: plan.maxSteamAccounts,
+                    maxUsageTime: plan instanceof PlanUsage ? plan.maxUsageTime : 0,
+                    priceInCents: plan.price,
+                  },
+                },
+              }
+            : undefined,
+          id_plan: plan.id_plan,
+          name: plan.name,
+          type: plan.type,
+          usages: {
+            connectOrCreate: plan.usages.data.map(u => ({
+              where: { id_usage: u.id_usage },
+              create: {
+                amountTime: u.amountTime,
+                createdAt: new Date(),
+                id_usage: u.id_usage,
+                accountName: u.accountName,
+                user_id: u.user_id,
+              },
+            })),
+          },
+        },
+      },
+    },
     profilePic: user.profilePic,
     purchases: {
       connectOrCreate: user.purchases.map(p => ({
@@ -59,113 +105,4 @@ export function updateUser(user: User) {
   }
 
   return updateWithoutPlan
-}
-
-function createPlanToUpdate(plan: PlanUsage | PlanInfinity) {
-  if (plan.custom) {
-    const dbPlan: Pick<UpdateData, "plan" | "custom_plan"> = {
-      plan: {
-        disconnect: true,
-      },
-      custom_plan: {
-        upsert: {
-          where: {
-            ownerId: plan.ownerId,
-          },
-          update: {
-            maxGamesAllowed: plan.maxGamesAllowed,
-            maxSteamAccounts: plan.maxSteamAccounts,
-            maxUsageTime: "maxUsageTime" in plan ? plan.maxUsageTime : 0,
-            priceInCents: plan.price,
-            usages: {
-              connectOrCreate: plan.usages.data.map(u => ({
-                where: { id_usage: u.id_usage },
-                create: {
-                  amountTime: u.amountTime,
-                  createdAt: new Date(),
-                  id_usage: u.id_usage,
-                  accountName: u.accountName,
-                },
-              })),
-            },
-          },
-          create: {
-            createdAt: new Date(),
-            maxGamesAllowed: plan.maxGamesAllowed,
-            maxSteamAccounts: plan.maxSteamAccounts,
-            maxUsageTime: "maxUsageTime" in plan ? plan.maxUsageTime : 0,
-            priceInCents: plan.price,
-            autoRelogin: plan.autoRestarter,
-            id_plan: plan.id_plan,
-            name: mapCustomPlanName_toPrisma(plan.name as PlanCustomName),
-            type: plan.type,
-            usages: {
-              connectOrCreate: plan.usages.data.map(u => ({
-                where: { id_usage: u.id_usage },
-                create: {
-                  amountTime: u.amountTime,
-                  createdAt: new Date(),
-                  id_usage: u.id_usage,
-                  accountName: u.accountName,
-                },
-              })),
-            },
-          },
-        },
-      },
-    }
-    return dbPlan
-  }
-  const dbPlan: Pick<UpdateData, "plan" | "custom_plan"> = {
-    custom_plan: {
-      disconnect: true,
-    },
-    plan: {
-      upsert: {
-        where: {
-          ownerId: plan.ownerId,
-        },
-        update: {
-          usages: {
-            connectOrCreate: plan.usages.data.map(u => ({
-              where: { id_usage: u.id_usage },
-              create: {
-                amountTime: u.amountTime,
-                createdAt: new Date(),
-                id_usage: u.id_usage,
-                accountName: u.accountName,
-              },
-            })),
-          },
-        },
-        create: {
-          createdAt: new Date(),
-          id_plan: plan.id_plan,
-          name: plan.name as PlanNormalName,
-          type: plan.type,
-          usages: {
-            connectOrCreate: plan.usages.data.map(u => ({
-              where: { id_usage: u.id_usage },
-              create: {
-                amountTime: u.amountTime,
-                createdAt: new Date(),
-                id_usage: u.id_usage,
-                accountName: u.accountName,
-              },
-            })),
-          },
-        },
-      },
-    },
-  }
-  return dbPlan
-}
-
-export function mapCustomPlanName_toPrisma(planName: PlanCustomName): $Enums.PlanNameCustom {
-  switch (planName) {
-    case "INFINITY-CUSTOM":
-      return "CUSTOM_INFINITY_PLAN"
-    case "USAGE-CUSTOM":
-      return "CUSTOM_USAGE_PLAN"
-  }
 }

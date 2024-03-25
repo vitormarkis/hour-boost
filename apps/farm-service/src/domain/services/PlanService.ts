@@ -1,22 +1,13 @@
 import {
-  CustomInfinityPlan,
-  CustomUsagePlan,
-  type 
   DataOrFail,
   DiamondPlan,
   GoldPlan,
   GuestPlan,
-  type 
   PlanAllNames,
-  type 
   PlanInfinity,
-  type 
   PlanInfinityName,
-  type 
   PlanType,
-  type 
   PlanUsage,
-  type 
   PlanUsageName,
   SilverPlan,
 } from "core"
@@ -80,8 +71,6 @@ function buildUsagePlan({ newPlanName, plan }: BuildUsagePlanProps): PlanUsage {
   switch (newPlanName) {
     case "GUEST":
       return GuestPlan.create({ ownerId: plan.ownerId })
-    case "USAGE-CUSTOM":
-      return CustomUsagePlan.fromPlan(plan, plan.price)
   }
 }
 
@@ -93,8 +82,6 @@ function buildInfinityPlan({ newPlanName, plan }: BuildInfinityPlanProps): PlanI
       return GoldPlan.create({ ownerId: plan.ownerId })
     case "SILVER":
       return SilverPlan.create({ ownerId: plan.ownerId })
-    case "INFINITY-CUSTOM":
-      return CustomInfinityPlan.fromPlan(plan, plan.price)
   }
 }
 
@@ -103,10 +90,8 @@ function getPlanTypeByName(planName: PlanAllNames): PlanType {
     case "DIAMOND":
     case "GOLD":
     case "SILVER":
-    case "INFINITY-CUSTOM":
       return "INFINITY"
     case "GUEST":
-    case "USAGE-CUSTOM":
       return "USAGE"
   }
 }

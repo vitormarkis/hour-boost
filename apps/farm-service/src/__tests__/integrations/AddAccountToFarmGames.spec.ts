@@ -29,7 +29,7 @@ async function setupInstances(props?: MakeTestInstancesProps, customInstances?: 
   await i.createUser("me", {
     persistSteamAccounts: false,
   })
-  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+  const addSteamAccount = new AddSteamAccount(i.usersRepository, i.idGenerator)
   const addSteamAccountUseCase = new AddSteamAccountUseCase(
     addSteamAccount,
     i.allUsersClientsStorage,

@@ -87,7 +87,7 @@ describe("ScheduleAutoRestartUseCase test suite", () => {
 
   test("should call resolve on asking for steam guard, and log once user add steam guard", async () => {
     jest.useFakeTimers({ doNotFake: ["setTimeout", "setImmediate", "clearInterval", "nextTick"] })
-    const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+    const addSteamAccount = new AddSteamAccount(i.usersRepository, i.idGenerator)
     const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(
       i.steamAccountsRepository
     )
@@ -124,7 +124,7 @@ describe("ScheduleAutoRestartUseCase test suite", () => {
 
   test("should relog sac with refresh token", async () => {
     jest.useFakeTimers({ doNotFake: ["setTimeout", "setImmediate"] })
-    const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+    const addSteamAccount = new AddSteamAccount(i.usersRepository, i.idGenerator)
     const checkSteamAccountOwnerStatusUseCase = new CheckSteamAccountOwnerStatusUseCase(
       i.steamAccountsRepository
     )

@@ -1,16 +1,12 @@
-import { CustomUsagePlan, DiamondPlan, GoldPlan, GuestPlan, type PlanUsage } from "core"
+import { DiamondPlan, GoldPlan } from "core"
 import {
-  type 
-  CustomInstances,
-  type 
-  MakeTestInstancesProps,
-  type 
-  PrefixKeys,
+  type CustomInstances,
+  type MakeTestInstancesProps,
+  type PrefixKeys,
   makeTestInstances,
   validSteamAccounts,
 } from "~/__tests__/instances"
 import { PlanBuilder } from "~/application/factories/PlanFactory"
-import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 import { UserService } from "./UserService"
 
 const log = console.log
@@ -33,14 +29,6 @@ beforeEach(async () => {
   await setupInstances({
     validSteamAccounts,
   })
-})
-
-test("should change user plan", async () => {
-  expect(meInstances.me.plan).toBeInstanceOf(GuestPlan)
-  const newCustomUsagePlan = new PlanBuilder(s.me.userId).usage().custom(meInstances.me.plan as PlanUsage)
-  const { updatedCacheStates } = userService.changePlan(meInstances.me, newCustomUsagePlan, [])
-  expect(updatedCacheStates).toStrictEqual([])
-  expect(meInstances.me.plan).toBeInstanceOf(CustomUsagePlan)
 })
 
 test("should change between infinity", async () => {

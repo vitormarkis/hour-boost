@@ -1,16 +1,10 @@
 import {
-  type 
   DatabaseSteamAccount,
-  type 
   PlanInfinity,
   PlanUsage,
-  type 
   UserAdminPanelSession,
-  type 
   UserSession,
-  type 
   UserSessionShallow,
-  type 
   UsersDAO,
 } from "core"
 import type { UsersInMemory } from "~/infra/repository"
@@ -55,6 +49,7 @@ export class UsersDAOInMemory implements UsersDAO {
                 name: user.plan.name,
                 type: "USAGE",
                 farmUsedTime: 0,
+                custom: user.plan.custom,
               }
             : {
                 id_plan: user.plan.id_plan,
@@ -63,6 +58,7 @@ export class UsersDAOInMemory implements UsersDAO {
                 maxSteamAccounts: user.plan.maxSteamAccounts,
                 name: user.plan.name,
                 type: "INFINITY",
+                custom: user.plan.custom,
               },
         profilePicture: user.profilePic,
         purchases: [],
@@ -123,6 +119,7 @@ export class UsersDAOInMemory implements UsersDAO {
               name: foundUser.plan.name,
               type: "USAGE",
               farmUsedTime: 0,
+              custom: foundUser.plan.custom,
             }
           : {
               id_plan: foundUser.plan.id_plan,
@@ -131,6 +128,7 @@ export class UsersDAOInMemory implements UsersDAO {
               maxSteamAccounts: foundUser.plan.maxSteamAccounts,
               name: foundUser.plan.name,
               type: "INFINITY",
+              custom: foundUser.plan.custom,
             },
       profilePic: foundUser.profilePic,
       purchases: foundUser.purchases.map(p => p.id_Purchase),

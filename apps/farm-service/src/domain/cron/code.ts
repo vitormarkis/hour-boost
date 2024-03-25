@@ -5,9 +5,9 @@ import {
   AddSteamAccountUseCase,
   CreateUserUseCase,
   RestoreAccountConnectionUseCase,
+  RestoreAccountSessionUseCase,
   ScheduleAutoRestartUseCase,
 } from "~/application/use-cases"
-import { RestoreAccountSessionUseCase } from "~/application/use-cases"
 import { AutoRestarterScheduler } from "~/domain/cron/AutoRestarterScheduler"
 import { testUsers as s } from "~/infra/services/UserAuthenticationInMemory"
 
@@ -23,7 +23,7 @@ const i = makeTestInstances(
 const autoRestarterScheduler = new AutoRestarterScheduler()
 const createUser = new CreateUserUseCase(i.usersRepository, i.userAuthentication, i.usersClusterStorage)
 
-const addSteamAccount = new AddSteamAccount(i.usersRepository, i.steamAccountsRepository, i.idGenerator)
+const addSteamAccount = new AddSteamAccount(i.usersRepository, i.idGenerator)
 const addSteamAccountUseCase = new AddSteamAccountUseCase(
   addSteamAccount,
   i.allUsersClientsStorage,

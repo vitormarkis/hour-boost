@@ -1,13 +1,11 @@
+import { Plan, PlanCreateProps, PlanInfinityName } from "core/entity/plan"
 import { Usage } from "core/entity/plan/Usage"
-import { Plan, PlanInfinityName } from "../../entity/plan/Plan"
 import { UsageList } from "core/entity/plan/UsageList"
-import { PlanSetters } from "./extends"
 
 export class PlanInfinity extends Plan {
-  custom: boolean
   readonly name: PlanInfinityName
 
-  constructor(props: PlanInfinityAllProps) {
+  constructor(props: PlanInfinityConstructorProps) {
     super({
       ...props,
       type: "INFINITY",
@@ -17,16 +15,12 @@ export class PlanInfinity extends Plan {
     this.custom = props.custom
   }
 
-  isCustom(): this is PlanSetters {
-    return this.custom
-  }
-
   use(usage: Usage): void {
     this.usages.add(usage)
   }
 }
 
-export type PlanInfinityAllProps = {
+export type PlanInfinityConstructorProps = {
   id_plan: string
   name: PlanInfinityName
   price: number
@@ -38,8 +32,17 @@ export type PlanInfinityAllProps = {
   custom: boolean
 }
 
+export type PlanInfinityCreateProps = PlanCreateProps
+
 export type PlanInfinityRestoreProps = {
   id_plan: string
   ownerId: string
   usages: UsageList
+}
+
+export type PlanInfinityRestoreFromCustomProps = PlanInfinityRestoreProps & {
+  maxGamesAllowed: number
+  maxSteamAccounts: number
+  autoRestarter: boolean
+  price: number
 }

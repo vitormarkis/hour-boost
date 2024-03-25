@@ -1,4 +1,4 @@
 export type UserAdminActionSetAccountsPayload = {
-  newAccountsLimit: number
-  userId: string
+  mutatingUserId: string
+  newMaxSteamAccountsAllowed: number
 }

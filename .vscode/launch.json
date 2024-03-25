@@ -2,13 +2,28 @@
   "version": "1.0.0",
   "configurations": [
     {
+      "name": "Attach by Process ID",
+      "processId": "${command:PickProcess}",
+      "request": "attach",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Jest: current file",
-      "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
-      "args": ["${fileBasenameNoExtension}", "--config", "apps/farm-service/jest.config.ts"],
+      "envFile": "${workspaceFolder}/apps/farm-service/.env",
+      "runtimeArgs": ["--experimental-vm-modules", "--nolazy"],
+      //"env": { "NODE_ENV": "test" },
+      "program": "${workspaceFolder}/apps/farm-service/node_modules/jest/bin/jest",
+      "args": ["--config", "./apps/farm-service/jest.config.ts", "--runInBand", "--verbose", "${fileBasenameNoExtension}"],
       "console": "integratedTerminal",
-      "disableOptimisticBPs": true
+      "disableOptimisticBPs": true,
+      "windows": {
+        "program": "${workspaceFolder}/apps/farm-service/node_modules/jest/bin/jest"
+      }
     }
   ]
 }

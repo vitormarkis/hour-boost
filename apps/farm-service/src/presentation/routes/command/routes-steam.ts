@@ -2,11 +2,7 @@ import { ClerkExpressRequireAuth, type WithAuthProp } from "@clerk/clerk-sdk-nod
 import { AddSteamAccount, type HttpClient, appAccountStatusSchema } from "core"
 import { type Request, type Response, Router } from "express"
 import { z } from "zod"
-import {
-  ChangeAccountStatusUseCase,
-  RemoveSteamAccountUseCase,
-  UpdateStagingGamesUseCase,
-} from "~/application/use-cases"
+import { ChangeAccountStatusUseCase, UpdateStagingGamesUseCase } from "~/application/use-cases"
 import { StopAllFarms } from "~/application/use-cases/StopAllFarms"
 import { ToggleAutoReloginUseCase } from "~/application/use-cases/ToggleAutoReloginUseCase"
 
@@ -24,11 +20,11 @@ import { promiseHandler, promiseHandlerBroad } from "~/presentation/controllers/
 import {
   addSteamAccountUseCase,
   allUsersClientsStorage,
-  autoRestarterScheduler,
   farmGamesUseCase,
   hashService,
   idGenerator,
   planRepository,
+  removeSteamAccountUseCase,
   stagingGamesListService,
   steamAccountClientStateCacheRepository,
   steamAccountsRepository,
@@ -38,17 +34,8 @@ import {
   usersRepository,
 } from "~/presentation/instances"
 
-export const addSteamAccount = new AddSteamAccount(usersRepository, steamAccountsRepository, idGenerator)
+export const addSteamAccount = new AddSteamAccount(usersRepository, idGenerator)
 const stopAllFarmsUseCase = new StopAllFarms(usersClusterStorage)
-const removeSteamAccountUseCase = new RemoveSteamAccountUseCase(
-  usersRepository,
-  allUsersClientsStorage,
-  steamAccountClientStateCacheRepository,
-  usersClusterStorage,
-  planRepository,
-  autoRestarterScheduler
-)
-
 export const command_routerSteam: Router = Router()
 
 type Resolved = {
@@ -84,7 +71,6 @@ command_routerSteam.delete(
       removeSteamAccountUseCase
     )
 
-    console.log("0. calling remove steam account controller")
     const { status, json } = await promiseHandler(
       removeSteamAccountControllerController.handle({
         payload: {

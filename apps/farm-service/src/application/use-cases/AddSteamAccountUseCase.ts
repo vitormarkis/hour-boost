@@ -67,17 +67,30 @@ export class AddSteamAccountUseCase
     if (errorEncrypting) return bad(errorEncrypting)
 
     if (sac.logged) {
-      const { steamAccountId } = await this.addSteamAccount.execute({
+      const [error, result] = await this.addSteamAccount.execute({
         accountName,
         password: hashPassword,
         userId,
       })
+      if (error) {
+        switch (error.code) {
+          case "ACCOUNTS_LIMIT_REACHED":
+            return [new ApplicationError("Limite de contas alcançado.")]
+          case "ALREADY_HAS_ACCOUNT_WITH_THIS_NAME":
+            return [new ApplicationError("Já possui uma conta com esse nome.")]
+          case "USER_NOT_FOUND":
+            return [new ApplicationError("Usuário não encontrado.")]
+          default:
+            error satisfies never
+        }
+        throw error
+      }
 
       return [
         null,
         {
           message: `${accountName} adicionada com sucesso!`,
-          steamAccountId,
+          steamAccountId: result.steamAccountId,
         },
       ]
     }
@@ -134,11 +147,32 @@ export class AddSteamAccountUseCase
     }
 
     if (eventsPromisesResolved.type === "loggedOn") {
-      const { steamAccountId } = await this.addSteamAccount.execute({
+      console.log("55: ", {
         accountName,
         password: hashPassword,
         userId,
       })
+      const [error, result] = await this.addSteamAccount.execute({
+        accountName,
+        password: hashPassword,
+        userId,
+      })
+
+      if (error) {
+        switch (error.code) {
+          case "ACCOUNTS_LIMIT_REACHED":
+            return [new ApplicationError("Limite de contas alcançado.")]
+          case "ALREADY_HAS_ACCOUNT_WITH_THIS_NAME":
+            return [new ApplicationError("Já possui uma conta com esse nome.")]
+          case "USER_NOT_FOUND":
+            return [new ApplicationError("Usuário não encontrado.")]
+          default:
+            error satisfies never
+        }
+        throw error
+      }
+
+      const { steamAccountId } = result
 
       // 22: salvar auth code no banco de dados
 
