@@ -251,5 +251,7 @@ publisher.register(new ScheduleAutoRestartHandler(scheduleAutoRestartUseCase))
 export const setMaxSteamAccountsUseCase = new SetMaxSteamAccountsUseCase(
   usersRepository,
   flushUpdateSteamAccountUseCase,
-  trimSteamAccounts
+  trimSteamAccounts,
+  steamAccountClientStateCacheRepository,
+  planRepository
 )

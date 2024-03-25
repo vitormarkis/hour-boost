@@ -189,7 +189,9 @@ export function makeTestInstances(props?: MakeTestInstancesProps, ci?: CustomIns
   const setMaxSteamAccountsUseCase = new SetMaxSteamAccountsUseCase(
     usersRepository,
     flushUpdateSteamAccountUseCase,
-    trimSteamAccounts
+    trimSteamAccounts,
+    sacStateCacheRepository,
+    planRepository
   )
 
   const restoreAccountSessionUseCase = new RestoreAccountSessionUseCase(usersClusterStorage, publisher)

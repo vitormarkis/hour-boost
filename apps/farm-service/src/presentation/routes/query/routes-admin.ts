@@ -93,6 +93,7 @@ query_routerAdmin.post("/set-max-steam-accounts", async (req, res) => {
           return console.log({ error })
         case "LIST::TRIMMING-ACCOUNTS":
         case "LIST:ERROR-RESETING-FARM":
+        case "COULD-NOT-PERSIST-ACCOUNT-USAGE":
           return console.log(error.payload)
         default:
           error satisfies never
